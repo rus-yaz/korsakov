@@ -4,10 +4,10 @@ from parse import Parser
 from tokens_list import global_context
 
 
-def run(file_name: str, code: str, mods: dict = {"debug": False}):
+def run(module_name: str, code: str, mods: dict = {"debug": False}):
   DEBUG = mods["debug"]
 
-  lexer = Lexer(file_name, code)
+  lexer = Lexer(module_name, code)
   tokens, error = lexer.make_tokens()
   if error:
     return None, error
@@ -23,7 +23,7 @@ def run(file_name: str, code: str, mods: dict = {"debug": False}):
   if DEBUG:
     print(ast.node.element_nodes)
 
-  interpreter = Interpreter()
+  interpreter = Interpreter(module_name)
   interpret = interpreter.interpret(ast.node, global_context)
 
   if DEBUG:

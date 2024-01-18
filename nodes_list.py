@@ -161,3 +161,11 @@ class BreakNode:
   def __init__(self, position_start, position_end):
     self.position_start = position_start
     self.position_end = position_end
+
+
+class IncludeNode:
+  def __init__(self, modules: list[Token], position_start, position_end):
+    self.modules = modules
+
+    self.position_start = position_start
+    self.position_end = position_end

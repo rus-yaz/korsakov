@@ -31,9 +31,10 @@ global_context = Context("<программа>")
 global_symbol_table = SymbolTable()
 global_context.symbol_table = global_symbol_table
 
+
 def set_global_variables():
   from types_list import Number, build_in_functions
-  
+
   global_symbol_table.set_many_variables([
       [["null", "нуль"], Number(None)],
       [["true", "истина"], Number(1)],
@@ -41,10 +42,11 @@ def set_global_variables():
       *build_in_functions.items()
   ])
 
+
 set_global_variables()
 
 
-FILE_EXTENTION = "xlang"
+FILE_EXTENSION = "xlang"
 
 SPACE = "пробел"
 PERCENT = "процент"

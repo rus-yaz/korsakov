@@ -1,3 +1,4 @@
+import readline
 from sys import argv
 
 from run import run
@@ -18,7 +19,7 @@ if __name__ == "__main__":
   if argv:
     file_name, *argv = argv
 
-  default = "включить стандартный_модуль\n"
+  default = "включить \"стандартный_модуль\"\n"
 
   if file_name:
     code = default

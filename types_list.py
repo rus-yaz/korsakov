@@ -20,6 +20,9 @@ class Value:
     self.context = context
     return self
 
+  def is_true(self):
+    return False
+
   def addition(self, operand):
     return None, self.illegal_operation(operand)
 
@@ -77,9 +80,6 @@ class Value:
   def copy(self):
     raise Exception("Метод копирования не определён")
 
-  def is_true(self):
-    return False
-
   def illegal_operation(self, operand=None):
     if not operand:
       operand = self
@@ -102,6 +102,9 @@ class Number(Value):
 
   def __repr__(self):
     return f"Число({self.value})"
+
+  def is_true(self):
+    return self.value != 0
 
   def addition(self, operand):
     if isinstance(operand, Number):
@@ -195,10 +198,7 @@ class Number(Value):
     return None, Value.illegal_operation(self, operand)
 
   def denial(self):
-    return Number(not self.value, self.context), None
-
-  def is_true(self):
-    return Number(bool(self.value), self.context), None
+    return Number(not self.is_true(), self.context), None
 
   def copy(self):
     copy = Number(self.value, self.context)
@@ -217,6 +217,9 @@ class String(Value):
 
   def __repr__(self):
     return f"Строка(\"{self.value}\")"
+
+  def is_true(self):
+    return self.value != ""
 
   def addition(self, operand):
     if isinstance(operand, String):
@@ -287,9 +290,6 @@ class String(Value):
   def denial(self):
     return Number(not self.is_true(), self.context), None
 
-  def is_true(self):
-    return Number(bool(self.value), self.context), None
-
   def copy(self):
     copy = String(self.value, self.context)
     copy.set_position(self.position_start, self.position_end)
@@ -310,6 +310,9 @@ class List(Value):
 
   def __repr__(self):
     return f"Список({self.value})"
+
+  def is_true(self):
+    return self.value != []
 
   def addition(self, operand):
     if isinstance(operand, List):
@@ -343,10 +346,7 @@ class List(Value):
     return None, Value.illegal_operation(self, operand)
 
   def denial(self, operand):
-    return Number(not self.value, self.context), None
-
-  def is_true(self):
-    return Number(bool(self.value), self.context), None
+    return Number(not self.is_true(), self.context), None
 
   def copy(self):
     copy = List(self.value, self.context)
@@ -374,7 +374,7 @@ class Function(Value):
       functions[self.name, ] = dict.fromkeys(arguments, Value)
 
   def __repr__(self):
-    return f"Функция({self.name}; {self.arguments})"
+    return f"Функция({self.name}, {list(self.get_arguments_names(self.name))})"
 
   def get_arguments_names(self, function_name):
     for function_names, arguments in functions.items():
@@ -467,7 +467,7 @@ class Function(Value):
       return response.success(return_value)
     else:
       from interpret import Interpreter
-      interpret = Interpreter()
+      interpret = Interpreter(self.name)
 
       arguments_names = [argument_name.split(
         "=")[0] for argument_name in self.get_arguments_names(self.name)]
@@ -540,37 +540,36 @@ class Function(Value):
   # BuildIn Functions
 
   def _print(self, context: Context):
-    error, prompt = self.get_arguments(context, "print")
+    error, value = self.get_arguments(context, "print")
     if error:
       return error
-    prompt: String | Number | List
+    value: Number | String | List
 
-    print(str(prompt))
+    print(str(value))
 
     return RuntimeResponse().success(Number(None, context))
-  functions[("print", "показать")] = {"message=\"\"": String | Number | List}
+  functions[("print", "показать")] = {"value=\"\"": Number | String | List}
 
   def _error(self, context: Context):
-    error, message = self.get_arguments(context, "error")
+    error, value = self.get_arguments(context, "error")
     if error:
       return error
-    message: String
+    value: Number | String | List
 
     return RuntimeResponse().failure(RuntimeError(
       self.position_start, self.position_end,
-      message.value,
-      context, False
+      str(value.value), context, False
     ))
-  functions[("error", "ошибка")] = {"message=\"\"": String}
+  functions[("error", "ошибка")] = {"value=\"\"": Number | String | List}
 
   def _input(self, context: Context):
-    error, prompt = self.get_arguments(context, "input")
+    error, value = self.get_arguments(context, "input")
     if error:
       return error
-    prompt: String
+    value: Number | String | List
 
-    return RuntimeResponse().success(String(input(prompt.value), context))
-  functions[("input", "ввести")] = {"message=\"\"": String}
+    return RuntimeResponse().success(String(input(str(value.value)), context))
+  functions[("input", "ввести")] = {"value=\"\"": Number | String | List}
 
   def _clear(self, context: Context):
     system("cls" if os_name == "nt" else "clear")
@@ -589,20 +588,20 @@ class Function(Value):
   functions[("type", "тип")] = {"value": Value}
 
   def _to_binary(self, context: Context):
-    error, value = self.get_arguments(context, "to_binary")
+    error, number = self.get_arguments(context, "to_binary")
     if error:
       return error
-    value: Number
+    number: Number
 
-    binary_value = format(value.value, "08b")
+    binary_value = bin(number.value)[2:]
     return RuntimeResponse().success(String(binary_value, context))
-  functions[("to_binary", "в_бинарный", "к_бинарному")] = {"value": String}
+  functions[("to_binary", "в_бинарный", "к_бинарному")] = {"number": Number}
 
   def _to_number(self, context: Context):
     error, value, base = self.get_arguments(context, "to_number")
     if error:
       return error
-    value: String | Number
+    value: Number | String
     base: Number
 
     if isinstance(value, Number):
@@ -611,42 +610,52 @@ class Function(Value):
       return RuntimeResponse().success(Number(float(value.value), context))
 
     return RuntimeResponse().success(Number(int(value.value, base.value), context))
-  functions[("to_number", "в_число", "к_числу")] = {
-    "value": String | Number, "base=10": Number}
+  functions[("to_number", "в_число", "к_числу")] = {"value": Number | String, "base=10": Number}
 
   def _to_integer(self, context: Context):
     error, value, base = self.get_arguments(context, "to_integer")
     if error:
       return error
-    value: String | Number
+    value: Number | String
     base: Number
 
-    if isinstance(value, Number):
-      return RuntimeResponse().success(value.set_context(context))
-
     return RuntimeResponse().success(Number(int(value.value, base.value), context))
-  functions[("to_integer", "в_целое", "к_целому")] = {"value": Number}
+  functions[("to_integer", "в_целое", "к_целому")] = {"value": Number | String, "base=10": Number}
+
+  def _to_float(self, context: Context):
+    error, value = self.get_arguments(context, "to_float")
+    if error:
+      return error
+    value: Number | String
+
+    return RuntimeResponse().success(Number(float(value.value), context))
+  functions[("to_float", "в_вещественное", "к_вещественному")] = {"value": Number | String}
 
   def _to_string(self, context: Context):
     error, value = self.get_arguments(context, "to_string")
     if error:
       return error
-    value: Number | List
+    value: Number | String | List
 
     if isinstance(value, Number):
       return RuntimeResponse().success(String(str(value.value), context))
+    elif isinstance(value, List):
+      return RuntimeResponse().success(String(f"%({', '.join(map(lambda x: str(x), value.value))})%", context))
 
-    return RuntimeResponse().success(String(f"%({', '.join(map(lambda x: str(x), value.value))})%", context))
-  functions[("to_string", "в_строку", "к_строке")] = {"value": Number}
+    return RuntimeResponse().success(value.set_context(context))
+  functions[("to_string", "в_строку", "к_строке")] = {"value": Number | String | List}
 
   def _to_list(self, context: Context):
     error, value = self.get_arguments(context, "to_list")
     if error:
       return error
-    value: String
+    value: String | List
 
-    return RuntimeResponse().success(List(list(map(lambda x: String(x, context), value.value)), context))
-  functions[("to_list", "в_список", "к_списку")] = {"value": String}
+    if isinstance(value, String):
+      return RuntimeResponse().success(List(list(map(lambda x: String(x, context), value.value)), context))
+
+    return RuntimeResponse().success(value.set_context(context))
+  functions[("to_list", "в_список", "к_списку")] = {"value": String | List}
 
   def _random(self, context: Context):
     from random import random
@@ -707,8 +716,10 @@ class Function(Value):
 
 
 build_in_functions_names = [
-  name for function_names in functions.keys() for name in function_names]
+  name for function_names in functions.keys() for name in function_names
+]
 
 build_in_functions = {
   functions_names: Function(functions_names[0])
-  for functions_names in functions}
+  for functions_names in functions
+}

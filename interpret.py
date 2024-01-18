@@ -1,12 +1,25 @@
-from context import *
+from os import name as os_name
+from os.path import realpath
+from pathlib import Path
+
 from errors_list import *
 from nodes_list import *
-from runtime_response import *
 from tokens_list import *
 from types_list import *
 
+PATH_SEPARATOR = "\\" if os_name == "nt" else "/"
+LANGAUGE_PATH = __file__.rsplit(PATH_SEPARATOR, 1)[0]
+BUILDIN_LIBRARIES = {
+  str(file).rsplit(PATH_SEPARATOR, 1)[1].removesuffix(f".{FILE_EXTENSION}"): str(file)
+  for file in Path(LANGAUGE_PATH).glob(f"*.{FILE_EXTENSION}")
+}
+
 
 class Interpreter:
+  def __init__(self, file_name):
+    self.file_name = file_name
+    self.script_location = realpath(self.file_name).rsplit(PATH_SEPARATOR, 1)[0]
+
   def interpret(self, node, context: Context) -> Number:
     method = f"interpret_{type(node).__name__}"
     visitor = getattr(self, method, self.no_interpret_method)
@@ -276,7 +289,6 @@ class Interpreter:
         index += step_value.value
     else:
       index = 0
-
       while index < len(start_value.value):
         context.symbol_table.set_variable(
           node.variable_name.value,
@@ -387,3 +399,41 @@ class Interpreter:
 
   def interpret_BreakNode(self, node, context):
     return RuntimeResponse().success_break()
+
+  def interpret_IncludeNode(self, node: IncludeNode, context):
+    from run import run
+
+    response = RuntimeResponse()
+
+    for module in node.modules:
+      module_name = module.value
+
+      if module_name.endswith("*"):
+        module_name, depth = module_name.rsplit(PATH_SEPARATOR, 1)
+        module_path = f"{self.script_location}{PATH_SEPARATOR}{module_name}"
+        files = list(map(str, Path(self.script_location).glob(f"*.{FILE_EXTENSION}")))
+
+        get_files = getattr(Path(module_path), "glob" if depth == "*" else "rglob")
+        files = list(map(str, get_files(f"*.{FILE_EXTENSION}")))
+
+        for file_path in files:
+          with open(file_path) as file:
+            _, error = run(file_path, file.read())
+            if error:
+              return response.failure(error)
+      else:
+        module_path = f"{self.script_location}{PATH_SEPARATOR}{module_name}.{FILE_EXTENSION}"
+        files = list(map(str, Path(self.script_location).glob(f"*.{FILE_EXTENSION}")))
+
+        if module_path not in files:
+          if module_name in BUILDIN_LIBRARIES:
+            module_path = BUILDIN_LIBRARIES[module_name]
+          else:
+            return response.failure(ModuleNotFoundError(module.position_start, module.position_end, module_name))
+
+        with open(module_path) as file:
+          _, error = run(module_path, file.read())
+          if error:
+            return response.failure(error)
+
+    return response.success(Number(None, context))

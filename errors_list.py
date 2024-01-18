@@ -103,7 +103,7 @@ class RuntimeError(Error):
     self.highlight = highlight
 
   def __repr__(self):
-    result = "Error\n"
+    result = "Ошбика\n"
     result += self.generate_traceback()
     result += f"{self.name}: {self.details}\n"
     if self.highlight:

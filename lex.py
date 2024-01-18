@@ -1,10 +1,5 @@
-from os import name as os_name
-from pathlib import Path
-
 from errors_list import *
 from tokens_list import *
-
-PATH_SEPARATOR = "\\" if os_name == "nt" else "/"
 
 
 class Lexer:
@@ -26,7 +21,7 @@ class Lexer:
     tokens: list[Token] = []
 
     while self.character != None:
-      token = None
+      token: Token = None
       previous_token: Token = tokens[-1] if tokens else None
       position_start = self.position.copy()
 
@@ -53,65 +48,18 @@ class Lexer:
           tokens += [identifier]
           continue
         elif previous_token.matches_keyword(INCLUDE):
-          modules: list[str] = []
+          while self.character and self.character in " \t":
+            self.advance()
 
-          while tokens[-1].matches_keyword(INCLUDE):
-            tokens.pop()
+          if self.character != "\"":
+            return [], InvalidSyntaxError(
+              self.position.copy(), self.position.copy(),
+              "Ожидалось `\"`"
+            )
 
-            while self.character == " ":
-              self.advance()
+          tokens += [self.make_string()]
 
-            modules += [self.make_identifier().value]
-
-            while self.character == ".":
-              modules[-1] += "."
-              self.advance()
-
-              while self.character == "*":
-                modules[-1] += "*"
-                self.advance()
-              else:
-                modules[-1] += self.make_identifier().value
-
-            while self.character and self.character in " \t\n":
-              self.advance()
-
-            if self.character == None:
-              break
-
-            tokens += [self.make_identifier()]
-
-          for module_name in modules:
-            folder_path = module_name[:module_name.rindex(
-              ".")].replace(".", PATH_SEPARATOR) if "." in module_name else "."
-
-            if module_name.endswith("*"):
-              get_files = Path(folder_path).glob if module_name.endswith(
-                ".*") else Path(folder_path).rglob
-
-              files = map(str, get_files(f"*.{FILE_EXTENTION}"))
-
-              for file_name in files:
-                with open(f"{file_name}") as module:
-                  self.text = module.read() + "\n" + self.text\
-                    .replace(previous_token.value, "")\
-                    .replace(module_name, "")
-            else:
-              file_name = f"{module_name.replace(".", PATH_SEPARATOR)}.{
-                  FILE_EXTENTION}"
-              if file_name not in map(str, Path(folder_path).glob(f"*.{FILE_EXTENTION}")):
-                return [], ModuleNotFoundError(position_start, self.position, module_name)
-
-              with open(f"{module_name.replace(".", PATH_SEPARATOR)}.{FILE_EXTENTION}") as module:
-                self.text = module.read() + "\n" + self.text\
-                  .replace(previous_token.value, "")\
-                  .replace(module_name, "")
-
-          self.reset()
-          self.advance()
-          tokens = []
           continue
-
       if self.character.isdigit():
         tokens += [self.make_number()]
         continue
@@ -146,8 +94,7 @@ class Lexer:
               while tokens[-1].type == SPACE:
                 tokens.pop()
               tokens += [
-                  Token(ASSIGN, position_start=position_start,
-                        position_end=self.position.copy()),
+                  Token(ASSIGN, position_start=position_start, position_end=self.position.copy()),
                   tokens[-1]
               ]
               token = previous_token.type
@@ -277,7 +224,7 @@ class Lexer:
       number += "-"
       self.advance()
 
-    while self.character and (self.character.isdigit() or self.character in "._"):
+    while self.character and (self.character.isdigit() or self.character in "_."):
       if self.character == "_":
         self.advance()
 
@@ -310,17 +257,18 @@ class Lexer:
     escape_sequence = False
     self.advance()
 
-    while self.character != "\"" or escape_sequence:
+    while self.character != None and (self.character != "\"" or escape_sequence):
       if escape_sequence:
         string += ESCAPE_SEQUENCES.get(self.character, self.character)
         escape_sequence = False
+      elif self.character == "\\":
+        escape_sequence = True
       else:
-        if self.character == "\\":
-          escape_sequence = True
-        else:
-          string += self.character
+        string += self.character
 
       self.advance()
 
-    self.advance()
+    if self.character == "\"":
+      self.advance()
+
     return Token(STRING, string, position_start, self.position.copy())
