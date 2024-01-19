@@ -25,41 +25,6 @@ class Lexer:
       previous_token: Token = tokens[-1] if tokens else None
       position_start = self.position.copy()
 
-      if previous_token:
-        if previous_token.type == COMMENT:
-          tokens.pop()
-          self.advance()
-
-          while self.character not in ["\n", None]:
-            self.advance()
-
-          self.advance()
-
-          continue
-        elif previous_token.type == IDENTIFIER and self.character == "\\":
-          identifier = tokens.pop()
-          self.advance()
-
-          if self.character.isdigit() or self.character == "-":
-            identifier.value += f"\\{self.make_number().value}"
-          else:
-            identifier.value += f"\\{self.make_identifier().value}"
-
-          tokens += [identifier]
-          continue
-        elif previous_token.matches_keyword(INCLUDE):
-          while self.character and self.character in " \t":
-            self.advance()
-
-          if self.character != "\"":
-            return [], InvalidSyntaxError(
-              self.position.copy(), self.position.copy(),
-              "Ожидалось `\"`"
-            )
-
-          tokens += [self.make_string()]
-
-          continue
       if self.character.isdigit():
         tokens += [self.make_number()]
         continue
@@ -93,10 +58,7 @@ class Lexer:
               tokens.pop()
               while tokens[-1].type == SPACE:
                 tokens.pop()
-              tokens += [
-                  Token(ASSIGN, position_start=position_start, position_end=self.position.copy()),
-                  tokens[-1]
-              ]
+              tokens += [Token(ASSIGN, None, position_start, self.position.copy()), tokens[-1]]
               token = previous_token.type
 
           if token != ASSIGN:
@@ -107,9 +69,14 @@ class Lexer:
         case "!":
           token = EXCLAMATION_MARK
           if tokens and previous_token.type == EXCLAMATION_MARK:
-            token = COMMENT
-            position_start = previous_token.position_start
+            token = None
             tokens.pop()
+            text = ""
+            self.advance()
+
+            while self.character not in ["\n", None]:
+              text += self.character
+              self.advance()
 
         case "+":
           token = ADDITION
@@ -120,15 +87,7 @@ class Lexer:
             if tokens and tokens[-1].type == IDENTIFIER:
               identifier = tokens.pop()
 
-            tokens += [
-                Token(
-                    INCREMENT,
-                    not identifier,
-                    position_start,
-                    self.position.copy()
-                ),
-                identifier
-            ]
+            tokens += [Token(INCREMENT, not identifier, position_start, self.position.copy()), identifier]
             position_start = previous_token.position_start
         case "-":
           token = SUBSTRACION
@@ -141,15 +100,7 @@ class Lexer:
               if tokens and tokens[-1].type == IDENTIFIER:
                 identifier = tokens.pop()
 
-              tokens += [
-                  Token(
-                      DECREMENT,
-                      not identifier,
-                      position_start,
-                      self.position.copy()
-                  ),
-                  identifier
-              ]
+              tokens += [Token(DECREMENT, not identifier, position_start, self.position.copy()), identifier]
               position_start = previous_token.position_start
               continue
 
@@ -199,7 +150,6 @@ class Lexer:
             position_start = previous_token.position_start
             tokens.pop()
 
-        case ":": token = COLON
         case ",": token = COMMA
 
         case _:
@@ -207,13 +157,11 @@ class Lexer:
           char = self.character
           self.advance()
           return [], IllegalCharacterError(position_start, self.position, f"`{char}`")
-      tokens += [
-          Token(token, position_start=position_start,
-                position_end=self.position.copy())
-      ] if token else []
+
+      tokens += [Token(token, None, position_start, self.position.copy())] if token else []
       self.advance()
 
-    tokens += [Token(END_OF_FILE, position_start=self.position)]
+    tokens += [Token(END_OF_FILE, position_start=self.position.copy())]
     return list(filter(lambda token: token and token.type != SPACE, tokens)), None
 
   def make_number(self):
@@ -244,8 +192,13 @@ class Lexer:
     position_start = self.position.copy()
     position_end = position_start
 
-    while self.character != None and (self.character.isalnum() or self.character == "_"):
+    while self.character != None and (self.character.isalnum() or self.character in "_."):
       position_end = self.position.copy()
+
+      # Меня заставили
+      if self.character == "ё":
+        self.character = "е"
+
       identifier += self.character
       self.advance()
 

@@ -1,5 +1,4 @@
-from os import name as os_name
-from os import system
+from os import name, system
 
 from context import Context, SymbolTable
 from errors_list import RuntimeError
@@ -72,7 +71,7 @@ class Value:
     return None, self.illegal_operation(operand)
 
   def denial(self, operand):
-    return None, self.illegal_operation(operand)
+    return None, self.illegal_operation()
 
   def execute(self, arguments):
     return RuntimeResponse().failure(self.illegal_operation())
@@ -86,7 +85,7 @@ class Value:
 
     return RuntimeError(
       self.position_start, operand.position_end,
-      "Неизвестная операция",
+      f"Неизвестная операция: {self} и {operand if operand != self else ''}",
       self.context
     )
 
@@ -572,7 +571,7 @@ class Function(Value):
   functions[("input", "ввести")] = {"value=\"\"": Number | String | List}
 
   def _clear(self, context: Context):
-    system("cls" if os_name == "nt" else "clear")
+    system("cls" if name == "nt" else "clear")
     return RuntimeResponse().success(Number(None, context))
   functions[("clear", "очистить")] = {}
 

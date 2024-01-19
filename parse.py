@@ -38,7 +38,6 @@ class Parser:
 
     return result
 
-  # Выражение
   def expression(self):
     response = ParseResponse()
 
@@ -464,14 +463,6 @@ class Parser:
           "Ожидалось `from` или `in`"
       ))
 
-    if self.token.type != COLON:
-      return response.failure(InvalidSyntaxError(
-          self.token.position_start, self.token.position_end,
-          "Ожидался двоеточие (`:`)"
-      ))
-
-    response.advance(self)
-
     if self.token.type == NEWLINE:
       response.advance(self)
       body = response.register(self.statements())
@@ -513,14 +504,6 @@ class Parser:
     condition = response.register(self.expression())
     if response.error:
       return response
-
-    if self.token.type != COLON:
-      return response.failure(InvalidSyntaxError(
-          self.token.position_start, self.token.position_end,
-          "Ожидался двоеточие (`:`)"
-      ))
-
-    response.advance(self)
 
     if self.token.type == NEWLINE:
       response.advance(self)
@@ -645,14 +628,6 @@ class Parser:
             self.token.position_start, self.token.position_end,
             "Ожидались Идентификатор или `)`"
         ))
-
-    response.advance(self)
-
-    if self.token.type != COLON:
-      return response.failure(InvalidSyntaxError(
-          self.token.position_start, self.token.position_end,
-          "Ожиалось двоеточие (`:`)"
-      ))
 
     response.advance(self)
 

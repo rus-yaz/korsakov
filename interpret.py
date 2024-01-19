@@ -17,15 +17,15 @@ BUILDIN_LIBRARIES = {
 
 class Interpreter:
   def __init__(self, file_name):
-    self.file_name = file_name
-    self.script_location = realpath(self.file_name).rsplit(PATH_SEPARATOR, 1)[0]
+    self.file_path = realpath(file_name)
+    self.script_location, self.file_name = self.file_path.rsplit(PATH_SEPARATOR, 1)
 
   def interpret(self, node, context: Context) -> Number:
     method = f"interpret_{type(node).__name__}"
     visitor = getattr(self, method, self.no_interpret_method)
     return visitor(node, context)
 
-  def no_interpret_method(self, node, context) -> None:
+  def no_interpret_method(self, node, context: Context) -> None:
     raise Exception(f"Метод interpret_{type(node).__name__} не объявлен")
 
   def interpret_NumberNode(self, node: NumberNode, context: Context) -> Number:
@@ -137,8 +137,8 @@ class Interpreter:
     response = RuntimeResponse()
     variable_name = node.variable_name.value
 
-    if "\\" in variable_name:
-      name, *indexes = variable_name.split("\\")
+    if "." in variable_name:
+      name, *indexes = variable_name.split(".")
       value: List = context.symbol_table.get_variable(name)
 
       indexes = [
@@ -180,8 +180,8 @@ class Interpreter:
     if response.should_return():
       return response
 
-    if "\\" in variable_name.value:
-      variable_name.value, *keys = variable_name.value.split("\\")
+    if "." in variable_name.value:
+      variable_name.value, *keys = variable_name.value.split(".")
       keys = [
         int(key)
         if key.isdigit() or key[0] == "-" else
@@ -221,7 +221,7 @@ class Interpreter:
     context.symbol_table.set_variable(variable_name.value, value)
     return response.success(value)
 
-  def interpret_IfNode(self, node, context):
+  def interpret_IfNode(self, node: IfNode, context: Context):
     response = RuntimeResponse()
 
     for condition, expression, should_return_null in node.cases:
@@ -382,7 +382,7 @@ class Interpreter:
 
     return response.success(return_value)
 
-  def interpret_ReturnNode(self, node, context):
+  def interpret_ReturnNode(self, node: ReturnNode, context: Context):
     response = RuntimeResponse()
 
     if node.return_node:
@@ -394,13 +394,14 @@ class Interpreter:
 
     return response.success_return(value)
 
-  def interpret_ContinueNode(self, node, context):
+  def interpret_ContinueNode(self, node: ContinueNode, context: Context):
     return RuntimeResponse().success_continue()
 
-  def interpret_BreakNode(self, node, context):
+  def interpret_BreakNode(self, node: BreakNode, context: Context):
     return RuntimeResponse().success_break()
 
-  def interpret_IncludeNode(self, node: IncludeNode, context):
+  # Recursion including
+  def interpret_IncludeNode(self, node: IncludeNode, context: Context):
     from run import run
 
     response = RuntimeResponse()
@@ -409,12 +410,16 @@ class Interpreter:
       module_name = module.value
 
       if module_name.endswith("*"):
-        module_name, depth = module_name.rsplit(PATH_SEPARATOR, 1)
+        if PATH_SEPARATOR in module_name:
+          module_name, depth = module_name.rsplit(PATH_SEPARATOR, 1)
+        else:
+          depth = module_name
         module_path = f"{self.script_location}{PATH_SEPARATOR}{module_name}"
-        files = list(map(str, Path(self.script_location).glob(f"*.{FILE_EXTENSION}")))
 
         get_files = getattr(Path(module_path), "glob" if depth == "*" else "rglob")
         files = list(map(str, get_files(f"*.{FILE_EXTENSION}")))
+        if self.file_path in files:
+          files.remove(self.file_path)
 
         for file_path in files:
           with open(file_path) as file:
@@ -426,10 +431,10 @@ class Interpreter:
         files = list(map(str, Path(self.script_location).glob(f"*.{FILE_EXTENSION}")))
 
         if module_path not in files:
-          if module_name in BUILDIN_LIBRARIES:
-            module_path = BUILDIN_LIBRARIES[module_name]
-          else:
+          if module_name not in BUILDIN_LIBRARIES:
             return response.failure(ModuleNotFoundError(module.position_start, module.position_end, module_name))
+
+          module_path = BUILDIN_LIBRARIES[module_name]
 
         with open(module_path) as file:
           _, error = run(module_path, file.read())
