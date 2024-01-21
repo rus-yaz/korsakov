@@ -32,8 +32,8 @@ class Parser:
 
     if not result.error and self.token.type != END_OF_FILE:
       return result.failure(InvalidSyntaxError(
-          self.token.position_start, self.token.position_end,
-          "Ожидался математический оператор (`+`, `-`, `*`, `/`)"
+        self.token.position_start, self.token.position_end,
+        "Ожидался математический оператор (`+`, `-`, `*`, `/`)"
       ))
 
     return result
@@ -75,19 +75,31 @@ class Parser:
       right_function = left_function
 
     response = ParseResponse()
-    left: Token = response.register(left_function())
+    left = response.register(left_function())
     if response.error:
       return response
 
     while self.token.type in operators or [self.token.type, self.token.value] in operators:
-      operator = self.token
+      left_operator = self.token
       response.advance(self)
 
-      right: Token = response.register(right_function())
+      middle = response.register(right_function())
       if response.error:
         return response
 
-      left = BinaryOperationNode(left, operator, right)
+      left = BinaryOperationNode(left, left_operator, middle)
+
+      if operators == COMPARISONS and self.token.type in COMPARISONS:
+        right_operator = self.token
+        response.advance(self)
+
+        right = response.register(self.arithmetical_expression())
+        if response.error:
+          return response
+
+        middle = BinaryOperationNode(middle, right_operator, right)
+
+        left = BinaryOperationNode(left, Token(KEYWORD, "и"), middle)
 
     return response.success(left)
 
@@ -243,10 +255,7 @@ class Parser:
         return response
       return response.success(UnaryOperationNode(token, node))
 
-    node = response.register(self.binary_operation(
-        [EQUAL, NOT_EQUAL, LESS, MORE, LESS_OR_EQUAL, MORE_OR_EQUAL],
-        self.arithmetical_expression
-    ))
+    node = response.register(self.binary_operation(COMPARISONS, self.arithmetical_expression))
 
     if response.error:
       return response.failure(InvalidSyntaxError(
@@ -803,5 +812,5 @@ class ParseResponse:
   def failure(self, error):
     if not self.error or not self.advance_count:
       self.error = error
-      
+
     return self

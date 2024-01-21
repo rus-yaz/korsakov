@@ -36,10 +36,7 @@ class UnaryOperationNode:
 
 
 class BinaryOperationNode:
-  def __init__(
-      self, left_node: NumberNode,
-      operator: Token, right_node: NumberNode
-  ):
+  def __init__(self, left_node, operator: Token, right_node):
     self.left_node = left_node
     self.operator = operator
     self.right_node = right_node
@@ -51,7 +48,7 @@ class BinaryOperationNode:
 
 
 class VariableAssignNode:
-  def __init__(self, variable_name: str, value_node: NumberNode):
+  def __init__(self, variable_name: str, value_node):
     self.variable_name = variable_name
     self.value_node = value_node
 

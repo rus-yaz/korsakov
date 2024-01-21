@@ -52,6 +52,7 @@ class Interpreter:
 
   def interpret_BinaryOperationNode(self, node: BinaryOperationNode, context: Context) -> Number:
     response = RuntimeResponse()
+    error = None
 
     left: Value = response.register(self.interpret(node.left_node, context))
     if response.should_return():
@@ -93,6 +94,11 @@ class Interpreter:
       result, error = left.some(right)
     elif node.operator.matches_keyword(NOT):
       result, error = left.denial(right)
+    else:
+      return response.failure(RuntimeError(
+        node.left_node.position_start, node.right_node.position_end,
+        "Не известная операция", context
+      ))
 
     if error:
       return response.failure(error)
