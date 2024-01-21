@@ -37,6 +37,8 @@ if __name__ == "__main__":
 
     while True:
       code = input(">> ")
+      if not code.strip():
+        continue
 
       result, error = run(file_name or "<ввод>", code, mods)
 

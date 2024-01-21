@@ -12,7 +12,7 @@ class Token:
       self.position_end = position_start.copy()
 
     if position_end:
-      self.position_end = position_end
+      self.position_end = position_end.copy()
 
   def __repr__(self):
     return f"{self.position_start}::{self.position_end} ::: {self.type}{f':{self.value}' if self.value else ''}"
@@ -46,7 +46,7 @@ def set_global_variables():
 set_global_variables()
 
 
-FILE_EXTENSION = "xlang"
+FILE_EXTENSION = "kors"
 
 SPACE = "пробел"
 PERCENT = "процент"
@@ -114,12 +114,12 @@ BREAK = ["прервать", "break"]
 INCLUDE = ["включить", "include"]
 
 KEYWORDS = AND + OR + NOT + IF + ELSE + \
-    FOR + FROM + TO + AFTER + WHILE + FUNCTION + \
-    RETURN + CONTINUE + BREAK + THEN + INCLUDE
+  FOR + FROM + TO + AFTER + WHILE + FUNCTION + \
+  RETURN + CONTINUE + BREAK + THEN + INCLUDE
 
 ESCAPE_SEQUENCES = {
-    "n": "\n",
-    "н": "\n",
-    "t": "\t",
-    "т": "\t"
+  "n": "\n",
+  "н": "\n",
+  "t": "\t",
+  "т": "\t"
 }

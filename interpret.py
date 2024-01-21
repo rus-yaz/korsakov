@@ -214,7 +214,10 @@ class Interpreter:
 
           value = List(value)
 
-        items[0][key] = value
+        if isinstance(items[0], list):
+          items[0][key] = value
+        elif isinstance(items[0], str):
+          items[0] = items[0][:key] + value + items[0][key + 1:]
 
       value = List(items[0])
 
@@ -224,7 +227,7 @@ class Interpreter:
   def interpret_IfNode(self, node: IfNode, context: Context):
     response = RuntimeResponse()
 
-    for condition, expression, should_return_null in node.cases:
+    for condition, expression, return_null in node.cases:
       condition_value = response.register(self.interpret(condition, context))
       if response.should_return():
         return response
@@ -235,15 +238,15 @@ class Interpreter:
         if response.should_return():
           return response
 
-        return response.success(Number(None, context) if should_return_null else expression_value)
+        return response.success(Number(None, context) if return_null else expression_value)
 
     if node.else_case:
-      expression, should_return_null = node.else_case
+      expression, return_null = node.else_case
       else_case_value = response.register(self.interpret(expression, context))
       if response.should_return():
         return response
 
-      return response.success(Number(None, context) if should_return_null else else_case_value)
+      return response.success(Number(None, context) if return_null else else_case_value)
 
     return response.success(Number(None, context))
 
@@ -251,42 +254,42 @@ class Interpreter:
     response = RuntimeResponse()
     elements = []
 
-    start_value: Number | List | String = response.register(self.interpret(node.start_value_node, context))
+    start_value: Number | List | String = response.register(self.interpret(node.start_node, context))
     if response.should_return():
       return response
 
-    if node.end_value_node:
+    if node.end_node:
       end_value = response.register(
-        self.interpret(node.end_value_node, context))
+        self.interpret(node.end_node, context))
       if response.should_return():
         return response
     else:
-      end_value = None
+      end_value = Number(None)
 
-    if node.step_value_node:
-      step_value = response.register(self.interpret(node.step_value_node, context))
+    if node.step_node:
+      step_value = response.register(self.interpret(node.step_node, context))
       if response.should_return():
         return response
     else:
       step_value = Number(1)
 
-    if end_value != None:
-      index = start_value.value
+    if end_value.value != None:
+      counter = start_value.value
 
-      while index < end_value.value if step_value.value > 0 else index > end_value.value:
-        context.symbol_table.set_variable(node.variable_name.value, Number(index))
+      while counter < end_value.value if step_value.value > 0 else counter > end_value.value:
+        context.symbol_table.set_variable(node.variable_name.value, Number(counter))
 
         value = [response.register(self.interpret(node.body_node, context))]
         if response.should_return() and not response.break_loop and not response.continue_loop:
           return response
 
+        elements += value
+        counter += step_value.value
+
         if response.continue_loop:
           continue
         if response.break_loop:
           break
-
-        elements += value
-        index += step_value.value
     else:
       index = 0
       while index < len(start_value.value):
@@ -301,17 +304,25 @@ class Interpreter:
         if response.should_return() and not response.break_loop and not response.continue_loop:
           return response
 
+        elements += [value]
+        index += 1
+
         if response.continue_loop:
           continue
         if response.break_loop:
           break
 
-        elements += [value]
-        index += 1
+    if node.else_case and not elements:
+      expression, return_null = node.else_case
+      else_case_value = response.register(self.interpret(expression, context))
+      if response.should_return():
+        return response
+
+      return response.success(Number(None, context) if return_null else else_case_value)
 
     return response.success(
         Number(None, context)
-        if node.should_return_null else
+        if node.return_null else
         List(elements, context).set_position(node.position_start, node.position_end)
     )
 
@@ -331,12 +342,20 @@ class Interpreter:
       if response.should_return() and not response.break_loop and not response.continue_loop:
         return response
 
+      elements += [value]
+
       if response.continue_loop:
         continue
       if response.break_loop:
         break
 
-      elements += [value]
+    if node.else_case and not elements:
+      expression, return_null = node.else_case
+      else_case_value = response.register(self.interpret(expression, context))
+      if response.should_return():
+        return response
+
+      return response.success(Number(None, context) if return_null else else_case_value)
 
     return response.success(
         Number(None, context).set_position(node.position_start, node.position_end)
@@ -351,11 +370,7 @@ class Interpreter:
     body_node = node.body_node
     argument_names = list(map(lambda x: x.value, node.argument_names))
     function_value = Function(
-      function_name,
-      body_node,
-      argument_names,
-      node.should_auto_return,
-      context
+      function_name, body_node, argument_names, node.should_auto_return, context
     ).set_position(node.position_start, node.position_end)
 
     if node.variable_name:

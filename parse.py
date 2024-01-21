@@ -311,7 +311,6 @@ class Parser:
       response.advance(self)
     return response.success(ListNode(
       element_nodes,
-      None,
       position_start,
       self.token.position_end.copy()
     ))
@@ -405,6 +404,7 @@ class Parser:
 
   def for_expression(self):
     response = ParseResponse()
+    else_case = None
 
     if not self.token.matches_keyword(FOR):
       return response.failure(InvalidSyntaxError(
@@ -469,16 +469,16 @@ class Parser:
       if response.error:
         return response
 
-      if not self.token.type == END_OF_CONSTRUCTION:
-        return response.failure(InvalidSyntaxError(
-            self.token.position_start, self.token.position_end,
-            "Ожидался конец конструкции (`---`, `===` или `%%%`)"
-        ))
-      response.advance(self)
+      if self.token.type == END_OF_CONSTRUCTION:
+        response.advance(self)
+      else:
+        else_case = response.register(self.else_expression())
+        if response.error:
+          return response
 
       return response.success(ForNode(
-          variable_name, start_value, end_value,
-          step_value, body, True
+        variable_name, start_value, end_value,
+        step_value, body, True, else_case
       ))
 
     body = response.register(self.statement())
@@ -488,11 +488,13 @@ class Parser:
     return response.success(ForNode(
         variable_name, start_value,
         end_value, step_value,
-        body, False
+        body, False, None
     ))
 
   def while_expression(self):
     response = ParseResponse()
+    else_case = None
+
     if not self.token.matches_keyword(WHILE):
       return response.failure(InvalidSyntaxError(
           self.token.position_start, self.token.position_end,
@@ -512,21 +514,20 @@ class Parser:
       if response.error:
         return response
 
-      if not self.token.type == END_OF_CONSTRUCTION:
-        return response.failure(InvalidSyntaxError(
-            self.token.position_start, self.token.position_end,
-            "Ожидался конец конструкции (`---`, `===` или `%%%`)"
-        ))
+      if self.token.type == END_OF_CONSTRUCTION:
+        response.advance(self)
+      else:
+        else_case = response.register(self.else_expression())
+        if response.error:
+          return response
 
-      response.advance(self)
-
-      return response.success(WhileNode(condition, body, True))
+      return response.success(WhileNode(condition, body, True, else_case))
 
     body = response.register(self.statement())
     if response.error:
       return response
 
-    return response.success(WhileNode(condition, body, False))
+    return response.success(WhileNode(condition, body, False, None))
 
   def function_expression(self):
     response = ParseResponse()
@@ -640,8 +641,8 @@ class Parser:
         return response
 
       return response.success(FunctionDefinitionNode(
-          variable_name, argument_names,
-          return_node, True
+        variable_name, argument_names,
+        return_node, True
       ))
 
     response.advance(self)
@@ -729,7 +730,7 @@ class Parser:
       statements += [statement]
 
     return response.success(ListNode(
-      statements, None, position_start,
+      statements, position_start,
       self.token.position_end.copy()
     ))
 
@@ -758,8 +759,8 @@ class Parser:
     expression = response.register(self.expression())
     if response.error:
       return response.failure(InvalidSyntaxError(
-          self.token.position_start, self.token.position_end,
-          "Ожидались `вернуть` (`return`), `продолжить` (`continue`), `прервать` (`break`), `если` (`if`), `для` (`for`), `пока` (`while`), `функция` (`function`), `не` (`not`), Целое число, Дробное число, Идентификатор, Математический оператор (`+`, `-`, `*`, `/`) или открывающая скобка (`(`, `%(`)"
+        self.token.position_start, self.token.position_end,
+        "Ожидались `вернуть` (`return`), `продолжить` (`continue`), `прервать` (`break`), `если` (`if`), `для` (`for`), `пока` (`while`), `функция` (`function`), `не` (`not`), Целое число, Дробное число, Идентификатор, Математический оператор (`+`, `-`, `*`, `/`) или открывающая скобка (`(`, `%(`)"
       ))
 
     return response.success(expression)
@@ -802,4 +803,5 @@ class ParseResponse:
   def failure(self, error):
     if not self.error or not self.advance_count:
       self.error = error
+      
     return self

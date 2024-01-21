@@ -33,7 +33,7 @@ class SymbolTable:
 
   def set_localed_variables(self, names, value):
     for name in names:
-      self.variables[name] = value
+      self.set_variable(name, value)
 
   def set_many_variables(self, variables):
     for variable in variables:

@@ -150,6 +150,7 @@ class Lexer:
             position_start = previous_token.position_start
             tokens.pop()
 
+        case ":": token = COLON
         case ",": token = COMMA
 
         case _:
@@ -200,7 +201,12 @@ class Lexer:
         self.character = "е"
 
       identifier += self.character
+      character = self.character
       self.advance()
+
+      if character == "." and self.character == "-":
+        identifier += self.character
+        self.advance()
 
     return Token(KEYWORD if identifier in KEYWORDS else IDENTIFIER, identifier, position_start, position_end)
 

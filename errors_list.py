@@ -71,9 +71,7 @@ class IllegalCharacterError(Error):
 
 class BadIdentifierError(Error):
   def __init__(self, position_start: Position, position_end: Position, details: str):
-    super().__init__(
-        position_start, position_end, "Неизвестный идентификатор", details
-    )
+    super().__init__(position_start, position_end, "Неизвестный идентификатор", details)
 
 
 class BadCharacterError(Error):

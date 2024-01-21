@@ -17,9 +17,8 @@ class StringNode:
 
 
 class ListNode:
-  def __init__(self, element_nodes: [NumberNode | StringNode], variable_name, position_start, position_end):
+  def __init__(self, element_nodes: [NumberNode | StringNode], position_start, position_end):
     self.element_nodes = element_nodes
-    self.variable_name = variable_name
 
     self.position_start = position_start
     self.position_end = position_end
@@ -75,39 +74,34 @@ class VariableAccessNode:
 
 
 class IfNode:
-  def __init__(self, cases: [[NumberNode, NumberNode]], else_case: NumberNode):
+  def __init__(self, cases, else_case):
     self.cases = cases
     self.else_case = else_case
 
     self.position_start = self.cases[0][0].position_start
-    self.position_end = (
-        self.else_case or self.cases[len(self.cases) - 1]
-    )[0].position_end
+    self.position_end = (self.else_case or self.cases[-1])[0].position_end
 
 
 class ForNode:
-  def __init__(
-      self, variable_name,
-      start_value_node, end_value_node,
-      step_value_node, body_node,
-      should_return_null
-  ):
+  def __init__(self, variable_name, start_node, end_node, step_node, body_node, return_null, else_case):
     self.variable_name = variable_name
-    self.start_value_node = start_value_node
-    self.end_value_node = end_value_node
-    self.step_value_node = step_value_node
+    self.start_node = start_node
+    self.end_node = end_node
+    self.step_node = step_node
     self.body_node = body_node
-    self.should_return_null = should_return_null
+    self.return_null = return_null
+    self.else_case = else_case
 
     self.position_start = self.variable_name.position_start
     self.position_end = self.body_node.position_end
 
 
 class WhileNode:
-  def __init__(self, condition_node, body_node, should_return_null):
+  def __init__(self, condition_node, body_node, return_null, else_case):
     self.condition_node = condition_node
     self.body_node = body_node
-    self.should_return_null = should_return_null
+    self.should_return_null = return_null
+    self.else_case = else_case
 
     self.position_start = self.condition_node.position_start
     self.position_end = self.body_node.position_end

@@ -85,7 +85,7 @@ class Value:
 
     return RuntimeError(
       self.position_start, operand.position_end,
-      f"Неизвестная операция: {self} и {operand if operand != self else ''}",
+      f"Неизвестная операция: {self.__class__.__name__} и {operand.__class__.__name__}",
       self.context
     )
 
@@ -119,7 +119,7 @@ class Number(Value):
 
   def multiplication(self, operand):
     if isinstance(operand, List | Number | String):
-      return Number(self.value * operand.value, self.context), None
+      return type(operand)(self.value * operand.value, self.context), None
 
     return None, Value.illegal_operation(self, operand)
 
@@ -298,17 +298,15 @@ class String(Value):
 class List(Value):
   def __init__(self, elements, context=None):
     super().__init__()
-    self.value: list = [element.value if hasattr(
-      element, "value") else element for element in elements]
-    self.elements: dict = {index: element for index,
-                           element in enumerate(elements)}
+    self.value: list = [element.value if hasattr(element, "value") else element for element in elements]
+    self.elements: dict = {index: element for index, element in enumerate(elements)}
     self.context = context
 
   def __str__(self):
     return "%(" + ", ".join(map(str, self.value)) + ")%"
 
   def __repr__(self):
-    return f"Список({self.value})"
+    return f"Список({str(self.value)})"
 
   def is_true(self):
     return self.value != []
@@ -324,11 +322,7 @@ class List(Value):
 
   def multiplication(self, operand):
     if isinstance(operand, Number):
-      previous_list = new_list = self.value.copy()
-      for _ in range(1, operand.value):
-        new_list += previous_list
-
-      return List(new_list, self.context), None
+      return List(list(self.elements.values()) * operand.value, self.context), None
 
     return None, Value.illegal_operation(self, operand)
 
@@ -370,7 +364,7 @@ class Function(Value):
 
     if not self.is_buildin:
       self.arguments = None
-      functions[self.name, ] = dict.fromkeys(arguments, Value)
+      functions[self.name,] = dict.fromkeys(arguments, Value)
 
   def __repr__(self):
     return f"Функция({self.name}, {list(self.get_arguments_names(self.name))})"
@@ -474,15 +468,14 @@ class Function(Value):
       if error:
         return response.failure(error)
 
-      context.symbol_table.set_many_variables(
-        [[[name], value] for name, value in zip(arguments_names, arguments)])
+      context.symbol_table.set_many_variables([[[name], value] for name, value in zip(arguments_names, arguments)])
 
       value = response.register(interpret.interpret(self.body_node, context))
       if response.should_return() and response.function_return_value == None:
         return response
 
       return_value = (
-          value if self.should_auto_return else response.function_return_value
+        value if self.should_auto_return else response.function_return_value
       ) or response.function_return_value or Number(None)
 
       return response.success(return_value)
@@ -674,6 +667,12 @@ class Function(Value):
 
     return RuntimeResponse().success(Number(None, context))
   functions[("pause", "приостановить", "пауза")] = {"time": Number}
+
+  def _time(self, context: Context):
+    from time import time
+
+    return RuntimeResponse().success(Number(time(), context))
+  functions["time", "время"] = {}
 
   def _run(self, context: Context):
     from run import run
