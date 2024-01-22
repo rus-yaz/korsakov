@@ -15,7 +15,7 @@ class Token:
       self.position_end = position_end.copy()
 
   def __repr__(self):
-    return f"{self.position_start}::{self.position_end} ::: {self.type}{f':{self.value}' if self.value else ''}"
+    return f"{self.position_start}::{self.position_end} ::: {self.type}{f':{self.value}' if self.value != None else ''}"
 
   def copy(self):
     return Token(self.type, self.value, self.position_start, self.position_end)
@@ -105,11 +105,13 @@ TO = ["до", "to"]
 AFTER = ["через", "after"]
 
 WHILE = ["пока", "while"]
+CONTINUE = ["продолжить", "continue"]
+BREAK = ["прервать", "break"]
+
+CHECK = ["проверить", "check"]
 
 FUNCTION = ["функция", "function"]
 RETURN = ["вернуть", "return"]
-CONTINUE = ["продолжить", "continue"]
-BREAK = ["прервать", "break"]
 
 INCLUDE = ["включить", "include"]
 
@@ -119,9 +121,4 @@ KEYWORDS = AND + OR + NOT + IF + ELSE + \
 
 COMPARISONS = [EQUAL, NOT_EQUAL, LESS, MORE, LESS_OR_EQUAL, MORE_OR_EQUAL]
 
-ESCAPE_SEQUENCES = {
-  "n": "\n",
-  "н": "\n",
-  "t": "\t",
-  "т": "\t"
-}
+ESCAPE_SEQUENCES = {"n": "\n", "н": "\n", "t": "\t", "т": "\t"}

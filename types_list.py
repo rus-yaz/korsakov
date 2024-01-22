@@ -611,6 +611,9 @@ class Function(Value):
     value: Number | String
     base: Number
 
+    if isinstance(value, Number):
+      return RuntimeResponse().success(Number(int(value.value), context))
+
     return RuntimeResponse().success(Number(int(value.value, base.value), context))
   functions[("to_integer", "в_целое", "к_целому")] = {"value": Number | String, "base=10": Number}
 

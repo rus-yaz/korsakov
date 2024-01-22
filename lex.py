@@ -32,12 +32,27 @@ class Lexer:
         tokens += [self.make_identifier()]
         continue
       elif self.character == "\"":
-        tokens += [self.make_string()]
+        string, error = self.make_string()
+        if error:
+          return None, error
+
+        tokens += [string]
+        continue
+      elif previous_token and previous_token.type == EXCLAMATION_MARK and self.character == "!":
+        tokens.pop()
+        text = ""
+
+        while self.character not in ["\n", None]:
+          text += self.character
+          self.advance()
+
+        tokens += [Token(STRING, text, position_start, self.position.copy())]
         continue
 
       match self.character:
         case " " | "\t": token = None if tokens and previous_token.type == SPACE else SPACE
-        case ";" | "\n": token = NEWLINE
+        case ";" | "\n": token = None if tokens and previous_token.type == NEWLINE else NEWLINE
+        case "!": token = EXCLAMATION_MARK
 
         case "=":
           token = ASSIGN
@@ -56,8 +71,10 @@ class Lexer:
 
             elif previous_token.type in [ADDITION, SUBSTRACION, MULTIPLICATION, DIVISION, POWER, ROOT]:
               tokens.pop()
+
               while tokens[-1].type == SPACE:
                 tokens.pop()
+
               tokens += [Token(ASSIGN, None, position_start, self.position.copy()), tokens[-1]]
               token = previous_token.type
 
@@ -65,18 +82,6 @@ class Lexer:
             position_start = previous_token.position_start
             if token not in [ADDITION, SUBSTRACION, MULTIPLICATION, DIVISION, POWER, ROOT]:
               tokens.pop()
-
-        case "!":
-          token = EXCLAMATION_MARK
-          if tokens and previous_token.type == EXCLAMATION_MARK:
-            token = None
-            tokens.pop()
-            text = ""
-            self.advance()
-
-            while self.character not in ["\n", None]:
-              text += self.character
-              self.advance()
 
         case "+":
           token = ADDITION
@@ -137,6 +142,7 @@ class Lexer:
             position_start = previous_token.position_start
             tokens.pop()
         case ")": token = CLOSED_PAREN
+
         case "%":
           token = PERCENT
           if tokens:
@@ -157,12 +163,12 @@ class Lexer:
           position_start = self.position.copy()
           char = self.character
           self.advance()
-          return [], IllegalCharacterError(position_start, self.position, f"`{char}`")
+          return [], IllegalCharacterError(position_start, self.position.copy(), f"`{char}`")
 
       tokens += [Token(token, None, position_start, self.position.copy())] if token else []
       self.advance()
 
-    tokens += [Token(END_OF_FILE, position_start=self.position.copy())]
+    tokens += [Token(END_OF_FILE, None, self.position.copy())]
     return list(filter(lambda token: token and token.type != SPACE, tokens)), None
 
   def make_number(self):
@@ -227,7 +233,9 @@ class Lexer:
 
       self.advance()
 
-    if self.character == "\"":
-      self.advance()
+    if self.character != "\"":
+      return None, InvalidSyntaxError(self.position.copy(), self.position.copy(), "Ожидалось `\"`")
 
-    return Token(STRING, string, position_start, self.position.copy())
+    self.advance()
+
+    return Token(STRING, string, position_start, self.position.copy()), None

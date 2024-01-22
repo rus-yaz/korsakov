@@ -105,6 +105,7 @@ class Parser:
 
   def atom(self):
     response = ParseResponse()
+
     token = self.token
 
     if token.type in [INTEGER, FLOAT]:
@@ -185,7 +186,7 @@ class Parser:
       response.advance(self)
       argument_nodes = []
 
-      while self.token.type == NEWLINE:
+      if self.token.type == NEWLINE:
         response.advance(self)
 
       if self.token.type == CLOSED_PAREN:
@@ -201,14 +202,14 @@ class Parser:
         while self.token.type == COMMA:
           response.advance(self)
 
-          while self.token.type == NEWLINE:
+          if self.token.type == NEWLINE:
             response.advance(self)
 
           argument_nodes += [response.register(self.expression())]
           if response.error:
             return response
 
-        while self.token.type == NEWLINE:
+        if self.token.type == NEWLINE:
           response.advance(self)
 
         if self.token.type != CLOSED_PAREN:
@@ -281,7 +282,7 @@ class Parser:
 
     response.advance(self)
 
-    while self.token.type == NEWLINE:
+    if self.token.type == NEWLINE:
       response.advance(self)
 
     if self.token.type == CLOSED_LIST_PAREN:
@@ -298,7 +299,7 @@ class Parser:
       while self.token.type == COMMA:
         response.advance(self)
 
-        while self.token.type == NEWLINE:
+        if self.token.type == NEWLINE:
           response.advance(self)
 
         if self.token.type == CLOSED_LIST_PAREN:
@@ -308,7 +309,7 @@ class Parser:
         if response.error:
           return response
 
-      while self.token.type == NEWLINE:
+      if self.token.type == NEWLINE:
         response.advance(self)
 
       if self.token.type != CLOSED_LIST_PAREN:
@@ -490,6 +491,13 @@ class Parser:
         step_value, body, True, else_case
       ))
 
+    if self.token.type != COLON:
+      return response.failure(InvalidSyntaxError(
+        self.token.position_start, self.token.position_end,
+        "Ожидалось двоеточие (`:`)"
+      ))
+    response.advance(self)
+
     body = response.register(self.statement())
     if response.error:
       return response
@@ -531,6 +539,13 @@ class Parser:
           return response
 
       return response.success(WhileNode(condition, body, True, else_case))
+
+    if self.token.type != COLON:
+      return response.failure(InvalidSyntaxError(
+        self.token.position_start, self.token.position_end,
+        "Ожидалось двоеточие (`:`)"
+      ))
+    response.advance(self)
 
     body = response.register(self.statement())
     if response.error:
@@ -641,36 +656,42 @@ class Parser:
 
     response.advance(self)
 
-    if self.token.type != NEWLINE:
+    if self.token.type == NEWLINE:
       response.advance(self)
 
-      return_node = response.register(self.expression())
-
+      body: ListNode = response.register(self.statements())
       if response.error:
         return response
 
+      if self.token.type != END_OF_CONSTRUCTION:
+        return response.failure(InvalidSyntaxError(
+          self.token.position_start, self.token.position_end,
+          "Ожидался конец конструкции (`---`, `===` или `%%%`)"
+        ))
+
+      response.advance(self)
+
       return response.success(FunctionDefinitionNode(
-        variable_name, argument_names,
-        return_node, True
+          variable_name, argument_names,
+          body, False
+      ))
+
+    if self.token.type != COLON:
+      return response.failure(InvalidSyntaxError(
+        self.token.position_start, self.token.position_end,
+        "Ожидалось двоеточие (`:`)"
       ))
 
     response.advance(self)
 
-    body: ListNode = response.register(self.statements())
+    return_node = response.register(self.expression())
+
     if response.error:
       return response
 
-    if self.token.type != END_OF_CONSTRUCTION:
-      return response.failure(InvalidSyntaxError(
-        self.token.position_start, self.token.position_end,
-        "Ожидался конец конструкции (`---`, `===` или `%%%`)"
-      ))
-
-    response.advance(self)
-
     return response.success(FunctionDefinitionNode(
       variable_name, argument_names,
-      body, False
+      return_node, True
     ))
 
   def include_statement(self):
@@ -706,7 +727,7 @@ class Parser:
     statements = []
     position_start = self.token.position_start.copy()
 
-    while self.token.type == NEWLINE:
+    if self.token.type == NEWLINE:
       response.advance(self)
 
     statement = response.register(self.statement())
@@ -719,7 +740,7 @@ class Parser:
 
     while True:
       newline_count = 0
-      while self.token.type == NEWLINE:
+      if self.token.type == NEWLINE:
         response.advance(self)
         newline_count += 1
 

@@ -1,7 +1,7 @@
 from interpret import Interpreter
 from lex import Lexer
 from parse import Parser
-from tokens_list import global_context
+from tokens_list import COMMENT, global_context
 
 
 def run(module_name: str, code: str, mods: dict = {"debug": False}):
@@ -11,6 +11,9 @@ def run(module_name: str, code: str, mods: dict = {"debug": False}):
   tokens, error = lexer.make_tokens()
   if error:
     return None, error
+
+  if len(tokens) == 2 and tokens[0].type == COMMENT:
+    return None, None
 
   if DEBUG:
     [print("[DEBUG]", i) for i in tokens]
