@@ -38,21 +38,18 @@ class Lexer:
 
         tokens += [string]
         continue
-      elif previous_token and previous_token.type == EXCLAMATION_MARK and self.character == "!":
-        tokens.pop()
-        text = ""
-
-        while self.character not in ["\n", None]:
-          text += self.character
-          self.advance()
-
-        tokens += [Token(STRING, text, position_start, self.position.copy())]
-        continue
 
       match self.character:
         case " " | "\t": token = None if tokens and previous_token.type == SPACE else SPACE
         case ";" | "\n": token = None if tokens and previous_token.type == NEWLINE else NEWLINE
-        case "!": token = EXCLAMATION_MARK
+        case "!":
+          token = EXCLAMATION_MARK
+          if tokens and previous_token.type == EXCLAMATION_MARK:
+            tokens.pop()
+            token = None
+
+            while self.character not in ["\n", None]:
+              self.advance()
 
         case "=":
           token = ASSIGN

@@ -86,7 +86,6 @@ COMMA = "запятая"
 BACK_SLASH = "обратная_косая_черта"
 
 NEWLINE = "новая_строка"
-COMMENT = "комментарий"
 END_OF_CONSTRUCTION = "конец_конструкции"
 END_OF_FILE = "конец_файла"
 

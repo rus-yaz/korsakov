@@ -26,7 +26,7 @@ if __name__ == "__main__":
     with open(file_name) as file:
       code += file.read()
 
-    _, error = run(file_name or "<ввод>", code, mods)
+    _, error = run(file_name, code, mods)
 
     if error:
       print(error)
@@ -37,10 +37,10 @@ if __name__ == "__main__":
 
     while True:
       code = input(">> ")
-      if not code.strip():
+      if not code.strip() or code.startswith("!!"):
         continue
 
-      result, error = run(file_name or "<ввод>", code, mods)
+      result, error = run("<ввод>", code, mods)
 
       if error:
         print(error)
