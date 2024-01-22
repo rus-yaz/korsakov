@@ -1,7 +1,5 @@
-from os import name, system
-
 from context import Context, SymbolTable
-from errors_list import RuntimeError
+from errors_list import InvalidSyntaxError, RuntimeError
 from runtime_response import RuntimeResponse
 
 
@@ -295,28 +293,79 @@ class String(Value):
     return copy
 
 
+class Dictionary(Value):
+  def __init__(self, elements: dict, context=None):
+    super().__init__()
+    self.value = {
+      key.value if hasattr(key, "value") else key:
+      element.value if hasattr(element, "value") else element
+      for key, element in elements.items()
+    }
+    self.elements = {key: element for key, element in zip(self.value, elements.values())}
+    self.elements_nodes = elements.copy()
+    self.context = context
+
+  def __str__(self):
+    return "%(" + ", ".join(map(lambda items: f"{items[0]}: {items[1]}", self.elements_nodes.items())) + ")%"
+
+  def __repr__(self):
+    return f"Словарь({str(self)})"
+
+  def is_true(self):
+    return self.value != {}
+
+  def addition(self, operand):
+    if isinstance(operand, Dictionary):
+      elements = self.elements_nodes.copy()
+      elements |= operand.elements_nodes.copy()
+
+      return Dictionary(elements, self.context), None
+
+    return None, Value.illegal_operation(self, operand)
+
+  def equal(self, operand):
+    if isinstance(operand, Dictionary):
+      return Number(self.value == operand.value, self.context), None
+
+    return None, Value.illegal_operation(self, operand)
+
+  def not_equal(self, operand):
+    if isinstance(operand, Dictionary):
+      return Number(self.value != operand.value, self.context), None
+
+    return None, Value.illegal_operation(self, operand)
+
+  def denial(self, operand):
+    return Number(not self.is_true(), self.context), None
+
+  def copy(self):
+    copy = Dictionary(self.elements_nodes, self.context)
+    copy.set_position(self.position_start, self.position_end)
+    return copy
+
+
 class List(Value):
-  def __init__(self, elements, context=None):
+  def __init__(self, elements: list, context=None):
     super().__init__()
     self.value: list = [element.value if hasattr(element, "value") else element for element in elements]
     self.elements: dict = {index: element for index, element in enumerate(elements)}
     self.context = context
 
   def __str__(self):
-    return "%(" + ", ".join(map(str, self.value)) + ")%"
+    return "%(" + ", ".join(map(str, self.elements.values())) + ")%"
 
   def __repr__(self):
-    return f"Список({str(self.value)})"
+    return f"Список({str(self)})"
 
   def is_true(self):
-    return self.value != []
+    return self.elements != {}
 
   def addition(self, operand):
     if isinstance(operand, List):
-      elements = self.value.copy()
-      elements += operand.value.copy()
-
-      return List(elements, self.context), None
+      return List(
+        list(self.elements.values()) + list(operand.elements.values()),
+        self.context
+      ), None
 
     return None, Value.illegal_operation(self, operand)
 
@@ -328,13 +377,13 @@ class List(Value):
 
   def equal(self, operand):
     if isinstance(operand, List):
-      return Number(self.value == operand.value, self.context), None
+      return Number(self.elements == operand.elements, self.context), None
 
     return None, Value.illegal_operation(self, operand)
 
   def not_equal(self, operand):
     if isinstance(operand, List):
-      return Number(self.value != operand.value, self.context), None
+      return Number(self.elements != operand.elements, self.context), None
 
     return None, Value.illegal_operation(self, operand)
 
@@ -535,35 +584,37 @@ class Function(Value):
     error, value = self.get_arguments(context, "print")
     if error:
       return error
-    value: Number | String | List
+    value: Number | String | List | Dictionary
 
     print(str(value))
 
     return RuntimeResponse().success(Number(None, context))
-  functions[("print", "показать")] = {"value=\"\"": Number | String | List}
+  functions[("print", "показать")] = {"value=\"\"": Number | String | List | Dictionary}
 
   def _error(self, context: Context):
     error, value = self.get_arguments(context, "error")
     if error:
       return error
-    value: Number | String | List
+    value: Number | String | List | Dictionary
 
     return RuntimeResponse().failure(RuntimeError(
       self.position_start, self.position_end,
       str(value.value), context, False
     ))
-  functions[("error", "ошибка")] = {"value=\"\"": Number | String | List}
+  functions[("error", "ошибка")] = {"value=\"\"": Number | String | List | Dictionary}
 
   def _input(self, context: Context):
     error, value = self.get_arguments(context, "input")
     if error:
       return error
-    value: Number | String | List
+    value: Number | String | List | Dictionary
 
     return RuntimeResponse().success(String(input(str(value.value)), context))
-  functions[("input", "ввести")] = {"value=\"\"": Number | String | List}
+  functions[("input", "ввести")] = {"value=\"\"": Number | String | List | Dictionary}
 
   def _clear(self, context: Context):
+    from os import name, system
+
     system("cls" if name == "nt" else "clear")
     return RuntimeResponse().success(Number(None, context))
   functions[("clear", "очистить")] = {}
@@ -574,7 +625,8 @@ class Function(Value):
       return error
 
     types = {"Number": "Число", "String": "Строка",
-             "List": "Список", "Function": "Функция"}
+             "List": "Список", "Dictionary": "Словарь",
+             "Function": "Функция"}
 
     return RuntimeResponse().success(String(types[value.__class__.__name__], context))
   functions[("type", "тип")] = {"value": Value}
@@ -630,27 +682,44 @@ class Function(Value):
     error, value = self.get_arguments(context, "to_string")
     if error:
       return error
-    value: Number | String | List
+    value: Number | String | List | Dictionary
 
-    if isinstance(value, Number):
-      return RuntimeResponse().success(String(str(value.value), context))
-    elif isinstance(value, List):
-      return RuntimeResponse().success(String(f"%({', '.join(map(lambda x: str(x), value.value))})%", context))
+    if isinstance(value, Number | List | Dictionary):
+      return RuntimeResponse().success(String(str(value), context))
 
     return RuntimeResponse().success(value.set_context(context))
-  functions[("to_string", "в_строку", "к_строке")] = {"value": Number | String | List}
+  functions[("to_string", "в_строку", "к_строке")] = {"value": Number | String | List | Dictionary}
 
   def _to_list(self, context: Context):
     error, value = self.get_arguments(context, "to_list")
     if error:
       return error
-    value: String | List
+    value: String | List | Dictionary
 
     if isinstance(value, String):
       return RuntimeResponse().success(List(list(map(lambda x: String(x, context), value.value)), context))
+    elif isinstance(value, Dictionary):
+      return RuntimeResponse().success(List(list(value.elements.keys())))
 
     return RuntimeResponse().success(value.set_context(context))
-  functions[("to_list", "в_список", "к_списку")] = {"value": String | List}
+  functions[("to_list", "в_список", "к_списку")] = {"value": String | List | Dictionary}
+
+  def _to_dictionary(self, context: Context):
+    error, elements = self.get_arguments(context, "to_dictionary")
+    if error:
+      return error
+    elements: List = list(elements.elements.values())
+    for item in elements:
+      if not isinstance(item, List) or len(item.elements) != 2:
+        return RuntimeResponse().failure(InvalidSyntaxError(
+          elements.position_start, elements.position_end,
+          "Список должен содержать массивы, состоящие из двух элементов "
+        ))
+
+    elements = [list(item.elements.values()) for item in elements]
+
+    return RuntimeResponse().success(Dictionary({key: value for key, value in elements}, context))
+  functions[("to_dictionary", "к_словарю", "в_словарь")] = {"elements": List}
 
   def _random(self, context: Context):
     from random import random

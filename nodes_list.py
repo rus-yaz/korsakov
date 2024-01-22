@@ -16,8 +16,16 @@ class StringNode:
     self.position_end = self.token.position_end
 
 
+class DictionaryNode:
+  def __init__(self, element_nodes: dict, position_start, position_end):
+    self.element_nodes = element_nodes
+
+    self.position_start = position_start
+    self.position_end = position_end
+
+
 class ListNode:
-  def __init__(self, element_nodes: [NumberNode | StringNode], position_start, position_end):
+  def __init__(self, element_nodes: list, position_start, position_end):
     self.element_nodes = element_nodes
 
     self.position_start = position_start

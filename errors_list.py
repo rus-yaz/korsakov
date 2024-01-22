@@ -27,15 +27,15 @@ class Position:
 
 
 class Error:
-  def __init__(self, position_start: Position, position_end: Position, name: str, details: str):
+  def __init__(self, position_start: Position, position_end: Position, error: str, details: str = ""):
     self.position_start = position_start
     self.position_end = position_end
-    self.name = name
+    self.error = error
     self.details = details
 
   def __repr__(self):
     result = f"Файл {self.position_start.file}, строка {self.position_start.row + 1}\n\n"
-    result += f"Ошибка: {self.name}: {self.details}\n"
+    result += f"Ошибка: {self.error}{f': {self.details}' if self.details else ''}\n"
     result += self.highlighting_with_arrows()
     return result
 
@@ -65,32 +65,37 @@ class Error:
 
 
 class IllegalCharacterError(Error):
-  def __init__(self, position_start: Position, position_end: Position, details: str):
+  def __init__(self, position_start: Position, position_end: Position, details: str = ""):
     super().__init__(position_start, position_end, "Неизвестный символ", details)
 
 
 class BadIdentifierError(Error):
-  def __init__(self, position_start: Position, position_end: Position, details: str):
+  def __init__(self, position_start: Position, position_end: Position, details: str = ""):
     super().__init__(position_start, position_end, "Неизвестный идентификатор", details)
 
 
 class BadCharacterError(Error):
-  def __init__(self, position_start: Position, position_end: Position, details: str):
+  def __init__(self, position_start: Position, position_end: Position, details: str = ""):
     super().__init__(position_start, position_end, "Неподходящий символ", details)
 
 
 class InvalidSyntaxError(Error):
-  def __init__(self, position_start: Position, position_end: Position, details: str):
+  def __init__(self, position_start: Position, position_end: Position, details: str = ""):
     super().__init__(position_start, position_end, "Неверный синтаксис", details)
 
 
+class InvalidKeyError(Error):
+  def __init__(self, position_start: Position, position_end: Position, details: str = ""):
+    super().__init__(position_start, position_end, "Неверный ключ", details)
+
+
 class IndexOutOfRangeError(Error):
-  def __init__(self, position_start: Position, position_end: Position, details: str):
+  def __init__(self, position_start: Position, position_end: Position, details: str = ""):
     super().__init__(position_start, position_end, "Индекс вне массива", details)
 
 
 class ModuleNotFoundError(Error):
-  def __init__(self, position_start: Position, position_end: Position, details: str):
+  def __init__(self, position_start: Position, position_end: Position, details: str = ""):
     super().__init__(position_start, position_end, "Модуль не найден", details)
 
 
@@ -103,7 +108,7 @@ class RuntimeError(Error):
   def __repr__(self):
     result = "Ошибка\n"
     result += self.generate_traceback()
-    result += f"{self.name}: {self.details}\n"
+    result += f"{self.error}: {self.details}\n"
     if self.highlight:
       result += self.highlighting_with_arrows()
 

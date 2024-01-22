@@ -34,6 +34,25 @@ class Interpreter:
   def interpret_StringNode(self, node: StringNode, context: Context):
     return RuntimeResponse().success(String(node.token.value, context).set_position(node.position_start, node.position_end))
 
+  def interpret_DictionaryNode(self, node: DictionaryNode, context: Context):
+    response = RuntimeResponse()
+    elements = {}
+
+    for key_node, element_node in node.element_nodes.items():
+      elements |= {
+        key_node
+        if context == global_symbol_table else
+        response.register(self.interpret(key_node, context)):
+        element_node
+        if context == global_symbol_table else
+        response.register(self.interpret(element_node, context))
+      }
+
+      if response.should_return():
+        return response
+
+    return response.success(Dictionary(elements, context).set_position(node.position_start, node.position_end))
+
   def interpret_ListNode(self, node: ListNode, context: Context):
     response = RuntimeResponse()
     elements = []
@@ -139,28 +158,44 @@ class Interpreter:
 
     return response.success(result.set_position(node.position_start, node.position_end))
 
+  # TODO: Исправить парсинг идентификаторов
+  #       Возможно изменить их создание
+  #       Слишком "ручная" обработка
   def interpret_VariableAccessNode(self, node: VariableAccessNode, context: Context):
     response = RuntimeResponse()
     variable_name = node.variable_name.value
 
     if "." in variable_name:
-      name, *indexes = variable_name.split(".")
-      value: List = context.symbol_table.get_variable(name)
+      name, *keys = variable_name.split(".")
+      value = context.symbol_table.get_variable(name)
 
-      indexes = [
-        int(index)
-        if index.isdigit() or index[0] == "-" else
-        context.symbol_table.get_variable(index).value
-        for index in indexes
+      keys = [
+        int(key)
+        if key.isdigit() or key[0] == "-" and key[1:].isdigit() else
+        -context.symbol_table.get_variable(key[1:]).value
+        if key[0] == "-" else
+        context.symbol_table.get_variable(key).value
+        for key in keys
       ]
 
-      while indexes:
-        index, *indexes = indexes
+      while keys:
+        key, *keys = keys
 
-        if isinstance(value, List):
-          value = list(value.elements.values())[index]
+        if isinstance(value, Dictionary):
+          if key not in value.elements.keys():
+            return response.failure(InvalidKeyError(node.position_start, node.position_end))
+
+          value = value.elements[key]
+        elif isinstance(value, List):
+          if key >= len(value.value) or len(value.value) < -key:
+            return response.failure(IndexOutOfRangeError(node.position_start, node.position_end))
+
+          value = list(value.elements.values())[key]
         elif isinstance(value, String):
-          value = String(value.value[index])
+          if key >= len(value.value) or len(value.value) < -key:
+            return response.failure(IndexOutOfRangeError(node.position_start, node.position_end))
+
+          value = String(value.value[key])
     else:
       value = context.symbol_table.get_variable(variable_name)
 
@@ -169,19 +204,14 @@ class Interpreter:
 
     return response.success(value.set_context(context).set_position(node.position_start, node.position_end))
 
+  # TODO: Исправить парсинг идентификаторов
+  #       Возможно изменить их создание
+  #       Слишком "ручная" обработка
   def interpret_VariableAssignNode(self, node: VariableAssignNode, context: Context):
     response = RuntimeResponse()
     variable_name = node.variable_name.copy()
 
-    if isinstance(node.value_node, ListNode):
-      value = response.register(self.interpret(ListNode(
-        node.value_node.element_nodes,
-        variable_name,
-        node.position_start,
-        node.position_end
-      ), context))
-    else:
-      value = response.register(self.interpret(node.value_node, context))
+    value = response.register(self.interpret(node.value_node, context))
 
     if response.should_return():
       return response
@@ -195,9 +225,12 @@ class Interpreter:
         for key in keys
       ]
 
-      elements: dict = context.symbol_table.get_variable(variable_name.value)
+      elements = context.symbol_table.get_variable(variable_name.value)
 
-      items = [list(elements.elements.values())]
+      if isinstance(elements, List):
+        items = [list(elements.elements.values())]
+      elif isinstance(elements, Dictionary):
+        items = [elements.elements.copy()]
 
       for key in keys[:-1]:
         if key >= len(items[0]):
@@ -207,6 +240,8 @@ class Interpreter:
 
         if isinstance(item, List):
           item = list(item.elements.values())
+        if isinstance(item, Dictionary):
+          item = item.elements.copy()
 
         items.insert(0, item)
 
@@ -218,14 +253,19 @@ class Interpreter:
           if key < 0:
             key += len(value)
 
-          value = List(value)
+          value = List(value, context)
+        if isinstance(value, dict):
+          value = Dictionary(value, context)
 
-        if isinstance(items[0], list):
+        if isinstance(items[0], list | dict):
           items[0][key] = value
         elif isinstance(items[0], str):
           items[0] = items[0][:key] + value + items[0][key + 1:]
 
-      value = List(items[0])
+      if isinstance(elements, List):
+        value = List(items[0], context)
+      elif isinstance(elements, Dictionary):
+        value = Dictionary(items[0], context)
 
     context.symbol_table.set_variable(variable_name.value, value)
     return response.success(value)

@@ -53,9 +53,9 @@ if __name__ == "__main__":
           if not hasattr(result, "value") or result.value != None:
             print(str(result))
           elif mods["debug"]:
-            print(result)
+            print(repr(result))
         else:
           if any(map(lambda x: x.value if hasattr(x, "value") else None, result)):
             print(str(result.values()))
           elif mods["debug"]:
-            print(result.values())
+            print(repr(result.values()))
