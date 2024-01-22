@@ -19,7 +19,7 @@
 ## Скачивание
 
 ```console
-$ git clone https://github.com/x1z53/xlang --depth=1
+$ git clone https://github.com/x1z53/korsakov --depth=1
 ```
 
 ## Использование
