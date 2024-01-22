@@ -553,6 +553,7 @@ class Parser:
 
     return response.success(WhileNode(condition, body, False, None))
 
+  # TODO: Сделать через парсинг уравнений, а не вручную
   def function_expression(self):
     response = ParseResponse()
     if not self.token.matches_keyword(FUNCTION):
@@ -584,16 +585,21 @@ class Parser:
       default_values = False
       if self.token.type == ASSIGN:
         default_values = True
-
+        argument_name += "="
         response.advance(self)
-        if self.token.type not in [STRING, INTEGER, FLOAT, IDENTIFIER]:
+
+        if self.token.type == SUBSTRACION:
+          argument_name += "-"
+          response.advance(self)
+
+        if self.token.type not in [IDENTIFIER, INTEGER, FLOAT, STRING, OPEN_LIST_PAREN]:
           return response.failure(InvalidSyntaxError(
               self.token.position_start, self.token.position_end,
-              "Ожидались Строка, Число или Идентификатор"
+              "Ожидались Идентификатор, Число, Строка или Список"
           ))
 
-        argument_name += f"={f"\"{self.token.value}\"" if self.token.type ==
-                             STRING else self.token.value}"
+        argument_name += f"{f"\"{self.token.value}\"" if self.token.type == STRING else self.token.value}"
+
         response.advance(self)
 
       argument_names += [Token(IDENTIFIER, argument_name, *postiion)]
@@ -614,6 +620,11 @@ class Parser:
         if self.token.type == ASSIGN:
           argument_name += "="
           response.advance(self)
+
+          if self.token.type == SUBSTRACION:
+            argument_name += "-"
+            response.advance(self)
+
           if self.token.type not in [IDENTIFIER, INTEGER, FLOAT, STRING, OPEN_LIST_PAREN]:
             return response.failure(InvalidSyntaxError(
               self.token.position_start, self.token.position_end,
