@@ -158,74 +158,67 @@ class Interpreter:
 
     return response.success(result.set_position(node.position_start, node.position_end))
 
-  # TODO: Исправить парсинг идентификаторов
-  #       Возможно изменить их создание
-  #       Слишком "ручная" обработка
   def interpret_VariableAccessNode(self, node: VariableAccessNode, context: Context):
     response = RuntimeResponse()
     variable_name = node.variable_name.value
+    value = context.symbol_table.get_variable(variable_name)
+    if value == None:
+      return response.failure(BadIdentifierError(
+        node.variable_name.position_start, node.variable_name.position_end,
+        f"Переменная \"{variable_name}\" не найдена"))
 
-    if "." in variable_name:
-      name, *keys = variable_name.split(".")
-      value = context.symbol_table.get_variable(name)
-
-      keys = [
-        int(key)
-        if key.isdigit() or key[0] == "-" and key[1:].isdigit() else
-        -context.symbol_table.get_variable(key[1:]).value
-        if key[0] == "-" else
-        context.symbol_table.get_variable(key).value
-        for key in keys
-      ]
+    if node.keys:
+      keys = node.keys.copy()
 
       while keys:
+        if not isinstance(value, String | Dictionary | List):
+          return response.failure(InvalidSyntaxError(
+            node.variable.position_start, node.keys[-1].position_end,
+            f"Из типа \"{repr(value).split('(')[0]}\" нельзя взять элемент"
+          ))
+
         key, *keys = keys
+        key = response.register(self.interpret(key, context)).value
 
         if isinstance(value, Dictionary):
-          if key not in value.elements.keys():
-            return response.failure(InvalidKeyError(node.position_start, node.position_end))
+          value = value.elements.symbol_table.get_variable(key)
 
-          value = value.elements[key]
+          if value == None:
+            return response.failure(InvalidKeyError(node.position_start, node.position_end))
         elif isinstance(value, List):
-          if key >= len(value.value) or len(value.value) < -key:
+          if key < 0:
+            key += len(value.value)
+
+          if key >= len(value.value):
             return response.failure(IndexOutOfRangeError(node.position_start, node.position_end))
 
           value = list(value.elements.values())[key]
         elif isinstance(value, String):
-          if key >= len(value.value) or len(value.value) < -key:
+          if key < 0:
+            key += len(value.value)
+
+          if key >= len(value.value):
             return response.failure(IndexOutOfRangeError(node.position_start, node.position_end))
 
           value = String(value.value[key])
-    else:
-      value = context.symbol_table.get_variable(variable_name)
 
     if value == None:
       return response.failure(BadIdentifierError(node.position_start, node.position_end, f"`{variable_name}`"))
 
     return response.success(value.set_context(context).set_position(node.position_start, node.position_end))
 
-  # TODO: Исправить парсинг идентификаторов
-  #       Возможно изменить их создание
-  #       Слишком "ручная" обработка
   def interpret_VariableAssignNode(self, node: VariableAssignNode, context: Context):
     response = RuntimeResponse()
-    variable_name = node.variable_name.copy()
+    variable = node.variable.copy()
 
     value = response.register(self.interpret(node.value_node, context))
 
     if response.should_return():
       return response
 
-    if "." in variable_name.value:
-      variable_name.value, *keys = variable_name.value.split(".")
-      keys = [
-        int(key)
-        if key.isdigit() or key[0] == "-" else
-        context.symbol_table.get_variable(key).value
-        for key in keys
-      ]
-
-      elements = context.symbol_table.get_variable(variable_name.value)
+    if node.keys:
+      keys = [response.register(self.interpret(key, self)).value for key in node.keys]
+      elements = context.symbol_table.get_variable(variable.value)
 
       if isinstance(elements, List):
         items = [list(elements.elements.values())]
@@ -237,6 +230,11 @@ class Interpreter:
           return response.failure(IndexOutOfRangeError(node.position_start, node.position_end, key))
 
         item = items[0][key]
+        if not isinstance(item, String | Dictionary | List):
+          return response.failure(InvalidSyntaxError(
+            node.variable.position_start, node.keys[-1].position_end,
+            f"Из типа \"{repr(value).split('(')[0]}\" нельзя взять элемент"
+          ))
 
         if isinstance(item, List):
           item = list(item.elements.values())
@@ -267,7 +265,7 @@ class Interpreter:
       elif isinstance(elements, Dictionary):
         value = Dictionary(items[0], context)
 
-    context.symbol_table.set_variable(variable_name.value, value)
+    context.symbol_table.set_variable(variable.value, value)
     return response.success(value)
 
   def interpret_IfNode(self, node: IfNode, context: Context):

@@ -43,25 +43,32 @@ class Parser:
 
     if self.token.type == IDENTIFIER:
       variable = self.token
+      index = self.token_index
       response.advance(self)
+      keys = []
+
+      while self.token.type == POINT:
+        response.advance(self)
+        expression = response.register(self.term())
+        if response.error:
+          return response
+
+        keys += [expression]
 
       if self.token.type == ASSIGN:
         response.advance(self)
-
         expression = response.register(self.expression())
         if response.error:
           return response
 
-        return response.success(VariableAssignNode(variable, expression))
+        return response.success(VariableAssignNode(variable, keys, expression))
 
-      self.token = variable
-      self.token_index -= 1
+      self.reverse(self.token_index - index)
 
     node = response.register(self.binary_operation(
       [[KEYWORD, (AND + OR)[i]] for i in range(len(AND + OR))],
       self.comparison_expression
     ))
-
     if response.error:
       return response.failure(InvalidSyntaxError(
         self.token.position_start, self.token.position_end,
@@ -117,7 +124,16 @@ class Parser:
 
     elif token.type == IDENTIFIER:
       response.advance(self)
-      return response.success(VariableAccessNode(token))
+      keys = []
+
+      while self.token.type == POINT:
+        response.advance(self)
+        expression = response.register(self.term())
+        if response.error:
+          return response
+        keys += [expression]
+
+      return response.success(VariableAccessNode(token, keys, token.position_start, self.token.position_end))
 
     elif token.type == OPEN_PAREN:
       response.advance(self)
@@ -234,9 +250,9 @@ class Parser:
     if token.type in [SUBSTRACION, ROOT, INCREMENT, DECREMENT]:
       response.advance(self)
       factor = response.register(self.factor())
-
       if response.error:
         return response
+
       return response.success(UnaryOperationNode(token, factor))
 
     return self.power_root()
@@ -342,7 +358,7 @@ class Parser:
 
       if self.token.type != CLOSED_LIST_PAREN:
         return response.failure(InvalidSyntaxError(
-          self.token.position_start, self.token.position_end,
+          self.token.position_start, self.token.position_end.advance(),
           "Ожидались `,` или `)%`"
         ))
 

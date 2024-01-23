@@ -55,27 +55,29 @@ class BinaryOperationNode:
     return f"({self.left_node}, {self.operator}, {self.right_node})"
 
 
-class VariableAssignNode:
-  def __init__(self, variable_name: str, value_node):
-    self.variable_name = variable_name
-    self.value_node = value_node
-
-    self.position_start = self.variable_name.position_start
-    self.position_end = self.value_node.position_end
-
-  def __repr__(self):
-    return f"{self.variable_name}, {self.value_node}"
-
-
 class VariableAccessNode:
-  def __init__(self, variable_name: Token):
+  def __init__(self, variable_name: Token, keys: list, position_start: Position, position_end: Position):
     self.variable_name = variable_name
+    self.keys = keys
 
-    self.position_start = self.variable_name.position_start
-    self.position_end = self.variable_name.position_end
+    self.position_start = position_start
+    self.position_end = position_end
 
   def __repr__(self):
     return f"{self.variable_name}"
+
+
+class VariableAssignNode:
+  def __init__(self, variable_name: Token, keys: list, value_node):
+    self.variable = variable_name
+    self.keys = keys
+    self.value_node = value_node
+
+    self.position_start = self.variable.position_start
+    self.position_end = self.value_node.position_end
+
+  def __repr__(self):
+    return f"{self.variable}, {self.value_node}"
 
 
 class IfNode:

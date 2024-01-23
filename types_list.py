@@ -230,12 +230,6 @@ class String(Value):
 
     return None, Value.illegal_operation(self, operand)
 
-  def division(self, operand):
-    if isinstance(operand, Number):
-      return String(self.value[operand.value], self.context), None
-
-    return None, Value.illegal_operation(self, operand)
-
   def equal(self, operand):
     if isinstance(operand, String):
       return Number(self.value == operand.value, self.context), None
@@ -274,13 +268,13 @@ class String(Value):
 
   def both(self, operand):
     if isinstance(operand, String):
-      return Number(self.value and operand.value, self.context), None
+      return Number(self.is_true() and operand.is_true(), self.context), None
 
     return None, Value.illegal_operation(self, operand)
 
   def some(self, operand):
     if isinstance(operand, String):
-      return Number(self.value or operand.value, self.context), None
+      return Number(self.is_true() or operand.is_true(), self.context), None
 
     return None, Value.illegal_operation(self, operand)
 
@@ -301,7 +295,8 @@ class Dictionary(Value):
       element.value if hasattr(element, "value") else element
       for key, element in elements.items()
     }
-    self.elements = {key: element for key, element in zip(self.value, elements.values())}
+    self.elements = Context("Cловарь")
+    self.elements.symbol_table = SymbolTable({key: element for key, element in zip(self.value, elements.values())})
     self.elements_nodes = elements.copy()
     self.context = context
 
@@ -482,8 +477,7 @@ class Function(Value):
 
     return RuntimeResponse().failure(RuntimeError(
       self.position_start, self.position_end,
-      custom_message or f"Аргумент \"{argument_name.rstrip("?")}\" должен быть {
-        ', '.join(type_names)}",
+      custom_message or f"Аргумент \"{argument_name.rstrip('?')}\" должен быть {', '.join(type_names)}",
       context
     ))
 

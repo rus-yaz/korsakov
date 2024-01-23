@@ -18,42 +18,47 @@ class Lexer:
     self.character = self.text[self.position.index] if self.position.index < len(self.text) else None
 
   def make_tokens(self) -> [[Token], None | Error]:
-    tokens: list[Token] = []
+    self.tokens: list[Token] = []
 
     while self.character != None:
       token: Token = None
-      previous_token: Token = tokens[-1] if tokens else None
+      previous_token: Token = self.tokens[-1] if self.tokens else None
       position_start = self.position.copy()
 
       if self.character.isdigit():
-        tokens += [self.make_number()]
+        self.tokens += [self.make_number()]
         continue
       elif self.character.isalpha() or self.character == "_":
-        tokens += [self.make_identifier()]
+        self.tokens += [self.make_identifier()]
         continue
       elif self.character == "\"":
         string, error = self.make_string()
         if error:
           return None, error
 
-        tokens += [string]
+        self.tokens += [string]
         continue
 
       match self.character:
-        case " " | "\t": token = None if tokens and previous_token.type == SPACE else SPACE
-        case ";" | "\n": token = None if tokens and previous_token.type == NEWLINE else NEWLINE
+        case " " | "\t": token = None if self.tokens and previous_token.type == SPACE else SPACE
+        case ";" | "\n": token = None if self.tokens and previous_token.type == NEWLINE else NEWLINE
+
+        case ":": token = COLON
+        case ",": token = COMMA
+        case ".": token = POINT
+
         case "!":
           token = EXCLAMATION_MARK
-          if tokens and previous_token.type == EXCLAMATION_MARK:
-            tokens.pop()
-            token = None
+          if self.tokens and previous_token.type == EXCLAMATION_MARK:
+            self.tokens.pop()
 
             while self.character not in ["\n", None]:
               self.advance()
 
+            token = None if self.tokens[-1].type == NEWLINE else NEWLINE
         case "=":
           token = ASSIGN
-          if tokens:
+          if self.tokens:
             if previous_token.type == EXCLAMATION_MARK:
               token = NOT_EQUAL
             elif previous_token.type == ASSIGN:
@@ -67,55 +72,55 @@ class Lexer:
               token = END_OF_CONSTRUCTION
 
             elif previous_token.type in [ADDITION, SUBSTRACION, MULTIPLICATION, DIVISION, POWER, ROOT]:
-              tokens.pop()
+              self.tokens.pop()
 
-              while tokens[-1].type == SPACE:
-                tokens.pop()
+              while self.tokens[-1].type == SPACE:
+                self.tokens.pop()
 
-              tokens += [Token(ASSIGN, None, position_start, self.position.copy()), tokens[-1]]
+              self.tokens += [Token(ASSIGN, None, position_start, self.position.copy()), self.tokens[-1]]
               token = previous_token.type
 
           if token != ASSIGN:
             position_start = previous_token.position_start
             if token not in [ADDITION, SUBSTRACION, MULTIPLICATION, DIVISION, POWER, ROOT]:
-              tokens.pop()
+              self.tokens.pop()
 
         case "+":
           token = ADDITION
-          if tokens and previous_token.type == ADDITION:
+          if self.tokens and previous_token.type == ADDITION:
             token = None
-            tokens.pop()
+            self.tokens.pop()
             identifier = None
-            if tokens and tokens[-1].type == IDENTIFIER:
-              identifier = tokens.pop()
+            if self.tokens and self.tokens[-1].type == IDENTIFIER:
+              identifier = self.tokens.pop()
 
-            tokens += [Token(INCREMENT, not identifier, position_start, self.position.copy()), identifier]
+            self.tokens += [Token(INCREMENT, not identifier, position_start, self.position.copy()), identifier]
             position_start = previous_token.position_start
         case "-":
           token = SUBSTRACION
-          if tokens and previous_token.type == SUBSTRACION:
-            tokens.pop()
+          if self.tokens and previous_token.type == SUBSTRACION:
+            self.tokens.pop()
             self.advance()
 
             if self.character != "-":
               identifier = None
-              if tokens and tokens[-1].type == IDENTIFIER:
-                identifier = tokens.pop()
+              if self.tokens and self.tokens[-1].type == IDENTIFIER:
+                identifier = self.tokens.pop()
 
-              tokens += [Token(DECREMENT, not identifier, position_start, self.position.copy()), identifier]
+              self.tokens += [Token(DECREMENT, not identifier, position_start, self.position.copy()), identifier]
               position_start = previous_token.position_start
               continue
 
             token = END_OF_CONSTRUCTION
         case "*":
           token = MULTIPLICATION
-          if tokens and previous_token.type == MULTIPLICATION:
+          if self.tokens and previous_token.type == MULTIPLICATION:
             token = POWER
             position_start = previous_token.position_start
-            tokens.pop()
+            self.tokens.pop()
         case "/":
           token = DIVISION
-          if tokens:
+          if self.tokens:
             if previous_token.type == BACK_SLASH:
               token = LESS
             elif previous_token.type == DIVISION:
@@ -123,38 +128,35 @@ class Lexer:
 
           if token != DIVISION:
             position_start = previous_token.position_start
-            tokens.pop()
+            self.tokens.pop()
 
         case "\\":
           token = BACK_SLASH
-          if tokens and previous_token.type == DIVISION:
+          if self.tokens and previous_token.type == DIVISION:
             token = MORE
             position_start = previous_token.position_start
-            tokens.pop()
+            self.tokens.pop()
 
         case "(":
           token = OPEN_PAREN
-          if tokens and previous_token.type == PERCENT:
+          if self.tokens and previous_token.type == PERCENT:
             token = OPEN_LIST_PAREN
             position_start = previous_token.position_start
-            tokens.pop()
+            self.tokens.pop()
         case ")": token = CLOSED_PAREN
 
         case "%":
           token = PERCENT
-          if tokens:
+          if self.tokens:
             if previous_token.type == CLOSED_PAREN:
               token = CLOSED_LIST_PAREN
-            elif len(tokens) > 1 and [tokens[-1].type, tokens[-2].type] == [PERCENT, PERCENT]:
+            elif len(self.tokens) > 1 and [self.tokens[-1].type, self.tokens[-2].type] == [PERCENT, PERCENT]:
               token = END_OF_CONSTRUCTION
-              tokens.pop()
+              self.tokens.pop()
 
           if token != PERCENT:
             position_start = previous_token.position_start
-            tokens.pop()
-
-        case ":": token = COLON
-        case ",": token = COMMA
+            self.tokens.pop()
 
         case _:
           position_start = self.position.copy()
@@ -162,19 +164,21 @@ class Lexer:
           self.advance()
           return [], IllegalCharacterError(position_start, self.position.copy(), f"`{char}`")
 
-      tokens += [Token(token, None, position_start, self.position.copy())] if token else []
+      self.tokens += [Token(token, None, position_start, self.position.copy())] if token else []
       self.advance()
 
-    tokens += [Token(END_OF_FILE, None, self.position.copy())]
-    return list(filter(lambda token: token and token.type != SPACE, tokens)), None
+    self.tokens += [Token(END_OF_FILE, None, self.position.copy())]
+    return list(filter(lambda token: token and token.type != SPACE, self.tokens)), None
 
   def make_number(self):
     number = ""
-    float_point = False
+    integer = (
+      self.tokens and self.tokens[-1].type == POINT or
+      len(self.tokens) > 2 and self.tokens[-2].type == POINT and self.tokens[-1].type == SUBSTRACION
+    )
+    float_point = integer
     position_start = self.position.copy()
-    if self.character == "-":
-      number += "-"
-      self.advance()
+    position_end = self.position.copy()
 
     while self.character and (self.character.isdigit() or self.character in "_."):
       if self.character == "_":
@@ -187,29 +191,24 @@ class Lexer:
         float_point = True
 
       number += self.character
+      position_end = self.position.copy()
       self.advance()
 
-    return Token(FLOAT, float(number), position_start, self.position.copy()) if float_point else Token(INTEGER, int(number), position_start, self.position.copy())
+    return Token(FLOAT, float(number), position_start, position_end) if float_point and not integer else Token(INTEGER, int(number), position_start, position_end)
 
   def make_identifier(self):
     identifier = ""
     position_start = self.position.copy()
-    position_end = position_start
+    position_end = self.position.copy()
 
-    while self.character != None and (self.character.isalnum() or self.character in "_."):
-      position_end = self.position.copy()
-
+    while self.character != None and (self.character.isalnum() or self.character == "_"):
       # Меня заставили
       if self.character == "ё":
         self.character = "е"
 
       identifier += self.character
-      character = self.character
+      position_end = self.position.copy()
       self.advance()
-
-      if character == "." and self.character == "-":
-        identifier += self.character
-        self.advance()
 
     return Token(KEYWORD if identifier in KEYWORDS else IDENTIFIER, identifier, position_start, position_end)
 
