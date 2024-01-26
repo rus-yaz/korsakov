@@ -55,6 +55,7 @@ EXCLAMATION_MARK = "восклицательный знак"
 INTEGER = "целое_число"
 FLOAT = "дробное_число"
 STRING = "строка"
+ESCAPE_SEQUENCES = {"n": "\n", "н": "\n", "t": "\t", "т": "\t"}
 
 ADDITION = "сумма"
 SUBSTRACION = "разность"
@@ -75,6 +76,7 @@ LESS = "меньше"
 MORE = "больше"
 LESS_OR_EQUAL = "меньше_или_равно"
 MORE_OR_EQUAL = "больше_или_равно"
+COMPARISONS = [EQUAL, NOT_EQUAL, LESS, MORE, LESS_OR_EQUAL, MORE_OR_EQUAL]
 
 OPEN_PAREN = "открывающая_скобка"
 CLOSED_PAREN = "закрывающая_скобка"
@@ -94,6 +96,7 @@ AND = ["и", "and"]
 OR = ["или", "or"]
 NOT = ["не", "not"]
 
+CHECK = ["проверить", "check"]
 IF = ["если", "if"]
 ELSE = ["иначе", "else"]
 THEN = ["то", "then"]
@@ -108,17 +111,15 @@ WHILE = ["пока", "while"]
 CONTINUE = ["продолжить", "continue"]
 BREAK = ["прервать", "break"]
 
-CHECK = ["проверить", "check"]
-
 FUNCTION = ["функция", "function"]
 RETURN = ["вернуть", "return"]
 
 INCLUDE = ["включить", "include"]
 
-KEYWORDS = AND + OR + NOT + IF + ELSE + \
-  FOR + FROM + TO + AFTER + WHILE + FUNCTION + \
-  RETURN + CONTINUE + BREAK + THEN + INCLUDE
-
-COMPARISONS = [EQUAL, NOT_EQUAL, LESS, MORE, LESS_OR_EQUAL, MORE_OR_EQUAL]
-
-ESCAPE_SEQUENCES = {"n": "\n", "н": "\n", "t": "\t", "т": "\t"}
+KEYWORDS =\
+  AND + OR + NOT +\
+  CHECK + IF + ELSE + THEN +\
+  FOR + IN + FROM + TO + AFTER +\
+  WHILE + CONTINUE + BREAK +\
+  FUNCTION + RETURN + \
+  INCLUDE

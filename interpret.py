@@ -1,3 +1,4 @@
+from code import interact
 from os import name as os_name
 from os.path import realpath
 from pathlib import Path
@@ -21,8 +22,7 @@ class Interpreter:
     self.script_location, self.file_name = self.file_path.rsplit(PATH_SEPARATOR, 1)
 
   def interpret(self, node, context: Context) -> Number:
-    method = f"interpret_{type(node).__name__}"
-    visitor = getattr(self, method, self.no_interpret_method)
+    visitor = getattr(self, f"interpret_{node.__class__.__name__}", self.no_interpret_method)
     return visitor(node, context)
 
   def no_interpret_method(self, node, context: Context) -> None:
@@ -39,14 +39,15 @@ class Interpreter:
     elements = {}
 
     for key_node, element_node in node.element_nodes.items():
-      elements |= {
-        key_node
-        if context == global_symbol_table else
-        response.register(self.interpret(key_node, context)):
-        element_node
-        if context == global_symbol_table else
-        response.register(self.interpret(element_node, context))
-      }
+      key = key_node if context == global_symbol_table else response.register(self.interpret(key_node, context))
+      if response.should_return():
+        return response
+
+      value = element_node if context == global_symbol_table else response.register(
+        self.interpret(element_node, context))
+      if response.should_return():
+        return response
+      elements |= {key: value}
 
       if response.should_return():
         return response
@@ -58,14 +59,12 @@ class Interpreter:
     elements = []
 
     for element_node in node.element_nodes:
-      elements += [
-        element_node
-        if context == global_symbol_table else
-        response.register(self.interpret(element_node, context))
-      ]
-
+      element = element_node if context == global_symbol_table else response.register(
+        self.interpret(element_node, context))
       if response.should_return():
         return response
+
+      elements += [element]
 
     return response.success(List(elements, context).set_position(node.position_start, node.position_end))
 
@@ -113,6 +112,7 @@ class Interpreter:
       result, error = left.some(right)
     elif node.operator.matches_keyword(NOT):
       result, error = left.denial(right)
+
     else:
       return response.failure(RuntimeError(
         node.left_node.position_start, node.right_node.position_end,
@@ -138,16 +138,19 @@ class Interpreter:
       result, error = Number(2).root(result)
 
     elif node.operator.type == INCREMENT:
-      self.interpret(VariableAssignNode(
-        node.node.variable_name,
-        NumberNode(Token(INTEGER, result.value + 1, result.position_start))), context)
+      response.register(self.interpret(VariableAssignNode(
+        node.node.variable,
+        [],
+        NumberNode(Token(INTEGER, result.value + 1, result.position_start))
+      ), context))
       if node.operator.value:
         result, error = result.addition(Number(1))
     elif node.operator.type == DECREMENT:
-      self.interpret(VariableAssignNode(
-        node.node.variable_name,
+      response.register(self.interpret(VariableAssignNode(
+        node.node.variable,
+        [],
         NumberNode(Token(INTEGER, result.value - 1, result.position_start))
-      ), context)
+      ), context))
       if node.operator.value:
         result, error = result.subtraction(Number(1))
     elif node.operator.matches_keyword(NOT):
@@ -160,12 +163,13 @@ class Interpreter:
 
   def interpret_VariableAccessNode(self, node: VariableAccessNode, context: Context):
     response = RuntimeResponse()
-    variable_name = node.variable_name.value
+    variable_name = node.variable.value
     value = context.symbol_table.get_variable(variable_name)
     if value == None:
       return response.failure(BadIdentifierError(
-        node.variable_name.position_start, node.variable_name.position_end,
-        f"Переменная \"{variable_name}\" не найдена"))
+        node.variable.position_start, node.variable.position_end,
+        f"Переменная \"{variable_name}\" не найдена"
+      ))
 
     if node.keys:
       keys = node.keys.copy()
@@ -178,7 +182,11 @@ class Interpreter:
           ))
 
         key, *keys = keys
-        key = response.register(self.interpret(key, context)).value
+        key = response.register(self.interpret(key, context))
+        if response.should_return():
+          return response
+
+        key = key.value
 
         if isinstance(value, Dictionary):
           value = value.elements.symbol_table.get_variable(key)
@@ -212,12 +220,18 @@ class Interpreter:
     variable = node.variable.copy()
 
     value = response.register(self.interpret(node.value_node, context))
-
     if response.should_return():
       return response
 
     if node.keys:
-      keys = [response.register(self.interpret(key, self)).value for key in node.keys]
+      keys = []
+      for key in node.keys:
+        key = response.register(self.interpret(key, context))
+        if response.should_return():
+          return response
+
+        keys += [key.value]
+
       elements = context.symbol_table.get_variable(variable.value)
 
       if isinstance(elements, List):
@@ -267,6 +281,28 @@ class Interpreter:
 
     context.symbol_table.set_variable(variable.value, value)
     return response.success(value)
+
+  def interpret_CheckNode(self, node: CheckNode, context: Context):
+    response = RuntimeResponse()
+    done = False
+
+    for case in node.cases:
+      if not done and response.register(self.interpret(case[0], context)).value:
+        done = True
+
+      response.register(self.interpret(IfNode([case], None), context))
+      if response.should_return() and not response.break_loop:
+        return response
+
+      if response.break_loop:
+        break
+
+    if not done and node.else_case:
+      response.register(self.interpret(node.else_case[0], context))
+      if response.should_return():
+        return response
+
+    return response.success(Number(None, context))
 
   def interpret_IfNode(self, node: IfNode, context: Context):
     response = RuntimeResponse()

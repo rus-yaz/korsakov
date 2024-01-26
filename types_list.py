@@ -83,7 +83,7 @@ class Value:
 
     return RuntimeError(
       self.position_start, operand.position_end,
-      f"Неизвестная операция: {self.__class__.__name__} и {operand.__class__.__name__}",
+      f"Неизвестная операция для {self.__class__.__name__} и {operand.__class__.__name__}",
       self.context
     )
 

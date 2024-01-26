@@ -40,8 +40,8 @@ class Lexer:
         continue
 
       match self.character:
-        case " " | "\t": token = None if self.tokens and previous_token.type == SPACE else SPACE
-        case ";" | "\n": token = None if self.tokens and previous_token.type == NEWLINE else NEWLINE
+        case " " | "\t": token = None if self.tokens and self.tokens[-1].type in [SPACE, NEWLINE] else SPACE
+        case ";" | "\n": token = None if self.tokens and self.tokens[-1].type == NEWLINE else NEWLINE
 
         case ":": token = COLON
         case ",": token = COMMA
@@ -55,7 +55,7 @@ class Lexer:
             while self.character not in ["\n", None]:
               self.advance()
 
-            token = None if self.tokens[-1].type == NEWLINE else NEWLINE
+            token = None if self.tokens[-1].type in [NEWLINE, SPACE] else SPACE
         case "=":
           token = ASSIGN
           if self.tokens:

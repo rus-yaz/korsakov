@@ -17,14 +17,15 @@ def run(module_name: str, code: str, mods: dict = {"debug": False}):
 
   parser = Parser(tokens)
   ast = parser.parse()
-  if ast.error:
-    return None, ast.error
+  value, error = ast.node, ast.error
+  if error:
+    return None, error
 
   if DEBUG:
-    print(ast.node.element_nodes)
+    print(value.element_nodes)
 
   interpreter = Interpreter(module_name)
-  interpret = interpreter.interpret(ast.node, global_context)
+  interpret = interpreter.interpret(value, global_context)
 
   if DEBUG:
     print(str(global_context.symbol_table))

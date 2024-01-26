@@ -39,9 +39,6 @@ class UnaryOperationNode:
     self.position_start = self.operator.position_start
     self.position_end = node.position_end
 
-  def __repr__(self):
-    return f"({self.operator}, {self.node})"
-
 
 class BinaryOperationNode:
   def __init__(self, left_node, operator: Token, right_node):
@@ -51,33 +48,33 @@ class BinaryOperationNode:
     self.position_start = self.left_node.position_start
     self.position_end = self.right_node.position_end
 
-  def __repr__(self):
-    return f"({self.left_node}, {self.operator}, {self.right_node})"
-
 
 class VariableAccessNode:
-  def __init__(self, variable_name: Token, keys: list, position_start: Position, position_end: Position):
-    self.variable_name = variable_name
+  def __init__(self, variable: Token, keys: list, position_start: Position, position_end: Position):
+    self.variable = variable
     self.keys = keys
 
     self.position_start = position_start
     self.position_end = position_end
 
-  def __repr__(self):
-    return f"{self.variable_name}"
-
 
 class VariableAssignNode:
-  def __init__(self, variable_name: Token, keys: list, value_node):
-    self.variable = variable_name
+  def __init__(self, variable: Token, keys: list, value_node):
+    self.variable = variable
     self.keys = keys
     self.value_node = value_node
 
     self.position_start = self.variable.position_start
     self.position_end = self.value_node.position_end
 
-  def __repr__(self):
-    return f"{self.variable}, {self.value_node}"
+
+class CheckNode:
+  def __init__(self, cases, else_case):
+    self.cases = cases
+    self.else_case = else_case
+
+    self.position_start = self.cases[0][0].position_start
+    self.position_end = (self.else_case or self.cases[-1])[0].position_end
 
 
 class IfNode:
