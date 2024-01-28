@@ -71,19 +71,9 @@ class Lexer:
             elif previous_token.type == EQUAL:
               token = END_OF_CONSTRUCTION
 
-            elif previous_token.type in [ADDITION, SUBSTRACION, MULTIPLICATION, DIVISION, POWER, ROOT]:
-              self.tokens.pop()
-
-              while self.tokens[-1].type == SPACE:
-                self.tokens.pop()
-
-              self.tokens += [Token(ASSIGN, None, position_start, self.position.copy()), self.tokens[-1]]
-              token = previous_token.type
-
           if token != ASSIGN:
             position_start = previous_token.position_start
-            if token not in [ADDITION, SUBSTRACION, MULTIPLICATION, DIVISION, POWER, ROOT]:
-              self.tokens.pop()
+            self.tokens.pop()
 
         case "+":
           token = ADDITION

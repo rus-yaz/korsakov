@@ -36,10 +36,10 @@ def set_global_variables():
   from types_list import Number, build_in_functions
 
   global_symbol_table.set_many_variables([
-      [["null", "нуль"], Number(None)],
-      [["true", "истина"], Number(1)],
-      [["false", "ложь"], Number(0)],
-      *build_in_functions.items()
+    [["null", "нуль"], Number(None)],
+    [["true", "истина"], Number(1)],
+    [["false", "ложь"], Number(0)],
+    *build_in_functions.items()
   ])
 
 

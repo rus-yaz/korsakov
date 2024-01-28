@@ -27,17 +27,33 @@ $ git clone https://github.com/x1z53/korsakov --depth=1
 #### Итерактивная оболочка
 
 ```console
-$ python main.py [-d/--debug]
+$ python korsakov.py [-d/--debug]
 ```
 
 #### Исполнение файла
 
 ```console
-$ python main.py <файл> [-d/--debug]
+$ python korsakov.py <файл> [-d/--debug]
 ```
 
 #### Флаги
 
+`-d` / `--debug` - Режим отладки: выводит все токены, абстрактное синтаксическое дерево и все переменные (в итоге всё в кашу и не очень информативно 🙂)
+
+## Подсветка синтаксиса
+
+#### Vim
+
+```console
+$ mkdir -p ~/.vim/syntax
+$ cp korsakov.vim ~/.vim/syntax/
+$ echo "au BufNewFile,BufRead *.kors :set filetype=korsakov" >> ~/.vimrc
 ```
--d / --debug - Режим отладки: выводит все токены, абстрактное синтаксическое дерево и все переменные (итоге всё в кашу и не очень информативно 🙂)
+
+#### Neovim
+
+```console
+$ mkdir -p ~/.config/nvim/syntax ~/.config/nvim/ftdetect
+$ cp korsakov.vim ~/.config/nvim/syntax
+$ echo "au BufNewFile,BufRead *.kors :set filetype=korsakov" >> ~/.config/nvim/ftdetect/korsakov.vim
 ```

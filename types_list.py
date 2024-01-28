@@ -68,7 +68,7 @@ class Value:
   def some(self, operand):
     return None, self.illegal_operation(operand)
 
-  def denial(self, operand):
+  def denial(self):
     return None, self.illegal_operation()
 
   def execute(self, arguments):
@@ -101,7 +101,7 @@ class Number(Value):
     return f"Число({self.value})"
 
   def is_true(self):
-    return self.value != 0
+    return self.value not in [0, None]
 
   def addition(self, operand):
     if isinstance(operand, Number):
@@ -330,7 +330,7 @@ class Dictionary(Value):
 
     return None, Value.illegal_operation(self, operand)
 
-  def denial(self, operand):
+  def denial(self):
     return Number(not self.is_true(), self.context), None
 
   def copy(self):
@@ -382,7 +382,7 @@ class List(Value):
 
     return None, Value.illegal_operation(self, operand)
 
-  def denial(self, operand):
+  def denial(self):
     return Number(not self.is_true(), self.context), None
 
   def copy(self):

@@ -55,9 +55,20 @@ class Parser:
 
         keys += [expression]
 
+      operator = None
+      if self.token.type in [ADDITION, SUBSTRACION, MULTIPLICATION, DIVISION, POWER]:  # ROOT?
+        operator = self.token
+        response.advance(self)
+
       if self.token.type == ASSIGN:
         response.advance(self)
         expression = response.register(self.expression())
+        if operator:
+          expression = BinaryOperationNode(
+            VariableAccessNode(variable, keys, variable.position_start, variable.position_end),
+            operator,
+            expression
+          )
         if response.error:
           return response
 
@@ -130,7 +141,29 @@ class Parser:
       keys = []
       while self.token.type == POINT:
         response.advance(self)
-        expression = response.register(self.term())
+        if self.token.type == SUBSTRACION:
+          response.advance(self)
+          if self.token.type == IDENTIFIER:
+            self.token.value = "-" + self.token.value
+          elif self.token.type == INTEGER:
+            self.token.value = -self.token.value
+          else:
+            return response.failure(InvalidSyntaxError(
+              self.token.position_start, self.token.position_end,
+              "Ожидался идентификатор или число"
+            ))
+
+          expression = response.register(self.atom())
+
+        elif self.token.type in [IDENTIFIER, STRING, INTEGER]:
+          expression = response.register(self.atom())
+        elif self.token.type == OPEN_PAREN:
+          expression = response.register(self.arithmetical_expression())
+        else:
+          return response.failure(InvalidSyntaxError(
+            self.token.position_start, self.token.position_end,
+            "Ожидались идентификатор или открывающая скобка",
+          ))
         if response.error:
           return response
         keys += [expression]

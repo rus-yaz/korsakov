@@ -1,4 +1,3 @@
-from code import interact
 from os import name as os_name
 from os.path import realpath
 from pathlib import Path
@@ -11,7 +10,8 @@ from types_list import *
 PATH_SEPARATOR = "\\" if os_name == "nt" else "/"
 LANGAUGE_PATH = __file__.rsplit(PATH_SEPARATOR, 1)[0]
 BUILDIN_LIBRARIES = {
-  str(file).rsplit(PATH_SEPARATOR, 1)[1].removesuffix(f".{FILE_EXTENSION}"): str(file)
+  str(file).rsplit(PATH_SEPARATOR, 1)[1].removesuffix(f".{FILE_EXTENSION}"):
+  str(file)
   for file in Path(LANGAUGE_PATH).glob(f"*.{FILE_EXTENSION}")
 }
 
@@ -76,6 +76,9 @@ class Interpreter:
     if response.should_return():
       return response
 
+    if node.operator.matches_keyword(AND) and not left.is_true() or node.operator.matches_keyword(OR) and left.is_true():
+      return response.success(Number(0, context))
+
     right: Value = response.register(self.interpret(node.right_node, context))
     if response.should_return():
       return response
@@ -110,13 +113,13 @@ class Interpreter:
       result, error = left.both(right)
     elif node.operator.matches_keyword(OR):
       result, error = left.some(right)
-    elif node.operator.matches_keyword(NOT):
-      result, error = left.denial(right)
+    # elif node.operator.matches_keyword(NOT):
+    #   result, error = left.denial(right)
 
     else:
       return response.failure(RuntimeError(
         node.left_node.position_start, node.right_node.position_end,
-        "Не известная операция", context
+        "Неизвестная операция", context
       ))
 
     if error:
@@ -124,6 +127,7 @@ class Interpreter:
 
     return response.success(result.set_position(node.position_start, node.position_end))
 
+  # TODO: переделать реализаци инкремента/декремента из-за изменения алгоритма взятия элемента по индексу
   def interpret_UnaryOperationNode(self, node: UnaryOperationNode, context: Context) -> Number:
     response = RuntimeResponse()
 
