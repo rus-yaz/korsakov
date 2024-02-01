@@ -209,6 +209,15 @@ class String(Value):
     self.value = value
     self.context = context
 
+  def get(self, index: Number, default_value: Value = None):
+    if -len(self.value) <= index.value < len(self.value):
+      return String(self.value[index.value])
+    return default_value
+
+  def set(self, index: Number, value):
+    self.value = self.value[:index.value] + value.value + self.value[index.value + 1:]
+    return self
+
   def __str__(self):
     return self.value
 
@@ -287,34 +296,108 @@ class String(Value):
     return copy
 
 
-class Dictionary(Value):
-  def __init__(self, elements: dict, context=None):
+class List(Value):
+  def __init__(self, values: list, context=None):
     super().__init__()
-    self.value = {
-      key.value if hasattr(key, "value") else key:
-      element.value if hasattr(element, "value") else element
-      for key, element in elements.items()
-    }
-    self.elements = Context("Cловарь")
-    self.elements.symbol_table = SymbolTable({key: element for key, element in zip(self.value, elements.values())})
-    self.elements_nodes = elements.copy()
+    self.value = values.copy()
     self.context = context
 
   def __str__(self):
-    return "%(" + ", ".join(map(lambda items: f"{items[0]}: {items[1]}", self.elements_nodes.items())) + ")%"
+    return "%(" + ", ".join(map(str, self.value)) + ")%"
+
+  def __repr__(self):
+    return f"Список({str(self)})"
+
+  def get(self, index: Number, default_value: Value = None):
+    if -len(self.value) <= index.value < len(self.value):
+      return self.value[index.value]
+    return default_value
+
+  def set(self, index: Number, value: Value):
+    self.value[index.value] = value
+    return self
+
+  def is_true(self):
+    return self.value != []
+
+  def addition(self, operand):
+    if isinstance(operand, List):
+      return List(self.value + operand.value, self.context), None
+
+    return None, Value.illegal_operation(self, operand)
+
+  def multiplication(self, operand: Number):
+    if isinstance(operand, Number):
+      return List(self.value * operand.value, self.context), None
+
+    return None, Value.illegal_operation(self, operand)
+
+  def equal(self, operand):
+    if isinstance(operand, List):
+      return Number(self.value == operand.value, self.context), None
+
+    return None, Value.illegal_operation(self, operand)
+
+  def not_equal(self, operand):
+    if isinstance(operand, List):
+      return Number(self.value != operand.value, self.context), None
+
+    return None, Value.illegal_operation(self, operand)
+
+  def denial(self):
+    return Number(not self.is_true(), self.context), None
+
+  def copy(self):
+    copy = List(self.value.copy(), self.context)
+    copy.set_position(self.position_start, self.position_end)
+    return copy
+
+
+class Dictionary(Value):
+  def __init__(self, values: list[list], context=None):
+    super().__init__()
+    self.value = values
+    self.context = context
+
+  def __str__(self):
+    return "%(" + ", ".join(f"{key}: {value}" for key, value in self.value) + ")%"
 
   def __repr__(self):
     return f"Словарь({str(self)})"
 
+  def items(self):
+    return self.value.copy()
+
+  def values(self):
+    return [value for key, value in self.value]
+
+  def keys(self):
+    return [key for key, value in self.value]
+
+  def get(self, target: String | Number, default_value: Value=None):
+    for key, value in self.value:
+      if key.value == target.value: return value
+
+    return default_value
+
+  def set(self, target: String | Number, replacement: Value):
+    for index, pair in enumerate(self.value):
+      if pair[0].value == target.value:
+        self.value.pop(index)
+        break
+
+    self.value += [[target, replacement]]
+    return self
+
   def is_true(self):
-    return self.value != {}
+    return self.value != []
 
   def addition(self, operand):
     if isinstance(operand, Dictionary):
-      elements = self.elements_nodes.copy()
-      elements |= operand.elements_nodes.copy()
-
-      return Dictionary(elements, self.context), None
+      result = self.copy()
+      for key, value in operand.value:
+        result.set(key, value)
+      return result, None 
 
     return None, Value.illegal_operation(self, operand)
 
@@ -334,59 +417,7 @@ class Dictionary(Value):
     return Number(not self.is_true(), self.context), None
 
   def copy(self):
-    copy = Dictionary(self.elements_nodes, self.context)
-    copy.set_position(self.position_start, self.position_end)
-    return copy
-
-
-class List(Value):
-  def __init__(self, elements: list, context=None):
-    super().__init__()
-    self.value: list = [element.value if hasattr(element, "value") else element for element in elements]
-    self.elements: dict = {index: element for index, element in enumerate(elements)}
-    self.context = context
-
-  def __str__(self):
-    return "%(" + ", ".join(map(str, self.elements.values())) + ")%"
-
-  def __repr__(self):
-    return f"Список({str(self)})"
-
-  def is_true(self):
-    return self.elements != {}
-
-  def addition(self, operand):
-    if isinstance(operand, List):
-      return List(
-        list(self.elements.values()) + list(operand.elements.values()),
-        self.context
-      ), None
-
-    return None, Value.illegal_operation(self, operand)
-
-  def multiplication(self, operand):
-    if isinstance(operand, Number):
-      return List(list(self.elements.values()) * operand.value, self.context), None
-
-    return None, Value.illegal_operation(self, operand)
-
-  def equal(self, operand):
-    if isinstance(operand, List):
-      return Number(self.elements == operand.elements, self.context), None
-
-    return None, Value.illegal_operation(self, operand)
-
-  def not_equal(self, operand):
-    if isinstance(operand, List):
-      return Number(self.elements != operand.elements, self.context), None
-
-    return None, Value.illegal_operation(self, operand)
-
-  def denial(self):
-    return Number(not self.is_true(), self.context), None
-
-  def copy(self):
-    copy = List(self.value, self.context)
+    copy = Dictionary(self.value.copy(), self.context)
     copy.set_position(self.position_start, self.position_end)
     return copy
 
@@ -693,7 +724,7 @@ class Function(Value):
     if isinstance(value, String):
       return RuntimeResponse().success(List(list(map(lambda x: String(x, context), value.value)), context))
     elif isinstance(value, Dictionary):
-      return RuntimeResponse().success(List(list(value.elements.keys())))
+      return RuntimeResponse().success(List(value.keys(), context))
 
     return RuntimeResponse().success(value.set_context(context))
   functions[("to_list", "в_список", "к_списку")] = {"value": String | List | Dictionary}
@@ -702,19 +733,46 @@ class Function(Value):
     error, elements = self.get_arguments(context, "to_dictionary")
     if error:
       return error
-    elements: List = list(elements.elements.values())
+    elements: List = elements.value
+
     for item in elements:
-      if not isinstance(item, List) or len(item.elements) != 2:
+      if not isinstance(item, List) or len(item.value) != 2:
         return RuntimeResponse().failure(InvalidSyntaxError(
           elements.position_start, elements.position_end,
           "Список должен содержать массивы, состоящие из двух элементов "
         ))
 
-    elements = [list(item.elements.values()) for item in elements]
-
-    return RuntimeResponse().success(Dictionary({key: value for key, value in elements}, context))
+    return RuntimeResponse().success(Dictionary(elements.value, context))
   functions[("to_dictionary", "к_словарю", "в_словарь")] = {"elements": List}
 
+  def _items(self, context: Context):
+    error, elements = self.get_arguments(context, "items")
+    if error:
+      return error
+
+    elements: Dictionary = elements.items()
+    return RuntimeResponse().success(List(elements, context))
+  functions[("items", "элементы")] = {"elements": Dictionary}
+
+
+  def _values(self, context: Context):
+    error, elements = self.get_arguments(context, "values")
+    if error:
+      return error
+
+    elements: Dictionary = elements.values()
+    return RuntimeResponse().success(List(elements, context))
+  functions[("values", "значения")] = {"elements": Dictionary}
+
+  def _keys(self, context: Context):
+    error, elements = self.get_arguments(context, "keys")
+    if error:
+      return error
+
+    elements: Dictionary = elements.keys()
+    return RuntimeResponse().success(List(elements, context))
+  functions[("keys", "ключи")] = {"elements": Dictionary}
+  
   def _random(self, context: Context):
     from random import random
 
@@ -776,7 +834,7 @@ class Function(Value):
       return error
 
     exit(code.value)
-  functions[("exit", "завершить", "выход")] = {"code=1": Number}
+  functions[("exit", "завершить", "выход")] = {"code=0": Number}
 
 
 build_in_functions_names = [

@@ -9,11 +9,10 @@ from types_list import *
 
 PATH_SEPARATOR = "\\" if os_name == "nt" else "/"
 LANGAUGE_PATH = __file__.rsplit(PATH_SEPARATOR, 1)[0]
-BUILDIN_LIBRARIES = {
-  str(file).rsplit(PATH_SEPARATOR, 1)[1].removesuffix(f".{FILE_EXTENSION}"):
-  str(file)
+BUILDIN_LIBRARIES = [
+  str(file).rsplit(PATH_SEPARATOR, 1)[1]
   for file in Path(LANGAUGE_PATH).glob(f"*.{FILE_EXTENSION}")
-}
+]
 
 
 class Interpreter:
@@ -36,7 +35,7 @@ class Interpreter:
 
   def interpret_DictionaryNode(self, node: DictionaryNode, context: Context):
     response = RuntimeResponse()
-    elements = {}
+    dictionary = Dictionary([], context)
 
     for key_node, element_node in node.element_nodes.items():
       key = key_node if context == global_symbol_table else response.register(self.interpret(key_node, context))
@@ -47,12 +46,12 @@ class Interpreter:
         self.interpret(element_node, context))
       if response.should_return():
         return response
-      elements |= {key: value}
+      dictionary.set(key, value)
 
       if response.should_return():
         return response
 
-    return response.success(Dictionary(elements, context).set_position(node.position_start, node.position_end))
+    return response.success(dictionary.set_position(node.position_start, node.position_end))
 
   def interpret_ListNode(self, node: ListNode, context: Context):
     response = RuntimeResponse()
@@ -76,8 +75,10 @@ class Interpreter:
     if response.should_return():
       return response
 
-    if node.operator.matches_keyword(AND) and not left.is_true() or node.operator.matches_keyword(OR) and left.is_true():
+    if node.operator.matches_keyword(AND) and not left.is_true():
       return response.success(Number(0, context))
+    elif node.operator.matches_keyword(OR) and left.is_true():
+      return response.success(Number(1, context))
 
     right: Value = response.register(self.interpret(node.right_node, context))
     if response.should_return():
@@ -113,8 +114,6 @@ class Interpreter:
       result, error = left.both(right)
     elif node.operator.matches_keyword(OR):
       result, error = left.some(right)
-    # elif node.operator.matches_keyword(NOT):
-    #   result, error = left.denial(right)
 
     else:
       return response.failure(RuntimeError(
@@ -169,6 +168,7 @@ class Interpreter:
     response = RuntimeResponse()
     variable_name = node.variable.value
     value = context.symbol_table.get_variable(variable_name)
+
     if value == None:
       return response.failure(BadIdentifierError(
         node.variable.position_start, node.variable.position_end,
@@ -187,32 +187,27 @@ class Interpreter:
 
         key, *keys = keys
         key = response.register(self.interpret(key, context))
-        if response.should_return():
+        if isinstance(value, Dictionary) and not isinstance(key, Number | String):
+          return response.failure(InvalidSyntaxError(
+            node.position_start, node.position_end,
+            "Ключ должен иметь тип Число или Строка"
+          ))
+        if isinstance(value, List | String) and not isinstance(key, Number):
+          return response.failure(InvalidSyntaxError(
+            node.position_start, node.position_end,
+            "Индекс должен иметь тип Число"
+          ))
+        elif response.should_return():
           return response
 
-        key = key.value
+        is_dictionary = isinstance(value, Dictionary)
+        value = value.get(key)
 
-        if isinstance(value, Dictionary):
-          value = value.elements.symbol_table.get_variable(key)
-
-          if value == None:
+        if value == None:
+          if is_dictionary:
             return response.failure(InvalidKeyError(node.position_start, node.position_end))
-        elif isinstance(value, List):
-          if key < 0:
-            key += len(value.value)
 
-          if key >= len(value.value):
-            return response.failure(IndexOutOfRangeError(node.position_start, node.position_end))
-
-          value = list(value.elements.values())[key]
-        elif isinstance(value, String):
-          if key < 0:
-            key += len(value.value)
-
-          if key >= len(value.value):
-            return response.failure(IndexOutOfRangeError(node.position_start, node.position_end))
-
-          value = String(value.value[key])
+          return response.failure(IndexOutOfRangeError(node.position_start, node.position_end))
 
     if value == None:
       return response.failure(BadIdentifierError(node.position_start, node.position_end, f"`{variable_name}`"))
@@ -234,30 +229,30 @@ class Interpreter:
         if response.should_return():
           return response
 
-        keys += [key.value]
+        keys += [key]
 
-      elements = context.symbol_table.get_variable(variable.value)
-
-      if isinstance(elements, List):
-        items = [list(elements.elements.values())]
-      elif isinstance(elements, Dictionary):
-        items = [elements.elements.copy()]
+      items = [context.symbol_table.get_variable(variable.value).copy()]
 
       for key in keys[:-1]:
-        if key >= len(items[0]):
+        if -len(items[0].value) < key.value >= len(items[0].value):
           return response.failure(IndexOutOfRangeError(node.position_start, node.position_end, key))
 
-        item = items[0][key]
+        item = items[0].get(key).copy()
         if not isinstance(item, String | Dictionary | List):
           return response.failure(InvalidSyntaxError(
             node.variable.position_start, node.keys[-1].position_end,
-            f"Из типа \"{repr(value).split('(')[0]}\" нельзя взять элемент"
+            f"Из типа \"{repr(item).split('(')[0]}\" нельзя взять элемент"
           ))
-
-        if isinstance(item, List):
-          item = list(item.elements.values())
-        if isinstance(item, Dictionary):
-          item = item.elements.copy()
+        elif isinstance(items[0], String | List) and not isinstance(key, Number):
+          return response.failure(InvalidSyntaxError(
+            node.variable.position_start, node.keys[-1].position_end,
+            f"Из типа \"{repr(item).split('(')[0]}\" можно взять элемент только по индексу"
+          ))
+        elif isinstance(items[0], Dictionary) and not isinstance(key, Number | String):
+          return response.failure(InvalidSyntaxError(
+            node.variable.position_start, node.keys[-1].position_end,
+            f"Ключ должен быть Числом или Строкой, не {repr(key).split("(")}"
+          ))
 
         items.insert(0, item)
 
@@ -265,23 +260,26 @@ class Interpreter:
 
       for key in keys[::-1]:
         value = items.pop(0)
-        if isinstance(value, list):
-          if key < 0:
-            key += len(value)
+        if isinstance(items[0], String) and not isinstance(value, String):
+          return response.failure(InvalidSyntaxError(
+            node.variable.position_start, node.variable.position_end,
+            f"Тип \"{repr(value).split('(')[0]}\" не может быть записан в строку"
+          ))
+        elif isinstance(items[0], List | String) and not isinstance(key, Number):
+          return response.failure(InvalidSyntaxError(
+            node.variable.position_start, node.variable.position_end,
+            "Индекс должен иметь тип Число"
+          ))
+        elif isinstance(items[0], Dictionary) and not isinstance(key, Number | String):
+          return response.failure(InvalidSyntaxError(
+            node.variable.position_start, node.variable.position_end,
+            "Ключ должен иметь тип Число или Строка"
+          ))
+        elif isinstance(items[0], List) and -len(items[0].value) < key.value >= len(items[0].value):
+          return response.failure(IndexOutOfRangeError(node.position_start, node.position_end, key))
+        items[0].set(key, value)
 
-          value = List(value, context)
-        if isinstance(value, dict):
-          value = Dictionary(value, context)
-
-        if isinstance(items[0], list | dict):
-          items[0][key] = value
-        elif isinstance(items[0], str):
-          items[0] = items[0][:key] + value + items[0][key + 1:]
-
-      if isinstance(elements, List):
-        value = List(items[0], context)
-      elif isinstance(elements, Dictionary):
-        value = Dictionary(items[0], context)
+      value = items[0]
 
     context.symbol_table.set_variable(variable.value, value)
     return response.success(value)
@@ -341,12 +339,21 @@ class Interpreter:
     start_value: Number | List | String = response.register(self.interpret(node.start_node, context))
     if response.should_return():
       return response
+    if not isinstance(start_value, Number | List | String):
+      return response.failure(InvalidSyntaxError(
+        start_value.position_start, start_value.position_end,
+        "Ожидались число, список или строка"
+      ))
 
     if node.end_node:
-      end_value = response.register(
-        self.interpret(node.end_node, context))
+      end_value = response.register(self.interpret(node.end_node, context))
       if response.should_return():
         return response
+      if not isinstance(end_value, Number):
+        return response.failure(InvalidSyntaxError(
+          end_value.position_start, end_value.position_end,
+          "Ожидалось число"
+        ))
     else:
       end_value = Number(None)
 
@@ -354,6 +361,11 @@ class Interpreter:
       step_value = response.register(self.interpret(node.step_node, context))
       if response.should_return():
         return response
+      if not isinstance(step_value, Number):
+        return response.failure(InvalidSyntaxError(
+          step_value.position_start, step_value.position_end,
+          "Ожидалось число"
+        ))
     else:
       step_value = Number(1)
 
@@ -376,13 +388,13 @@ class Interpreter:
           break
     else:
       index = 0
+      if not isinstance(start_value, String | List):
+        return response.failure(InvalidSyntaxError(
+          start_value.position_start, start_value.position_end,
+          "Ожидались строка или список"
+        ))
       while index < len(start_value.value):
-        context.symbol_table.set_variable(
-          node.variable_name.value,
-          String(start_value.value[index])
-          if isinstance(start_value, String) else
-          start_value.elements[index]
-        )
+        context.symbol_table.set_variable(node.variable_name.value, start_value.get(Number(index)))
 
         value = response.register(self.interpret(node.body_node, context))
         if response.should_return() and not response.break_loop and not response.continue_loop:
@@ -499,7 +511,6 @@ class Interpreter:
   def interpret_BreakNode(self, node: BreakNode, context: Context):
     return RuntimeResponse().success_break()
 
-  # Recursion including
   def interpret_IncludeNode(self, node: IncludeNode, context: Context):
     from run import run
 
@@ -526,17 +537,18 @@ class Interpreter:
             if error:
               return response.failure(error)
       else:
-        module_path = f"{self.script_location}{PATH_SEPARATOR}{module_name}.{FILE_EXTENSION}"
-        files = list(map(str, Path(self.script_location).glob(f"*.{FILE_EXTENSION}")))
+        module_path = f"{self.script_location}{PATH_SEPARATOR}{module_name.rsplit(PATH_SEPARATOR, 1)[0]}"
+        files = list(map(lambda x: str(x).rsplit(PATH_SEPARATOR, 1)[-1], Path(module_path).glob(f"*.{FILE_EXTENSION}")))
+        module_name = f"{module_name.rsplit(PATH_SEPARATOR, 1)[-1]}.{FILE_EXTENSION}"
 
-        if module_path not in files:
+        if module_name not in files:
           if module_name not in BUILDIN_LIBRARIES:
             return response.failure(ModuleNotFoundError(module.position_start, module.position_end, module_name))
 
-          module_path = BUILDIN_LIBRARIES[module_name]
+          module_path = LANGAUGE_PATH
 
-        with open(module_path) as file:
-          _, error = run(module_path, file.read())
+        with open(f"{module_path}{PATH_SEPARATOR}{module_name}") as file:
+          _, error = run(f"{module_path}{PATH_SEPARATOR}{module_name}", file.read())
           if error:
             return response.failure(error)
 

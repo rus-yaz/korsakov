@@ -653,7 +653,7 @@ class Parser:
           return response
       else:
         step_value = None
-    elif self.token.matches_keyword(IN):
+    elif self.token.matches_keyword(OF):
       response.advance(self)
 
       start_value = response.register(self.expression())

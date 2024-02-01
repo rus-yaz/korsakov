@@ -45,7 +45,7 @@ if __name__ == "__main__":
       if error:
         print(error)
       elif result:
-        result = result.elements
+        result = result.value
 
         if len(result) == 1:
           result = result[0]

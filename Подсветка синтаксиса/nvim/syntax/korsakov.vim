@@ -1,24 +1,24 @@
 syn region Comment start="!!" end="$" contains=SpecialComment
 syn keyword SpecialComment TODO NOTE XXX
 
-syn match Number /\d/
-syn match Float /\d\.\d/
+syn match Number /\d\+\(_\d\+\)*/
+syn match Float /\d\+\(_\d\+\)*\.\d\+\(_\d\+\)*/
 
 syn region String start="\"" end="\"" contains=SpecialChar
 syn match SpecialChar /\\[tnvr"\\]/
 
-syn match Identifier /[A-zА-я_][A-zА-я0-9_]\+/
-syn match Constant /[A-ZА-Я_][A-ZА-Я0-9_]\+/
+syn match Identifier /[A-zА-яЁё_][A-zА-яЁё0-9_]\+/
+syn match Constant /[A-ZА-ЯЁ_][A-ZА-ЯЁ0-9_]\+/
 
 syn keyword Conditional check     if   then else
 syn keyword Conditional проверить если то   иначе
 
-syn keyword Repeat for in from to after while
-syn keyword Repeat для в  от   до через пока
+syn keyword Repeat for of from to after while
+syn keyword Repeat для из от   до через пока
 
 syn keyword Keyword function
 syn keyword Keyword функция
-syn match Function /[A-zА-я_][A-zА-я0-9_]\+\((\)\@=/
+syn match Function /[A-zА-яЁё_][A-zА-яЁё0-9_]*\((\)\@=/
 
 syn match Delimiter /\(---\|===\|%%%\)/
 

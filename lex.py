@@ -40,8 +40,8 @@ class Lexer:
         continue
 
       match self.character:
-        case " " | "\t": token = None if self.tokens and self.tokens[-1].type in [SPACE, NEWLINE] else SPACE
-        case ";" | "\n": token = None if self.tokens and self.tokens[-1].type == NEWLINE else NEWLINE
+        case " " | "\t": token = None if not self.tokens or self.tokens[-1].type in [SPACE, NEWLINE] else SPACE
+        case ";" | "\n": token = None if not self.tokens or self.tokens[-1].type == NEWLINE else NEWLINE
 
         case ":": token = COLON
         case ",": token = COMMA
@@ -55,7 +55,7 @@ class Lexer:
             while self.character not in ["\n", None]:
               self.advance()
 
-            token = None if self.tokens[-1].type in [NEWLINE, SPACE] else SPACE
+            token = None if not self.tokens or self.tokens[-1].type in [NEWLINE, SPACE] else NEWLINE
         case "=":
           token = ASSIGN
           if self.tokens:
@@ -157,7 +157,8 @@ class Lexer:
       self.tokens += [Token(token, None, position_start, self.position.copy())] if token else []
       self.advance()
 
-    self.tokens += [Token(END_OF_FILE, None, self.position.copy())]
+    if self.tokens:
+      self.tokens += [Token(END_OF_FILE, None, self.position.copy())]
     return list(filter(lambda token: token and token.type != SPACE, self.tokens)), None
 
   def make_number(self):

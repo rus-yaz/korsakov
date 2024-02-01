@@ -45,6 +45,7 @@ $ python korsakov.py <файл> [-d/--debug]
 #### Vim
 
 ```console
+$ cd Подсветка\ синтаксиса/vim
 $ mkdir -p ~/.vim/syntax
 $ cp korsakov.vim ~/.vim/syntax/
 $ echo "au BufNewFile,BufRead *.kors :set filetype=korsakov" >> ~/.vimrc
@@ -53,7 +54,6 @@ $ echo "au BufNewFile,BufRead *.kors :set filetype=korsakov" >> ~/.vimrc
 #### Neovim
 
 ```console
-$ mkdir -p ~/.config/nvim/syntax ~/.config/nvim/ftdetect
-$ cp korsakov.vim ~/.config/nvim/syntax
-$ echo "au BufNewFile,BufRead *.kors :set filetype=korsakov" >> ~/.config/nvim/ftdetect/korsakov.vim
+$ cd Подсветка\ синтаксиса/nvim
+$ cp syntax ftdetect ~/.config/nvim
 ```

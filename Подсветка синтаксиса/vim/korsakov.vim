@@ -1,0 +1,1 @@
+../nvim/syntax/korsakov.vim

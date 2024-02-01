@@ -102,7 +102,7 @@ ELSE = ["иначе", "else"]
 THEN = ["то", "then"]
 
 FOR = ["для", "for"]
-IN = ["в", "in"]
+OF = ["из", "of"]
 FROM = ["от", "from"]
 TO = ["до", "to"]
 AFTER = ["через", "after"]
@@ -119,7 +119,7 @@ INCLUDE = ["включить", "include"]
 KEYWORDS =\
   AND + OR + NOT +\
   CHECK + IF + ELSE + THEN +\
-  FOR + IN + FROM + TO + AFTER +\
+  FOR + OF + FROM + TO + AFTER +\
   WHILE + CONTINUE + BREAK +\
   FUNCTION + RETURN + \
   INCLUDE
