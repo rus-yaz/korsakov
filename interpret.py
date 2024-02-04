@@ -37,7 +37,7 @@ class Interpreter:
     response = RuntimeResponse()
     dictionary = Dictionary([], context)
 
-    for key_node, element_node in node.element_nodes.items():
+    for key_node, element_node in node.element_nodes:
       key = key_node if context == global_symbol_table else response.register(self.interpret(key_node, context))
       if response.should_return():
         return response
@@ -166,13 +166,13 @@ class Interpreter:
 
   def interpret_VariableAccessNode(self, node: VariableAccessNode, context: Context):
     response = RuntimeResponse()
-    variable_name = node.variable.value
-    value = context.symbol_table.get_variable(variable_name)
+    variable = node.variable
+    value = context.symbol_table.get_variable(variable.value)
 
     if value == None:
       return response.failure(BadIdentifierError(
         node.variable.position_start, node.variable.position_end,
-        f"Переменная \"{variable_name}\" не найдена"
+        f"Переменная \"{variable.value}\" не найдена"
       ))
 
     if node.keys:
@@ -181,20 +181,31 @@ class Interpreter:
       while keys:
         if not isinstance(value, String | Dictionary | List):
           return response.failure(InvalidSyntaxError(
-            node.variable.position_start, node.keys[-1].position_end,
+            variable.position_start, variable.position_end,
             f"Из типа \"{repr(value).split('(')[0]}\" нельзя взять элемент"
           ))
 
         key, *keys = keys
-        key = response.register(self.interpret(key, context))
+        if not isinstance(value, Object):
+          key = response.register(self.interpret(key, context))
+          if response.should_return():
+            return response
+        else:
+          if not isinstance(key, VariableAccessNode) and key.token.type not in [IDENTIFIER, KEYWORD]:
+            return response.failure(InvalidKeyError(
+              key.token.position_start, key.token.position_end,
+              "Ключ должен быть Идентификатором"
+            ))
+          key = response.register(self.interpret(StringNode(key.variable), context))
+
         if isinstance(value, Dictionary) and not isinstance(key, Number | String):
           return response.failure(InvalidSyntaxError(
-            node.position_start, node.position_end,
+            key.position_start, key.position_end,
             "Ключ должен иметь тип Число или Строка"
           ))
         if isinstance(value, List | String) and not isinstance(key, Number):
           return response.failure(InvalidSyntaxError(
-            node.position_start, node.position_end,
+            key.position_start, key.position_end,
             "Индекс должен иметь тип Число"
           ))
         elif response.should_return():
@@ -205,12 +216,12 @@ class Interpreter:
 
         if value == None:
           if is_dictionary:
-            return response.failure(InvalidKeyError(node.position_start, node.position_end))
+            return response.failure(InvalidKeyError(key.position_start, key.position_end))
 
-          return response.failure(IndexOutOfRangeError(node.position_start, node.position_end))
+          return response.failure(IndexOutOfRangeError(key.position_start, key.position_end))
 
     if value == None:
-      return response.failure(BadIdentifierError(node.position_start, node.position_end, f"`{variable_name}`"))
+      return response.failure(BadIdentifierError(node.position_start, node.position_end, f"`{variable.value}`"))
 
     return response.success(value.set_context(context).set_position(node.position_start, node.position_end))
 
@@ -223,22 +234,36 @@ class Interpreter:
       return response
 
     if node.keys:
+      item = context.symbol_table.get_variable(variable.value)
+      if item == None:
+        return response.failure(BadIdentifierError(variable.position_start, variable.position_end, variable.value))
+      
+      items = [item.copy()]
       keys = []
+      
       for key in node.keys:
-        key = response.register(self.interpret(key, context))
-        if response.should_return():
-          return response
+        if not isinstance(items[0], Object):
+          key = response.register(self.interpret(key, context))
+          if response.should_return():
+            return response
+        else:
+          if not isinstance(key, VariableAccessNode) and key.token.type not in [IDENTIFIER, KEYWORD]:
+            return response.failure(InvalidKeyError(
+              key.token.position_start, key.token.position_end,
+              "Ключ должен быть Идентификатором"
+            ))
+          key = response.register(self.interpret(StringNode(key.variable), context))
 
         keys += [key]
 
-      items = [context.symbol_table.get_variable(variable.value).copy()]
-
-      for key in keys[:-1]:
+        if len(keys) == len(node.keys):
+          break 
+        
         if -len(items[0].value) < key.value >= len(items[0].value):
           return response.failure(IndexOutOfRangeError(node.position_start, node.position_end, key))
 
         item = items[0].get(key).copy()
-        if not isinstance(item, String | Dictionary | List):
+        if not isinstance(item, String | Dictionary | List | Object):
           return response.failure(InvalidSyntaxError(
             node.variable.position_start, node.keys[-1].position_end,
             f"Из типа \"{repr(item).split('(')[0]}\" нельзя взять элемент"
@@ -454,9 +479,9 @@ class Interpreter:
       return response.success(Number(None, context) if return_null else else_case_value)
 
     return response.success(
-        Number(None, context).set_position(node.position_start, node.position_end)
-        if node.should_return_null else
-        List(elements, context).set_position(node.position_start, node.position_end)
+      Number(None, context).set_position(node.position_start, node.position_end)
+      if node.return_null else
+      List(elements, context).set_position(node.position_start, node.position_end)
     )
 
   def interpret_FunctionDefinitionNode(self, node: FunctionDefinitionNode, context: Context):
@@ -465,8 +490,22 @@ class Interpreter:
     function_name = node.variable_name.value if node.variable_name else None
     body_node = node.body_node
     argument_names = list(map(lambda x: x.value, node.argument_names))
-    function_value = Function(
-      function_name, body_node, argument_names, node.should_auto_return, context
+    function_value = Function(function_name, body_node, argument_names, node.auto_return, context).set_position(node.position_start, node.position_end)
+
+    if node.variable_name:
+      context.symbol_table.set_variable(function_name, function_value)
+
+    return response.success(function_value)
+
+  def interpret_MethodDefinitionNode(self, node: MethodDefinitionNode, context: Context):
+    response = RuntimeResponse()
+
+    function_name = node.variable_name.value if node.variable_name else None
+    body_node = node.body_node
+    argument_names = list(map(lambda x: x.value, node.argument_names))
+    function_value = Method(
+      function_name, body_node,
+      argument_names, node.auto_return, context
     ).set_position(node.position_start, node.position_end)
 
     if node.variable_name:
@@ -474,11 +513,24 @@ class Interpreter:
 
     return response.success(function_value)
 
-  def interpret_FunctionCallNode(self, node: FunctionCallNode, context: Context):
+  def interpret_ClassDefinitionNode(self, node: ClassDefinitionNode, context: Context):
+    response = RuntimeResponse()
+    class_name = node.variable_name.value
+    methods = response.register(self.interpret(node.body_node, context))
+    context.symbol_table.set_variable(class_name, Class(class_name, methods, context))
+    return response.success(Number(None, context))
+
+  def interpret_CallNode(self, node: CallNode, context: Context):
     response = RuntimeResponse()
     arguments = []
 
-    call_value: Function = response.register(self.interpret(node.call_node, context))
+    call_node = response.register(self.interpret(node.call_node, context))
+
+    if isinstance(call_node, Method):
+      object_node = node.call_node
+      object_node.keys = []
+      first_argument = response.register(self.interpret(object_node, context))
+      arguments += [first_argument]
     if response.should_return():
       return response
 
@@ -487,7 +539,9 @@ class Interpreter:
       if response.should_return():
         return response
 
-    return_value = response.register(call_value.execute(arguments))
+    return_value = response.register(call_node.execute(arguments))
+    if isinstance(call_node, Method):
+      context.symbol_table.set_variable(object_node.variable.value, call_node.interal_context.symbol_table.get_variable(call_node.arguments_names[0]))
     if response.should_return():
       return response
 
@@ -516,40 +570,39 @@ class Interpreter:
 
     response = RuntimeResponse()
 
-    for module in node.modules:
-      module_name = module.value
+    module_name = node.module.value
 
-      if module_name.endswith("*"):
-        if PATH_SEPARATOR in module_name:
-          module_name, depth = module_name.rsplit(PATH_SEPARATOR, 1)
-        else:
-          depth = module_name
-        module_path = f"{self.script_location}{PATH_SEPARATOR}{module_name}"
-
-        get_files = getattr(Path(module_path), "glob" if depth == "*" else "rglob")
-        files = list(map(str, get_files(f"*.{FILE_EXTENSION}")))
-        if self.file_path in files:
-          files.remove(self.file_path)
-
-        for file_path in files:
-          with open(file_path) as file:
-            _, error = run(file_path, file.read())
-            if error:
-              return response.failure(error)
+    if module_name.endswith("*"):
+      if PATH_SEPARATOR in module_name:
+        module_name, depth = module_name.rsplit(PATH_SEPARATOR, 1)
       else:
-        module_path = f"{self.script_location}{PATH_SEPARATOR}{module_name.rsplit(PATH_SEPARATOR, 1)[0]}"
-        files = list(map(lambda x: str(x).rsplit(PATH_SEPARATOR, 1)[-1], Path(module_path).glob(f"*.{FILE_EXTENSION}")))
-        module_name = f"{module_name.rsplit(PATH_SEPARATOR, 1)[-1]}.{FILE_EXTENSION}"
+        depth = module_name
+      module_path = f"{self.script_location}{PATH_SEPARATOR}{module_name}"
 
-        if module_name not in files:
-          if module_name not in BUILDIN_LIBRARIES:
-            return response.failure(ModuleNotFoundError(module.position_start, module.position_end, module_name))
+      get_files = getattr(Path(module_path), "glob" if depth == "*" else "rglob")
+      files = list(map(str, get_files(f"*.{FILE_EXTENSION}")))
+      if self.file_path in files:
+        files.remove(self.file_path)
 
-          module_path = LANGAUGE_PATH
-
-        with open(f"{module_path}{PATH_SEPARATOR}{module_name}") as file:
-          _, error = run(f"{module_path}{PATH_SEPARATOR}{module_name}", file.read())
+      for file_path in files:
+        with open(file_path) as file:
+          _, error = run(file_path, file.read())
           if error:
             return response.failure(error)
+    else:
+      module_path = f"{self.script_location}{PATH_SEPARATOR}{module_name.rsplit(PATH_SEPARATOR, 1)[0]}"
+      files = list(map(lambda x: str(x).rsplit(PATH_SEPARATOR, 1)[-1], Path(module_path).glob(f"*.{FILE_EXTENSION}")))
+      module_name = f"{module_name.rsplit(PATH_SEPARATOR, 1)[-1]}.{FILE_EXTENSION}"
+
+      if module_name not in files:
+        if module_name not in BUILDIN_LIBRARIES:
+          return response.failure(ModuleNotFoundError(module.position_start, module.position_end, module_name))
+
+        module_path = LANGAUGE_PATH
+
+      with open(f"{module_path}{PATH_SEPARATOR}{module_name}") as file:
+        _, error = run(f"{module_path}{PATH_SEPARATOR}{module_name}", file.read())
+        if error:
+          return response.failure(error)
 
     return response.success(Number(None, context))

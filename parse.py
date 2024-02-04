@@ -28,15 +28,17 @@ class Parser:
       self.token = self.tokens[self.token_index - 1]
 
   def parse(self):
-    result = self.statements()
+    response = ParseResponse()
+    result = ListNode([], self.token.position_start, self.token.position_start) 
+    
+    while self.token.type != END_OF_FILE:
+      result.element_nodes += [response.register(self.statement())]
+      if response.error:
+        return response
 
-    if not result.error and self.token.type != END_OF_FILE:
-      return result.failure(InvalidSyntaxError(
-        self.token.position_start, self.token.position_end,
-        "Ожидался математический оператор (`+`, `-`, `*`, `/`)"
-      ))
+      response.advance(self)
 
-    return result
+    return response.success(result)
 
   def expression(self):
     response = ParseResponse()
@@ -162,7 +164,7 @@ class Parser:
         else:
           return response.failure(InvalidSyntaxError(
             self.token.position_start, self.token.position_end,
-            "Ожидались идентификатор или открывающая скобка",
+            "Ожидались идентификатор, целое число, строка или открывающая скобка",
           ))
         if response.error:
           return response
@@ -222,6 +224,12 @@ class Parser:
         return response
       return response.success(function_expression)
 
+    elif token.matches_keyword(CLASS):
+      function_expression = response.register(self.class_expression())
+      if response.error:
+        return response
+      return response.success(function_expression)
+
     elif token.matches_keyword(INCLUDE):
       include_statement = response.register(self.include_statement())
       if response.error:
@@ -234,56 +242,56 @@ class Parser:
       "Ожидались Идентификатор, Целое число, Дробное число, `+`, `-` или `(`)"
     ))
 
-  def function_call(self):
+  def call_expression(self):
     response = ParseResponse()
     atom = response.register(self.atom())
     if response.error:
       return response
 
-    if self.token.type == OPEN_PAREN:
+    if self.token.type != OPEN_PAREN:
+      return response.success(atom)
+
+    response.advance(self)
+    argument_nodes = []
+
+    if self.token.type == NEWLINE:
       response.advance(self)
-      argument_nodes = []
 
-      if self.token.type == NEWLINE:
+    if self.token.type == CLOSED_PAREN:
+      response.advance(self)
+    else:
+      argument_nodes += [response.register(self.expression())]
+      if response.error:
+        return response.failure(InvalidSyntaxError(
+          self.token.position_start, self.token.position_end,
+          "Ожидались `если` (`if`), `для` (`for`), `пока` (`while`), `функция` (`function`), Целое число, Дробное число, Идентификатор, `)`"
+        ))
+
+      while self.token.type == COMMA:
         response.advance(self)
-
-      if self.token.type == CLOSED_PAREN:
-        response.advance(self)
-      else:
-        argument_nodes += [response.register(self.expression())]
-        if response.error:
-          return response.failure(InvalidSyntaxError(
-            self.token.position_start, self.token.position_end,
-            "Ожидались `если` (`if`), `для` (`for`), `пока` (`while`), `функция` (`function`), Целое число, Дробное число, Идентификатор, `)`"
-          ))
-
-        while self.token.type == COMMA:
-          response.advance(self)
-
-          if self.token.type == NEWLINE:
-            response.advance(self)
-
-          argument_nodes += [response.register(self.expression())]
-          if response.error:
-            return response
 
         if self.token.type == NEWLINE:
           response.advance(self)
 
-        if self.token.type != CLOSED_PAREN:
-          return response.failure(InvalidSyntaxError(
-            self.token.position_start, self.token.position_end,
-            "Ожидалось `,` или `)`"
-          ))
+        argument_nodes += [response.register(self.expression())]
+        if response.error:
+          return response
 
+      if self.token.type == NEWLINE:
         response.advance(self)
 
-      return response.success(FunctionCallNode(atom, argument_nodes))
+      if self.token.type != CLOSED_PAREN:
+        return response.failure(InvalidSyntaxError(
+          self.token.position_start, self.token.position_end,
+          "Ожидалось `,` или `)`"
+        ))
 
-    return response.success(atom)
+      response.advance(self)
+
+    return response.success(CallNode(atom, argument_nodes))
 
   def power_root(self):
-    return self.binary_operation([POWER, ROOT], self.function_call, self.factor)
+    return self.binary_operation([POWER, ROOT], self.call_expression, self.factor)
 
   def factor(self):
     response = ParseResponse()
@@ -747,7 +755,7 @@ class Parser:
     return response.success(WhileNode(condition, body, False, None))
 
   # TODO: Сделать через парсинг уравнений, а не вручную
-  def function_expression(self):
+  def function_expression(self, is_method=False):
     response = ParseResponse()
     if not self.token.matches_keyword(FUNCTION):
       return response.failure(InvalidSyntaxError(
@@ -757,9 +765,11 @@ class Parser:
 
     response.advance(self)
 
-    variable_name = self.token if self.token.type == IDENTIFIER else None
+    variable_name = None
+    if self.token.type == IDENTIFIER:
+      variable_name = self.token
+      response.advance(self)
 
-    response.advance(self)
     if self.token.type != OPEN_PAREN:
       return response.failure(InvalidSyntaxError(
         self.token.position_start, self.token.position_end,
@@ -869,10 +879,9 @@ class Parser:
 
       response.advance(self)
 
-      return response.success(FunctionDefinitionNode(
-        variable_name, argument_names,
-        body, False
-      ))
+      if is_method:
+        return response.success(MethodDefinitionNode(variable_name, argument_names, body, False))
+      return response.success(FunctionDefinitionNode(variable_name, argument_names, body, False))
 
     if self.token.type != COLON:
       return response.failure(InvalidSyntaxError(
@@ -887,10 +896,72 @@ class Parser:
     if response.error:
       return response
 
-    return response.success(FunctionDefinitionNode(
-      variable_name, argument_names,
-      return_node, True
-    ))
+    if is_method:
+      return response.success(MethodDefinitionNode(variable_name, argument_names, return_node, True))
+    return response.success(FunctionDefinitionNode(variable_name, argument_names, return_node, True))
+
+  def class_expression(self):
+    response = ParseResponse()
+    if not self.token.matches_keyword(CLASS):
+      return response.failure(InvalidSyntaxError(
+        self.token.position_start, self.token.position_end,
+        "Ожидалось `класс` (`class`)"
+      ))
+
+    response.advance(self)
+    if self.token.type != IDENTIFIER:
+      return response.failure(InvalidSyntaxError(
+        self.token.position_start, self.token.position_end,
+        "Ожидалось Идентификатор"
+      ))
+    
+    variable_name = self.token
+
+    response.advance(self)
+    if self.token.type != NEWLINE:
+      return response.failure(InvalidSyntaxError(
+        self.token.position_start, self.token.position_end,
+        "Ожидался перенос строки"
+      ))
+    response.advance(self)
+    methods = []
+    body_position_start = self.token.position_end.copy()
+    while self.token.matches_keyword(FUNCTION):
+      method = response.register(self.function_expression(True))
+      if len(method.argument_names) < 1:
+        return response.failure(InvalidSyntaxError(
+          method.variable_name.position_start, method.variable_name.position_end,
+          "Метод должен иметь хотя бы один аргумент, в который будет помещён сам объект"
+        ))
+      if response.error:
+        return response
+      method_name = StringNode(method.variable_name.copy())
+      methods += [[method_name, method]]
+      response.advance(self)
+
+    if self.token.type != END_OF_CONSTRUCTION:
+      return response.failure(InvalidSyntaxError(
+        self.token.position_start, self.token.position_end,
+        "Ожидалось завершение конструкции"
+      ))
+
+    if all(key.token.value not in ["__инициализация__", "__init__"] for key, _ in methods):
+
+      initial_method_name = Token(STRING, "__инициализация__", self.token.position_start, self.token.position_end)
+      initial_method = MethodDefinitionNode(
+        initial_method_name,
+        [Token(STRING, "объект", self.token.position_start, self.token.position_end)],
+        ListNode([], self.token.position_start, self.token.position_end),
+        True,
+        True
+      )
+
+      methods += [[StringNode(initial_method_name), initial_method]]
+
+    response.advance(self)
+    body_node = DictionaryNode(methods, body_position_start, self.token.position_end.copy())
+
+    return response.success(ClassDefinitionNode(variable_name, body_node))
 
   def include_statement(self):
     response = ParseResponse()
@@ -903,22 +974,17 @@ class Parser:
         "Ожидалось `включить` (`include`)"
       ))
 
-    modules: list[str] = []
+    response.advance(self)
+    if self.token.type != STRING:
+      return response.failure(InvalidSyntaxError(
+        self.token.position_start, self.token.position_end,
+        "Ожидалось название модуля"
+      ))
 
-    while self.token.matches_keyword(INCLUDE):
-      response.advance(self)
-
-      if self.token.type != STRING:
-        return response.failure(InvalidSyntaxError(
-          self.token.position_start, self.token.position_end,
-          "Ожидалось название модуля"
-        ))
-
-      modules += [self.token]
-
+    module = self.token
     response.advance(self)
 
-    return response.success(IncludeNode(modules, position_start, self.token.position_end.copy()))
+    return response.success(IncludeNode(module, position_start, self.token.position_end.copy()))
 
   def statements(self):
     response = ParseResponse()

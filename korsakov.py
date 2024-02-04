@@ -45,8 +45,8 @@ if __name__ == "__main__":
       if error:
         print(error)
       elif result:
-        result = result.value
-
+        result = result.value 
+        
         if len(result) == 1:
           result = result[0]
 
@@ -56,6 +56,6 @@ if __name__ == "__main__":
             print(repr(result))
         else:
           if any(map(lambda x: x.value if hasattr(x, "value") else None, result)):
-            print(str(result.values()))
+            print(str(result))
           elif mods["debug"]:
-            print(repr(result.values()))
+            print(repr(result))

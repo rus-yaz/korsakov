@@ -18,7 +18,7 @@ class Position:
 
     if char == "\n":
       self.row += 1
-      self.column = 0
+      self.column = 1
 
     return self
 
@@ -48,13 +48,13 @@ class Error:
     if index_end < 0:
       index_end = len(text)
 
-    line_count = self.position_end.row - self.position_start.row + 1
-    for i in range(line_count):
+    line_length = self.position_end.row - self.position_start.row + 1
+    for i in range(line_length):
       line = text[index_start:index_end]
-      column_start = self.position_start.column - 1 if not i else 0
-      column_end = self.position_end.column if i == line_count - 1 else len(line) - 1
+      start = self.position_start.column - 1 if not i else 0
+      end = self.position_end.column if i == line_length - 1 else len(line) - 1
 
-      result += line + "\n" + " " * column_start + "^" * (column_end - column_start)
+      result += line + "\n" + " " * start + "^" * (end - start)
 
       index_start = index_end
       index_end = text.find("\n", index_start + 1)
@@ -91,7 +91,7 @@ class InvalidKeyError(Error):
 
 class IndexOutOfRangeError(Error):
   def __init__(self, position_start: Position, position_end: Position, details: str = ""):
-    super().__init__(position_start, position_end, "Индекс вне массива", details)
+    super().__init__(position_start, position_end, "Индекс вне диапазона", details)
 
 
 class ModuleNotFoundError(Error):

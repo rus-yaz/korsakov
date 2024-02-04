@@ -1,6 +1,7 @@
 from context import Context, SymbolTable
 from errors_list import InvalidSyntaxError, RuntimeError
 from runtime_response import RuntimeResponse
+from tokens_list import global_context
 
 
 class Value:
@@ -89,7 +90,7 @@ class Value:
 
 
 class Number(Value):
-  def __init__(self, value=0, context=None):
+  def __init__(self, value, context):
     super().__init__()
     self.value = int(value) if isinstance(value, bool) else value
     self.context = context
@@ -204,14 +205,14 @@ class Number(Value):
 
 
 class String(Value):
-  def __init__(self, value="", context=None):
+  def __init__(self, value, context):
     super().__init__()
     self.value = value
     self.context = context
 
   def get(self, index: Number, default_value: Value = None):
     if -len(self.value) <= index.value < len(self.value):
-      return String(self.value[index.value])
+      return String(self.value[index.value], self.context)
     return default_value
 
   def set(self, index: Number, value):
@@ -297,7 +298,7 @@ class String(Value):
 
 
 class List(Value):
-  def __init__(self, values: list, context=None):
+  def __init__(self, values: list, context):
     super().__init__()
     self.value = values.copy()
     self.context = context
@@ -354,9 +355,9 @@ class List(Value):
 
 
 class Dictionary(Value):
-  def __init__(self, values: list[list], context=None):
+  def __init__(self, value: list[list], context):
     super().__init__()
-    self.value = values
+    self.value = value
     self.context = context
 
   def __str__(self):
@@ -426,20 +427,21 @@ functions = {}
 
 
 class Function(Value):
-  def __init__(self, name, body_node=None, arguments=None, should_auto_return=None, context=None):
+  def __init__(self, name, body_node, arguments_names, should_auto_return, context):
     from tokens_list import global_context
 
     super().__init__()
     self.name = name or "<безымянная>"
     self.body_node = body_node
-    self.arguments = arguments
+    self.arguments_names = arguments_names
     self.should_auto_return = should_auto_return
     self.is_buildin = self.name in build_in_functions_names
-    self.context = context or global_context
+    self.context = context
+    self.interal_context = Context(self.name, self.context, self.position_start)
+    self.interal_context.symbol_table = SymbolTable(parent=self.interal_context.parent.symbol_table)
 
     if not self.is_buildin:
-      self.arguments = None
-      functions[self.name,] = dict.fromkeys(arguments, Value)
+      functions[self.name,] = dict.fromkeys(arguments_names, Value)
 
   def __repr__(self):
     return f"Функция({self.name}, {list(self.get_arguments_names(self.name))})"
@@ -465,28 +467,20 @@ class Function(Value):
       arguments[argument] = types
 
       if default_value[0] == "\"":
-        default_arguments[argument] = String(default_value[1:-1])
+        default_arguments[argument] = String(default_value[1:-1], context)
       elif default_value[0].isdigit() or default_value[0] == "-":
-        default_arguments[argument] = Number(
-          float(default_value)
-          if "." in default_value else
-          int(default_value)
-        )
+        default_arguments[argument] = Number(float(default_value) if "." in default_value else int(default_value), context)
       elif default_value[0] == "%":
-        default_arguments[argument] = List(
-          eval(default_value.replace("%(", "[").replace(")%", "]")))
+        default_arguments[argument] = List(eval(default_value.replace("%(", "[").replace(")%", "]")), context)
       else:
-        default_arguments[argument] = context.symbol_table.get_variable(
-          default_value)
+        default_arguments[argument] = context.symbol_table.get_variable(default_value)
 
     values = []
     for argument_name in arguments:
-      argument = context.symbol_table.get_variable(
-        argument_name, default_arguments.get(argument_name, Number(None)))
-      error = self.check_instance(
-        argument, argument_name, context, arguments[argument_name])
+      argument = context.symbol_table.get_variable(argument_name, default_arguments.get(argument_name, Number(None, context)))
+      error = self.check_instance(argument, argument_name, context, arguments[argument_name])
       if error:
-        return error, [Number(None)] * len(arguments)
+        return error, *([Number(None, context)] * len(arguments))
 
       values += [argument]
 
@@ -515,19 +509,14 @@ class Function(Value):
   def execute(self, arguments):
     response = RuntimeResponse()
 
-    context = Context(self.name, self.context, self.position_start)
-    context.symbol_table = SymbolTable(parent=context.parent.symbol_table)
+    method = getattr(self, f"_{self.name}", self.no_interpret_method) if self.is_buildin else self
 
-    method = getattr(
-      self, f"_{self.name}", self.no_interpret_method) if self.is_buildin else self
-
-    response.register(self.check_and_populate_arguments(
-      self.get_arguments_names(self.name), arguments, context))
+    response.register(self.check_and_populate_arguments(self.get_arguments_names(self.name), arguments, self.interal_context))
     if response.should_return():
       return response
 
     if self.is_buildin:
-      return_value = response.register(method(context))
+      return_value = response.register(method(self.interal_context))
       if response.should_return():
         return response
 
@@ -536,21 +525,18 @@ class Function(Value):
       from interpret import Interpreter
       interpret = Interpreter(self.name)
 
-      arguments_names = [argument_name.split(
-        "=")[0] for argument_name in self.get_arguments_names(self.name)]
-      error, *arguments = self.get_arguments(context, self.name)
+      arguments_names = [argument_name.split("=")[0] for argument_name in self.get_arguments_names(self.name)]
+      error, *arguments = self.get_arguments(self.interal_context, self.name)
       if error:
         return response.failure(error)
 
-      context.symbol_table.set_many_variables([[[name], value] for name, value in zip(arguments_names, arguments)])
+      self.interal_context.symbol_table.set_many_variables([[[name], value] for name, value in zip(arguments_names, arguments)])
 
-      value = response.register(interpret.interpret(self.body_node, context))
+      value = response.register(interpret.interpret(self.body_node, self.interal_context))
       if response.should_return() and response.function_return_value == None:
         return response
 
-      return_value = (
-        value if self.should_auto_return else response.function_return_value
-      ) or response.function_return_value or Number(None)
+      return_value = (value if self.should_auto_return else response.function_return_value) or response.function_return_value or Number(None, self.context)
 
       return response.success(return_value)
 
@@ -597,7 +583,7 @@ class Function(Value):
   def copy(self):
     copy = Function(
       self.name, self.body_node,
-      self.arguments, self.should_auto_return,
+      self.arguments_names, self.should_auto_return,
       self.context
     )
     copy.set_position(self.position_start, self.position_end)
@@ -651,7 +637,7 @@ class Function(Value):
 
     types = {"Number": "Число", "String": "Строка",
              "List": "Список", "Dictionary": "Словарь",
-             "Function": "Функция"}
+             "Function": "Функция", "Class": "Класс", "Object": "Объект"}
 
     return RuntimeResponse().success(String(types[value.__class__.__name__], context))
   functions[("type", "тип")] = {"value": Value}
@@ -842,6 +828,168 @@ build_in_functions_names = [
 ]
 
 build_in_functions = {
-  functions_names: Function(functions_names[0])
+  functions_names: Function(functions_names[0], None, None, None, global_context)
   for functions_names in functions
 }
+
+class Class(Value):
+  def __init__(self, name, value, context):
+    super().__init__()
+
+    self.name = name
+    self.value: Dictionary = value
+    self.initial_method = self.value.get(String("__init__", context)) or self.value.get(String("__инициализация__", context))
+    self.initial_method.arguments_names = {argument_name: Value for argument_name in self.initial_method.arguments_names}
+    self.context = context
+
+  def __repr__(self):
+    return f"Класс({self.name}, {self.value})"
+
+  def execute(self, arguments):
+    response = RuntimeResponse()
+
+    context = Context(self.name, self.context, self.position_start)
+    context.symbol_table = SymbolTable(parent=context.parent.symbol_table)
+
+    arguments = [Object(self.value.items(), context)] + arguments
+
+    response.register(self.check_and_populate_arguments(self.initial_method.arguments_names, arguments, context))
+    if response.should_return():
+      return response
+
+    from interpret import Interpreter
+    interpret = Interpreter(self.name)
+
+    arguments_names = [argument_name.split("=")[0] for argument_name in self.initial_method.arguments_names]
+
+    error, *arguments = self.get_arguments(context, self.name)
+    if error:
+      return response.failure(error)
+
+    context.symbol_table.set_many_variables([[[name], value] for name, value in zip(arguments_names, arguments)])
+
+    value = response.register(interpret.interpret(self.initial_method.body_node, context))
+    if response.function_return_value:
+      return response.failure(InvalidSyntaxError(
+        self.initial_method.position_start, self.initial_method.position_end,
+        "Метод инициализации не может ничего возвращать"
+      ))
+    if response.should_return():
+      return response
+
+    return_value = context.symbol_table.get_variable(arguments_names[0])
+    self.value = return_value
+
+    return response.success(return_value)
+
+  def check_and_populate_arguments(self, argument_names, arguments, context):
+    response = RuntimeResponse()
+
+    response.register(self.check_arguments(arguments, argument_names))
+    if response.should_return():
+      return response
+
+    self.populate_arguments(argument_names, arguments, context)
+
+    return response.success(None)
+
+  def check_arguments(self, arguments, argument_names):
+    response = RuntimeResponse()
+
+    required_argument_names: list[str] = []
+    for argument_name in argument_names:
+      if "=" in argument_name:
+        break
+
+      required_argument_names += [argument_name]
+
+    if len(arguments) > len(argument_names) or len(arguments) < len(required_argument_names):
+      return response.failure(RuntimeError(
+        self.position_start, self.position_end,
+        f"Количество аргументов функции '{self.name}' - {len(argument_names if len(arguments) > len(argument_names) else required_argument_names)}, но получено {len(arguments)}",
+        self.context
+      ))
+
+    return response.success(None)
+
+  def populate_arguments(self, argument_names, arguments, context: Context):
+    for i in range(len(arguments)):
+      argument_name = list(argument_names)[i].split("=")[0]
+      argument_value = arguments[i]
+      context.symbol_table.set_variable(argument_name, argument_value)
+
+  def get_arguments(self, context: Context, function_name):
+    arguments_names = self.initial_method.arguments_names
+
+    arguments = {}
+    default_arguments = {}
+    for argument in list(arguments_names):
+      if "=" not in argument:
+        arguments[argument] = Value
+        continue
+
+      types = arguments_names[argument]
+      argument, default_value = argument.split("=")
+      default_value: str
+      arguments[argument] = types
+
+      if default_value[0] == "\"":
+        default_arguments[argument] = String(default_value[1:-1], context)
+      elif default_value[0].isdigit() or default_value[0] == "-":
+        default_arguments[argument] = Number(float(default_value) if "." in default_value else int(default_value), context)
+      elif default_value[0] == "%":
+        default_arguments[argument] = List(eval(default_value.replace("%(", "[").replace(")%", "]")), context)
+      else:
+        default_arguments[argument] = context.symbol_table.get_variable(default_value)
+
+    values = []
+    for argument_name in arguments:
+      argument = context.symbol_table.get_variable(argument_name, default_arguments.get(argument_name, Number(None, context)))
+      error = self.check_instance(argument, argument_name, context, arguments[argument_name])
+      if error:
+        return error, [Number(None, context)] * len(arguments)
+
+      values += [argument]
+
+    return None, *values
+
+  def check_instance(self, value, argument_name, context, type, custom_message=""):
+    if isinstance(value, type):
+      return False
+
+    type_names = []
+    if type == type | Number:
+      type_names += ["числом"]
+    if type == type | String:
+      type_names += ["строкой"]
+    if type == type | List:
+      type_names += ["списком"]
+    if type == type | Function:
+      type_names += ["функцией"]
+
+    return RuntimeResponse().failure(RuntimeError(
+      self.position_start, self.position_end,
+      custom_message or f"Аргумент \"{argument_name.rstrip('?')}\" должен быть {', '.join(type_names)}",
+      context
+    ))
+
+
+class Object(Dictionary):
+  def __init__(self, value, context):
+    super().__init__(value, context)
+
+  def __repr__(self):
+    return f"Объект({str(self)})"
+
+  def copy(self):
+    copy = Object(self.value.copy(), self.context)
+    copy.set_position(self.position_start, self.position_end)
+    return copy
+
+class Method(Function):
+  def __init__(self, name, body_node, arguments_names, should_auto_return, context):
+    super().__init__(name, body_node, arguments_names, should_auto_return, context)
+
+  def __repr__(self):
+    return f"Метод({self.name}, {list(self.get_arguments_names(self.name))})"
+

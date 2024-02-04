@@ -36,9 +36,9 @@ def set_global_variables():
   from types_list import Number, build_in_functions
 
   global_symbol_table.set_many_variables([
-    [["null", "нуль"], Number(None)],
-    [["true", "истина"], Number(1)],
-    [["false", "ложь"], Number(0)],
+    [["null", "нуль"], Number(None, global_context)],
+    [["true", "истина"], Number(1, global_context)],
+    [["false", "ложь"], Number(0, global_context)],
     *build_in_functions.items()
   ])
 
@@ -98,8 +98,8 @@ NOT = ["не", "not"]
 
 CHECK = ["проверить", "check"]
 IF = ["если", "if"]
-ELSE = ["иначе", "else"]
 THEN = ["то", "then"]
+ELSE = ["иначе", "else"]
 
 FOR = ["для", "for"]
 OF = ["из", "of"]
@@ -111,6 +111,7 @@ WHILE = ["пока", "while"]
 CONTINUE = ["продолжить", "continue"]
 BREAK = ["прервать", "break"]
 
+CLASS = ["класс", "class"]
 FUNCTION = ["функция", "function"]
 RETURN = ["вернуть", "return"]
 
@@ -121,5 +122,5 @@ KEYWORDS =\
   CHECK + IF + ELSE + THEN +\
   FOR + OF + FROM + TO + AFTER +\
   WHILE + CONTINUE + BREAK +\
-  FUNCTION + RETURN + \
+  CLASS + FUNCTION + RETURN + \
   INCLUDE

@@ -16,8 +16,8 @@ syn keyword Conditional проверить если то   иначе
 syn keyword Repeat for of from to after while
 syn keyword Repeat для из от   до через пока
 
-syn keyword Keyword function
-syn keyword Keyword функция
+syn keyword Keyword class function
+syn keyword Keyword класс функция
 syn match Function /[A-zА-яЁё_][A-zА-яЁё0-9_]*\((\)\@=/
 
 syn match Delimiter /\(---\|===\|%%%\)/
