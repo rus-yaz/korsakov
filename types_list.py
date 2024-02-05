@@ -444,7 +444,7 @@ class Function(Value):
       functions[self.name,] = dict.fromkeys(arguments_names, Value)
 
   def __repr__(self):
-    return f"Функция({self.name}, {list(self.get_arguments_names(self.name))})"
+    return f"Функция({self.name}, {List(self.get_arguments_names(self.name), self.context)})"
 
   def get_arguments_names(self, function_name):
     for function_names, arguments in functions.items():
@@ -519,6 +519,8 @@ class Function(Value):
       return_value = response.register(method(self.interal_context))
       if response.should_return():
         return response
+        
+      self.interal_context.symbol_table = SymbolTable(parent=self.interal_context.parent.symbol_table)
 
       return response.success(return_value)
     else:
