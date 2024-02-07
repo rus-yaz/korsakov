@@ -136,9 +136,9 @@ class Interpreter:
     error = None
 
     if node.operator.type == SUBSTRACION:
-      result, error = result.multiplication(Number(-1))
+      result, error = result.multiplication(Number(-1, context))
     elif node.operator.type == ROOT:
-      result, error = Number(2).root(result)
+      result, error = Number(2, context).root(result)
 
     elif node.operator.type == INCREMENT:
       response.register(self.interpret(VariableAssignNode(
@@ -147,7 +147,7 @@ class Interpreter:
         NumberNode(Token(INTEGER, result.value + 1, result.position_start))
       ), context))
       if node.operator.value:
-        result, error = result.addition(Number(1))
+        result, error = result.addition(Number(1, context))
     elif node.operator.type == DECREMENT:
       response.register(self.interpret(VariableAssignNode(
         node.node.variable,
@@ -155,7 +155,7 @@ class Interpreter:
         NumberNode(Token(INTEGER, result.value - 1, result.position_start))
       ), context))
       if node.operator.value:
-        result, error = result.subtraction(Number(1))
+        result, error = result.subtraction(Number(1, context))
     elif node.operator.matches_keyword(NOT):
       result, error = result.denial()
 
@@ -380,7 +380,7 @@ class Interpreter:
           "Ожидалось число"
         ))
     else:
-      end_value = Number(None)
+      end_value = Number(None, context)
 
     if node.step_node:
       step_value = response.register(self.interpret(node.step_node, context))
@@ -392,13 +392,13 @@ class Interpreter:
           "Ожидалось число"
         ))
     else:
-      step_value = Number(1)
+      step_value = Number(1, context)
 
     if end_value.value != None:
       counter = start_value.value
 
       while counter < end_value.value if step_value.value > 0 else counter > end_value.value:
-        context.symbol_table.set_variable(node.variable_name.value, Number(counter))
+        context.symbol_table.set_variable(node.variable_name.value, Number(counter, context))
 
         value = [response.register(self.interpret(node.body_node, context))]
         if response.should_return() and not response.break_loop and not response.continue_loop:
@@ -419,7 +419,7 @@ class Interpreter:
           "Ожидались строка или список"
         ))
       while index < len(start_value.value):
-        context.symbol_table.set_variable(node.variable_name.value, start_value.get(Number(index)))
+        context.symbol_table.set_variable(node.variable_name.value, start_value.get(Number(index, context)))
 
         value = response.register(self.interpret(node.body_node, context))
         if response.should_return() and not response.break_loop and not response.continue_loop:
@@ -525,14 +525,16 @@ class Interpreter:
     arguments = []
 
     call_node = response.register(self.interpret(node.call_node, context))
+    if response.should_return():
+      return response
 
     if isinstance(call_node, Method):
       object_node = node.call_node
       object_node.keys = []
       first_argument = response.register(self.interpret(object_node, context))
       arguments += [first_argument]
-    if response.should_return():
-      return response
+      if response.should_return():
+        return response
 
     for argument_node in node.argument_nodes:
       arguments += [response.register(self.interpret(argument_node, context))]
@@ -541,7 +543,10 @@ class Interpreter:
 
     return_value = response.register(call_node.execute(arguments))
     if isinstance(call_node, Method):
-      context.symbol_table.set_variable(object_node.variable.value, call_node.interal_context.symbol_table.get_variable(call_node.arguments_names[0]))
+      context.symbol_table.set_variable(
+        object_node.variable.value,
+        call_node.interal_context.symbol_table.get_variable(call_node.arguments_names[0])
+      )
     if response.should_return():
       return response
 

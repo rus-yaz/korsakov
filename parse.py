@@ -119,7 +119,7 @@ class Parser:
 
         middle = BinaryOperationNode(middle, right_operator, right)
 
-        left = BinaryOperationNode(left, Token(KEYWORD, "и"), middle)
+        left = BinaryOperationNode(left, Token(KEYWORD, "и", self.token.position_start, self.token.position_end), middle)
 
     return response.success(left)
 
@@ -363,7 +363,6 @@ class Parser:
         ))
 
       value_node = None
-
       if self.token.type == COLON:
         is_dictionary = True
         response.advance(self)
@@ -416,7 +415,7 @@ class Parser:
 
     if is_dictionary:
       return response.success(DictionaryNode(
-        element_nodes,
+        element_nodes.items(),
         position_start,
         self.token.position_end.copy()
       ))
@@ -443,7 +442,7 @@ class Parser:
     if response.error:
       return response
 
-    operator = Token(EQUAL)
+    operator = Token(EQUAL, None, self.token.position_start, self.token.position_end)
     if self.token.type in COMPARISONS:
       operator = self.token
       response.advance(self)

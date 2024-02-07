@@ -120,6 +120,8 @@ class RuntimeError(Error):
     context = self.context
 
     while context:
+      if not position:
+        break
       traceback = f"  Файл {position.file}, строка {position.row + 1}, в {context.name}\n{traceback}"
       position = context.parent_position
       context = context.parent

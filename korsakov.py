@@ -5,7 +5,7 @@ from run import run
 
 if __name__ == "__main__":
   program_name, *argv = argv
-  mods = {"debug": False}
+  mods = {"debug": False, "nostd": False}
 
   file_name = ""
   if "-d" in argv or "--debug" in argv:
@@ -16,10 +16,14 @@ if __name__ == "__main__":
 
     mods["debug"] = True
 
+  if "--nostd" in argv:
+    argv.remove("--nostd")
+    mods["nostd"] = True
+
   if argv:
     file_name, *argv = argv
 
-  default = "включить \"стандартный_модуль\"\n"
+  default = "включить \"стандартный_модуль\"\n" if not mods["nostd"] else ""
 
   if file_name:
     code = default

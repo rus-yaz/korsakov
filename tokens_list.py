@@ -1,5 +1,6 @@
 from context import Context, SymbolTable
 from errors_list import Position
+from types_list import Number, Function, functions
 
 
 class Token:
@@ -32,19 +33,17 @@ global_symbol_table = SymbolTable()
 global_context.symbol_table = global_symbol_table
 
 
-def set_global_variables():
-  from types_list import Number, build_in_functions
+build_in_functions = {
+  functions_names: Function(functions_names[0], None, None, None, global_context)
+  for functions_names in functions
+}
 
-  global_symbol_table.set_many_variables([
-    [["null", "нуль"], Number(None, global_context)],
-    [["true", "истина"], Number(1, global_context)],
-    [["false", "ложь"], Number(0, global_context)],
-    *build_in_functions.items()
-  ])
-
-
-set_global_variables()
-
+global_symbol_table.set_many_variables([
+  [["null", "нуль"], Number(None, global_context)],
+  [["true", "истина"], Number(1, global_context)],
+  [["false", "ложь"], Number(0, global_context)],
+  *build_in_functions.items()
+])
 
 FILE_EXTENSION = "kors"
 

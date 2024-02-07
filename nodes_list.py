@@ -87,7 +87,7 @@ class VariableAccessNode:
     self.position_end = position_end
 
   def __repr__(self):
-    return f"VariableAccessNode({self.variable}, {self.keys})"
+    return f"VariableAccessNode({self.variable.value}, {self.keys})"
 
 
 class VariableAssignNode:
@@ -100,7 +100,7 @@ class VariableAssignNode:
     self.position_end = self.value_node.position_end
 
   def __repr__(self):
-    return f"VariableAssignNode({self.variable}, {self.keys}, {self.value_node})"
+    return f"VariableAssignNode({self.variable.value}, {self.keys}, {self.value_node})"
 
 
 # --------------------------------------------------
@@ -147,7 +147,7 @@ class ForNode:
     self.position_end = self.body_node.position_end
 
   def __repr__(self):
-    return f"ForNode({self.variable_name}, {self.start_node}, {self.end_node}, {self.step_node}, {self.body_node}, {self.return_null}, {self.else_case})"
+    return f"ForNode({self.variable_name.value}, {self.start_node}, {self.end_node}, {self.step_node}, {self.body_node}, {self.return_null}, {self.else_case})"
 
 
 class WhileNode:
@@ -184,7 +184,7 @@ class FunctionDefinitionNode:
     self.position_end = self.body_node.position_end
 
   def __repr__(self):
-    return f"FunctionDefinitionNode({self.variable_name}, {self.argument_names}, {self.body_node}, {self.auto_return}, {self.is_method})"
+    return f"FunctionDefinitionNode({self.variable_name.value}, {self.argument_names}, {self.body_node}, {self.auto_return})"
 
 
 class ClassDefinitionNode:
@@ -196,7 +196,7 @@ class ClassDefinitionNode:
     self.position_end = self.body_node.position_end
 
   def __repr__(self):
-    return f"ClassDefinitionNode({self.variable_name}, {self.body_node})"
+    return f"ClassDefinitionNode({self.variable_name.value}, {self.body_node})"
 
 
 class MethodDefinitionNode:
@@ -218,7 +218,7 @@ class MethodDefinitionNode:
     self.position_end = self.body_node.position_end
 
   def __repr__(self):
-    return f"MethodDefinitionNode({self.variable_name}, {self.argument_names}, {self.body_node}, {self.auto_return}, {self.is_method})"
+    return f"MethodDefinitionNode({self.variable_name.value}, {self.argument_names}, {self.body_node}, {self.auto_return}, {self.is_method})"
 
 
 class CallNode:
@@ -280,4 +280,4 @@ class IncludeNode:
     self.position_end = position_end
 
   def __repr__(self):
-    return f"IncludeNode({self.module})"
+    return f"IncludeNode({self.module.value})"
