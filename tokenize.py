@@ -2,7 +2,7 @@ from errors_list import *
 from tokens_list import *
 
 
-class Lexer:
+class Tokenizer:
   def __init__(self, file_name, text: str) -> None:
     self.file_name = file_name
     self.text = text
@@ -17,7 +17,7 @@ class Lexer:
     self.position.advance(self.character)
     self.character = self.text[self.position.index] if self.position.index < len(self.text) else None
 
-  def make_tokens(self) -> [[Token], None | Error]:
+  def tokenize(self) -> [[Token], None | Error]:
     self.tokens: list[Token] = []
 
     while self.character != None:
@@ -40,8 +40,8 @@ class Lexer:
         continue
 
       match self.character:
-        case " " | "\t": token = None if not self.tokens or self.tokens[-1].type in [SPACE, NEWLINE] else SPACE
-        case ";" | "\n": token = None if not self.tokens or self.tokens[-1].type == NEWLINE else NEWLINE
+        case " " | "\t": token = None if not self.tokens or self.tokens[-1].check_type(SPACE, NEWLINE) else SPACE
+        case ";" | "\n": token = None if not self.tokens or self.tokens[-1].check_type(NEWLINE) else NEWLINE
 
         case ":": token = COLON
         case ",": token = COMMA
@@ -49,26 +49,26 @@ class Lexer:
 
         case "!":
           token = EXCLAMATION_MARK
-          if self.tokens and previous_token.type == EXCLAMATION_MARK:
+          if self.tokens and previous_token.check_type(EXCLAMATION_MARK):
             self.tokens.pop()
 
             while self.character not in ["\n", None]:
               self.advance()
 
-            token = None if not self.tokens or self.tokens[-1].type in [NEWLINE, SPACE] else NEWLINE
+            token = None if not self.tokens or self.tokens[-1].check_type(NEWLINE, SPACE) else NEWLINE
         case "=":
           token = ASSIGN
           if self.tokens:
-            if previous_token.type == EXCLAMATION_MARK:
+            if previous_token.check_type(EXCLAMATION_MARK):
               token = NOT_EQUAL
-            elif previous_token.type == ASSIGN:
+            elif previous_token.check_type(ASSIGN):
               token = EQUAL
-            elif previous_token.type == MORE:
+            elif previous_token.check_type(MORE):
               token = MORE_OR_EQUAL
-            elif previous_token.type == LESS:
+            elif previous_token.check_type(LESS):
               token = LESS_OR_EQUAL
 
-            elif previous_token.type == EQUAL:
+            elif previous_token.check_type(EQUAL):
               token = END_OF_CONSTRUCTION
 
           if token != ASSIGN:
@@ -77,24 +77,24 @@ class Lexer:
 
         case "+":
           token = ADDITION
-          if self.tokens and previous_token.type == ADDITION:
+          if self.tokens and previous_token.check_type(ADDITION):
             token = None
             self.tokens.pop()
             identifier = None
-            if self.tokens and self.tokens[-1].type == IDENTIFIER:
+            if self.tokens and self.tokens[-1].check_type(IDENTIFIER):
               identifier = self.tokens.pop()
 
             self.tokens += [Token(INCREMENT, not identifier, position_start, self.position.copy()), identifier]
             position_start = previous_token.position_start
         case "-":
           token = SUBSTRACION
-          if self.tokens and previous_token.type == SUBSTRACION:
+          if self.tokens and previous_token.check_type(SUBSTRACION):
             self.tokens.pop()
             self.advance()
 
             if self.character != "-":
               identifier = None
-              if self.tokens and self.tokens[-1].type == IDENTIFIER:
+              if self.tokens and self.tokens[-1].check_type(IDENTIFIER):
                 identifier = self.tokens.pop()
 
               self.tokens += [Token(DECREMENT, not identifier, position_start, self.position.copy()), identifier]
@@ -104,16 +104,16 @@ class Lexer:
             token = END_OF_CONSTRUCTION
         case "*":
           token = MULTIPLICATION
-          if self.tokens and previous_token.type == MULTIPLICATION:
+          if self.tokens and previous_token.check_type(MULTIPLICATION):
             token = POWER
             position_start = previous_token.position_start
             self.tokens.pop()
         case "/":
           token = DIVISION
           if self.tokens:
-            if previous_token.type == BACK_SLASH:
+            if previous_token.check_type(BACK_SLASH):
               token = LESS
-            elif previous_token.type == DIVISION:
+            elif previous_token.check_type(DIVISION):
               token = ROOT
 
           if token != DIVISION:
@@ -122,14 +122,14 @@ class Lexer:
 
         case "\\":
           token = BACK_SLASH
-          if self.tokens and previous_token.type == DIVISION:
+          if self.tokens and previous_token.check_type(DIVISION):
             token = MORE
             position_start = previous_token.position_start
             self.tokens.pop()
 
         case "(":
           token = OPEN_PAREN
-          if self.tokens and previous_token.type == PERCENT:
+          if self.tokens and previous_token.check_type(PERCENT):
             token = OPEN_LIST_PAREN
             position_start = previous_token.position_start
             self.tokens.pop()
@@ -138,7 +138,7 @@ class Lexer:
         case "%":
           token = PERCENT
           if self.tokens:
-            if previous_token.type == CLOSED_PAREN:
+            if previous_token.check_type(CLOSED_PAREN):
               token = CLOSED_LIST_PAREN
             elif len(self.tokens) > 1 and [self.tokens[-1].type, self.tokens[-2].type] == [PERCENT, PERCENT]:
               token = END_OF_CONSTRUCTION
@@ -159,13 +159,13 @@ class Lexer:
 
     if self.tokens:
       self.tokens += [Token(END_OF_FILE, None, self.position.copy())]
-    return list(filter(lambda token: token and token.type != SPACE, self.tokens)), None
+    return list(filter(lambda token: token and not token.check_type(SPACE), self.tokens)), None
 
   def make_number(self):
     number = ""
     integer = (
-      self.tokens and self.tokens[-1].type == POINT or
-      len(self.tokens) > 2 and self.tokens[-2].type == POINT and self.tokens[-1].type == SUBSTRACION
+      self.tokens and self.tokens[-1].check_type(POINT) or
+      len(self.tokens) > 2 and self.tokens[-2].check_type(POINT) and self.tokens[-1].check_type(SUBSTRACION)
     )
     float_point = integer
     position_start = self.position.copy()

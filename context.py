@@ -1,15 +1,9 @@
 class Context:
-  def __init__(self, name, parent=None, parent_position=None):
+  def __init__(self, name, variables={}, parent=None, parent_position=None):
     self.name = name
+    self.variables: dict = variables.copy()
     self.parent: Context = parent
     self.parent_position = parent_position
-    self.symbol_table: SymbolTable = None
-
-
-class SymbolTable:
-  def __init__(self, variables={}, parent=None):
-    self.variables: dict = variables.copy()
-    self.parent: dict = parent
 
   def __repr__(self):
     return self.variables
@@ -31,18 +25,10 @@ class SymbolTable:
   def set_variable(self, name, value):
     self.variables[name] = value
 
-  def set_localed_variables(self, names, value):
-    for name in names:
-      self.set_variable(name, value)
-
   def set_many_variables(self, variables):
-    for variable in variables:
-      self.set_localed_variables(*variable)
+    for names, value in variables:
+      for name in names:
+        self.set_variable(name, value)
 
-  def remove_variable(self, name):
+  def delete_variable(self, name):
     del self.variables[name]
-
-  def pop_variable(self, name):
-    variable = self.get_variable(name)
-    self.remove_variable(name)
-    return variable

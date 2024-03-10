@@ -1,6 +1,5 @@
-from context import Context, SymbolTable
+from context import Context
 from errors_list import Position
-from types_list import Number, Function, functions
 
 
 class Token:
@@ -21,29 +20,14 @@ class Token:
   def copy(self):
     return Token(self.type, self.value, self.position_start, self.position_end)
 
-  def matches(self, type, values):
-    return self.type == type and self.value in values
+  def check_type(self, *types):
+    return self.type in types
 
-  def matches_keyword(self, values):
-    return self.value in values
+  def check_keyword(self, *keywords):
+    return self.value in [keyword for keywords_pair in keywords for keyword in keywords_pair]
 
 
 global_context = Context("<программа>")
-global_symbol_table = SymbolTable()
-global_context.symbol_table = global_symbol_table
-
-
-build_in_functions = {
-  functions_names: Function(functions_names[0], None, None, None, global_context)
-  for functions_names in functions
-}
-
-global_symbol_table.set_many_variables([
-  [["null", "нуль"], Number(None, global_context)],
-  [["true", "истина"], Number(1, global_context)],
-  [["false", "ложь"], Number(0, global_context)],
-  *build_in_functions.items()
-])
 
 FILE_EXTENSION = "kors"
 
@@ -114,6 +98,7 @@ CLASS = ["класс", "class"]
 FUNCTION = ["функция", "function"]
 RETURN = ["вернуть", "return"]
 
+DELETE = ["удалить", "delete"]
 INCLUDE = ["включить", "include"]
 
 KEYWORDS =\
@@ -121,5 +106,22 @@ KEYWORDS =\
   CHECK + IF + ELSE + THEN +\
   FOR + OF + FROM + TO + AFTER +\
   WHILE + CONTINUE + BREAK +\
-  CLASS + FUNCTION + RETURN + \
-  INCLUDE
+  CLASS + FUNCTION + RETURN +\
+  DELETE + INCLUDE
+  
+def set_default_variables():
+  from types_list import Number, String, Function, functions
+  from nodes_list import VariableAccessNode, VariableAssignNode
+  
+  global_context.set_many_variables([
+    [["null", "нуль"], Number(None, global_context)],
+    [["true", "истина"], Number(1, global_context)],
+    [["false", "ложь"], Number(0, global_context)],
+    *[
+      [functions_names, Function(functions_names[0], None, None, None, global_context)]
+      for functions_names in functions
+    ],
+  ])
+  
+set_default_variables()
+

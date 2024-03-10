@@ -31,7 +31,7 @@ class Parser:
     response = ParseResponse()
     result = ListNode([], self.token.position_start, self.token.position_start) 
     
-    while self.token.type != END_OF_FILE:
+    while not self.token.check_type(END_OF_FILE):
       result.element_nodes += [response.register(self.statement())]
       if response.error:
         return response
@@ -43,13 +43,13 @@ class Parser:
   def expression(self):
     response = ParseResponse()
 
-    if self.token.type == IDENTIFIER:
+    if self.token.check_type(IDENTIFIER):
       variable = self.token
       index = self.token_index
       response.advance(self)
       keys = []
 
-      while self.token.type == POINT:
+      while self.token.check_type(POINT):
         response.advance(self)
         expression = response.register(self.term())
         if response.error:
@@ -58,30 +58,28 @@ class Parser:
         keys += [expression]
 
       operator = None
-      if self.token.type in [ADDITION, SUBSTRACION, MULTIPLICATION, DIVISION, POWER]:  # ROOT?
+      if self.token.check_type(ADDITION, SUBSTRACION, MULTIPLICATION, DIVISION, POWER):
         operator = self.token
         response.advance(self)
 
-      if self.token.type == ASSIGN:
+      if self.token.check_type(ASSIGN):
         response.advance(self)
         expression = response.register(self.expression())
+        if response.error:
+          return response
+        
         if operator:
           expression = BinaryOperationNode(
             VariableAccessNode(variable, keys, variable.position_start, variable.position_end),
             operator,
             expression
           )
-        if response.error:
-          return response
 
         return response.success(VariableAssignNode(variable, keys, expression))
 
       self.reverse(self.token_index - index)
 
-    node = response.register(self.binary_operation(
-      [[KEYWORD, (AND + OR)[i]] for i in range(len(AND + OR))],
-      self.comparison_expression
-    ))
+    node = response.register(self.binary_operation(AND + OR, self.comparison_expression))
     if response.error:
       return response.failure(InvalidSyntaxError(
         self.token.position_start, self.token.position_end,
@@ -99,7 +97,7 @@ class Parser:
     if response.error:
       return response
 
-    while self.token.type in operators or [self.token.type, self.token.value] in operators:
+    while self.token.check_type(*operators) or self.token.check_keyword(operators):
       left_operator = self.token
       response.advance(self)
 
@@ -109,7 +107,7 @@ class Parser:
 
       left = BinaryOperationNode(left, left_operator, middle)
 
-      if operators == COMPARISONS and self.token.type in COMPARISONS:
+      if operators == COMPARISONS and self.token.check_type(*COMPARISONS):
         right_operator = self.token
         response.advance(self)
 
@@ -127,27 +125,27 @@ class Parser:
     response = ParseResponse()
     token = self.token
 
-    if token.type in [INTEGER, FLOAT]:
+    if token.check_type(INTEGER, FLOAT):
       response.advance(self)
       return response.success(NumberNode(token))
-    elif token.type == STRING:
+    elif token.check_type(STRING):
       response.advance(self)
       return response.success(StringNode(token))
 
-    elif token.type == IDENTIFIER:
-      if self.tokens[self.token_index - 2].type == POINT:
+    elif token.check_type(IDENTIFIER):
+      if self.tokens[self.token_index - 2].check_type(POINT):
         response.advance(self)
         return response.success(VariableAccessNode(token, [], token.position_start, self.token.position_end))
 
       response.advance(self)
       keys = []
-      while self.token.type == POINT:
+      while self.token.check_type(POINT):
         response.advance(self)
-        if self.token.type == SUBSTRACION:
+        if self.token.check_type(SUBSTRACION):
           response.advance(self)
-          if self.token.type == IDENTIFIER:
+          if self.token.check_type(IDENTIFIER):
             self.token.value = "-" + self.token.value
-          elif self.token.type == INTEGER:
+          elif self.token.check_type(INTEGER):
             self.token.value = -self.token.value
           else:
             return response.failure(InvalidSyntaxError(
@@ -156,91 +154,64 @@ class Parser:
             ))
 
           expression = response.register(self.atom())
+          if response.error:
+            return response
 
-        elif self.token.type in [IDENTIFIER, STRING, INTEGER]:
+        elif self.token.check_type(IDENTIFIER, STRING, INTEGER):
           expression = response.register(self.atom())
-        elif self.token.type == OPEN_PAREN:
+        elif self.token.check_type(OPEN_PAREN):
           expression = response.register(self.arithmetical_expression())
         else:
           return response.failure(InvalidSyntaxError(
             self.token.position_start, self.token.position_end,
             "Ожидались идентификатор, целое число, строка или открывающая скобка",
           ))
+        
         if response.error:
           return response
+        
         keys += [expression]
 
       return response.success(VariableAccessNode(token, keys, token.position_start, self.token.position_end))
 
-    elif token.type == OPEN_PAREN:
+    elif token.check_type(OPEN_PAREN):
       response.advance(self)
 
       expression = response.register(self.expression())
       if response.error:
         return response
 
-      if self.token.type == CLOSED_PAREN:
-        response.advance(self)
-        return response.success(expression)
-      else:
+      if not self.token.check_type(CLOSED_PAREN):
         return response.failure(InvalidSyntaxError(
-            self.token.position_start, self.token.position_end,
-            "Ожидалось `)`)"
+          self.token.position_start, self.token.position_end,
+          "Ожидалось `)`)"
         ))
-    elif token.type == OPEN_LIST_PAREN:
-      list_expression = response.register(self.list_expression())
-      if response.error:
-        return response
-      return response.success(list_expression)
+      
+      response.advance(self)
+      return response.success(expression)
+      
+    expression = None
+    if token.check_type(OPEN_LIST_PAREN): expression = self.list_expression()
+    elif token.check_keyword(CHECK):      expression = self.check_expression()
+    elif token.check_keyword(IF):         expression = self.if_expression()
+    elif token.check_keyword(FOR):        expression = self.for_expression()
+    elif token.check_keyword(WHILE):      expression = self.while_expression()
+    elif token.check_keyword(FUNCTION):   expression = self.function_expression()
+    elif token.check_keyword(CLASS):      expression = self.class_expression()
+    elif token.check_keyword(DELETE):     expression = self.delete_expression()
+    elif token.check_keyword(INCLUDE):    expression = self.include_statement()
+    
+    if expression == None:
+      return response.failure(InvalidSyntaxError(
+        token.position_start, token.position_end,
+        "Ожидались Идентификатор, Целое число, Дробное число, `+`, `-` или `(`)"
+      ))
+    
+    expression = response.register(expression)
+    if response.error:
+      return response
 
-    elif token.matches_keyword(CHECK):
-      check_expression = response.register(self.check_expression())
-      if response.error:
-        return response
-
-      return response.success(check_expression)
-    elif token.matches_keyword(IF):
-      if_expression = response.register(self.if_expression())
-      if response.error:
-        return response
-
-      return response.success(if_expression)
-
-    elif token.matches_keyword(FOR):
-      for_expression = response.register(self.for_expression())
-      if response.error:
-        return response
-      return response.success(for_expression)
-    elif token.matches_keyword(WHILE):
-      while_expression = response.register(self.while_expression())
-      if response.error:
-        return response
-
-      return response.success(while_expression)
-
-    elif token.matches_keyword(FUNCTION):
-      function_expression = response.register(self.function_expression())
-      if response.error:
-        return response
-      return response.success(function_expression)
-
-    elif token.matches_keyword(CLASS):
-      function_expression = response.register(self.class_expression())
-      if response.error:
-        return response
-      return response.success(function_expression)
-
-    elif token.matches_keyword(INCLUDE):
-      include_statement = response.register(self.include_statement())
-      if response.error:
-        return response
-
-      return response.success(include_statement)
-
-    return response.failure(InvalidSyntaxError(
-      token.position_start, token.position_end,
-      "Ожидались Идентификатор, Целое число, Дробное число, `+`, `-` или `(`)"
-    ))
+    return response.success(expression)
 
   def call_expression(self):
     response = ParseResponse()
@@ -248,45 +219,46 @@ class Parser:
     if response.error:
       return response
 
-    if self.token.type != OPEN_PAREN:
+    if not self.token.check_type(OPEN_PAREN):
       return response.success(atom)
 
     response.advance(self)
     argument_nodes = []
 
-    if self.token.type == NEWLINE:
+    if self.token.check_type(NEWLINE):
       response.advance(self)
 
-    if self.token.type == CLOSED_PAREN:
+    if self.token.check_type(CLOSED_PAREN):
       response.advance(self)
-    else:
+      return response.success(CallNode(atom, argument_nodes))
+    
+    argument_nodes += [response.register(self.expression())]
+    if response.error:
+      return response.failure(InvalidSyntaxError(
+        self.token.position_start, self.token.position_end,
+        "Ожидались `если` (`if`), `для` (`for`), `пока` (`while`), `функция` (`function`), Целое число, Дробное число, Идентификатор, `)`"
+      ))
+
+    while self.token.check_type(COMMA):
+      response.advance(self)
+
+      if self.token.check_type(NEWLINE):
+        response.advance(self)
+
       argument_nodes += [response.register(self.expression())]
       if response.error:
-        return response.failure(InvalidSyntaxError(
-          self.token.position_start, self.token.position_end,
-          "Ожидались `если` (`if`), `для` (`for`), `пока` (`while`), `функция` (`function`), Целое число, Дробное число, Идентификатор, `)`"
-        ))
+        return response
 
-      while self.token.type == COMMA:
-        response.advance(self)
-
-        if self.token.type == NEWLINE:
-          response.advance(self)
-
-        argument_nodes += [response.register(self.expression())]
-        if response.error:
-          return response
-
-      if self.token.type == NEWLINE:
-        response.advance(self)
-
-      if self.token.type != CLOSED_PAREN:
-        return response.failure(InvalidSyntaxError(
-          self.token.position_start, self.token.position_end,
-          "Ожидалось `,` или `)`"
-        ))
-
+    if self.token.check_type(NEWLINE):
       response.advance(self)
+
+    if not self.token.check_type(CLOSED_PAREN):
+      return response.failure(InvalidSyntaxError(
+        self.token.position_start, self.token.position_end,
+        "Ожидалось `,` или `)`"
+      ))
+
+    response.advance(self)
 
     return response.success(CallNode(atom, argument_nodes))
 
@@ -297,15 +269,16 @@ class Parser:
     response = ParseResponse()
     token = self.token
 
-    if token.type in [SUBSTRACION, ROOT, INCREMENT, DECREMENT]:
-      response.advance(self)
-      factor = response.register(self.factor())
-      if response.error:
-        return response
+    if not token.check_type(SUBSTRACION, ROOT, INCREMENT, DECREMENT):
+      return self.power_root()
+    
+    response.advance(self)
+    factor = response.register(self.factor())
+    if response.error:
+      return response
 
-      return response.success(UnaryOperationNode(token, factor))
+    return response.success(UnaryOperationNode(token, factor))
 
-    return self.power_root()
 
   def term(self):
     return self.binary_operation([MULTIPLICATION, DIVISION], self.factor)
@@ -313,17 +286,17 @@ class Parser:
   def comparison_expression(self):
     response = ParseResponse()
 
-    if self.token.matches_keyword(NOT):
+    if self.token.check_keyword(NOT):
       token = self.token
       response.advance(self)
 
       node = response.register(self.comparison_expression())
       if response.error:
         return response
+      
       return response.success(UnaryOperationNode(token, node))
 
     node = response.register(self.binary_operation(COMPARISONS, self.arithmetical_expression))
-
     if response.error:
       return response.failure(InvalidSyntaxError(
         self.token.position_start, self.token.position_end,
@@ -341,7 +314,7 @@ class Parser:
     is_dictionary = False
     position_start = self.token.position_start.copy()
 
-    if self.token.type != OPEN_LIST_PAREN:
+    if not self.token.check_type(OPEN_LIST_PAREN):
       return response.failure(InvalidSyntaxError(
         self.token.position_start, self.token.position_end,
         "Ожидалось `%(`"
@@ -349,69 +322,85 @@ class Parser:
 
     response.advance(self)
 
-    if self.token.type == NEWLINE:
+    if self.token.check_type(NEWLINE):
       response.advance(self)
 
-    if self.token.type == CLOSED_LIST_PAREN:
+    if self.token.check_type(CLOSED_LIST_PAREN):
       response.advance(self)
-    else:
-      key_node = response.register(self.expression())
-      if response.error:
-        return response.failure(InvalidSyntaxError(
-          self.token.position_start, self.token.position_end,
-          "Ожидались `если` (`if`), `для` (`for`), `пока` (`while`), `функция` (`function`), Целое число, Дробное число, Идентификатор, `)`"
+      if is_dictionary:
+        return response.success(DictionaryNode(
+          element_nodes.items(),
+          position_start,
+          self.token.position_end.copy()
         ))
 
+      return response.success(ListNode(
+        list(element_nodes.keys()),
+        position_start,
+        self.token.position_end.copy()
+      ))
+      
+    key_node = response.register(self.expression())
+    if response.error:
+      return response.failure(InvalidSyntaxError(
+        self.token.position_start, self.token.position_end,
+        "Ожидались `если` (`if`), `для` (`for`), `пока` (`while`), `функция` (`function`), Целое число, Дробное число, Идентификатор, `)`"
+      ))
+
+    value_node = None
+    if self.token.check_type(COLON):
+      is_dictionary = True
+      response.advance(self)
+
+      value_node = response.register(self.expression())
+      if response.error:
+        return response
+
+    element_nodes |= {key_node: value_node}
+
+    while self.token.check_type(COMMA):
+      response.advance(self)
+
+      if self.token.check_type(NEWLINE):
+        response.advance(self)
+
+      if self.token.check_type(CLOSED_LIST_PAREN):
+        break
+
+      key_node = response.register(self.expression())
+      if response.error:
+        return response
+
       value_node = None
-      if self.token.type == COLON:
-        is_dictionary = True
+
+      if self.token.check_type(COLON) and not is_dictionary:
+        return response.failure(InvalidSyntaxError(self.token.position_start, self.token.position_end, "Ожидалась запятая (`,`)"))
+
+      if is_dictionary:
+        if not self.token.check_type(COLON):
+          return response.failure(InvalidSyntaxError(
+            self.token.position_start, self.token.position_end,
+            "Ожидалось двоеточие (`:`)"
+          ))
+
         response.advance(self)
 
         value_node = response.register(self.expression())
-
-      element_nodes |= {key_node: value_node}
-
-      while self.token.type == COMMA:
-        response.advance(self)
-
-        if self.token.type == NEWLINE:
-          response.advance(self)
-
-        if self.token.type == CLOSED_LIST_PAREN:
-          break
-
-        key_node = response.register(self.expression())
         if response.error:
           return response
 
-        value_node = None
+      element_nodes |= {key_node: value_node}
 
-        if self.token.type == COLON and not is_dictionary:
-          return response.failure(InvalidSyntaxError(self.token.position_start, self.token.position_end, "Ожидалась запятая (`,`)"))
-
-        if is_dictionary:
-          if self.token.type != COLON:
-            return response.failure(InvalidSyntaxError(
-              self.token.position_start, self.token.position_end,
-              "Ожидалось двоеточие (`:`)"
-            ))
-
-          response.advance(self)
-
-          value_node = response.register(self.expression())
-
-        element_nodes |= {key_node: value_node}
-
-      if self.token.type == NEWLINE:
-        response.advance(self)
-
-      if self.token.type != CLOSED_LIST_PAREN:
-        return response.failure(InvalidSyntaxError(
-          self.token.position_start, self.token.position_end.advance(),
-          "Ожидались `,` или `)%`"
-        ))
-
+    if self.token.check_type(NEWLINE):
       response.advance(self)
+
+    if not self.token.check_type(CLOSED_LIST_PAREN):
+      return response.failure(InvalidSyntaxError(
+        self.token.position_start, self.token.position_end.advance(),
+        "Ожидались `,` или `)%`"
+      ))
+
+    response.advance(self)
 
     if is_dictionary:
       return response.success(DictionaryNode(
@@ -431,11 +420,12 @@ class Parser:
     cases = []
     else_case = None
 
-    if not self.token.matches_keyword(CHECK):
+    if not self.token.check_keyword(CHECK):
       return response.failure(InvalidSyntaxError(
         self.token.position_start, self.token.position_end,
         f"Ожидалось `{CHECK}`"
       ))
+    
     response.advance(self)
 
     left = response.register(self.arithmetical_expression())
@@ -443,85 +433,101 @@ class Parser:
       return response
 
     operator = Token(EQUAL, None, self.token.position_start, self.token.position_end)
-    if self.token.type in COMPARISONS:
-      operator = self.token
-      response.advance(self)
-
-      if self.token.type != NEWLINE:
-        return response.failure(InvalidSyntaxError(
-          self.token.position_start, self.token.position_end,
-          "Ожидался перенос строки"
-        ))
-    elif self.token.type not in COMPARISONS + [NEWLINE]:
+    
+    if not self.token.check_type(*COMPARISONS, NEWLINE):
       return response.failure(InvalidSyntaxError(
         self.token.position_start, self.token.position_end,
         "Ожидалась операция сравнения или перенос строки"
       ))
+  
+    if self.token.check_type(*COMPARISONS):
+      operator = self.token
+      response.advance(self)
+
+      if not self.token.check_type(NEWLINE):
+        return response.failure(InvalidSyntaxError(
+          self.token.position_start, self.token.position_end,
+          "Ожидался перенос строки"
+        ))
 
     response.advance(self)
-    if not self.token.matches_keyword(IF):
+    
+    if not self.token.check_keyword(IF):
       return response.failure(InvalidSyntaxError(
         self.token.position_start, self.token.position_end,
         "Ожидалось `если` (`if`)"
       ))
 
-    while self.token.matches_keyword(IF):
+    while self.token.check_keyword(IF):
       response.advance(self)
 
       case_operator = operator
-      if self.token.type in COMPARISONS:
+      if self.token.check_type(*COMPARISONS):
         case_operator = self.token
         response.advance(self)
 
       right = response.register(self.arithmetical_expression())
+      if response.error:
+        return response
 
       condition = BinaryOperationNode(left, case_operator, right)
 
-      while self.token.matches_keyword(AND + OR):
+      while self.token.check_keyword(AND, OR):
         connector = self.token
         response.advance(self)
 
         case_operator = operator
-        if self.token.type in COMPARISONS:
+        if self.token.check_type(*COMPARISONS):
           case_operator = self.token
           response.advance(self)
 
         right = response.register(self.arithmetical_expression())
+        if response.error:
+          return response
+        
         condition = BinaryOperationNode(condition, connector, BinaryOperationNode(left, case_operator, right))
 
-      if not self.token.matches_keyword(THEN):
+      if not self.token.check_keyword(THEN):
         return response.failure(InvalidSyntaxError(
           self.token.position_start, self.token.position_end,
           "Ожидался `то` (`then`)"
         ))
+      
       response.advance(self)
 
-      if self.token.type != NEWLINE:
+      if not self.token.check_type(NEWLINE):
         return response.failure(InvalidSyntaxError(
           self.token.position_start, self.token.position_end,
           "Ожидался перено строки"
         ))
+      
       response.advance(self)
 
       body = []
-      while not self.token.matches_keyword(IF + ELSE):
+      while not self.token.check_keyword(IF, ELSE):
         body += [response.register(self.statement())]
+        if response.error:
+          return response
+        
         if isinstance(body[-1], ContinueNode):
           return response.failure(InvalidSyntaxError(
             body[-1].position_start, body[-1].position_end,
             "`продолжить` может использоваться только в цикле"
           ))
-        if response.error:
-          return response
+        
         response.advance(self)
 
       cases += [[condition, ListNode(body, None, None), False]]
 
-    if self.token.type != END_OF_CONSTRUCTION:
+    if not self.token.check_type(END_OF_CONSTRUCTION):
       else_case = response.register(self.else_expression())
-    else:
-      else_case = None
-      response.advance(self)
+      if response.error:
+        return response
+      
+      return response.success(CheckNode(cases, else_case))
+    
+    else_case = None
+    response.advance(self)
 
     return response.success(CheckNode(cases, else_case))
 
@@ -530,7 +536,7 @@ class Parser:
     cases = []
     else_case = None
 
-    if not self.token.matches_keyword(IF):
+    if not self.token.check_keyword(IF):
       return response.failure(InvalidSyntaxError(
         self.token.position_start, self.token.position_end,
         f"Ожидалось `{IF}`"
@@ -542,7 +548,7 @@ class Parser:
     if response.error:
       return response
 
-    if not self.token.matches_keyword(THEN):
+    if not self.token.check_keyword(THEN):
       return response.failure(InvalidSyntaxError(
         self.token.position_start, self.token.position_end,
         "Ожидалось `то` (`then`)"
@@ -550,7 +556,7 @@ class Parser:
 
     response.advance(self)
 
-    if self.token.type == NEWLINE:
+    if self.token.check_type(NEWLINE):
       response.advance(self)
 
       statements = response.register(self.statements())
@@ -559,12 +565,11 @@ class Parser:
 
       cases += [[condition, statements, True]]
 
-      if self.token.type == END_OF_CONSTRUCTION:
+      if self.token.check_type(END_OF_CONSTRUCTION):
         response.advance(self)
-      else:
-        else_case = response.register(self.else_expression())
-        if response.error:
-          return response
+        
+        return response.success(IfNode(cases, else_case))
+      
     else:
       expression = response.register(self.statement())
       if response.error:
@@ -572,9 +577,9 @@ class Parser:
 
       cases += [[condition, expression, False]]
 
-      else_case = response.register(self.else_expression())
-      if response.error:
-        return response
+    else_case = response.register(self.else_expression())
+    if response.error:
+      return response
 
     return response.success(IfNode(cases, else_case))
 
@@ -582,41 +587,38 @@ class Parser:
     response = ParseResponse()
     else_case = None
 
-    if not self.token.matches_keyword(ELSE):
+    if not self.token.check_keyword(ELSE):
       return response.success(else_case)
 
     response.advance(self)
 
-    if self.token.type == NEWLINE:
-      response.advance(self)
-
-      statements = response.register(self.statements())
-      if response.error:
-        return response
-
-      else_case = [statements, True]
-
-      if not self.token.type == END_OF_CONSTRUCTION:
-        return response.failure(InvalidSyntaxError(
-          self.token.position_start, self.token.position_end,
-          "Ожидался конец конструкции (`---`, `===` или `%%%`)"
-        ))
-
-      response.advance(self)
-    else:
+    if not self.token.check_type(NEWLINE):
       expression = response.register(self.statement())
       if response.error:
         return response
 
-      else_case = [expression, False]
+      return response.success([expression, False])
+    
+    response.advance(self)
 
-    return response.success(else_case)
+    statements = response.register(self.statements())
+    if response.error:
+      return response
+
+    if not self.token.check_type(END_OF_CONSTRUCTION):
+      return response.failure(InvalidSyntaxError(
+        self.token.position_start, self.token.position_end,
+        "Ожидался конец конструкции (`---`, `===` или `%%%`)"
+      ))
+
+    response.advance(self)
+    return response.success([statements, True])
 
   def for_expression(self):
     response = ParseResponse()
     else_case = None
 
-    if not self.token.matches_keyword(FOR):
+    if not self.token.check_keyword(FOR):
       return response.failure(InvalidSyntaxError(
         self.token.position_start, self.token.position_end,
         "Ожидался `for`"
@@ -624,7 +626,7 @@ class Parser:
 
     response.advance(self)
 
-    if self.token.type != IDENTIFIER:
+    if not self.token.check_type(IDENTIFIER):
       return response.failure(InvalidSyntaxError(
         self.token.position_start, self.token.position_end,
         "Ожидался Идентификатор"
@@ -633,14 +635,14 @@ class Parser:
     variable_name = self.token
     response.advance(self)
 
-    if self.token.matches_keyword(FROM):
+    if self.token.check_keyword(FROM):
       response.advance(self)
 
       start_value = response.register(self.expression())
       if response.error:
         return response
 
-      if not self.token.matches_keyword(TO):
+      if not self.token.check_keyword(TO):
         return response.failure(InvalidSyntaxError(
           self.token.position_start, self.token.position_end,
           "Ожидалось `to`"
@@ -652,7 +654,7 @@ class Parser:
       if response.error:
         return response
 
-      if self.token.matches_keyword(AFTER):
+      if self.token.check_keyword(AFTER):
         response.advance(self)
 
         step_value = response.register(self.expression())
@@ -660,26 +662,28 @@ class Parser:
           return response
       else:
         step_value = None
-    elif self.token.matches_keyword(OF):
+        
+    elif self.token.check_keyword(OF):
       response.advance(self)
 
       start_value = response.register(self.expression())
       if response.error:
         return response
       end_value = step_value = None
+      
     else:
       return response.failure(InvalidSyntaxError(
         self.token.position_start, self.token.position_end,
-        "Ожидалось `from` или `in`"
+        "Ожидалось `from` или `of`"
       ))
 
-    if self.token.type == NEWLINE:
+    if self.token.check_type(NEWLINE):
       response.advance(self)
       body = response.register(self.statements())
       if response.error:
         return response
 
-      if self.token.type == END_OF_CONSTRUCTION:
+      if self.token.check_type(END_OF_CONSTRUCTION):
         response.advance(self)
       else:
         else_case = response.register(self.else_expression())
@@ -691,11 +695,12 @@ class Parser:
         step_value, body, True, else_case
       ))
 
-    if self.token.type != COLON:
+    if not self.token.check_type(COLON):
       return response.failure(InvalidSyntaxError(
         self.token.position_start, self.token.position_end,
         "Ожидалось двоеточие (`:`)"
       ))
+    
     response.advance(self)
 
     body = response.register(self.statement())
@@ -712,7 +717,7 @@ class Parser:
     response = ParseResponse()
     else_case = None
 
-    if not self.token.matches_keyword(WHILE):
+    if not self.token.check_keyword(WHILE):
       return response.failure(InvalidSyntaxError(
         self.token.position_start, self.token.position_end,
         "Ожидалось `while`"
@@ -724,14 +729,14 @@ class Parser:
     if response.error:
       return response
 
-    if self.token.type == NEWLINE:
+    if self.token.check_type(NEWLINE):
       response.advance(self)
 
       body = response.register(self.statements())
       if response.error:
         return response
 
-      if self.token.type == END_OF_CONSTRUCTION:
+      if self.token.check_type(END_OF_CONSTRUCTION):
         response.advance(self)
       else:
         else_case = response.register(self.else_expression())
@@ -740,11 +745,12 @@ class Parser:
 
       return response.success(WhileNode(condition, body, True, else_case))
 
-    if self.token.type != COLON:
+    if not self.token.check_type(COLON):
       return response.failure(InvalidSyntaxError(
         self.token.position_start, self.token.position_end,
         "Ожидалось двоеточие (`:`)"
       ))
+    
     response.advance(self)
 
     body = response.register(self.statement())
@@ -753,10 +759,9 @@ class Parser:
 
     return response.success(WhileNode(condition, body, False, None))
 
-  # TODO: Сделать через парсинг уравнений, а не вручную
   def function_expression(self, is_method=False):
     response = ParseResponse()
-    if not self.token.matches_keyword(FUNCTION):
+    if not self.token.check_keyword(FUNCTION):
       return response.failure(InvalidSyntaxError(
         self.token.position_start, self.token.position_end,
         "Ожидалось `функция` (`function`)"
@@ -765,97 +770,36 @@ class Parser:
     response.advance(self)
 
     variable_name = None
-    if self.token.type == IDENTIFIER:
+    if self.token.check_type(IDENTIFIER):
       variable_name = self.token
       response.advance(self)
 
-    if self.token.type != OPEN_PAREN:
+    if not self.token.check_type(OPEN_PAREN):
       return response.failure(InvalidSyntaxError(
         self.token.position_start, self.token.position_end,
         f"Ожидалось `(`{' или Идентификатор' if variable_name else ''}"
       ))
 
     response.advance(self)
+    arguments = []
+    
+    while self.token.check_type(IDENTIFIER):
+      argument = response.register(self.expression())
+      if response.error:
+        return response
+        
+      if arguments and isinstance(arguments[-1], VariableAssignNode) and isinstance(argument, VariableAccessNode):
+        return response.failure(InvalidSyntaxError(
+          self.token.position_start, self.token.position_end,
+          "Ожидалось значение по умолчанию"
+        ))
 
-    argument_names = []
-
-    if self.token.type == IDENTIFIER:
-      argument_name = self.token.value
-      postiion = self.token.position_start, self.token.position_end
-      response.advance(self)
-
-      default_values = False
-      if self.token.type == ASSIGN:
-        default_values = True
-        argument_name += "="
+      arguments += [argument]
+      
+      if self.token.check_type(COMMA):
         response.advance(self)
 
-        if self.token.type == SUBSTRACION:
-          argument_name += "-"
-          response.advance(self)
-
-        if self.token.type not in [IDENTIFIER, INTEGER, FLOAT, STRING, OPEN_LIST_PAREN]:
-          return response.failure(InvalidSyntaxError(
-            self.token.position_start, self.token.position_end,
-            "Ожидались Идентификатор, Число, Строка или Список"
-          ))
-
-        argument_name += f"{f"\"{self.token.value}\"" if self.token.type == STRING else self.token.value}"
-
-        response.advance(self)
-
-      argument_names += [Token(IDENTIFIER, argument_name, *postiion)]
-
-      while self.token.type == COMMA:
-        response.advance(self)
-
-        if self.token.type != IDENTIFIER:
-          return response.failure(InvalidSyntaxError(
-            self.token.position_start, self.token.position_end,
-            "Ожидался Идентификатор"
-          ))
-
-        argument_name = self.token.value
-        postiion = self.token.position_start, self.token.position_end
-        response.advance(self)
-
-        if self.token.type == ASSIGN:
-          argument_name += "="
-          response.advance(self)
-
-          if self.token.type == SUBSTRACION:
-            argument_name += "-"
-            response.advance(self)
-
-          if self.token.type not in [IDENTIFIER, INTEGER, FLOAT, STRING, OPEN_LIST_PAREN]:
-            return response.failure(InvalidSyntaxError(
-              self.token.position_start, self.token.position_end,
-              "Ожидались Идентификатор, Число, Строка или Список"
-            ))
-
-          if self.token.type == OPEN_LIST_PAREN:
-            argument_name += "%("
-            response.advance(self)
-
-            while self.token.type == COMMA:
-              response.advance(self)
-              argument_name += f"{f"\"{self.token.value}\"" if self.token.type == STRING else self.token.value}"
-              response.advance(self)
-
-            argument_name += ")%"
-          else:
-            argument_name += f"{f"\"{self.token.value}\"" if self.token.type == STRING else self.token.value}"
-
-          response.advance(self)
-        elif default_values:
-          return response.failure(InvalidSyntaxError(
-            self.token.position_start, self.token.position_end,
-            "Ожидалось значение по умолчанию"
-          ))
-
-        argument_names += [Token(IDENTIFIER, argument_name, *postiion)]
-
-    if self.token.type != CLOSED_PAREN:
+    if not self.token.check_type(CLOSED_PAREN):
       return response.failure(InvalidSyntaxError(
         self.token.position_start, self.token.position_end,
         "Ожидались Идентификатор или `)`"
@@ -863,14 +807,14 @@ class Parser:
 
     response.advance(self)
 
-    if self.token.type == NEWLINE:
+    if self.token.check_type(NEWLINE):
       response.advance(self)
 
       body: ListNode = response.register(self.statements())
       if response.error:
         return response
 
-      if self.token.type != END_OF_CONSTRUCTION:
+      if not self.token.check_type(END_OF_CONSTRUCTION):
         return response.failure(InvalidSyntaxError(
           self.token.position_start, self.token.position_end,
           "Ожидался конец конструкции (`---`, `===` или `%%%`)"
@@ -879,10 +823,11 @@ class Parser:
       response.advance(self)
 
       if is_method:
-        return response.success(MethodDefinitionNode(variable_name, argument_names, body, False))
-      return response.success(FunctionDefinitionNode(variable_name, argument_names, body, False))
+        return response.success(MethodDefinitionNode(variable_name, arguments, body, False))
+      
+      return response.success(FunctionDefinitionNode(variable_name, arguments, body, False))
 
-    if self.token.type != COLON:
+    if not self.token.check_type(COLON):
       return response.failure(InvalidSyntaxError(
         self.token.position_start, self.token.position_end,
         "Ожидалось двоеточие (`:`)"
@@ -891,65 +836,74 @@ class Parser:
     response.advance(self)
 
     return_node = response.register(self.expression())
-
     if response.error:
       return response
 
     if is_method:
-      return response.success(MethodDefinitionNode(variable_name, argument_names, return_node, True))
-    return response.success(FunctionDefinitionNode(variable_name, argument_names, return_node, True))
+      return response.success(MethodDefinitionNode(variable_name, arguments, return_node, True))
+    
+    return response.success(FunctionDefinitionNode(variable_name, arguments, return_node, True))
 
   def class_expression(self):
     response = ParseResponse()
-    if not self.token.matches_keyword(CLASS):
+    
+    if not self.token.check_keyword(CLASS):
       return response.failure(InvalidSyntaxError(
         self.token.position_start, self.token.position_end,
         "Ожидалось `класс` (`class`)"
       ))
 
     response.advance(self)
-    if self.token.type != IDENTIFIER:
+    
+    if not self.token.check_type(IDENTIFIER):
       return response.failure(InvalidSyntaxError(
         self.token.position_start, self.token.position_end,
         "Ожидалось Идентификатор"
       ))
     
     variable_name = self.token
-
     response.advance(self)
-    if self.token.type != NEWLINE:
+    
+    if not self.token.check_type(NEWLINE):
       return response.failure(InvalidSyntaxError(
         self.token.position_start, self.token.position_end,
         "Ожидался перенос строки"
       ))
+    
     response.advance(self)
     methods = []
     body_position_start = self.token.position_end.copy()
-    while self.token.matches_keyword(FUNCTION):
+    
+    while self.token.check_keyword(FUNCTION):
       method = response.register(self.function_expression(True))
+      if response.error:
+        return response
+      
       if len(method.argument_names) < 1:
         return response.failure(InvalidSyntaxError(
           method.variable_name.position_start, method.variable_name.position_end,
           "Метод должен иметь хотя бы один аргумент, в который будет помещён сам объект"
         ))
-      if response.error:
-        return response
+      
       method_name = StringNode(method.variable_name.copy())
       methods += [[method_name, method]]
       response.advance(self)
 
-    if self.token.type != END_OF_CONSTRUCTION:
+    if not self.token.check_type(END_OF_CONSTRUCTION):
       return response.failure(InvalidSyntaxError(
         self.token.position_start, self.token.position_end,
         "Ожидалось завершение конструкции"
       ))
 
     if all(key.token.value not in ["__инициализация__", "__init__"] for key, _ in methods):
-
       initial_method_name = Token(STRING, "__инициализация__", self.token.position_start, self.token.position_end)
+      
       initial_method = MethodDefinitionNode(
         initial_method_name,
-        [Token(STRING, "объект", self.token.position_start, self.token.position_end)],
+        [VariableAccessNode(
+          Token(IDENTIFIER, "объект", self.token.position_start, self.token.position_end),
+          [], self.token.position_start, self.token.position_end
+        )],
         ListNode([], self.token.position_start, self.token.position_end),
         True,
         True
@@ -962,19 +916,42 @@ class Parser:
 
     return response.success(ClassDefinitionNode(variable_name, body_node))
 
+  def delete_expression(self):
+    response = ParseResponse()
+
+    if not self.token.check_keyword(DELETE):
+      return response.failure(InvalidSyntaxError(
+        self.token.position_start, self.token.position_end,
+        "Ожидалось `удалить` (`delete`)"
+      ))
+
+    position_start = self.token.position_start
+    response.advance(self)
+
+    if not self.token.check_type(IDENTIFIER):
+      return response.failure(InvalidSyntaxError(
+        self.token.position_start, self.token.position_end,
+        "Ожидался Идентификатор"
+      ))
+
+    variable = self.token
+    response.advance(self)
+
+    return response.success(DeleteNode(variable, position_start, self.token.position_end.copy()))
+
   def include_statement(self):
     response = ParseResponse()
 
-    position_start = self.token.position_start.copy()
-
-    if not self.token.matches_keyword(INCLUDE):
+    if not self.token.check_keyword(INCLUDE):
       return response.failure(InvalidSyntaxError(
         self.token.position_start, self.token.position_end,
         "Ожидалось `включить` (`include`)"
       ))
 
+    position_start = self.token.position_start.copy()
     response.advance(self)
-    if self.token.type != STRING:
+    
+    if not self.token.check_type(STRING):
       return response.failure(InvalidSyntaxError(
         self.token.position_start, self.token.position_end,
         "Ожидалось название модуля"
@@ -990,20 +967,18 @@ class Parser:
     statements = []
     position_start = self.token.position_start.copy()
 
-    if self.token.type == NEWLINE:
+    if self.token.check_type(NEWLINE):
       response.advance(self)
 
-    statement = response.register(self.statement())
+    statements = [response.register(self.statement())]
     if response.error:
       return response
-
-    statements += [statement]
 
     more_statements = True
 
     while True:
       newline_count = 0
-      if self.token.type == NEWLINE:
+      if self.token.check_type(NEWLINE):
         response.advance(self)
         newline_count += 1
 
@@ -1031,7 +1006,7 @@ class Parser:
     response = ParseResponse()
     position_start = self.token.position_start.copy()
 
-    if self.token.matches_keyword(RETURN):
+    if self.token.check_keyword(RETURN):
       response.advance(self)
       expression = response.try_register(self.expression())
       if not expression:
@@ -1039,12 +1014,12 @@ class Parser:
 
       return response.success(ReturnNode(expression, position_start, self.token.position_start.copy()))
 
-    elif self.token.matches_keyword(CONTINUE):
+    elif self.token.check_keyword(CONTINUE):
       response.advance(self)
 
       return response.success(ContinueNode(position_start, self.token.position_start.copy()))
 
-    elif self.token.matches_keyword(BREAK):
+    elif self.token.check_keyword(BREAK):
       response.advance(self)
 
       return response.success(BreakNode(position_start, self.token.position_start.copy()))

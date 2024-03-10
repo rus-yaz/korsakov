@@ -55,5 +55,5 @@ $ echo "au BufNewFile,BufRead *.kors :set filetype=korsakov" >> ~/.vimrc
 
 ```console
 $ cd Подсветка\ синтаксиса/nvim
-$ cp syntax ftdetect ~/.config/nvim
+$ cp -r syntax ftdetect ~/.config/nvim
 ```

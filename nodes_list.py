@@ -271,6 +271,13 @@ class BreakNode:
 
 # --------------------------------------------------
 
+class DeleteNode:
+  def __init__(self, variable: Token, position_start, position_end):
+    self.variable = variable
+
+    self.position_start = position_start
+    self.position_end = position_end
+
 
 class IncludeNode:
   def __init__(self, module: Token, position_start, position_end):
@@ -281,3 +288,4 @@ class IncludeNode:
 
   def __repr__(self):
     return f"IncludeNode({self.module.value})"
+
