@@ -87,8 +87,8 @@ class Tokenizer:
             self.tokens += [Token(INCREMENT, not identifier, position_start, self.position.copy()), identifier]
             position_start = previous_token.position_start
         case "-":
-          token = SUBSTRACION
-          if self.tokens and previous_token.check_type(SUBSTRACION):
+          token = SUBTRACTION
+          if self.tokens and previous_token.check_type(SUBTRACTION):
             self.tokens.pop()
             self.advance()
 
@@ -165,7 +165,7 @@ class Tokenizer:
     number = ""
     integer = (
       self.tokens and self.tokens[-1].check_type(POINT) or
-      len(self.tokens) > 2 and self.tokens[-2].check_type(POINT) and self.tokens[-1].check_type(SUBSTRACION)
+      len(self.tokens) > 2 and self.tokens[-2].check_type(POINT) and self.tokens[-1].check_type(SUBTRACTION)
     )
     float_point = integer
     position_start = self.position.copy()

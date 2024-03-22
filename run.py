@@ -4,29 +4,34 @@ from parse import Parser
 from interpret import Interpreter
 
 
-def run(module_name: str, code: str, mods: dict = {"debug": False}):
-  DEBUG = mods["debug"]
+COMMANDLINE_ARGUMENTS = dict.fromkeys(["debug", "nostd", "tokens", "ast", "context"], False)
 
+def run(module_name: str, code: str):
+  # Tokenization
   tokens, error = Tokenizer(module_name, code).tokenize()
-  if error or not tokens: return None, error
-
-  if DEBUG:
-    [print("[DEBUG]", i) for i in tokens]
-
-  ast = Parser(tokens).parse()
-  
-  value, error = ast.node, ast.error
-  if error:
+  if error or not tokens:
     return None, error
 
-  if DEBUG:
-    print(value.element_nodes)
+  if COMMANDLINE_ARGUMENTS["debug"] or COMMANDLINE_ARGUMENTS["tokens"]:
+    [print("[DEBUG]", i) for i in tokens]
 
-  interpret = Interpreter(module_name).interpret(value, global_context)
+  # ------------------------------
+  
+  # Abstract Syntax Tree
 
-  if DEBUG:
-    print(str(global_context.variables))
+  ast = Parser(tokens).parse()
+  if ast.error:
+    return None, ast.error
+
+  if COMMANDLINE_ARGUMENTS["debug"] or COMMANDLINE_ARGUMENTS["ast"]:
+    print(ast.node.element_nodes)
     
-  value, error = interpret.value, interpret.error
+  # ------------------------------
 
-  return value, error
+  # Interpretation
+
+  interpret = Interpreter(module_name).interpret(ast.node, global_context)
+  if COMMANDLINE_ARGUMENTS["debug"] or COMMANDLINE_ARGUMENTS["context"]:
+    print(str(global_context.variables))
+
+  return interpret.value, interpret.error

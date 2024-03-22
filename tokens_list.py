@@ -41,7 +41,7 @@ STRING = "строка"
 ESCAPE_SEQUENCES = {"n": "\n", "н": "\n", "t": "\t", "т": "\t"}
 
 ADDITION = "сумма"
-SUBSTRACION = "разность"
+SUBTRACTION = "разность"
 MULTIPLICATION = "произведение"
 DIVISION = "частное"
 POWER = "возведение_в_степень"
@@ -108,11 +108,11 @@ KEYWORDS =\
   WHILE + CONTINUE + BREAK +\
   CLASS + FUNCTION + RETURN +\
   DELETE + INCLUDE
-  
+
 def set_default_variables():
   from types_list import Number, String, Function, functions
   from nodes_list import VariableAccessNode, VariableAssignNode
-  
+
   global_context.set_many_variables([
     [["null", "нуль"], Number(None, global_context)],
     [["true", "истина"], Number(1, global_context)],
@@ -122,6 +122,6 @@ def set_default_variables():
       for functions_names in functions
     ],
   ])
-  
+
 set_default_variables()
 

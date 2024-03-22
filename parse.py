@@ -24,13 +24,13 @@ class Parser:
     return self.token
 
   def update_token(self):
-    if self.token_index >= 0 and self.token_index < len(self.tokens):
+    if 0 <= self.token_index < len(self.tokens):
       self.token = self.tokens[self.token_index - 1]
 
   def parse(self):
     response = ParseResponse()
     result = ListNode([], self.token.position_start, self.token.position_start) 
-    
+
     while not self.token.check_type(END_OF_FILE):
       result.element_nodes += [response.register(self.statement())]
       if response.error:
@@ -42,32 +42,38 @@ class Parser:
 
   def expression(self):
     response = ParseResponse()
+    index = self.token_index
 
     if self.token.check_type(IDENTIFIER):
       variable = self.token
-      index = self.token_index
-      response.advance(self)
       keys = []
+      
+      response.advance(self)
 
+      # Поиск ключей/индексов
       while self.token.check_type(POINT):
         response.advance(self)
+        
         expression = response.register(self.term())
         if response.error:
           return response
 
         keys += [expression]
 
+      # Операции с присвоением
+      # +=, -=, *=, /=, **=
       operator = None
-      if self.token.check_type(ADDITION, SUBSTRACION, MULTIPLICATION, DIVISION, POWER):
+      if self.token.check_type(ADDITION, SUBTRACTION, MULTIPLICATION, DIVISION, POWER):
         operator = self.token
         response.advance(self)
 
+      # Присвоение
       if self.token.check_type(ASSIGN):
         response.advance(self)
         expression = response.register(self.expression())
         if response.error:
           return response
-        
+
         if operator:
           expression = BinaryOperationNode(
             VariableAccessNode(variable, keys, variable.position_start, variable.position_end),
@@ -77,7 +83,39 @@ class Parser:
 
         return response.success(VariableAssignNode(variable, keys, expression))
 
-      self.reverse(self.token_index - index)
+    # Обработка множественного присвоения
+    # %(a, b)% = %(1, 2)%
+    elif self.token.check_type(OPEN_LIST_PAREN):
+      list_expression = response.register(self.list_expression())
+      if response.error:
+        return response
+
+      if self.token.check_type(ASSIGN):
+        response.advance(self)
+        
+        expression = response.register(self.list_expression())
+        if response.error:
+          return response
+
+        if len(list_expression.element_nodes) != len(expression.element_nodes):
+          return response.failure(InvalidSyntaxError(
+            expression.position_start, expression.position_end,
+            f"Недостаточно значений для распоковки: ожидалось {len(list_expression.element_nodes)}, получено {len(expression.element_nodes)}"
+          ))
+
+        variables = []
+        for variable, element in zip(list_expression.element_nodes, expression.element_nodes):
+          if not isinstance(variable, VariableAccessNode):
+            return response.failure(InvalidSyntaxError(
+              variable.position_start, variable.position_end,
+              "Ожидался идентификатор"
+            ))
+            
+          variables += [VariableAssignNode(variable.variable, variable.keys, element)]
+
+        return response.success(ListNode(variables, list_expression.position_start, self.token.position_end.copy()))
+
+    self.reverse(self.token_index - index)
 
     node = response.register(self.binary_operation(AND + OR, self.comparison_expression))
     if response.error:
@@ -117,7 +155,11 @@ class Parser:
 
         middle = BinaryOperationNode(middle, right_operator, right)
 
-        left = BinaryOperationNode(left, Token(KEYWORD, "и", self.token.position_start, self.token.position_end), middle)
+        left = BinaryOperationNode(
+          left,
+          Token(KEYWORD, "и", self.token.position_start, self.token.position_end),
+          middle
+        )
 
     return response.success(left)
 
@@ -135,44 +177,34 @@ class Parser:
     elif token.check_type(IDENTIFIER):
       if self.tokens[self.token_index - 2].check_type(POINT):
         response.advance(self)
-        return response.success(VariableAccessNode(token, [], token.position_start, self.token.position_end))
+        return response.success(VariableAccessNode(
+          token, [], token.position_start, self.token.position_end
+        ))
 
       response.advance(self)
       keys = []
       while self.token.check_type(POINT):
         response.advance(self)
-        if self.token.check_type(SUBSTRACION):
-          response.advance(self)
-          if self.token.check_type(IDENTIFIER):
-            self.token.value = "-" + self.token.value
-          elif self.token.check_type(INTEGER):
-            self.token.value = -self.token.value
-          else:
-            return response.failure(InvalidSyntaxError(
-              self.token.position_start, self.token.position_end,
-              "Ожидался идентификатор или число"
-            ))
-
-          expression = response.register(self.atom())
-          if response.error:
-            return response
-
-        elif self.token.check_type(IDENTIFIER, STRING, INTEGER):
-          expression = response.register(self.atom())
+        
+        if self.token.check_type(IDENTIFIER, STRING, INTEGER):
+          expression = self.atom()
         elif self.token.check_type(OPEN_PAREN):
-          expression = response.register(self.arithmetical_expression())
+          expression = self.arithmetical_expression()
+        elif self.token.check_type(SUBTRACTION):
+          expression = self.factor()
         else:
           return response.failure(InvalidSyntaxError(
             self.token.position_start, self.token.position_end,
             "Ожидались идентификатор, целое число, строка или открывающая скобка",
           ))
-        
+
+        keys += [response.register(expression)]
         if response.error:
           return response
-        
-        keys += [expression]
 
-      return response.success(VariableAccessNode(token, keys, token.position_start, self.token.position_end))
+      return response.success(VariableAccessNode(
+        token, keys, token.position_start, self.token.position_end
+      ))
 
     elif token.check_type(OPEN_PAREN):
       response.advance(self)
@@ -186,10 +218,10 @@ class Parser:
           self.token.position_start, self.token.position_end,
           "Ожидалось `)`)"
         ))
-      
+
       response.advance(self)
       return response.success(expression)
-      
+
     expression = None
     if token.check_type(OPEN_LIST_PAREN): expression = self.list_expression()
     elif token.check_keyword(CHECK):      expression = self.check_expression()
@@ -200,13 +232,13 @@ class Parser:
     elif token.check_keyword(CLASS):      expression = self.class_expression()
     elif token.check_keyword(DELETE):     expression = self.delete_expression()
     elif token.check_keyword(INCLUDE):    expression = self.include_statement()
-    
+
     if expression == None:
       return response.failure(InvalidSyntaxError(
         token.position_start, token.position_end,
         "Ожидались Идентификатор, Целое число, Дробное число, `+`, `-` или `(`)"
       ))
-    
+
     expression = response.register(expression)
     if response.error:
       return response
@@ -231,7 +263,7 @@ class Parser:
     if self.token.check_type(CLOSED_PAREN):
       response.advance(self)
       return response.success(CallNode(atom, argument_nodes))
-    
+
     argument_nodes += [response.register(self.expression())]
     if response.error:
       return response.failure(InvalidSyntaxError(
@@ -269,9 +301,9 @@ class Parser:
     response = ParseResponse()
     token = self.token
 
-    if not token.check_type(SUBSTRACION, ROOT, INCREMENT, DECREMENT):
+    if not token.check_type(SUBTRACTION, ROOT, INCREMENT, DECREMENT):
       return self.power_root()
-    
+
     response.advance(self)
     factor = response.register(self.factor())
     if response.error:
@@ -293,7 +325,7 @@ class Parser:
       node = response.register(self.comparison_expression())
       if response.error:
         return response
-      
+
       return response.success(UnaryOperationNode(token, node))
 
     node = response.register(self.binary_operation(COMPARISONS, self.arithmetical_expression))
@@ -306,7 +338,7 @@ class Parser:
     return response.success(node)
 
   def arithmetical_expression(self):
-    return self.binary_operation([ADDITION, SUBSTRACION], self.term)
+    return self.binary_operation([ADDITION, SUBTRACTION], self.term)
 
   def list_expression(self):
     response = ParseResponse()
@@ -335,11 +367,11 @@ class Parser:
         ))
 
       return response.success(ListNode(
-        list(element_nodes.keys()),
+        list(element_nodes),
         position_start,
         self.token.position_end.copy()
       ))
-      
+
     key_node = response.register(self.expression())
     if response.error:
       return response.failure(InvalidSyntaxError(
@@ -410,7 +442,7 @@ class Parser:
       ))
 
     return response.success(ListNode(
-      list(element_nodes.keys()),
+      list(element_nodes),
       position_start,
       self.token.position_end.copy()
     ))
@@ -425,7 +457,7 @@ class Parser:
         self.token.position_start, self.token.position_end,
         f"Ожидалось `{CHECK}`"
       ))
-    
+
     response.advance(self)
 
     left = response.register(self.arithmetical_expression())
@@ -433,13 +465,13 @@ class Parser:
       return response
 
     operator = Token(EQUAL, None, self.token.position_start, self.token.position_end)
-    
+
     if not self.token.check_type(*COMPARISONS, NEWLINE):
       return response.failure(InvalidSyntaxError(
         self.token.position_start, self.token.position_end,
         "Ожидалась операция сравнения или перенос строки"
       ))
-  
+
     if self.token.check_type(*COMPARISONS):
       operator = self.token
       response.advance(self)
@@ -451,7 +483,7 @@ class Parser:
         ))
 
     response.advance(self)
-    
+
     if not self.token.check_keyword(IF):
       return response.failure(InvalidSyntaxError(
         self.token.position_start, self.token.position_end,
@@ -484,7 +516,7 @@ class Parser:
         right = response.register(self.arithmetical_expression())
         if response.error:
           return response
-        
+
         condition = BinaryOperationNode(condition, connector, BinaryOperationNode(left, case_operator, right))
 
       if not self.token.check_keyword(THEN):
@@ -492,7 +524,7 @@ class Parser:
           self.token.position_start, self.token.position_end,
           "Ожидался `то` (`then`)"
         ))
-      
+
       response.advance(self)
 
       if not self.token.check_type(NEWLINE):
@@ -500,7 +532,7 @@ class Parser:
           self.token.position_start, self.token.position_end,
           "Ожидался перено строки"
         ))
-      
+
       response.advance(self)
 
       body = []
@@ -508,13 +540,13 @@ class Parser:
         body += [response.register(self.statement())]
         if response.error:
           return response
-        
+
         if isinstance(body[-1], ContinueNode):
           return response.failure(InvalidSyntaxError(
             body[-1].position_start, body[-1].position_end,
             "`продолжить` может использоваться только в цикле"
           ))
-        
+
         response.advance(self)
 
       cases += [[condition, ListNode(body, None, None), False]]
@@ -523,9 +555,9 @@ class Parser:
       else_case = response.register(self.else_expression())
       if response.error:
         return response
-      
+
       return response.success(CheckNode(cases, else_case))
-    
+
     else_case = None
     response.advance(self)
 
@@ -567,9 +599,9 @@ class Parser:
 
       if self.token.check_type(END_OF_CONSTRUCTION):
         response.advance(self)
-        
+
         return response.success(IfNode(cases, else_case))
-      
+
     else:
       expression = response.register(self.statement())
       if response.error:
@@ -598,7 +630,7 @@ class Parser:
         return response
 
       return response.success([expression, False])
-    
+
     response.advance(self)
 
     statements = response.register(self.statements())
@@ -662,7 +694,7 @@ class Parser:
           return response
       else:
         step_value = None
-        
+
     elif self.token.check_keyword(OF):
       response.advance(self)
 
@@ -670,7 +702,7 @@ class Parser:
       if response.error:
         return response
       end_value = step_value = None
-      
+
     else:
       return response.failure(InvalidSyntaxError(
         self.token.position_start, self.token.position_end,
@@ -700,7 +732,7 @@ class Parser:
         self.token.position_start, self.token.position_end,
         "Ожидалось двоеточие (`:`)"
       ))
-    
+
     response.advance(self)
 
     body = response.register(self.statement())
@@ -750,7 +782,7 @@ class Parser:
         self.token.position_start, self.token.position_end,
         "Ожидалось двоеточие (`:`)"
       ))
-    
+
     response.advance(self)
 
     body = response.register(self.statement())
@@ -782,20 +814,20 @@ class Parser:
 
     response.advance(self)
     arguments = []
-    
+
     while self.token.check_type(IDENTIFIER):
       argument = response.register(self.expression())
       if response.error:
         return response
-        
+
       if arguments and isinstance(arguments[-1], VariableAssignNode) and isinstance(argument, VariableAccessNode):
         return response.failure(InvalidSyntaxError(
           self.token.position_start, self.token.position_end,
-          "Ожидалось значение по умолчанию"
+          "Ожидался именованный аргумент"
         ))
 
       arguments += [argument]
-      
+
       if self.token.check_type(COMMA):
         response.advance(self)
 
@@ -824,7 +856,7 @@ class Parser:
 
       if is_method:
         return response.success(MethodDefinitionNode(variable_name, arguments, body, False))
-      
+
       return response.success(FunctionDefinitionNode(variable_name, arguments, body, False))
 
     if not self.token.check_type(COLON):
@@ -841,12 +873,12 @@ class Parser:
 
     if is_method:
       return response.success(MethodDefinitionNode(variable_name, arguments, return_node, True))
-    
+
     return response.success(FunctionDefinitionNode(variable_name, arguments, return_node, True))
 
   def class_expression(self):
     response = ParseResponse()
-    
+
     if not self.token.check_keyword(CLASS):
       return response.failure(InvalidSyntaxError(
         self.token.position_start, self.token.position_end,
@@ -854,23 +886,71 @@ class Parser:
       ))
 
     response.advance(self)
-    
+
     if not self.token.check_type(IDENTIFIER):
       return response.failure(InvalidSyntaxError(
         self.token.position_start, self.token.position_end,
         "Ожидалось Идентификатор"
       ))
-    
+
     variable_name = self.token
     response.advance(self)
     
-    if not self.token.check_type(NEWLINE):
+    if not self.token.check_type(NEWLINE, OPEN_PAREN):
       return response.failure(InvalidSyntaxError(
         self.token.position_start, self.token.position_end,
-        "Ожидался перенос строки"
+        "Ожидалися перенос строки или открывающая скобка"
+      ))
+
+    parents = []
+    if self.token.check_type(OPEN_PAREN):
+      response.advance(self)
+
+      if not self.token.check_type(IDENTIFIER, CLOSED_PAREN):
+        return response.failure(InvalidSyntaxError(
+          self.token.position_start, self.token.position_end,
+          "Ожидались идентификатор или закрывающая скобка"
+        ))
+
+      while self.token.check_type(IDENTIFIER):
+        parents += [self.token.value]
+        
+        response.advance(self)
+        
+        if self.token.check_type(NEWLINE):
+          response.advance(self)
+        
+        if not self.token.check_type(COMMA, CLOSED_PAREN):
+          return response.failure(InvalidSyntaxError(
+            self.token.position_start, self.token.position_end,
+            "Ожидались запятая или закрывающая скобка"
+          ))
+
+        if self.token.check_type(COMMA):
+          response.advance(self)
+
+      if not self.token.check_type(IDENTIFIER, CLOSED_PAREN):
+        return response.failure(InvalidSyntaxError(
+          self.token.position_start, self.token.position_end,
+          "Ожидались идентификатор или закрывающая скобка"
+        ))
+
+      response.advance(self)
+
+      if not self.token.check_type(NEWLINE):
+        return response.failure(InvalidSyntaxError(
+          self.token.position_start, self.token.position_end,
+          "Ожидался перенос строки"
+        ))
+      
+    response.advance(self)
+
+    if not self.token.check_keyword(FUNCTION) and not self.token.check_type(END_OF_CONSTRUCTION):
+      return response.failure(InvalidSyntaxError(
+        self.token.position_start, self.token.position_end,
+        "Ожидалось `функция` (`function`) или завершение конструкции"
       ))
     
-    response.advance(self)
     methods = []
     body_position_start = self.token.position_end.copy()
     
@@ -878,13 +958,13 @@ class Parser:
       method = response.register(self.function_expression(True))
       if response.error:
         return response
-      
+
       if len(method.argument_names) < 1:
         return response.failure(InvalidSyntaxError(
           method.variable_name.position_start, method.variable_name.position_end,
           "Метод должен иметь хотя бы один аргумент, в который будет помещён сам объект"
         ))
-      
+
       method_name = StringNode(method.variable_name.copy())
       methods += [[method_name, method]]
       response.advance(self)
@@ -897,7 +977,7 @@ class Parser:
 
     if all(key.token.value not in ["__инициализация__", "__init__"] for key, _ in methods):
       initial_method_name = Token(STRING, "__инициализация__", self.token.position_start, self.token.position_end)
-      
+
       initial_method = MethodDefinitionNode(
         initial_method_name,
         [VariableAccessNode(
@@ -914,7 +994,7 @@ class Parser:
     response.advance(self)
     body_node = DictionaryNode(methods, body_position_start, self.token.position_end.copy())
 
-    return response.success(ClassDefinitionNode(variable_name, body_node))
+    return response.success(ClassDefinitionNode(variable_name, body_node, parents))
 
   def delete_expression(self):
     response = ParseResponse()
@@ -950,7 +1030,7 @@ class Parser:
 
     position_start = self.token.position_start.copy()
     response.advance(self)
-    
+
     if not self.token.check_type(STRING):
       return response.failure(InvalidSyntaxError(
         self.token.position_start, self.token.position_end,

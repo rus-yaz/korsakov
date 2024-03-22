@@ -45,7 +45,7 @@ class Interpreter:
       value = response.register(self.interpret(element_node, context))
       if response.should_return():
         return response
-      
+
       dictionary.set(key, value)
       if response.should_return():
         return response
@@ -81,19 +81,19 @@ class Interpreter:
       return response
 
     if node.operator.check_type(ADDITION):         result, error = left.addition(right)
-    elif node.operator.check_type(SUBSTRACION):    result, error = left.subtraction(right)
+    elif node.operator.check_type(SUBTRACTION):    result, error = left.subtraction(right)
     elif node.operator.check_type(MULTIPLICATION): result, error = left.multiplication(right)
     elif node.operator.check_type(DIVISION):       result, error = left.division(right)
     elif node.operator.check_type(POWER):          result, error = left.power(right)
     elif node.operator.check_type(ROOT):           result, error = left.root(right)
-                                                   
+
     elif node.operator.check_type(EQUAL):          result, error = left.equal(right)
     elif node.operator.check_type(NOT_EQUAL):      result, error = left.not_equal(right)
     elif node.operator.check_type(LESS):           result, error = left.less(right)
     elif node.operator.check_type(MORE):           result, error = left.more(right)
     elif node.operator.check_type(LESS_OR_EQUAL):  result, error = left.less_or_equal(right)
     elif node.operator.check_type(MORE_OR_EQUAL):  result, error = left.more_or_equal(right)
-                                                   
+
     elif node.operator.check_keyword(AND):         result, error = left.both(right)
     elif node.operator.check_keyword(OR):          result, error = left.some(right)
 
@@ -117,20 +117,20 @@ class Interpreter:
       return response
 
     if node.operator.check_keyword(NOT):        result, error = result.denial()
-    elif node.operator.check_type(SUBSTRACION): result, error = result.multiplication(Number(-1, context))
+    elif node.operator.check_type(SUBTRACTION): result, error = result.multiplication(Number(-1, context))
     elif node.operator.check_type(ROOT):        result, error = Number(2, context).root(result)
 
     elif node.operator.check_type(INCREMENT):
       response.register(self.interpret(VariableAssignNode(
         node.node.variable, [], NumberNode(Token(INTEGER, result.value + 1, result.position_start))
       ), context))
-      
+
       if node.operator.value: result, error = result.addition(Number(1, context))
     elif node.operator.check_type(DECREMENT):
       response.register(self.interpret(VariableAssignNode(
         node.node.variable, [], NumberNode(Token(INTEGER, result.value - 1, result.position_start))
       ), context))
-      
+
       if node.operator.value: result, error = result.subtraction(Number(1, context))
 
     if error:
@@ -162,30 +162,35 @@ class Interpreter:
         key, *keys = keys
         if not isinstance(value, Object):
           key = response.register(self.interpret(key, context))
-          if response.should_return():
-            return response
         else:
           if not isinstance(key, VariableAccessNode) and not key.token.check_type(IDENTIFIER, KEYWORD):
             return response.failure(InvalidKeyError(
               key.token.position_start, key.token.position_end,
               "Ключ должен быть Идентификатором"
             ))
+          
           key = response.register(self.interpret(StringNode(key.variable), context))
+          
+        if response.should_return():
+          return response
 
         if isinstance(value, Dictionary) and not isinstance(key, Number | String):
           return response.failure(InvalidSyntaxError(key.position_start, key.position_end, "Ключ должен иметь тип Число или Строка"))
         if isinstance(value, List | String) and not isinstance(key, Number):
           return response.failure(InvalidSyntaxError(key.position_start, key.position_end, "Индекс должен иметь тип Число"))
-        elif response.should_return():
-          return response
 
         is_dictionary = isinstance(value, Dictionary)
+        list_value = value
         value = value.get(key)
 
         if value == None:
-          if is_dictionary: return response.failure(InvalidKeyError(key.position_start, key.position_end))
+          if is_dictionary:
+            return response.failure(InvalidKeyError(key.position_start, key.position_end))
 
-          return response.failure(IndexOutOfRangeError(key.position_start, key.position_end))
+          return response.failure(IndexOutOfRangeError(
+            key.position_start, key.position_end,
+            f"Длина массива - {len(list_value.value)}, индекс - {key}"
+          ))
 
     if value == None:
       return response.failure(BadIdentifierError(node.position_start, node.position_end, f"`{variable.value}`"))
@@ -204,10 +209,10 @@ class Interpreter:
       item = context.get_variable(variable.value)
       if item == None:
         return response.failure(BadIdentifierError(variable.position_start, variable.position_end, variable.value))
-      
+
       items = [item.copy()]
       keys = []
-      
+
       for key in node.keys:
         if not isinstance(items[0], Object):
           key = response.register(self.interpret(key, context))
@@ -225,7 +230,7 @@ class Interpreter:
 
         if len(keys) == len(node.keys):
           break 
-        
+
         if -len(items[0].value) < key.value >= len(items[0].value):
           return response.failure(IndexOutOfRangeError(node.position_start, node.position_end, key))
 
@@ -269,7 +274,7 @@ class Interpreter:
           ))
         elif isinstance(items[0], List) and -len(items[0].value) < key.value >= len(items[0].value):
           return response.failure(IndexOutOfRangeError(node.position_start, node.position_end, key))
-        
+
         items[0].set(key, value)
 
       value = items[0]
@@ -317,7 +322,7 @@ class Interpreter:
 
     if node.else_case:
       expression, return_null = node.else_case
-      
+
       else_case_value = response.register(self.interpret(expression, context))
       if response.should_return():
         return response
@@ -333,7 +338,7 @@ class Interpreter:
     start_value: Number | List | String = response.register(self.interpret(node.start_node, context))
     if response.should_return():
       return response
-    
+
     if not isinstance(start_value, Number | List | String):
       return response.failure(InvalidSyntaxError(
         start_value.position_start, start_value.position_end,
@@ -344,7 +349,7 @@ class Interpreter:
       end_value = response.register(self.interpret(node.end_node, context))
       if response.should_return():
         return response
-      
+
       if not isinstance(end_value, Number):
         return response.failure(InvalidSyntaxError(end_value.position_start, end_value.position_end, "Ожидалось число"))
     else:
@@ -354,7 +359,7 @@ class Interpreter:
       step_value = response.register(self.interpret(node.step_node, context))
       if response.should_return():
         return response
-      
+
       if not isinstance(step_value, Number):
         return response.failure(InvalidSyntaxError(step_value.position_start, step_value.position_end, "Ожидалось число"))
     else:
@@ -384,7 +389,7 @@ class Interpreter:
 
       if response.continue_loop: continue
       if response.break_loop:    break
-      
+
     if node.else_case and not elements:
       expression, return_null = node.else_case
       else_case_value = response.register(self.interpret(expression, context))
@@ -468,8 +473,10 @@ class Interpreter:
     response = RuntimeResponse()
     class_name = node.variable_name.value
     methods = response.register(self.interpret(node.body_node, context))
-    context.set_variable(class_name, Class(class_name, methods, context))
+    parents = node.parents
     
+    context.set_variable(class_name, Class(class_name, methods, parents, context))
+
     return response.success(Number(None, context))
 
   def interpret_CallNode(self, node: CallNode, context: Context):
@@ -486,8 +493,12 @@ class Interpreter:
       arguments += [response.register(self.interpret(object_node, context))]
       if response.should_return():
         return response
-    
+
     for argument_node in node.argument_nodes:
+      if isinstance(argument_node, VariableAssignNode):
+        arguments += [argument_node]
+        continue
+
       arguments += [response.register(self.interpret(argument_node, context))]
       if response.should_return():
         return response
@@ -495,7 +506,7 @@ class Interpreter:
     return_value = response.register(call_node.execute(arguments))
     if response.should_return():
       return response
-    
+
     if isinstance(call_node, Method):
       context.set_variable(
         object_node.variable.value,
@@ -538,7 +549,7 @@ class Interpreter:
         module_name, depth = module_name.rsplit(PATH_SEPARATOR, 1)
       else:
         depth = module_name
-        
+
       module_path = f"{self.script_location}{PATH_SEPARATOR}{module_name}"
 
       get_files = getattr(Path(module_path), "glob" if depth == "*" else "rglob")

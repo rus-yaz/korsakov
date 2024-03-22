@@ -188,9 +188,10 @@ class FunctionDefinitionNode:
 
 
 class ClassDefinitionNode:
-  def __init__(self, variable_name, body_node):
+  def __init__(self, variable_name, body_node, parents):
     self.variable_name = variable_name
     self.body_node = body_node
+    self.parents = parents
 
     self.position_start = self.variable_name.position_start
     self.position_end = self.body_node.position_end
@@ -218,7 +219,7 @@ class MethodDefinitionNode:
     self.position_end = self.body_node.position_end
 
   def __repr__(self):
-    return f"MethodDefinitionNode({self.variable_name.value}, {self.argument_names}, {self.body_node}, {self.auto_return}, {self.is_method})"
+    return f"MethodDefinitionNode({self.variable_name.value}, {self.argument_names}, {self.body_node}, {self.auto_return})"
 
 
 class CallNode:

@@ -104,7 +104,7 @@ class Number(Value):
     if isinstance(operand, Number):
       if operand.value == 0:
         return None, RuntimeError(operand.position_start, operand.position_end, "Деление на ноль", self.context)
-      
+
       return Number(self.value / operand.value, self.context), None
 
     return None, Value.illegal_operation(self, operand)
@@ -173,9 +173,7 @@ class Number(Value):
     return Number(not self.is_true(), self.context), None
 
   def copy(self):
-    copy = Number(self.value, self.context)
-    copy.set_position(self.position_start, self.position_end)
-    return copy
+    return Number(self.value, self.context).set_position(self.position_start, self.position_end)
 
 
 class String(Value):
@@ -187,7 +185,7 @@ class String(Value):
   def get(self, index: Number, default_value: Value = None):
     if -len(self.value) <= index.value < len(self.value):
       return String(self.value[index.value], self.context)
-    
+
     return default_value
 
   def set(self, index: Number, value):
@@ -267,9 +265,7 @@ class String(Value):
     return Number(not self.is_true(), self.context), None
 
   def copy(self):
-    copy = String(self.value, self.context)
-    copy.set_position(self.position_start, self.position_end)
-    return copy
+    return String(self.value, self.context).set_position(self.position_start, self.position_end)
 
 
 class List(Value):
@@ -287,6 +283,7 @@ class List(Value):
   def get(self, index: Number, default_value: Value = None):
     if -len(self.value) <= index.value < len(self.value):
       return self.value[index.value]
+    
     return default_value
 
   def set(self, index: Number, value: Value):
@@ -324,9 +321,7 @@ class List(Value):
     return Number(not self.is_true(), self.context), None
 
   def copy(self):
-    copy = List(self.value.copy(), self.context)
-    copy.set_position(self.position_start, self.position_end)
-    return copy
+    return List(self.value.copy(), self.context).set_position(self.position_start, self.position_end)
 
 
 class Dictionary(Value):
@@ -373,6 +368,7 @@ class Dictionary(Value):
       result = self.copy()
       for key, value in operand.value:
         result.set(key, value)
+
       return result, None 
 
     return None, Value.illegal_operation(self, operand)
@@ -393,15 +389,13 @@ class Dictionary(Value):
     return Number(not self.is_true(), self.context), None
 
   def copy(self):
-    copy = Dictionary(self.value.copy(), self.context)
-    copy.set_position(self.position_start, self.position_end)
-    return copy
+    return Dictionary(self.value.copy(), self.context).set_position(self.position_start, self.position_end)
 
 # TODO: после создания компилятора вырезать встроенные функции и код, связанный с ними
 class Function(Value):
   def __init__(self, name, body_node, argument_names, should_auto_return, context):
     super().__init__()
-    self.name = name or "/безымянная\\"
+    self.name = name or "<безымянная>"
     self.body_node = body_node
     self.argument_names = argument_names
     self.should_auto_return = should_auto_return
@@ -445,11 +439,11 @@ class Function(Value):
       return_value = response.register(method(self.internal_context))
       if response.should_return():
         return response
-      
+
       self.internal_context.variables = initial_variables.copy()
-        
+
       return response.success(return_value)
-    
+
     from interpret import Interpreter
     interpret = Interpreter(self.name)
 
@@ -471,66 +465,84 @@ class Function(Value):
     return response.success(return_value)
 
   def check_and_populate_arguments(self, argument_names, arguments, context):
+    from interpret import Interpreter
+
+    interpreter = Interpreter(self.name)
+
     response = RuntimeResponse()
-    
+
     if argument_names and isinstance(list(argument_names)[0], tuple):
       position = Position(-1, 0, 0, "", "")
       temp = []
       for argument in argument_names:
-          if len(argument) == 1:
-            temp += [VariableAccessNode(
-              Token(IDENTIFIER, argument[0], position, position),
-              [], position, position
-            )]
-            continue
-          
-          temp += [VariableAssignNode(
+        if len(argument) == 1:
+          temp += [VariableAccessNode(
             Token(IDENTIFIER, argument[0], position, position),
-            [],
-            NumberNode(Token(INTEGER, argument[1], position, position))
-            if isinstance(argument[1], int) else
-            NumberNode(Token(FLOAT, argument[1], position, position))
-            if isinstance(argument[1], float) else
-            StringNode(Token(STRING, argument[1], position, position))
-            if isinstance(argument[1], str) else
-            ListNode(argument[1], position, position)
-            if isinstance(argument[1], list) else
-            VariableAccessNode(Token(IDENTIFIER, argument[1], position, position), [], position, position),
+            [], position, position
           )]
-          
+          continue
+
+        temp += [VariableAssignNode(
+          Token(IDENTIFIER, argument[0], position, position),
+          [],
+          NumberNode(Token(INTEGER, argument[1], position, position))
+          if isinstance(argument[1], int) else
+          NumberNode(Token(FLOAT, argument[1], position, position))
+          if isinstance(argument[1], float) else
+          StringNode(Token(STRING, argument[1], position, position))
+          if isinstance(argument[1], str) else
+          ListNode(argument[1], position, position)
+          if isinstance(argument[1], list) else
+          VariableAccessNode(Token(IDENTIFIER, argument[1], position, position), [], position, position),
+        )]
+
       argument_names = temp
 
-    count_of_required_arguments = 0
+    function_positional_arguments_count = 0
+    function_keyword_arguments = []
     for argument_name in argument_names:
       if isinstance(argument_name, VariableAssignNode):
-        break
+        function_keyword_arguments += [argument_name.variable.value]
+        continue
 
-      count_of_required_arguments += 1
+      function_positional_arguments_count += 1
 
-    if len(arguments) > len(argument_names) or len(arguments) < count_of_required_arguments:
+    if len(arguments) > len(argument_names) or len(arguments) < function_positional_arguments_count:
       return response.failure(RuntimeError(
         self.position_start, self.position_end,
-        f"Количество аргументов функции '{self.name}' - {len(argument_names) if len(arguments) > len(argument_names) else count_of_required_arguments}, но получено {len(arguments)}",
+        f"Количество аргументов функции '{self.name}' - {len(argument_names) if len(arguments) > len(argument_names) else function_positional_arguments_count}, но получено {len(arguments)}",
         self.context
       ))
 
+    keywords = False
     for i in range(len(arguments)):
       argument_name = list(argument_names)[i]
+
       if not isinstance(argument_name, tuple):
         argument_name = argument_name.variable.value
-        
+
       argument_value = arguments[i]
+      if isinstance(argument_value, VariableAssignNode):
+        keywords = True
+        argument_name, argument_value = argument_value.variable.value, response.register(interpreter.interpret(argument_value.value_node, context))
+      elif keywords:
+        return response.failure(RuntimeError(
+          argument_value.position_start, argument_value.position_end,
+          "Позиционный аргумент следует за именованным",
+          self.context
+        ))
+
       context.set_variable(argument_name, argument_value)
 
     return response.success(None)
-  
+
   def get_arguments(self, context: Context, function_name, argument_names=None):
     from interpret import Interpreter
 
     interpreter = Interpreter(self.name)
     if argument_names == None:
       argument_names = self.get_argument_names(function_name)
-    
+
     arguments = {}
     default_arguments = {}
     for argument in list(argument_names):
@@ -540,7 +552,7 @@ class Function(Value):
         arguments[argument.variable.value] = Value
         continue
 
-      if isinstance(argument, tuple):
+      if self.is_buildin:
         if len(argument) == 1:
           arguments[argument[0]] = Value
           continue
@@ -559,12 +571,12 @@ class Function(Value):
           if isinstance(argument[1], list) else
           VariableAccessNode(Token(IDENTIFIER, argument[1], position, position), [], position, position),
         )
-      
+
       argument, default_value = argument.variable.value, argument.value_node
       arguments[argument] = types
 
       default_arguments[argument] = RuntimeResponse().register(interpreter.interpret(default_value, context))
-      
+
     values = []
     for argument_name in arguments:
       argument = context.get_variable(argument_name, default_arguments.get(argument_name, Number(None, context)))
@@ -585,13 +597,11 @@ class Function(Value):
     raise Exception(f"Метод _{self.name} не объявлен")
 
   def copy(self):
-    copy = Function(
+    return Function(
       self.name, self.body_node,
       self.argument_names, self.should_auto_return,
       self.context
-    )
-    copy.set_position(self.position_start, self.position_end)
-    return copy
+    ).set_position(self.position_start, self.position_end)
 
   # BuildIn Functions
 
@@ -599,7 +609,7 @@ class Function(Value):
     error, value = self.get_arguments(context, "print")
     if error:
       return error
-    
+
     value: Number | String | List | Dictionary
 
     print(str(value))
@@ -610,7 +620,7 @@ class Function(Value):
     error, value = self.get_arguments(context, "error")
     if error:
       return error
-    
+
     value: Number | String | List | Dictionary
 
     return RuntimeResponse().failure(RuntimeError(
@@ -622,7 +632,7 @@ class Function(Value):
     error, value = self.get_arguments(context, "input")
     if error:
       return error
-    
+
     value: Number | String | List | Dictionary
     return RuntimeResponse().success(String(input(str(value.value)), context))
 
@@ -650,7 +660,7 @@ class Function(Value):
     error, number = self.get_arguments(context, "to_binary")
     if error:
       return error
-    
+
     number: Number
     binary_value = bin(number.value)[2:]
     return RuntimeResponse().success(String(binary_value, context))
@@ -659,13 +669,13 @@ class Function(Value):
     error, value, base = self.get_arguments(context, "to_number")
     if error:
       return error
-    
+
     value: Number | String
     base: Number
 
     if isinstance(value, Number):
       return RuntimeResponse().success(value.copy().set_context(context))
-      
+
     if "." in value.value:
       return RuntimeResponse().success(Number(float(value.value), context))
 
@@ -675,7 +685,7 @@ class Function(Value):
     error, value, base = self.get_arguments(context, "to_integer")
     if error:
       return error
-    
+
     value: Number | String
     base: Number
 
@@ -688,7 +698,7 @@ class Function(Value):
     error, value = self.get_arguments(context, "to_float")
     if error:
       return error
-    
+
     value: Number | String
     return RuntimeResponse().success(Number(float(value.value), context))
 
@@ -696,7 +706,7 @@ class Function(Value):
     error, value = self.get_arguments(context, "to_string")
     if error:
       return error
-    
+
     value: Number | String | List | Dictionary
 
     if isinstance(value, Number | List | Dictionary):
@@ -708,7 +718,7 @@ class Function(Value):
     error, value = self.get_arguments(context, "to_list")
     if error:
       return error
-    
+
     value: String | List | Dictionary
 
     if isinstance(value, String):
@@ -722,7 +732,7 @@ class Function(Value):
     error, elements = self.get_arguments(context, "to_dictionary")
     if error:
       return error
-    
+
     elements: List = elements.value
 
     for item in elements:
@@ -758,7 +768,7 @@ class Function(Value):
 
     elements: Dictionary = elements.keys()
     return RuntimeResponse().success(List(elements, context))
-  
+
   def _random(self, context: Context):
     from random import random
 
@@ -770,7 +780,7 @@ class Function(Value):
     error, time = self.get_arguments(context, "pause")
     if error:
       return error
-    
+
     time: Number
 
     sleep(time.value)
@@ -788,7 +798,7 @@ class Function(Value):
     error, file_name = self.get_arguments(context, "run")
     if error:
       return error
-    
+
     file_name: String
 
     try:
@@ -816,7 +826,7 @@ class Function(Value):
     error, file_name = self.get_arguments(context, "read_file")
     if error:
       return error
-    
+
     file_name: String
 
     try: 
@@ -835,7 +845,7 @@ class Function(Value):
     error, path = self.get_arguments(context, "change_directory")
     if error:
       return error
-    
+
     path: String
 
     chdir(path.value)
@@ -879,25 +889,42 @@ functions = {
   ("get_current_directory", "получить_текущую_директорию"): {},
   ("exit", "завершить", "выход"):                           {("code", 0): Number},
 }
-    
+
 build_in_functions_names = [name for function_names in functions.keys() for name in function_names]
 
 class Class(Function):
-  def __init__(self, name, value, context):
+  def __init__(self, name, value, parents, context):
     self.name = name
     self.value: Dictionary = value
+    self.parents = parents
     self.initial_method = self.value.get(String("__init__", context)) or self.value.get(String("__инициализация__", context))
     self.initial_method.argument_names = {argument_name: Value for argument_name in self.initial_method.argument_names}
     self.context = context
 
   def __repr__(self):
-    return f"Класс({self.name}, {self.value})"
+    return f"Класс({self.name}, {self.value}, {self.parents})"
 
   def execute(self, arguments):
     response = RuntimeResponse()
 
     context = Context(self.name, self.context.variables, self.context, self.position_start)
-    arguments = [Object(self.value.items(), context)] + arguments
+
+    methods = Dictionary([], context)
+    for parent in self.parents:
+      parent = self.context.get_variable(parent)
+      methods, error = methods.addition(parent.value)
+      if error:
+        return error
+        
+      method_names = [method.value for method in parent.value.keys()]
+      if ("__init__" in method_names or "__инициализация__" in method_names) and len(self.initial_method.body_node.element_nodes) == 0:
+        self.initial_method = parent.initial_method
+
+    methods, error = methods.addition(self.value)
+    if error:
+      return error
+    
+    arguments = [Object(methods.items(), context)] + arguments
 
     response.register(self.check_and_populate_arguments(self.initial_method.argument_names, arguments, context))
     if response.should_return():
@@ -916,7 +943,7 @@ class Class(Function):
     value = response.register(interpret.interpret(self.initial_method.body_node, context))
     if response.should_return():
       return response
-    
+
     if response.function_return_value:
       return response.failure(InvalidSyntaxError(
         self.initial_method.position_start, self.initial_method.position_end,
@@ -936,9 +963,8 @@ class Object(Dictionary):
     return f"Объект({str(self)})"
 
   def copy(self):
-    copy = Object(self.value.copy(), self.context)
-    copy.set_position(self.position_start, self.position_end)
-    return copy
+    return Object(self.value.copy(), self.context).set_position(self.position_start, self.position_end)
+
 
 class Method(Function):
   def __init__(self, name, body_node, argument_names, should_auto_return, context):
