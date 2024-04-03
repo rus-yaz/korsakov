@@ -1,12 +1,10 @@
-from errors_list import Position
-from tokens_list import Token
-
+from loggers import Position
 
 # --------------------------------------------------
 
 
 class NumberNode:
-  def __init__(self, token: Token):
+  def __init__(self, token):
     self.token = token
     self.position_start = self.token.position_start
     self.position_end = self.token.position_end
@@ -16,7 +14,7 @@ class NumberNode:
 
 
 class StringNode:
-  def __init__(self, token: Token):
+  def __init__(self, token):
     self.token = token
     self.position_start = self.token.position_start
     self.position_end = self.token.position_end
@@ -51,7 +49,7 @@ class DictionaryNode:
 
 
 class UnaryOperationNode:
-  def __init__(self, operator: Token, node: NumberNode):
+  def __init__(self, operator, node: NumberNode):
     self.operator = operator
     self.node = node
 
@@ -63,7 +61,7 @@ class UnaryOperationNode:
 
 
 class BinaryOperationNode:
-  def __init__(self, left_node, operator: Token, right_node):
+  def __init__(self, left_node, operator, right_node):
     self.left_node = left_node
     self.operator = operator
     self.right_node = right_node
@@ -79,7 +77,7 @@ class BinaryOperationNode:
 
 
 class VariableAccessNode:
-  def __init__(self, variable: Token, keys: list, position_start: Position, position_end: Position):
+  def __init__(self, variable, keys: list, position_start: Position, position_end: Position):
     self.variable = variable
     self.keys = keys
 
@@ -91,7 +89,7 @@ class VariableAccessNode:
 
 
 class VariableAssignNode:
-  def __init__(self, variable: Token, keys: list, value_node):
+  def __init__(self, variable, keys: list, value_node):
     self.variable = variable
     self.keys = keys
     self.value_node = value_node
@@ -273,7 +271,7 @@ class BreakNode:
 # --------------------------------------------------
 
 class DeleteNode:
-  def __init__(self, variable: Token, position_start, position_end):
+  def __init__(self, variable, position_start, position_end):
     self.variable = variable
 
     self.position_start = position_start
@@ -281,7 +279,7 @@ class DeleteNode:
 
 
 class IncludeNode:
-  def __init__(self, module: Token, position_start, position_end):
+  def __init__(self, module, position_start, position_end):
     self.module = module
 
     self.position_start = position_start
@@ -289,4 +287,3 @@ class IncludeNode:
 
   def __repr__(self):
     return f"IncludeNode({self.module.value})"
-

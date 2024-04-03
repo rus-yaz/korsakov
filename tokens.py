@@ -1,5 +1,5 @@
 from context import Context
-from errors_list import Position
+from loggers import Position
 
 
 class Token:
@@ -31,74 +31,74 @@ global_context = Context("<программа>")
 
 FILE_EXTENSION = "kors"
 
-SPACE = "пробел"
-PERCENT = "процент"
+SPACE            = "пробел"
+PERCENT          = "процент"
 EXCLAMATION_MARK = "восклицательный знак"
 
-INTEGER = "целое_число"
-FLOAT = "дробное_число"
-STRING = "строка"
+INTEGER          = "целое_число"
+FLOAT            = "дробное_число"
+STRING           = "строка"
 ESCAPE_SEQUENCES = {"n": "\n", "н": "\n", "t": "\t", "т": "\t"}
 
-ADDITION = "сумма"
-SUBTRACTION = "разность"
+ADDITION       = "сумма"
+SUBTRACTION    = "разность"
 MULTIPLICATION = "произведение"
-DIVISION = "частное"
-POWER = "возведение_в_степень"
-ROOT = "извлечение_корня"
-INCREMENT = "увеличить_на_один"
-DECREMENT = "уменьшить_на_один"
+DIVISION       = "частное"
+POWER          = "возведение_в_степень"
+ROOT           = "извлечение_корня"
+INCREMENT      = "увеличить_на_один"
+DECREMENT      = "уменьшить_на_один"
 
 IDENTIFIER = "идентификатор"
-KEYWORD = "ключевое_слово"
-ASSIGN = "присвоение"
+KEYWORD    = "ключевое_слово"
+ASSIGN     = "присвоение"
 
-EQUAL = "равно"
-NOT_EQUAL = "не_равно"
-LESS = "меньше"
-MORE = "больше"
+EQUAL         = "равно"
+NOT_EQUAL     = "не_равно"
+LESS          = "меньше"
+MORE          = "больше"
 LESS_OR_EQUAL = "меньше_или_равно"
 MORE_OR_EQUAL = "больше_или_равно"
-COMPARISONS = [EQUAL, NOT_EQUAL, LESS, MORE, LESS_OR_EQUAL, MORE_OR_EQUAL]
+COMPARISONS   = [EQUAL, NOT_EQUAL, LESS, MORE, LESS_OR_EQUAL, MORE_OR_EQUAL]
 
-OPEN_PAREN = "открывающая_скобка"
-CLOSED_PAREN = "закрывающая_скобка"
-OPEN_LIST_PAREN = "открывающая_скобка_списка"
+OPEN_PAREN        = "открывающая_скобка"
+CLOSED_PAREN      = "закрывающая_скобка"
+OPEN_LIST_PAREN   = "открывающая_скобка_списка"
 CLOSED_LIST_PAREN = "закрывающая_скобка_списка"
 
-COLON = "двоеточие"
-COMMA = "запятая"
-POINT = "точка"
+COLON      = "двоеточие"
+COMMA      = "запятая"
+POINT      = "точка"
 BACK_SLASH = "обратная_косая_черта"
 
-NEWLINE = "новая_строка"
+NEWLINE             = "новая_строка"
 END_OF_CONSTRUCTION = "конец_конструкции"
-END_OF_FILE = "конец_файла"
+END_OF_FILE         = "конец_файла"
 
 AND = ["и", "and"]
-OR = ["или", "or"]
+OR  = ["или", "or"]
 NOT = ["не", "not"]
 
 CHECK = ["проверить", "check"]
-IF = ["если", "if"]
-THEN = ["то", "then"]
-ELSE = ["иначе", "else"]
+IF    = ["если", "if"]
+THEN  = ["то", "then"]
+ELSE  = ["иначе", "else"]
 
-FOR = ["для", "for"]
-OF = ["из", "of"]
-FROM = ["от", "from"]
-TO = ["до", "to"]
+FOR   = ["для", "for"]
+OF    = ["из", "of"]
+FROM  = ["от", "from"]
+TO    = ["до", "to"]
 AFTER = ["через", "after"]
 
-WHILE = ["пока", "while"]
+WHILE    = ["пока", "while"]
 CONTINUE = ["продолжить", "continue"]
-BREAK = ["прервать", "break"]
+BREAK    = ["прервать", "break"]
 
-CLASS = ["класс", "class"]
+CLASS    = ["класс", "class"]
 FUNCTION = ["функция", "function"]
-RETURN = ["вернуть", "return"]
+RETURN   = ["вернуть", "return"]
 
-DELETE = ["удалить", "delete"]
+DELETE  = ["удалить", "delete"]
 INCLUDE = ["включить", "include"]
 
 KEYWORDS =\
@@ -109,9 +109,10 @@ KEYWORDS =\
   CLASS + FUNCTION + RETURN +\
   DELETE + INCLUDE
 
+
 def set_default_variables():
-  from types_list import Number, String, Function, functions
-  from nodes_list import VariableAccessNode, VariableAssignNode
+  from classes import Number, String, Function, functions
+  from nodes import VariableAccessNode, VariableAssignNode
 
   global_context.set_many_variables([
     [["null", "нуль"], Number(None, global_context)],
@@ -123,5 +124,5 @@ def set_default_variables():
     ],
   ])
 
-set_default_variables()
 
+set_default_variables()

@@ -1,10 +1,10 @@
-from tokens_list import global_context
-from tokenize import Tokenizer
-from parse import Parser
-from interpret import Interpreter
-
+from interpreter import Interpreter
+from parser import Parser
+from tokenizer import Tokenizer
+from tokens import global_context
 
 COMMANDLINE_ARGUMENTS = dict.fromkeys(["debug", "nostd", "tokens", "ast", "context"], False)
+
 
 def run(module_name: str, code: str):
   # Tokenization
@@ -16,7 +16,7 @@ def run(module_name: str, code: str):
     [print("[DEBUG]", i) for i in tokens]
 
   # ------------------------------
-  
+
   # Abstract Syntax Tree
 
   ast = Parser(tokens).parse()
@@ -25,7 +25,7 @@ def run(module_name: str, code: str):
 
   if COMMANDLINE_ARGUMENTS["debug"] or COMMANDLINE_ARGUMENTS["ast"]:
     print(ast.node.element_nodes)
-    
+
   # ------------------------------
 
   # Interpretation

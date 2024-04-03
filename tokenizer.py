@@ -1,5 +1,5 @@
-from errors_list import *
-from tokens_list import *
+from loggers import *
+from tokens import *
 
 
 class Tokenizer:

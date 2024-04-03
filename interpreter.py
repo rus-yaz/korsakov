@@ -2,10 +2,10 @@ from os import name as os_name
 from os.path import realpath
 from pathlib import Path
 
-from errors_list import *
-from nodes_list import *
-from tokens_list import *
-from types_list import *
+from nodes import *
+from loggers import *
+from tokens import *
+from classes import *
 
 PATH_SEPARATOR = "\\" if os_name == "nt" else "/"
 LANGAUGE_PATH = __file__.rsplit(PATH_SEPARATOR, 1)[0]
@@ -28,57 +28,57 @@ class Interpreter:
     raise Exception(f"Метод interpret_{type(node).__name__} не объявлен")
 
   def interpret_NumberNode(self, node: NumberNode, context: Context) -> Number:
-    return RuntimeResponse().success(Number(node.token.value, context).set_position(node.position_start, node.position_end))
+    return ExecutionLogger().success(Number(node.token.value, context).set_position(node.position_start, node.position_end))
 
   def interpret_StringNode(self, node: StringNode, context: Context):
-    return RuntimeResponse().success(String(node.token.value, context).set_position(node.position_start, node.position_end))
+    return ExecutionLogger().success(String(node.token.value, context).set_position(node.position_start, node.position_end))
 
   def interpret_DictionaryNode(self, node: DictionaryNode, context: Context):
-    response = RuntimeResponse()
+    logger = ExecutionLogger()
     dictionary = Dictionary([], context)
 
     for key_node, element_node in node.element_nodes:
-      key = response.register(self.interpret(key_node, context))
-      if response.should_return():
-        return response
+      key = logger.register(self.interpret(key_node, context))
+      if logger.should_return():
+        return logger
 
-      value = response.register(self.interpret(element_node, context))
-      if response.should_return():
-        return response
+      value = logger.register(self.interpret(element_node, context))
+      if logger.should_return():
+        return logger
 
       dictionary.set(key, value)
-      if response.should_return():
-        return response
+      if logger.should_return():
+        return logger
 
-    return response.success(dictionary.set_position(node.position_start, node.position_end))
+    return logger.success(dictionary.set_position(node.position_start, node.position_end))
 
   def interpret_ListNode(self, node: ListNode, context: Context):
-    response = RuntimeResponse()
+    logger = ExecutionLogger()
     elements = []
 
     for element_node in node.element_nodes:
-      element = response.register(self.interpret(element_node, context))
-      if response.should_return():
-        return response
+      element = logger.register(self.interpret(element_node, context))
+      if logger.should_return():
+        return logger
 
       elements += [element]
 
-    return response.success(List(elements, context).set_position(node.position_start, node.position_end))
+    return logger.success(List(elements, context).set_position(node.position_start, node.position_end))
 
   def interpret_BinaryOperationNode(self, node: BinaryOperationNode, context: Context) -> Number:
-    response = RuntimeResponse()
+    logger = ExecutionLogger()
     error = None
 
-    left: Value = response.register(self.interpret(node.left_node, context))
-    if response.should_return():
-      return response
+    left: Value = logger.register(self.interpret(node.left_node, context))
+    if logger.should_return():
+      return logger
 
-    if node.operator.check_keyword(AND) and not left.is_true(): return response.success(Number(0, context))
-    elif node.operator.check_keyword(OR) and left.is_true():    return response.success(Number(1, context))
+    if node.operator.check_keyword(AND) and not left.is_true(): return logger.success(Number(0, context))
+    elif node.operator.check_keyword(OR) and left.is_true():    return logger.success(Number(1, context))
 
-    right: Value = response.register(self.interpret(node.right_node, context))
-    if response.should_return():
-      return response
+    right: Value = logger.register(self.interpret(node.right_node, context))
+    if logger.should_return():
+      return logger
 
     if node.operator.check_type(ADDITION):         result, error = left.addition(right)
     elif node.operator.check_type(SUBTRACTION):    result, error = left.subtraction(right)
@@ -98,53 +98,53 @@ class Interpreter:
     elif node.operator.check_keyword(OR):          result, error = left.some(right)
 
     else:
-      return response.failure(RuntimeError(
+      return logger.failure(RuntimeError(
         node.left_node.position_start, node.right_node.position_end,
         "Неизвестная операция", context
       ))
 
     if error:
-      return response.failure(error)
+      return logger.failure(error)
 
-    return response.success(result.set_position(node.position_start, node.position_end))
+    return logger.success(result.set_position(node.position_start, node.position_end))
 
   def interpret_UnaryOperationNode(self, node: UnaryOperationNode, context: Context) -> Number:
-    response = RuntimeResponse()
+    logger = ExecutionLogger()
     error = None
 
-    result: Number = response.register(self.interpret(node.node, context))
-    if response.should_return():
-      return response
+    result: Number = logger.register(self.interpret(node.node, context))
+    if logger.should_return():
+      return logger
 
     if node.operator.check_keyword(NOT):        result, error = result.denial()
     elif node.operator.check_type(SUBTRACTION): result, error = result.multiplication(Number(-1, context))
     elif node.operator.check_type(ROOT):        result, error = Number(2, context).root(result)
 
     elif node.operator.check_type(INCREMENT):
-      response.register(self.interpret(VariableAssignNode(
+      logger.register(self.interpret(VariableAssignNode(
         node.node.variable, [], NumberNode(Token(INTEGER, result.value + 1, result.position_start))
       ), context))
 
       if node.operator.value: result, error = result.addition(Number(1, context))
     elif node.operator.check_type(DECREMENT):
-      response.register(self.interpret(VariableAssignNode(
+      logger.register(self.interpret(VariableAssignNode(
         node.node.variable, [], NumberNode(Token(INTEGER, result.value - 1, result.position_start))
       ), context))
 
       if node.operator.value: result, error = result.subtraction(Number(1, context))
 
     if error:
-      return response.failure(error)
+      return logger.failure(error)
 
-    return response.success(result.set_position(node.position_start, node.position_end))
+    return logger.success(result.set_position(node.position_start, node.position_end))
 
   def interpret_VariableAccessNode(self, node: VariableAccessNode, context: Context):
-    response = RuntimeResponse()
+    logger = ExecutionLogger()
     variable = node.variable
     value = context.get_variable(variable.value)
 
     if value == None:
-      return response.failure(BadIdentifierError(
+      return logger.failure(BadIdentifierError(
         node.variable.position_start, node.variable.position_end,
         f"Переменная \"{variable.value}\" не найдена"
       ))
@@ -154,30 +154,30 @@ class Interpreter:
 
       while keys:
         if not isinstance(value, String | Dictionary | List):
-          return response.failure(InvalidSyntaxError(
+          return logger.failure(InvalidSyntaxError(
             variable.position_start, variable.position_end,
             f"Из типа \"{repr(value).split('(')[0]}\" нельзя взять элемент"
           ))
 
         key, *keys = keys
         if not isinstance(value, Object):
-          key = response.register(self.interpret(key, context))
+          key = logger.register(self.interpret(key, context))
         else:
           if not isinstance(key, VariableAccessNode) and not key.token.check_type(IDENTIFIER, KEYWORD):
-            return response.failure(InvalidKeyError(
+            return logger.failure(InvalidKeyError(
               key.token.position_start, key.token.position_end,
               "Ключ должен быть Идентификатором"
             ))
-          
-          key = response.register(self.interpret(StringNode(key.variable), context))
-          
-        if response.should_return():
-          return response
+
+          key = logger.register(self.interpret(StringNode(key.variable), context))
+
+        if logger.should_return():
+          return logger
 
         if isinstance(value, Dictionary) and not isinstance(key, Number | String):
-          return response.failure(InvalidSyntaxError(key.position_start, key.position_end, "Ключ должен иметь тип Число или Строка"))
+          return logger.failure(InvalidSyntaxError(key.position_start, key.position_end, "Ключ должен иметь тип Число или Строка"))
         if isinstance(value, List | String) and not isinstance(key, Number):
-          return response.failure(InvalidSyntaxError(key.position_start, key.position_end, "Индекс должен иметь тип Число"))
+          return logger.failure(InvalidSyntaxError(key.position_start, key.position_end, "Индекс должен иметь тип Число"))
 
         is_dictionary = isinstance(value, Dictionary)
         list_value = value
@@ -185,68 +185,68 @@ class Interpreter:
 
         if value == None:
           if is_dictionary:
-            return response.failure(InvalidKeyError(key.position_start, key.position_end))
+            return logger.failure(InvalidKeyError(key.position_start, key.position_end))
 
-          return response.failure(IndexOutOfRangeError(
+          return logger.failure(IndexOutOfRangeError(
             key.position_start, key.position_end,
             f"Длина массива - {len(list_value.value)}, индекс - {key}"
           ))
 
     if value == None:
-      return response.failure(BadIdentifierError(node.position_start, node.position_end, f"`{variable.value}`"))
+      return logger.failure(BadIdentifierError(node.position_start, node.position_end, f"`{variable.value}`"))
 
-    return response.success(value.set_context(context).set_position(node.position_start, node.position_end))
+    return logger.success(value.set_context(context).set_position(node.position_start, node.position_end))
 
   def interpret_VariableAssignNode(self, node: VariableAssignNode, context: Context):
-    response = RuntimeResponse()
+    logger = ExecutionLogger()
     variable = node.variable.copy()
 
-    value = response.register(self.interpret(node.value_node, context))
-    if response.should_return():
-      return response
+    value = logger.register(self.interpret(node.value_node, context))
+    if logger.should_return():
+      return logger
 
     if node.keys:
       item = context.get_variable(variable.value)
       if item == None:
-        return response.failure(BadIdentifierError(variable.position_start, variable.position_end, variable.value))
+        return logger.failure(BadIdentifierError(variable.position_start, variable.position_end, variable.value))
 
       items = [item.copy()]
       keys = []
 
       for key in node.keys:
         if not isinstance(items[0], Object):
-          key = response.register(self.interpret(key, context))
-          if response.should_return():
-            return response
+          key = logger.register(self.interpret(key, context))
+          if logger.should_return():
+            return logger
         else:
           if not isinstance(key, VariableAccessNode) and not key.token.check_type(IDENTIFIER, KEYWORD):
-            return response.failure(InvalidKeyError(
+            return logger.failure(InvalidKeyError(
               key.token.position_start, key.token.position_end,
               "Ключ должен быть Идентификатором"
             ))
-          key = response.register(self.interpret(StringNode(key.variable), context))
+          key = logger.register(self.interpret(StringNode(key.variable), context))
 
         keys += [key]
 
         if len(keys) == len(node.keys):
-          break 
+          break
 
         if -len(items[0].value) < key.value >= len(items[0].value):
-          return response.failure(IndexOutOfRangeError(node.position_start, node.position_end, key))
+          return logger.failure(IndexOutOfRangeError(node.position_start, node.position_end, key))
 
         item = items[0].get(key).copy()
         if not isinstance(item, String | Dictionary | List | Object):
-          return response.failure(InvalidSyntaxError(
+          return logger.failure(InvalidSyntaxError(
             node.variable.position_start, node.keys[-1].position_end,
             f"Из типа \"{repr(item).split('(')[0]}\" нельзя взять элемент"
           ))
         elif isinstance(items[0], String | List) and not isinstance(key, Number):
-          return response.failure(InvalidSyntaxError(
+          return logger.failure(InvalidSyntaxError(
             node.variable.position_start, node.keys[-1].position_end,
             f"Из типа \"{repr(item).split('(')[0]}\" можно взять элемент только по индексу"
           ))
         elif isinstance(items[0], Dictionary) and not isinstance(key, Number | String):
-          return response.failure(InvalidSyntaxError(
+          return logger.failure(InvalidSyntaxError(
             node.variable.position_start, node.keys[-1].position_end,
             f"Ключ должен быть Числом или Строкой, не {repr(key).split("(")}"
           ))
@@ -258,117 +258,117 @@ class Interpreter:
       for key in keys[::-1]:
         value = items.pop(0)
         if isinstance(items[0], String) and not isinstance(value, String):
-          return response.failure(InvalidSyntaxError(
+          return logger.failure(InvalidSyntaxError(
             node.variable.position_start, node.variable.position_end,
             f"Тип \"{repr(value).split('(')[0]}\" не может быть записан в строку"
           ))
         elif isinstance(items[0], List | String) and not isinstance(key, Number):
-          return response.failure(InvalidSyntaxError(
+          return logger.failure(InvalidSyntaxError(
             node.variable.position_start, node.variable.position_end,
             "Индекс должен иметь тип Число"
           ))
         elif isinstance(items[0], Dictionary) and not isinstance(key, Number | String):
-          return response.failure(InvalidSyntaxError(
+          return logger.failure(InvalidSyntaxError(
             node.variable.position_start, node.variable.position_end,
             "Ключ должен иметь тип Число или Строка"
           ))
         elif isinstance(items[0], List) and -len(items[0].value) < key.value >= len(items[0].value):
-          return response.failure(IndexOutOfRangeError(node.position_start, node.position_end, key))
+          return logger.failure(IndexOutOfRangeError(node.position_start, node.position_end, key))
 
         items[0].set(key, value)
 
       value = items[0]
 
     context.set_variable(variable.value, value)
-    return response.success(value)
+    return logger.success(value)
 
   def interpret_CheckNode(self, node: CheckNode, context: Context):
-    response = RuntimeResponse()
+    logger = ExecutionLogger()
     done = False
 
     for case in node.cases:
-      if not done and response.register(self.interpret(case[0], context)).value:
+      if not done and logger.register(self.interpret(case[0], context)).value:
         done = True
 
-      response.register(self.interpret(IfNode([case], None), context))
-      if response.should_return() and not response.break_loop:
-        return response
+      logger.register(self.interpret(IfNode([case], None), context))
+      if logger.should_return() and not logger.break_loop:
+        return logger
 
-      if response.break_loop:
+      if logger.break_loop:
         break
 
     if not done and node.else_case:
-      response.register(self.interpret(node.else_case[0], context))
-      if response.should_return():
-        return response
+      logger.register(self.interpret(node.else_case[0], context))
+      if logger.should_return():
+        return logger
 
-    return response.success(Number(None, context))
+    return logger.success(Number(None, context))
 
   def interpret_IfNode(self, node: IfNode, context: Context):
-    response = RuntimeResponse()
+    logger = ExecutionLogger()
 
     for condition, expression, return_null in node.cases:
-      condition_value = response.register(self.interpret(condition, context))
-      if response.should_return():
-        return response
+      condition_value = logger.register(self.interpret(condition, context))
+      if logger.should_return():
+        return logger
 
       if condition_value.is_true():
-        expression_value = response.register(self.interpret(expression, context))
+        expression_value = logger.register(self.interpret(expression, context))
 
-        if response.should_return():
-          return response
+        if logger.should_return():
+          return logger
 
-        return response.success(Number(None, context) if return_null else expression_value)
+        return logger.success(Number(None, context) if return_null else expression_value)
 
     if node.else_case:
       expression, return_null = node.else_case
 
-      else_case_value = response.register(self.interpret(expression, context))
-      if response.should_return():
-        return response
+      else_case_value = logger.register(self.interpret(expression, context))
+      if logger.should_return():
+        return logger
 
-      return response.success(Number(None, context) if return_null else else_case_value)
+      return logger.success(Number(None, context) if return_null else else_case_value)
 
-    return response.success(Number(None, context))
+    return logger.success(Number(None, context))
 
   def interpret_ForNode(self, node: ForNode, context: Context):
-    response = RuntimeResponse()
+    logger = ExecutionLogger()
     elements = []
 
-    start_value: Number | List | String = response.register(self.interpret(node.start_node, context))
-    if response.should_return():
-      return response
+    start_value: Number | List | String = logger.register(self.interpret(node.start_node, context))
+    if logger.should_return():
+      return logger
 
     if not isinstance(start_value, Number | List | String):
-      return response.failure(InvalidSyntaxError(
+      return logger.failure(InvalidSyntaxError(
         start_value.position_start, start_value.position_end,
         "Ожидались число, список или строка"
       ))
 
     if node.end_node:
-      end_value = response.register(self.interpret(node.end_node, context))
-      if response.should_return():
-        return response
+      end_value = logger.register(self.interpret(node.end_node, context))
+      if logger.should_return():
+        return logger
 
       if not isinstance(end_value, Number):
-        return response.failure(InvalidSyntaxError(end_value.position_start, end_value.position_end, "Ожидалось число"))
+        return logger.failure(InvalidSyntaxError(end_value.position_start, end_value.position_end, "Ожидалось число"))
     else:
       end_value = Number(None, context)
 
     if node.step_node:
-      step_value = response.register(self.interpret(node.step_node, context))
-      if response.should_return():
-        return response
+      step_value = logger.register(self.interpret(node.step_node, context))
+      if logger.should_return():
+        return logger
 
       if not isinstance(step_value, Number):
-        return response.failure(InvalidSyntaxError(step_value.position_start, step_value.position_end, "Ожидалось число"))
+        return logger.failure(InvalidSyntaxError(step_value.position_start, step_value.position_end, "Ожидалось число"))
     else:
       step_value = Number(1, context)
 
     if end_value.value == None:
       iterator = 0
       if not isinstance(start_value, String | List):
-        return response.failure(InvalidSyntaxError(start_value.position_start, start_value.position_end, "Ожидались строка или список"))
+        return logger.failure(InvalidSyntaxError(start_value.position_start, start_value.position_end, "Ожидались строка или список"))
     else:
       iterator = start_value.value
 
@@ -380,66 +380,66 @@ class Interpreter:
         Number(iterator, context)
       )
 
-      value = response.register(self.interpret(node.body_node, context))
-      if response.should_return() and not response.break_loop and not response.continue_loop:
-        return response
+      value = logger.register(self.interpret(node.body_node, context))
+      if logger.should_return() and not logger.break_loop and not logger.continue_loop:
+        return logger
 
       elements += [value]
       iterator += step_value.value
 
-      if response.continue_loop: continue
-      if response.break_loop:    break
+      if logger.continue_loop: continue
+      if logger.break_loop:    break
 
     if node.else_case and not elements:
       expression, return_null = node.else_case
-      else_case_value = response.register(self.interpret(expression, context))
-      if response.should_return():
-        return response
+      else_case_value = logger.register(self.interpret(expression, context))
+      if logger.should_return():
+        return logger
 
-      return response.success(Number(None, context) if return_null else else_case_value)
+      return logger.success(Number(None, context) if return_null else else_case_value)
 
-    return response.success(
+    return logger.success(
         Number(None, context)
         if node.return_null else
         List(elements, context).set_position(node.position_start, node.position_end)
     )
 
   def interpret_WhileNode(self, node: WhileNode, context: Context):
-    response = RuntimeResponse()
+    logger = ExecutionLogger()
     elements = []
 
     while True:
-      condition = response.register(self.interpret(node.condition_node, context))
-      if response.should_return():
-        return response
+      condition = logger.register(self.interpret(node.condition_node, context))
+      if logger.should_return():
+        return logger
 
       if not condition.is_true(): break
 
-      value = [response.register(self.interpret(node.body_node, context))]
-      if response.should_return() and not response.break_loop and not response.continue_loop:
-        return response
+      value = [logger.register(self.interpret(node.body_node, context))]
+      if logger.should_return() and not logger.break_loop and not logger.continue_loop:
+        return logger
 
       elements += [value]
 
-      if response.continue_loop: continue
-      if response.break_loop: break
+      if logger.continue_loop: continue
+      if logger.break_loop: break
 
     if node.else_case and not elements:
       expression, return_null = node.else_case
-      else_case_value = response.register(self.interpret(expression, context))
-      if response.should_return():
-        return response
+      else_case_value = logger.register(self.interpret(expression, context))
+      if logger.should_return():
+        return logger
 
-      return response.success(Number(None, context) if return_null else else_case_value)
+      return logger.success(Number(None, context) if return_null else else_case_value)
 
-    return response.success(
+    return logger.success(
       Number(None, context).set_position(node.position_start, node.position_end)
       if node.return_null else
       List(elements, context).set_position(node.position_start, node.position_end)
     )
 
   def interpret_FunctionDefinitionNode(self, node: FunctionDefinitionNode, context: Context):
-    response = RuntimeResponse()
+    logger = ExecutionLogger()
 
     function_name = node.variable_name.value if node.variable_name else None
     body_node = node.body_node
@@ -451,10 +451,10 @@ class Interpreter:
     if node.variable_name:
       context.set_variable(function_name, function_value)
 
-    return response.success(function_value)
+    return logger.success(function_value)
 
   def interpret_MethodDefinitionNode(self, node: MethodDefinitionNode, context: Context):
-    response = RuntimeResponse()
+    logger = ExecutionLogger()
 
     function_name = node.variable_name.value if node.variable_name else None
     body_node = node.body_node
@@ -467,45 +467,45 @@ class Interpreter:
     if node.variable_name:
       context.set_variable(function_name, function_value)
 
-    return response.success(function_value)
+    return logger.success(function_value)
 
   def interpret_ClassDefinitionNode(self, node: ClassDefinitionNode, context: Context):
-    response = RuntimeResponse()
+    logger = ExecutionLogger()
     class_name = node.variable_name.value
-    methods = response.register(self.interpret(node.body_node, context))
+    methods = logger.register(self.interpret(node.body_node, context))
     parents = node.parents
-    
+
     context.set_variable(class_name, Class(class_name, methods, parents, context))
 
-    return response.success(Number(None, context))
+    return logger.success(Number(None, context))
 
   def interpret_CallNode(self, node: CallNode, context: Context):
-    response = RuntimeResponse()
+    logger = ExecutionLogger()
     arguments = []
 
-    call_node = response.register(self.interpret(node.call_node, context))
-    if response.should_return():
-      return response
+    call_node = logger.register(self.interpret(node.call_node, context))
+    if logger.should_return():
+      return logger
 
     if isinstance(call_node, Method):
       object_node = node.call_node
       object_node.keys = []
-      arguments += [response.register(self.interpret(object_node, context))]
-      if response.should_return():
-        return response
+      arguments += [logger.register(self.interpret(object_node, context))]
+      if logger.should_return():
+        return logger
 
     for argument_node in node.argument_nodes:
       if isinstance(argument_node, VariableAssignNode):
         arguments += [argument_node]
         continue
 
-      arguments += [response.register(self.interpret(argument_node, context))]
-      if response.should_return():
-        return response
+      arguments += [logger.register(self.interpret(argument_node, context))]
+      if logger.should_return():
+        return logger
 
-    return_value = response.register(call_node.execute(arguments))
-    if response.should_return():
-      return response
+    return_value = logger.register(call_node.execute(arguments))
+    if logger.should_return():
+      return logger
 
     if isinstance(call_node, Method):
       context.set_variable(
@@ -513,35 +513,35 @@ class Interpreter:
         call_node.internal_context.get_variable(call_node.argument_names[0].variable.value)
       )
 
-    return response.success(return_value)
+    return logger.success(return_value)
 
   def interpret_ReturnNode(self, node: ReturnNode, context: Context):
-    response = RuntimeResponse()
+    logger = ExecutionLogger()
 
     if node.return_node:
-      value = response.register(self.interpret(node.return_node, context))
-      if response.should_return():
-        return response
+      value = logger.register(self.interpret(node.return_node, context))
+      if logger.should_return():
+        return logger
     else:
       value = Number(None, context)
 
-    return response.success_return(value)
+    return logger.success_return(value)
 
   def interpret_ContinueNode(self, node: ContinueNode, context: Context):
-    return RuntimeResponse().success_continue()
+    return ExecutionLogger().success_continue()
 
   def interpret_BreakNode(self, node: BreakNode, context: Context):
-    return RuntimeResponse().success_break()
+    return ExecutionLogger().success_break()
 
   def interpret_DeleteNode(self, node: DeleteNode, context: Context):
     context.delete_variable(node.variable.value)
 
-    return RuntimeResponse().success(Number(None, context))
+    return ExecutionLogger().success(Number(None, context))
 
   def interpret_IncludeNode(self, node: IncludeNode, context: Context):
     from run import run
 
-    response = RuntimeResponse()
+    logger = ExecutionLogger()
     module_name = node.module.value
 
     if module_name.endswith("*"):
@@ -561,7 +561,7 @@ class Interpreter:
         with open(file_path) as file:
           _, error = run(file_path, file.read())
           if error:
-            return response.failure(error)
+            return logger.failure(error)
     else:
       module_path = f"{self.script_location}{PATH_SEPARATOR}{module_name.rsplit(PATH_SEPARATOR, 1)[0]}"
       files = list(map(lambda x: str(x).rsplit(PATH_SEPARATOR, 1)[-1], Path(module_path).glob(f"*.{FILE_EXTENSION}")))
@@ -569,13 +569,13 @@ class Interpreter:
 
       if module_name not in files:
         if module_name not in BUILDIN_LIBRARIES:
-          return response.failure(ModuleNotFoundError(module.position_start, module.position_end, module_name))
+          return logger.failure(ModuleNotFoundError(module.position_start, module.position_end, module_name))
 
         module_path = LANGAUGE_PATH
 
       with open(f"{module_path}{PATH_SEPARATOR}{module_name}") as file:
         _, error = run(f"{module_path}{PATH_SEPARATOR}{module_name}", file.read())
         if error:
-          return response.failure(error)
+          return logger.failure(error)
 
-    return response.success(Number(None, context))
+    return logger.success(Number(None, context))

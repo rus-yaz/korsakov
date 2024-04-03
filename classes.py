@@ -1,8 +1,7 @@
 from context import Context
-from errors_list import InvalidSyntaxError, RuntimeError
-from runtime_response import RuntimeResponse
-from nodes_list import *
-from tokens_list import *
+from loggers import InvalidSyntaxError, RuntimeError, ExecutionLogger
+from nodes import *
+from tokens import *
 
 
 class Value:
@@ -55,7 +54,7 @@ class Value:
 
   def denial(self): return None, self.illegal_operation()
 
-  def execute(self, arguments): return RuntimeResponse().failure(self.illegal_operation())
+  def execute(self, arguments): return ExecutionLogger().failure(self.illegal_operation())
 
   def copy(self): raise Exception("Метод копирования не определён")
 
@@ -283,7 +282,7 @@ class List(Value):
   def get(self, index: Number, default_value: Value = None):
     if -len(self.value) <= index.value < len(self.value):
       return self.value[index.value]
-    
+
     return default_value
 
   def set(self, index: Number, value: Value):
@@ -345,7 +344,7 @@ class Dictionary(Value):
   def keys(self):
     return [key for key, value in self.value]
 
-  def get(self, target: String | Number, default_value: Value=None):
+  def get(self, target: String | Number, default_value: Value = None):
     for key, value in self.value:
       if key.value == target.value: return value
 
@@ -369,7 +368,7 @@ class Dictionary(Value):
       for key, value in operand.value:
         result.set(key, value)
 
-      return result, None 
+      return result, None
 
     return None, Value.illegal_operation(self, operand)
 
@@ -391,7 +390,7 @@ class Dictionary(Value):
   def copy(self):
     return Dictionary(self.value.copy(), self.context).set_position(self.position_start, self.position_end)
 
-# TODO: после создания компилятора вырезать встроенные функции и код, связанный с ними
+
 class Function(Value):
   def __init__(self, name, body_node, argument_names, should_auto_return, context):
     super().__init__()
@@ -419,57 +418,57 @@ class Function(Value):
     if type == type | List:     type_names += ["списком"]
     if type == type | Function: type_names += ["функцией"]
 
-    return RuntimeResponse().failure(RuntimeError(
+    return ExecutionLogger().failure(RuntimeError(
       self.position_start, self.position_end,
       custom_message or f"Аргумент \"{argument_name}\" должен быть {', '.join(type_names)}",
       context
     ))
 
   def execute(self, arguments):
-    response = RuntimeResponse()
+    logger = ExecutionLogger()
 
     argument_names = self.get_argument_names(self.name)
     initial_variables = self.internal_context.variables.copy()
-    response.register(self.check_and_populate_arguments(argument_names, arguments, self.internal_context))
-    if response.should_return():
-      return response
+    logger.register(self.check_and_populate_arguments(argument_names, arguments, self.internal_context))
+    if logger.should_return():
+      return logger
 
     if self.is_buildin:
       method = getattr(self, f"_{self.name}", self.no_interpret_method)
-      return_value = response.register(method(self.internal_context))
-      if response.should_return():
-        return response
+      return_value = logger.register(method(self.internal_context))
+      if logger.should_return():
+        return logger
 
       self.internal_context.variables = initial_variables.copy()
 
-      return response.success(return_value)
+      return logger.success(return_value)
 
-    from interpret import Interpreter
+    from interpreter import Interpreter
     interpret = Interpreter(self.name)
 
     argument_names = [argument_name.variable.value for argument_name in list(argument_names)]
     error, *arguments = self.get_arguments(self.internal_context, self.name)
     if error:
-      return response.failure(error)
+      return logger.failure(error)
 
     self.internal_context.set_many_variables([[[name], value] for name, value in zip(argument_names, arguments)])
 
-    value = response.register(interpret.interpret(self.body_node, self.internal_context))
-    if response.should_return() and response.function_return_value == None:
-      return response
+    value = logger.register(interpret.interpret(self.body_node, self.internal_context))
+    if logger.should_return() and logger.function_return_value == None:
+      return logger
 
-    return_value = (value if self.should_auto_return else response.function_return_value) or response.function_return_value or Number(None, self.context)
+    return_value = (value if self.should_auto_return else logger.function_return_value) or logger.function_return_value or Number(None, self.context)
 
     self.internal_context.variables = initial_variables.copy()
 
-    return response.success(return_value)
+    return logger.success(return_value)
 
   def check_and_populate_arguments(self, argument_names, arguments, context):
-    from interpret import Interpreter
+    from interpreter import Interpreter
 
     interpreter = Interpreter(self.name)
 
-    response = RuntimeResponse()
+    logger = ExecutionLogger()
 
     if argument_names and isinstance(list(argument_names)[0], tuple):
       position = Position(-1, 0, 0, "", "")
@@ -508,7 +507,7 @@ class Function(Value):
       function_positional_arguments_count += 1
 
     if len(arguments) > len(argument_names) or len(arguments) < function_positional_arguments_count:
-      return response.failure(RuntimeError(
+      return logger.failure(RuntimeError(
         self.position_start, self.position_end,
         f"Количество аргументов функции '{self.name}' - {len(argument_names) if len(arguments) > len(argument_names) else function_positional_arguments_count}, но получено {len(arguments)}",
         self.context
@@ -524,9 +523,9 @@ class Function(Value):
       argument_value = arguments[i]
       if isinstance(argument_value, VariableAssignNode):
         keywords = True
-        argument_name, argument_value = argument_value.variable.value, response.register(interpreter.interpret(argument_value.value_node, context))
+        argument_name, argument_value = argument_value.variable.value, logger.register(interpreter.interpret(argument_value.value_node, context))
       elif keywords:
-        return response.failure(RuntimeError(
+        return logger.failure(RuntimeError(
           argument_value.position_start, argument_value.position_end,
           "Позиционный аргумент следует за именованным",
           self.context
@@ -534,10 +533,10 @@ class Function(Value):
 
       context.set_variable(argument_name, argument_value)
 
-    return response.success(None)
+    return logger.success(None)
 
   def get_arguments(self, context: Context, function_name, argument_names=None):
-    from interpret import Interpreter
+    from interpreter import Interpreter
 
     interpreter = Interpreter(self.name)
     if argument_names == None:
@@ -575,7 +574,7 @@ class Function(Value):
       argument, default_value = argument.variable.value, argument.value_node
       arguments[argument] = types
 
-      default_arguments[argument] = RuntimeResponse().register(interpreter.interpret(default_value, context))
+      default_arguments[argument] = ExecutionLogger().register(interpreter.interpret(default_value, context))
 
     values = []
     for argument_name in arguments:
@@ -614,7 +613,7 @@ class Function(Value):
 
     print(str(value))
 
-    return RuntimeResponse().success(Number(None, context))
+    return ExecutionLogger().success(Number(None, context))
 
   def _error(self, context: Context):
     error, value = self.get_arguments(context, "error")
@@ -623,7 +622,7 @@ class Function(Value):
 
     value: Number | String | List | Dictionary
 
-    return RuntimeResponse().failure(RuntimeError(
+    return ExecutionLogger().failure(RuntimeError(
       self.position_start, self.position_end,
       str(value.value), context, False
     ))
@@ -634,13 +633,13 @@ class Function(Value):
       return error
 
     value: Number | String | List | Dictionary
-    return RuntimeResponse().success(String(input(str(value.value)), context))
+    return ExecutionLogger().success(String(input(str(value.value)), context))
 
   def _clear(self, context: Context):
     from os import name, system
 
     system("cls" if name == "nt" else "clear")
-    return RuntimeResponse().success(Number(None, context))
+    return ExecutionLogger().success(Number(None, context))
 
   def _type(self, context: Context):
     error, value = self.get_arguments(context, "type")
@@ -654,7 +653,7 @@ class Function(Value):
       "Object": "Объект"
     }
 
-    return RuntimeResponse().success(String(types[value.__class__.__name__], context))
+    return ExecutionLogger().success(String(types[value.__class__.__name__], context))
 
   def _to_binary(self, context: Context):
     error, number = self.get_arguments(context, "to_binary")
@@ -663,7 +662,7 @@ class Function(Value):
 
     number: Number
     binary_value = bin(number.value)[2:]
-    return RuntimeResponse().success(String(binary_value, context))
+    return ExecutionLogger().success(String(binary_value, context))
 
   def _to_number(self, context: Context):
     error, value, base = self.get_arguments(context, "to_number")
@@ -674,12 +673,12 @@ class Function(Value):
     base: Number
 
     if isinstance(value, Number):
-      return RuntimeResponse().success(value.copy().set_context(context))
+      return ExecutionLogger().success(value.copy().set_context(context))
 
     if "." in value.value:
-      return RuntimeResponse().success(Number(float(value.value), context))
+      return ExecutionLogger().success(Number(float(value.value), context))
 
-    return RuntimeResponse().success(Number(int(value.value, base.value), context))
+    return ExecutionLogger().success(Number(int(value.value, base.value), context))
 
   def _to_integer(self, context: Context):
     error, value, base = self.get_arguments(context, "to_integer")
@@ -690,9 +689,9 @@ class Function(Value):
     base: Number
 
     if isinstance(value, Number):
-      return RuntimeResponse().success(Number(int(value.value), context))
+      return ExecutionLogger().success(Number(int(value.value), context))
 
-    return RuntimeResponse().success(Number(int(value.value, base.value), context))
+    return ExecutionLogger().success(Number(int(value.value, base.value), context))
 
   def _to_float(self, context: Context):
     error, value = self.get_arguments(context, "to_float")
@@ -700,7 +699,7 @@ class Function(Value):
       return error
 
     value: Number | String
-    return RuntimeResponse().success(Number(float(value.value), context))
+    return ExecutionLogger().success(Number(float(value.value), context))
 
   def _to_string(self, context: Context):
     error, value = self.get_arguments(context, "to_string")
@@ -710,9 +709,9 @@ class Function(Value):
     value: Number | String | List | Dictionary
 
     if isinstance(value, Number | List | Dictionary):
-      return RuntimeResponse().success(String(str(value), context))
+      return ExecutionLogger().success(String(str(value), context))
 
-    return RuntimeResponse().success(value.set_context(context))
+    return ExecutionLogger().success(value.set_context(context))
 
   def _to_list(self, context: Context):
     error, value = self.get_arguments(context, "to_list")
@@ -722,11 +721,11 @@ class Function(Value):
     value: String | List | Dictionary
 
     if isinstance(value, String):
-      return RuntimeResponse().success(List(list(map(lambda x: String(x, context), value.value)), context))
+      return ExecutionLogger().success(List(list(map(lambda x: String(x, context), value.value)), context))
     elif isinstance(value, Dictionary):
-      return RuntimeResponse().success(List(value.keys(), context))
+      return ExecutionLogger().success(List(value.keys(), context))
 
-    return RuntimeResponse().success(value.set_context(context))
+    return ExecutionLogger().success(value.set_context(context))
 
   def _to_dictionary(self, context: Context):
     error, elements = self.get_arguments(context, "to_dictionary")
@@ -737,12 +736,12 @@ class Function(Value):
 
     for item in elements:
       if not isinstance(item, List) or len(item.value) != 2:
-        return RuntimeResponse().failure(InvalidSyntaxError(
+        return ExecutionLogger().failure(InvalidSyntaxError(
           elements.position_start, elements.position_end,
           "Список должен содержать массивы, состоящие из двух элементов "
         ))
 
-    return RuntimeResponse().success(Dictionary(elements.value, context))
+    return ExecutionLogger().success(Dictionary(elements.value, context))
 
   def _items(self, context: Context):
     error, elements = self.get_arguments(context, "items")
@@ -750,8 +749,7 @@ class Function(Value):
       return error
 
     elements: Dictionary = elements.items()
-    return RuntimeResponse().success(List(elements, context))
-
+    return ExecutionLogger().success(List(elements, context))
 
   def _values(self, context: Context):
     error, elements = self.get_arguments(context, "values")
@@ -759,7 +757,7 @@ class Function(Value):
       return error
 
     elements: Dictionary = elements.values()
-    return RuntimeResponse().success(List(elements, context))
+    return ExecutionLogger().success(List(elements, context))
 
   def _keys(self, context: Context):
     error, elements = self.get_arguments(context, "keys")
@@ -767,12 +765,12 @@ class Function(Value):
       return error
 
     elements: Dictionary = elements.keys()
-    return RuntimeResponse().success(List(elements, context))
+    return ExecutionLogger().success(List(elements, context))
 
   def _random(self, context: Context):
     from random import random
 
-    return RuntimeResponse().success(Number(random(), context))
+    return ExecutionLogger().success(Number(random(), context))
 
   def _pause(self, context: Context):
     from time import sleep
@@ -785,12 +783,12 @@ class Function(Value):
 
     sleep(time.value)
 
-    return RuntimeResponse().success(Number(None, context))
+    return ExecutionLogger().success(Number(None, context))
 
   def _time(self, context: Context):
     from time import time
 
-    return RuntimeResponse().success(Number(time(), context))
+    return ExecutionLogger().success(Number(time(), context))
 
   def _run(self, context: Context):
     from run import run
@@ -805,7 +803,7 @@ class Function(Value):
       with open(file_name.value) as file:
         code = file.read()
     except Exception as exception:
-      return RuntimeResponse().failure(RuntimeError(
+      return ExecutionLogger().failure(RuntimeError(
         self.position_start, self.position_end,
         f"Не удалось загрузить файл {file_name.value}\n" + str(exception),
         context
@@ -814,13 +812,13 @@ class Function(Value):
     _, error = run(file_name.value, code)
 
     if error:
-      return RuntimeResponse().failure(RuntimeError(
+      return ExecutionLogger().failure(RuntimeError(
         self.position_start, self.position_end,
         f"Не удалось закончить выполение кода {file_name.value}\n" + str(error),
         context
       ))
 
-    return RuntimeResponse().success(Number(None, context))
+    return ExecutionLogger().success(Number(None, context))
 
   def _read_file(self, context: Context):
     error, file_name = self.get_arguments(context, "read_file")
@@ -829,11 +827,11 @@ class Function(Value):
 
     file_name: String
 
-    try: 
+    try:
       with open(file_name.value) as file:
-        return RuntimeResponse().success(String(file.read(), context))
+        return ExecutionLogger().success(String(file.read(), context))
     except:
-      return RuntimeResponse().failure(RuntimeError(
+      return ExecutionLogger().failure(RuntimeError(
         self.position_start, self.position_end,
         f"Не удалось открыть файл {file_name.value}",
         context
@@ -850,12 +848,12 @@ class Function(Value):
 
     chdir(path.value)
 
-    return RuntimeResponse().success(Number(None, context))
+    return ExecutionLogger().success(Number(None, context))
 
   def _get_current_directory(self, context: Context):
     from os import getcwd
 
-    return RuntimeResponse().success(String(getcwd(), context))
+    return ExecutionLogger().success(String(getcwd(), context))
 
   def _exit(self, context: Context):
     error, code = self.get_arguments(context, "exit")
@@ -863,6 +861,7 @@ class Function(Value):
       return error
 
     exit(code.value)
+
 
 functions = {
   ("print", "показать"):                                    {("value", ""): Number | String | List | Dictionary},
@@ -892,6 +891,7 @@ functions = {
 
 build_in_functions_names = [name for function_names in functions.keys() for name in function_names]
 
+
 class Class(Function):
   def __init__(self, name, value, parents, context):
     self.name = name
@@ -905,7 +905,7 @@ class Class(Function):
     return f"Класс({self.name}, {self.value}, {self.parents})"
 
   def execute(self, arguments):
-    response = RuntimeResponse()
+    logger = ExecutionLogger()
 
     context = Context(self.name, self.context.variables, self.context, self.position_start)
 
@@ -915,7 +915,7 @@ class Class(Function):
       methods, error = methods.addition(parent.value)
       if error:
         return error
-        
+
       method_names = [method.value for method in parent.value.keys()]
       if ("__init__" in method_names or "__инициализация__" in method_names) and len(self.initial_method.body_node.element_nodes) == 0:
         self.initial_method = parent.initial_method
@@ -923,29 +923,29 @@ class Class(Function):
     methods, error = methods.addition(self.value)
     if error:
       return error
-    
+
     arguments = [Object(methods.items(), context)] + arguments
 
-    response.register(self.check_and_populate_arguments(self.initial_method.argument_names, arguments, context))
-    if response.should_return():
-      return response
+    logger.register(self.check_and_populate_arguments(self.initial_method.argument_names, arguments, context))
+    if logger.should_return():
+      return logger
 
-    from interpret import Interpreter
+    from interpreter import Interpreter
     interpret = Interpreter(self.name)
 
     argument_names = [argument_name.variable.value for argument_name in self.initial_method.argument_names]
     error, *arguments = self.get_arguments(context, self.name, self.initial_method.argument_names)
     if error:
-      return response.failure(error)
+      return logger.failure(error)
 
     context.set_many_variables([[[name], value] for name, value in zip(argument_names, arguments)])
 
-    value = response.register(interpret.interpret(self.initial_method.body_node, context))
-    if response.should_return():
-      return response
+    value = logger.register(interpret.interpret(self.initial_method.body_node, context))
+    if logger.should_return():
+      return logger
 
-    if response.function_return_value:
-      return response.failure(InvalidSyntaxError(
+    if logger.function_return_value:
+      return logger.failure(InvalidSyntaxError(
         self.initial_method.position_start, self.initial_method.position_end,
         "Метод инициализации не может ничего возвращать"
       ))
@@ -953,7 +953,8 @@ class Class(Function):
     return_value = context.get_variable(argument_names[0])
     self.value = return_value
 
-    return response.success(return_value)
+    return logger.success(return_value)
+
 
 class Object(Dictionary):
   def __init__(self, value, context):
@@ -972,4 +973,3 @@ class Method(Function):
 
   def __repr__(self):
     return f"Метод({self.name}, {list(self.get_argument_names(self.name))})"
-
