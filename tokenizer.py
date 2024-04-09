@@ -7,14 +7,14 @@ class Tokenizer:
     self.file_name = file_name
     self.text = text
     self.reset()
-    self.advance()
+    self.next()
 
   def reset(self) -> None:
     self.position = Position(-1, 0, 0, self.file_name, self.text)
     self.character = None
 
-  def advance(self) -> None:
-    self.position.advance(self.character)
+  def next(self) -> None:
+    self.position.next(self.character)
     self.character = self.text[self.position.index] if self.position.index < len(self.text) else None
 
   def tokenize(self) -> [[Token], None | Error]:
@@ -41,10 +41,10 @@ class Tokenizer:
 
       match self.character:
         case " " | "\t": token = None if not self.tokens or self.tokens[-1].check_type(SPACE, NEWLINE) else SPACE
-        case ";" | "\n": token = None if not self.tokens or self.tokens[-1].check_type(NEWLINE) else NEWLINE
+        case "\n": token = None if not self.tokens or self.tokens[-1].check_type(NEWLINE) else NEWLINE
 
         case ":": token = COLON
-        case ",": token = COMMA
+        case ";": token = SEMICOLON
         case ".": token = POINT
 
         case "!":
@@ -53,9 +53,9 @@ class Tokenizer:
             self.tokens.pop()
 
             while self.character not in ["\n", None]:
-              self.advance()
+              self.next()
 
-            token = None if not self.tokens or self.tokens[-1].check_type(NEWLINE, SPACE) else NEWLINE
+            token = NEWLINE if self.tokens and not self.tokens[-1].check_type(NEWLINE) else None
         case "=":
           token = ASSIGN
           if self.tokens:
@@ -90,7 +90,7 @@ class Tokenizer:
           token = SUBTRACTION
           if self.tokens and previous_token.check_type(SUBTRACTION):
             self.tokens.pop()
-            self.advance()
+            self.next()
 
             if self.character != "-":
               identifier = None
@@ -133,7 +133,8 @@ class Tokenizer:
             token = OPEN_LIST_PAREN
             position_start = previous_token.position_start
             self.tokens.pop()
-        case ")": token = CLOSED_PAREN
+        case ")":
+          token = CLOSED_PAREN
 
         case "%":
           token = PERCENT
@@ -151,11 +152,12 @@ class Tokenizer:
         case _:
           position_start = self.position.copy()
           char = self.character
-          self.advance()
+          self.next()
+          print(self.character)
           return [], IllegalCharacterError(position_start, self.position.copy(), f"`{char}`")
 
       self.tokens += [Token(token, None, position_start, self.position.copy())] if token else []
-      self.advance()
+      self.next()
 
     if self.tokens:
       self.tokens += [Token(END_OF_FILE, None, self.position.copy())]
@@ -171,11 +173,11 @@ class Tokenizer:
     position_start = self.position.copy()
     position_end = self.position.copy()
 
-    while self.character and (self.character.isdigit() or self.character in "_."):
+    while self.character and (self.character.isdigit() or self.character in "_,"):
       if self.character == "_":
-        self.advance()
+        self.next()
 
-      if self.character == ".":
+      if self.character == ",":
         if float_point:
           break
 
@@ -183,9 +185,9 @@ class Tokenizer:
 
       number += self.character
       position_end = self.position.copy()
-      self.advance()
+      self.next()
 
-    return Token(FLOAT, float(number), position_start, position_end) if float_point and not integer else Token(INTEGER, int(number), position_start, position_end)
+    return Token(FLOAT, float(number.replace(",", ".")), position_start, position_end) if float_point and not integer else Token(INTEGER, int(number), position_start, position_end)
 
   def make_identifier(self):
     identifier = ""
@@ -199,7 +201,7 @@ class Tokenizer:
 
       identifier += self.character
       position_end = self.position.copy()
-      self.advance()
+      self.next()
 
     return Token(KEYWORD if identifier in KEYWORDS else IDENTIFIER, identifier, position_start, position_end)
 
@@ -207,7 +209,7 @@ class Tokenizer:
     string = ""
     position_start = self.position.copy()
     escape_sequence = False
-    self.advance()
+    self.next()
 
     while self.character != None and (self.character != "\"" or escape_sequence):
       if escape_sequence:
@@ -218,11 +220,11 @@ class Tokenizer:
       else:
         string += self.character
 
-      self.advance()
+      self.next()
 
     if self.character != "\"":
       return None, InvalidSyntaxError(self.position.copy(), self.position.copy(), "Ожидалось `\"`")
 
-    self.advance()
+    self.next()
 
     return Token(STRING, string, position_start, self.position.copy()), None

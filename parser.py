@@ -8,9 +8,9 @@ class Parser:
     self.tokens = tokens
 
     self.token_index = 0
-    self.advance()
+    self.next()
 
-  def advance(self):
+  def next(self):
     if self.token_index < len(self.tokens):
       self.token: Token = self.tokens[self.token_index]
 
@@ -32,11 +32,11 @@ class Parser:
     result = ListNode([], self.token.position_start, self.token.position_start)
 
     while not self.token.check_type(END_OF_FILE):
-      result.element_nodes += [logger.register(self.statement())]
+      result.elements += [logger.register(self.statement())]
       if logger.error:
         return logger
 
-      logger.advance(self)
+      logger.next(self)
 
     return logger.success(result)
 
@@ -48,11 +48,11 @@ class Parser:
       variable = self.token
       keys = []
 
-      logger.advance(self)
+      logger.next(self)
 
       # Поиск ключей/индексов
       while self.token.check_type(POINT):
-        logger.advance(self)
+        logger.next(self)
 
         expression = logger.register(self.term())
         if logger.error:
@@ -65,11 +65,11 @@ class Parser:
       operator = None
       if self.token.check_type(ADDITION, SUBTRACTION, MULTIPLICATION, DIVISION, POWER):
         operator = self.token
-        logger.advance(self)
+        logger.next(self)
 
       # Присвоение
       if self.token.check_type(ASSIGN):
-        logger.advance(self)
+        logger.next(self)
         expression = logger.register(self.expression())
         if logger.error:
           return logger
@@ -91,20 +91,20 @@ class Parser:
         return logger
 
       if self.token.check_type(ASSIGN):
-        logger.advance(self)
+        logger.next(self)
 
         expression = logger.register(self.list_expression())
         if logger.error:
           return logger
 
-        if len(list_expression.element_nodes) != len(expression.element_nodes):
+        if len(list_expression.value) != len(expression.value):
           return logger.failure(InvalidSyntaxError(
             expression.position_start, expression.position_end,
-            f"Недостаточно значений для распоковки: ожидалось {len(list_expression.element_nodes)}, получено {len(expression.element_nodes)}"
+            f"Недостаточно значений для распоковки: ожидалось {len(list_expression.value)}, получено {len(expression.value)}"
           ))
 
         variables = []
-        for variable, element in zip(list_expression.element_nodes, expression.element_nodes):
+        for variable, element in zip(list_expression.value, expression.value):
           if not isinstance(variable, VariableAccessNode):
             return logger.failure(InvalidSyntaxError(
               variable.position_start, variable.position_end,
@@ -137,7 +137,7 @@ class Parser:
 
     while self.token.check_type(*operators) or self.token.check_keyword(operators):
       left_operator = self.token
-      logger.advance(self)
+      logger.next(self)
 
       middle = logger.register(right_function())
       if logger.error:
@@ -147,7 +147,7 @@ class Parser:
 
       if operators == COMPARISONS and self.token.check_type(*COMPARISONS):
         right_operator = self.token
-        logger.advance(self)
+        logger.next(self)
 
         right = logger.register(self.arithmetical_expression())
         if logger.error:
@@ -168,23 +168,23 @@ class Parser:
     token = self.token
 
     if token.check_type(INTEGER, FLOAT):
-      logger.advance(self)
+      logger.next(self)
       return logger.success(NumberNode(token))
     elif token.check_type(STRING):
-      logger.advance(self)
+      logger.next(self)
       return logger.success(StringNode(token))
 
     elif token.check_type(IDENTIFIER):
       if self.tokens[self.token_index - 2].check_type(POINT):
-        logger.advance(self)
+        logger.next(self)
         return logger.success(VariableAccessNode(
           token, [], token.position_start, self.token.position_end
         ))
 
-      logger.advance(self)
+      logger.next(self)
       keys = []
       while self.token.check_type(POINT):
-        logger.advance(self)
+        logger.next(self)
 
         if self.token.check_type(IDENTIFIER, STRING, INTEGER):
           expression = self.atom()
@@ -207,7 +207,7 @@ class Parser:
       ))
 
     elif token.check_type(OPEN_PAREN):
-      logger.advance(self)
+      logger.next(self)
 
       expression = logger.register(self.expression())
       if logger.error:
@@ -219,7 +219,7 @@ class Parser:
           "Ожидалось `)`)"
         ))
 
-      logger.advance(self)
+      logger.next(self)
       return logger.success(expression)
 
     expression = None
@@ -254,14 +254,14 @@ class Parser:
     if not self.token.check_type(OPEN_PAREN):
       return logger.success(atom)
 
-    logger.advance(self)
+    logger.next(self)
     argument_nodes = []
 
     if self.token.check_type(NEWLINE):
-      logger.advance(self)
+      logger.next(self)
 
     if self.token.check_type(CLOSED_PAREN):
-      logger.advance(self)
+      logger.next(self)
       return logger.success(CallNode(atom, argument_nodes))
 
     argument_nodes += [logger.register(self.expression())]
@@ -271,18 +271,18 @@ class Parser:
         "Ожидались `если` (`if`), `для` (`for`), `пока` (`while`), `функция` (`function`), Целое число, Дробное число, Идентификатор, `)`"
       ))
 
-    while self.token.check_type(COMMA):
-      logger.advance(self)
+    while self.token.check_type(SEMICOLON):
+      logger.next(self)
 
       if self.token.check_type(NEWLINE):
-        logger.advance(self)
+        logger.next(self)
 
       argument_nodes += [logger.register(self.expression())]
       if logger.error:
         return logger
 
     if self.token.check_type(NEWLINE):
-      logger.advance(self)
+      logger.next(self)
 
     if not self.token.check_type(CLOSED_PAREN):
       return logger.failure(InvalidSyntaxError(
@@ -290,7 +290,7 @@ class Parser:
         "Ожидалось `,` или `)`"
       ))
 
-    logger.advance(self)
+    logger.next(self)
 
     return logger.success(CallNode(atom, argument_nodes))
 
@@ -304,7 +304,7 @@ class Parser:
     if not token.check_type(SUBTRACTION, ROOT, INCREMENT, DECREMENT):
       return self.power_root()
 
-    logger.advance(self)
+    logger.next(self)
     factor = logger.register(self.factor())
     if logger.error:
       return logger
@@ -319,7 +319,7 @@ class Parser:
 
     if self.token.check_keyword(NOT):
       token = self.token
-      logger.advance(self)
+      logger.next(self)
 
       node = logger.register(self.comparison_expression())
       if logger.error:
@@ -341,7 +341,7 @@ class Parser:
 
   def list_expression(self):
     logger = ParsingLogger()
-    element_nodes = {}
+    value = {}
     is_dictionary = False
     position_start = self.token.position_start.copy()
 
@@ -351,22 +351,22 @@ class Parser:
         "Ожидалось `%(`"
       ))
 
-    logger.advance(self)
+    logger.next(self)
 
     if self.token.check_type(NEWLINE):
-      logger.advance(self)
+      logger.next(self)
 
     if self.token.check_type(CLOSED_LIST_PAREN):
-      logger.advance(self)
+      logger.next(self)
       if is_dictionary:
         return logger.success(DictionaryNode(
-          element_nodes.items(),
+          value.items(),
           position_start,
           self.token.position_end.copy()
         ))
 
       return logger.success(ListNode(
-        list(element_nodes),
+        list(value),
         position_start,
         self.token.position_end.copy()
       ))
@@ -381,19 +381,19 @@ class Parser:
     value_node = None
     if self.token.check_type(COLON):
       is_dictionary = True
-      logger.advance(self)
+      logger.next(self)
 
       value_node = logger.register(self.expression())
       if logger.error:
         return logger
 
-    element_nodes |= {key_node: value_node}
+    value |= {key_node: value_node}
 
-    while self.token.check_type(COMMA):
-      logger.advance(self)
+    while self.token.check_type(SEMICOLON):
+      logger.next(self)
 
       if self.token.check_type(NEWLINE):
-        logger.advance(self)
+        logger.next(self)
 
       if self.token.check_type(CLOSED_LIST_PAREN):
         break
@@ -414,34 +414,34 @@ class Parser:
             "Ожидалось двоеточие (`:`)"
           ))
 
-        logger.advance(self)
+        logger.next(self)
 
         value_node = logger.register(self.expression())
         if logger.error:
           return logger
 
-      element_nodes |= {key_node: value_node}
+      value |= {key_node: value_node}
 
     if self.token.check_type(NEWLINE):
-      logger.advance(self)
+      logger.next(self)
 
     if not self.token.check_type(CLOSED_LIST_PAREN):
       return logger.failure(InvalidSyntaxError(
-        self.token.position_start, self.token.position_end.advance(),
+        self.token.position_start, self.token.position_end.next(),
         "Ожидались `,` или `)%`"
       ))
 
-    logger.advance(self)
+    logger.next(self)
 
     if is_dictionary:
       return logger.success(DictionaryNode(
-        element_nodes.items(),
+        value.items(),
         position_start,
         self.token.position_end.copy()
       ))
 
     return logger.success(ListNode(
-      list(element_nodes),
+      list(value),
       position_start,
       self.token.position_end.copy()
     ))
@@ -457,7 +457,7 @@ class Parser:
         f"Ожидалось `{CHECK}`"
       ))
 
-    logger.advance(self)
+    logger.next(self)
 
     left = logger.register(self.arithmetical_expression())
     if logger.error:
@@ -473,7 +473,7 @@ class Parser:
 
     if self.token.check_type(*COMPARISONS):
       operator = self.token
-      logger.advance(self)
+      logger.next(self)
 
       if not self.token.check_type(NEWLINE):
         return logger.failure(InvalidSyntaxError(
@@ -481,7 +481,7 @@ class Parser:
           "Ожидался перенос строки"
         ))
 
-    logger.advance(self)
+    logger.next(self)
 
     if not self.token.check_keyword(IF):
       return logger.failure(InvalidSyntaxError(
@@ -490,12 +490,12 @@ class Parser:
       ))
 
     while self.token.check_keyword(IF):
-      logger.advance(self)
+      logger.next(self)
 
       case_operator = operator
       if self.token.check_type(*COMPARISONS):
         case_operator = self.token
-        logger.advance(self)
+        logger.next(self)
 
       right = logger.register(self.arithmetical_expression())
       if logger.error:
@@ -505,12 +505,12 @@ class Parser:
 
       while self.token.check_keyword(AND, OR):
         connector = self.token
-        logger.advance(self)
+        logger.next(self)
 
         case_operator = operator
         if self.token.check_type(*COMPARISONS):
           case_operator = self.token
-          logger.advance(self)
+          logger.next(self)
 
         right = logger.register(self.arithmetical_expression())
         if logger.error:
@@ -524,7 +524,7 @@ class Parser:
           "Ожидался `то` (`then`)"
         ))
 
-      logger.advance(self)
+      logger.next(self)
 
       if not self.token.check_type(NEWLINE):
         return logger.failure(InvalidSyntaxError(
@@ -532,7 +532,7 @@ class Parser:
           "Ожидался перено строки"
         ))
 
-      logger.advance(self)
+      logger.next(self)
 
       body = []
       while not self.token.check_keyword(IF, ELSE):
@@ -546,7 +546,7 @@ class Parser:
             "`продолжить` может использоваться только в цикле"
           ))
 
-        logger.advance(self)
+        logger.next(self)
 
       cases += [[condition, ListNode(body, None, None), False]]
 
@@ -558,7 +558,7 @@ class Parser:
       return logger.success(CheckNode(cases, else_case))
 
     else_case = None
-    logger.advance(self)
+    logger.next(self)
 
     return logger.success(CheckNode(cases, else_case))
 
@@ -573,7 +573,7 @@ class Parser:
         f"Ожидалось `{IF}`"
       ))
 
-    logger.advance(self)
+    logger.next(self)
 
     condition = logger.register(self.expression())
     if logger.error:
@@ -585,10 +585,10 @@ class Parser:
         "Ожидалось `то` (`then`)"
       ))
 
-    logger.advance(self)
+    logger.next(self)
 
     if self.token.check_type(NEWLINE):
-      logger.advance(self)
+      logger.next(self)
 
       statements = logger.register(self.statements())
       if logger.error:
@@ -597,7 +597,7 @@ class Parser:
       cases += [[condition, statements, True]]
 
       if self.token.check_type(END_OF_CONSTRUCTION):
-        logger.advance(self)
+        logger.next(self)
 
         return logger.success(IfNode(cases, else_case))
 
@@ -621,7 +621,7 @@ class Parser:
     if not self.token.check_keyword(ELSE):
       return logger.success(else_case)
 
-    logger.advance(self)
+    logger.next(self)
 
     if not self.token.check_type(NEWLINE):
       expression = logger.register(self.statement())
@@ -630,7 +630,7 @@ class Parser:
 
       return logger.success([expression, False])
 
-    logger.advance(self)
+    logger.next(self)
 
     statements = logger.register(self.statements())
     if logger.error:
@@ -642,7 +642,7 @@ class Parser:
         "Ожидался конец конструкции (`---`, `===` или `%%%`)"
       ))
 
-    logger.advance(self)
+    logger.next(self)
     return logger.success([statements, True])
 
   def for_expression(self):
@@ -655,7 +655,7 @@ class Parser:
         "Ожидался `for`"
       ))
 
-    logger.advance(self)
+    logger.next(self)
 
     if not self.token.check_type(IDENTIFIER):
       return logger.failure(InvalidSyntaxError(
@@ -664,10 +664,10 @@ class Parser:
       ))
 
     variable_name = self.token
-    logger.advance(self)
+    logger.next(self)
 
     if self.token.check_keyword(FROM):
-      logger.advance(self)
+      logger.next(self)
 
       start_value = logger.register(self.expression())
       if logger.error:
@@ -679,14 +679,14 @@ class Parser:
           "Ожидалось `to`"
         ))
 
-      logger.advance(self)
+      logger.next(self)
 
       end_value = logger.register(self.expression())
       if logger.error:
         return logger
 
       if self.token.check_keyword(AFTER):
-        logger.advance(self)
+        logger.next(self)
 
         step_value = logger.register(self.expression())
         if logger.error:
@@ -695,7 +695,7 @@ class Parser:
         step_value = None
 
     elif self.token.check_keyword(OF):
-      logger.advance(self)
+      logger.next(self)
 
       start_value = logger.register(self.expression())
       if logger.error:
@@ -709,13 +709,13 @@ class Parser:
       ))
 
     if self.token.check_type(NEWLINE):
-      logger.advance(self)
+      logger.next(self)
       body = logger.register(self.statements())
       if logger.error:
         return logger
 
       if self.token.check_type(END_OF_CONSTRUCTION):
-        logger.advance(self)
+        logger.next(self)
       else:
         else_case = logger.register(self.else_expression())
         if logger.error:
@@ -732,7 +732,7 @@ class Parser:
         "Ожидалось двоеточие (`:`)"
       ))
 
-    logger.advance(self)
+    logger.next(self)
 
     body = logger.register(self.statement())
     if logger.error:
@@ -754,21 +754,21 @@ class Parser:
         "Ожидалось `while`"
       ))
 
-    logger.advance(self)
+    logger.next(self)
 
     condition = logger.register(self.expression())
     if logger.error:
       return logger
 
     if self.token.check_type(NEWLINE):
-      logger.advance(self)
+      logger.next(self)
 
       body = logger.register(self.statements())
       if logger.error:
         return logger
 
       if self.token.check_type(END_OF_CONSTRUCTION):
-        logger.advance(self)
+        logger.next(self)
       else:
         else_case = logger.register(self.else_expression())
         if logger.error:
@@ -782,7 +782,7 @@ class Parser:
         "Ожидалось двоеточие (`:`)"
       ))
 
-    logger.advance(self)
+    logger.next(self)
 
     body = logger.register(self.statement())
     if logger.error:
@@ -798,12 +798,12 @@ class Parser:
         "Ожидалось `функция` (`function`)"
       ))
 
-    logger.advance(self)
+    logger.next(self)
 
     variable_name = None
     if self.token.check_type(IDENTIFIER):
       variable_name = self.token
-      logger.advance(self)
+      logger.next(self)
 
     if not self.token.check_type(OPEN_PAREN):
       return logger.failure(InvalidSyntaxError(
@@ -811,7 +811,7 @@ class Parser:
         f"Ожидалось `(`{' или Идентификатор' if variable_name else ''}"
       ))
 
-    logger.advance(self)
+    logger.next(self)
     arguments = []
 
     while self.token.check_type(IDENTIFIER):
@@ -827,8 +827,8 @@ class Parser:
 
       arguments += [argument]
 
-      if self.token.check_type(COMMA):
-        logger.advance(self)
+      if self.token.check_type(SEMICOLON):
+        logger.next(self)
 
     if not self.token.check_type(CLOSED_PAREN):
       return logger.failure(InvalidSyntaxError(
@@ -836,10 +836,10 @@ class Parser:
         "Ожидались Идентификатор или `)`"
       ))
 
-    logger.advance(self)
+    logger.next(self)
 
     if self.token.check_type(NEWLINE):
-      logger.advance(self)
+      logger.next(self)
 
       body: ListNode = logger.register(self.statements())
       if logger.error:
@@ -851,7 +851,7 @@ class Parser:
           "Ожидался конец конструкции (`---`, `===` или `%%%`)"
         ))
 
-      logger.advance(self)
+      logger.next(self)
 
       if is_method:
         return logger.success(MethodDefinitionNode(variable_name, arguments, body, False))
@@ -864,7 +864,7 @@ class Parser:
         "Ожидалось двоеточие (`:`)"
       ))
 
-    logger.advance(self)
+    logger.next(self)
 
     return_node = logger.register(self.expression())
     if logger.error:
@@ -884,7 +884,7 @@ class Parser:
         "Ожидалось `класс` (`class`)"
       ))
 
-    logger.advance(self)
+    logger.next(self)
 
     if not self.token.check_type(IDENTIFIER):
       return logger.failure(InvalidSyntaxError(
@@ -893,7 +893,7 @@ class Parser:
       ))
 
     variable_name = self.token
-    logger.advance(self)
+    logger.next(self)
 
     if not self.token.check_type(NEWLINE, OPEN_PAREN):
       return logger.failure(InvalidSyntaxError(
@@ -903,7 +903,7 @@ class Parser:
 
     parents = []
     if self.token.check_type(OPEN_PAREN):
-      logger.advance(self)
+      logger.next(self)
 
       if not self.token.check_type(IDENTIFIER, CLOSED_PAREN):
         return logger.failure(InvalidSyntaxError(
@@ -914,19 +914,19 @@ class Parser:
       while self.token.check_type(IDENTIFIER):
         parents += [self.token.value]
 
-        logger.advance(self)
+        logger.next(self)
 
         if self.token.check_type(NEWLINE):
-          logger.advance(self)
+          logger.next(self)
 
-        if not self.token.check_type(COMMA, CLOSED_PAREN):
+        if not self.token.check_type(SEMICOLON, CLOSED_PAREN):
           return logger.failure(InvalidSyntaxError(
             self.token.position_start, self.token.position_end,
             "Ожидались запятая или закрывающая скобка"
           ))
 
-        if self.token.check_type(COMMA):
-          logger.advance(self)
+        if self.token.check_type(SEMICOLON):
+          logger.next(self)
 
       if not self.token.check_type(IDENTIFIER, CLOSED_PAREN):
         return logger.failure(InvalidSyntaxError(
@@ -934,7 +934,7 @@ class Parser:
           "Ожидались идентификатор или закрывающая скобка"
         ))
 
-      logger.advance(self)
+      logger.next(self)
 
       if not self.token.check_type(NEWLINE):
         return logger.failure(InvalidSyntaxError(
@@ -942,7 +942,7 @@ class Parser:
           "Ожидался перенос строки"
         ))
 
-    logger.advance(self)
+    logger.next(self)
 
     if not self.token.check_keyword(FUNCTION) and not self.token.check_type(END_OF_CONSTRUCTION):
       return logger.failure(InvalidSyntaxError(
@@ -966,7 +966,7 @@ class Parser:
 
       method_name = StringNode(method.variable_name.copy())
       methods += [[method_name, method]]
-      logger.advance(self)
+      logger.next(self)
 
     if not self.token.check_type(END_OF_CONSTRUCTION):
       return logger.failure(InvalidSyntaxError(
@@ -990,7 +990,7 @@ class Parser:
 
       methods += [[StringNode(initial_method_name), initial_method]]
 
-    logger.advance(self)
+    logger.next(self)
     body_node = DictionaryNode(methods, body_position_start, self.token.position_end.copy())
 
     return logger.success(ClassDefinitionNode(variable_name, body_node, parents))
@@ -1005,7 +1005,7 @@ class Parser:
       ))
 
     position_start = self.token.position_start
-    logger.advance(self)
+    logger.next(self)
 
     if not self.token.check_type(IDENTIFIER):
       return logger.failure(InvalidSyntaxError(
@@ -1014,7 +1014,7 @@ class Parser:
       ))
 
     variable = self.token
-    logger.advance(self)
+    logger.next(self)
 
     return logger.success(DeleteNode(variable, position_start, self.token.position_end.copy()))
 
@@ -1028,7 +1028,7 @@ class Parser:
       ))
 
     position_start = self.token.position_start.copy()
-    logger.advance(self)
+    logger.next(self)
 
     if not self.token.check_type(STRING):
       return logger.failure(InvalidSyntaxError(
@@ -1037,7 +1037,7 @@ class Parser:
       ))
 
     module = self.token
-    logger.advance(self)
+    logger.next(self)
 
     return logger.success(IncludeNode(module, position_start, self.token.position_end.copy()))
 
@@ -1047,7 +1047,7 @@ class Parser:
     position_start = self.token.position_start.copy()
 
     if self.token.check_type(NEWLINE):
-      logger.advance(self)
+      logger.next(self)
 
     statements = [logger.register(self.statement())]
     if logger.error:
@@ -1058,7 +1058,7 @@ class Parser:
     while True:
       newline_count = 0
       if self.token.check_type(NEWLINE):
-        logger.advance(self)
+        logger.next(self)
         newline_count += 1
 
       if newline_count == 0:
@@ -1086,7 +1086,7 @@ class Parser:
     position_start = self.token.position_start.copy()
 
     if self.token.check_keyword(RETURN):
-      logger.advance(self)
+      logger.next(self)
       expression = logger.try_register(self.expression())
       if not expression:
         self.reverse(logger.to_reverse_count)
@@ -1094,12 +1094,12 @@ class Parser:
       return logger.success(ReturnNode(expression, position_start, self.token.position_start.copy()))
 
     elif self.token.check_keyword(CONTINUE):
-      logger.advance(self)
+      logger.next(self)
 
       return logger.success(ContinueNode(position_start, self.token.position_start.copy()))
 
     elif self.token.check_keyword(BREAK):
-      logger.advance(self)
+      logger.next(self)
 
       return logger.success(BreakNode(position_start, self.token.position_start.copy()))
 

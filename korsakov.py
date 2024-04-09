@@ -7,29 +7,10 @@ if __name__ == "__main__":
   program_name, *argv = argv
 
   file_name = ""
-  if "-d" in argv or "--debug" in argv:
-    if "-d" in argv:
-      argv.remove("-d")
-    if "--debug" in argv:
-      argv.remove("--debug")
-
-    COMMANDLINE_ARGUMENTS["debug"] = True
-
-  if "--nostd" in argv:
-    argv.remove("--nostd")
-    COMMANDLINE_ARGUMENTS["nostd"] = True
-
-  if "--tokens" in argv:
-    argv.remove("--tokens")
-    COMMANDLINE_ARGUMENTS["tokens"] = True
-
-  if "--ast" in argv:
-    argv.remove("--ast")
-    COMMANDLINE_ARGUMENTS["ast"] = True
-
-  if "--context" in argv:
-    argv.remove("--context")
-    COMMANDLINE_ARGUMENTS["context"] = True
+  for flag in COMMANDLINE_ARGUMENTS.keys():
+    if "--" + flag in argv:
+      argv.remove("--" + flag)
+      COMMANDLINE_ARGUMENTS[flag] = True
 
   if argv:
     file_name, *argv = argv

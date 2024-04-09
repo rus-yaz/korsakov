@@ -1,4 +1,5 @@
 from interpreter import Interpreter
+from compiler import Compiler
 from parser import Parser
 from tokenizer import Tokenizer
 from tokens import global_context
@@ -7,6 +8,18 @@ COMMANDLINE_ARGUMENTS = dict.fromkeys(["debug", "nostd", "tokens", "ast", "conte
 
 
 def run(module_name: str, code: str):
+  """
+    Описание:
+      Функция запуска кода из строки
+
+    Аргументы:
+      module_name (строка): название модуля, где была вызвана функция
+      code (строка): код для исполнения
+
+    Возвращаемое значение:
+      *Value или None: результат интерпретации или нуль
+      *Error или None: сигнал ошибки или нуль
+  """
   # Tokenization
   tokens, error = Tokenizer(module_name, code).tokenize()
   if error or not tokens:
@@ -24,7 +37,7 @@ def run(module_name: str, code: str):
     return None, ast.error
 
   if COMMANDLINE_ARGUMENTS["debug"] or COMMANDLINE_ARGUMENTS["ast"]:
-    print(ast.node.element_nodes)
+    print(ast.node.elements)
 
   # ------------------------------
 

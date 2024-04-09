@@ -16,27 +16,9 @@ class Context:
     self.parent_position = parent_position
 
   def __repr__(self):
-    """
-      Описание:
-        Репрезентация - словарь variables
-
-      Аргументы: -
-
-      Возвращаемое значение:
-        Словарь: переменные из хранилища
-    """
     return self.variables
 
   def __str__(self):
-    """
-      Описание:
-        Репрезентация - словарь variables, переведённый в строку
-
-      Аргументы: -
-
-      Возвращаемое значение:
-        Строка: переменные из хранилища
-    """
     return str(self.variables)
 
   def get_variable(self, name: str, default_value=None):

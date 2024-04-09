@@ -27,17 +27,17 @@ class Interpreter:
   def no_interpret_method(self, node, context: Context) -> None:
     raise Exception(f"Метод interpret_{type(node).__name__} не объявлен")
 
-  def interpret_NumberNode(self, node: NumberNode, context: Context) -> Number:
-    return ExecutionLogger().success(Number(node.token.value, context).set_position(node.position_start, node.position_end))
+  def interpret_NumberNode(self, node: NumberNode, context: Context):
+    return RuntimeLogger().success(Number(node.token.value, context).set_position(node.position_start, node.position_end))
 
   def interpret_StringNode(self, node: StringNode, context: Context):
-    return ExecutionLogger().success(String(node.token.value, context).set_position(node.position_start, node.position_end))
+    return RuntimeLogger().success(String(node.token.value, context).set_position(node.position_start, node.position_end))
 
   def interpret_DictionaryNode(self, node: DictionaryNode, context: Context):
-    logger = ExecutionLogger()
+    logger = RuntimeLogger()
     dictionary = Dictionary([], context)
 
-    for key_node, element_node in node.element_nodes:
+    for key_node, element_node in node.elements:
       key = logger.register(self.interpret(key_node, context))
       if logger.should_return():
         return logger
@@ -53,10 +53,10 @@ class Interpreter:
     return logger.success(dictionary.set_position(node.position_start, node.position_end))
 
   def interpret_ListNode(self, node: ListNode, context: Context):
-    logger = ExecutionLogger()
+    logger = RuntimeLogger()
     elements = []
 
-    for element_node in node.element_nodes:
+    for element_node in node.elements:
       element = logger.register(self.interpret(element_node, context))
       if logger.should_return():
         return logger
@@ -66,7 +66,7 @@ class Interpreter:
     return logger.success(List(elements, context).set_position(node.position_start, node.position_end))
 
   def interpret_BinaryOperationNode(self, node: BinaryOperationNode, context: Context) -> Number:
-    logger = ExecutionLogger()
+    logger = RuntimeLogger()
     error = None
 
     left: Value = logger.register(self.interpret(node.left_node, context))
@@ -109,7 +109,7 @@ class Interpreter:
     return logger.success(result.set_position(node.position_start, node.position_end))
 
   def interpret_UnaryOperationNode(self, node: UnaryOperationNode, context: Context) -> Number:
-    logger = ExecutionLogger()
+    logger = RuntimeLogger()
     error = None
 
     result: Number = logger.register(self.interpret(node.node, context))
@@ -139,7 +139,7 @@ class Interpreter:
     return logger.success(result.set_position(node.position_start, node.position_end))
 
   def interpret_VariableAccessNode(self, node: VariableAccessNode, context: Context):
-    logger = ExecutionLogger()
+    logger = RuntimeLogger()
     variable = node.variable
     value = context.get_variable(variable.value)
 
@@ -198,10 +198,10 @@ class Interpreter:
     return logger.success(value.set_context(context).set_position(node.position_start, node.position_end))
 
   def interpret_VariableAssignNode(self, node: VariableAssignNode, context: Context):
-    logger = ExecutionLogger()
+    logger = RuntimeLogger()
     variable = node.variable.copy()
 
-    value = logger.register(self.interpret(node.value_node, context))
+    value = logger.register(self.interpret(node.value, context))
     if logger.should_return():
       return logger
 
@@ -283,7 +283,7 @@ class Interpreter:
     return logger.success(value)
 
   def interpret_CheckNode(self, node: CheckNode, context: Context):
-    logger = ExecutionLogger()
+    logger = RuntimeLogger()
     done = False
 
     for case in node.cases:
@@ -305,7 +305,7 @@ class Interpreter:
     return logger.success(Number(None, context))
 
   def interpret_IfNode(self, node: IfNode, context: Context):
-    logger = ExecutionLogger()
+    logger = RuntimeLogger()
 
     for condition, expression, return_null in node.cases:
       condition_value = logger.register(self.interpret(condition, context))
@@ -332,7 +332,7 @@ class Interpreter:
     return logger.success(Number(None, context))
 
   def interpret_ForNode(self, node: ForNode, context: Context):
-    logger = ExecutionLogger()
+    logger = RuntimeLogger()
     elements = []
 
     start_value: Number | List | String = logger.register(self.interpret(node.start_node, context))
@@ -405,7 +405,7 @@ class Interpreter:
     )
 
   def interpret_WhileNode(self, node: WhileNode, context: Context):
-    logger = ExecutionLogger()
+    logger = RuntimeLogger()
     elements = []
 
     while True:
@@ -439,7 +439,7 @@ class Interpreter:
     )
 
   def interpret_FunctionDefinitionNode(self, node: FunctionDefinitionNode, context: Context):
-    logger = ExecutionLogger()
+    logger = RuntimeLogger()
 
     function_name = node.variable_name.value if node.variable_name else None
     body_node = node.body_node
@@ -454,7 +454,7 @@ class Interpreter:
     return logger.success(function_value)
 
   def interpret_MethodDefinitionNode(self, node: MethodDefinitionNode, context: Context):
-    logger = ExecutionLogger()
+    logger = RuntimeLogger()
 
     function_name = node.variable_name.value if node.variable_name else None
     body_node = node.body_node
@@ -470,7 +470,7 @@ class Interpreter:
     return logger.success(function_value)
 
   def interpret_ClassDefinitionNode(self, node: ClassDefinitionNode, context: Context):
-    logger = ExecutionLogger()
+    logger = RuntimeLogger()
     class_name = node.variable_name.value
     methods = logger.register(self.interpret(node.body_node, context))
     parents = node.parents
@@ -480,7 +480,7 @@ class Interpreter:
     return logger.success(Number(None, context))
 
   def interpret_CallNode(self, node: CallNode, context: Context):
-    logger = ExecutionLogger()
+    logger = RuntimeLogger()
     arguments = []
 
     call_node = logger.register(self.interpret(node.call_node, context))
@@ -516,7 +516,7 @@ class Interpreter:
     return logger.success(return_value)
 
   def interpret_ReturnNode(self, node: ReturnNode, context: Context):
-    logger = ExecutionLogger()
+    logger = RuntimeLogger()
 
     if node.return_node:
       value = logger.register(self.interpret(node.return_node, context))
@@ -525,23 +525,23 @@ class Interpreter:
     else:
       value = Number(None, context)
 
-    return logger.success_return(value)
+    return logger.return_signal(value)
 
   def interpret_ContinueNode(self, node: ContinueNode, context: Context):
-    return ExecutionLogger().success_continue()
+    return RuntimeLogger().continue_signal()
 
   def interpret_BreakNode(self, node: BreakNode, context: Context):
-    return ExecutionLogger().success_break()
+    return RuntimeLogger().break_signal()
 
   def interpret_DeleteNode(self, node: DeleteNode, context: Context):
     context.delete_variable(node.variable.value)
 
-    return ExecutionLogger().success(Number(None, context))
+    return RuntimeLogger().success(Number(None, context))
 
   def interpret_IncludeNode(self, node: IncludeNode, context: Context):
     from run import run
 
-    logger = ExecutionLogger()
+    logger = RuntimeLogger()
     module_name = node.module.value
 
     if module_name.endswith("*"):
@@ -569,7 +569,7 @@ class Interpreter:
 
       if module_name not in files:
         if module_name not in BUILDIN_LIBRARIES:
-          return logger.failure(ModuleNotFoundError(module.position_start, module.position_end, module_name))
+          return logger.failure(ModuleNotFoundError(node.module.position_start, node.module.position_end, module_name))
 
         module_path = LANGAUGE_PATH
 

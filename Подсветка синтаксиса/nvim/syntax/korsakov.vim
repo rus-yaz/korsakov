@@ -2,7 +2,7 @@ syn region Comment start="!!" end="$" contains=SpecialComment
 syn keyword SpecialComment TODO NOTE XXX
 
 syn match Number /\d\+\(_\d\+\)*/
-syn match Float /\d\+\(_\d\+\)*\.\d\+\(_\d\+\)*/
+syn match Float /\d\+\(_\d\+\)*,\d\+\(_\d\+\)*/
 
 syn region String start="\"" end="\"" contains=SpecialChar
 syn match SpecialChar /\\[tnvr"\\]/

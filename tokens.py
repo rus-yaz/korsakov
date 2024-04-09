@@ -29,11 +29,16 @@ class Token:
 
 global_context = Context("<программа>")
 
-FILE_EXTENSION = "kors"
+FILE_EXTENSION = "корс"
 
 SPACE            = "пробел"
 PERCENT          = "процент"
 EXCLAMATION_MARK = "восклицательный знак"
+
+COLON      = "двоеточие"
+SEMICOLON  = "точка_с_запятой"
+POINT      = "точка"
+BACK_SLASH = "обратная_косая_черта"
 
 INTEGER          = "целое_число"
 FLOAT            = "дробное_число"
@@ -65,11 +70,6 @@ OPEN_PAREN        = "открывающая_скобка"
 CLOSED_PAREN      = "закрывающая_скобка"
 OPEN_LIST_PAREN   = "открывающая_скобка_списка"
 CLOSED_LIST_PAREN = "закрывающая_скобка_списка"
-
-COLON      = "двоеточие"
-COMMA      = "запятая"
-POINT      = "точка"
-BACK_SLASH = "обратная_косая_черта"
 
 NEWLINE             = "новая_строка"
 END_OF_CONSTRUCTION = "конец_конструкции"

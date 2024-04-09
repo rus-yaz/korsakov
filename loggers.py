@@ -1,71 +1,161 @@
 from context import Context
 
 
-class ExecutionLogger:
+class RuntimeLogger:
+  """
+    Сборщик сигналов, работающий во время исполнения программы
+
+    Аргументы: -
+
+    Поля класса:
+      value (*Node): анализируемый нод абстрактного синтаксического дерева (по умолчанию - None)
+      error (*Error): обнаруженная в ноде ошибка (по умолчанию - None)
+      return_value (*Node): возвращаемое значение функции (по умолчанию - None)
+      continue (булево значение): обнаружение операции продолжения цикла (по умолчанию - False)
+      break (булево значение): обнаружение операции прерывания цикла (по умолчанию - False)
+  """
+
   def __init__(self):
     self.reset()
 
   def reset(self):
+    """
+      Сброс значений сборщика на начальные
+
+      Аргументы: -
+
+      Возвращаемое значение: -
+    """
     self.value = None
     self.error = None
-    self.function_return_value = None
+    self.return_value = None
     self.continue_loop = False
     self.break_loop = False
 
   def register(self, logger):
+    """
+      Регистрация предыдущих обработок из сборщика logger
+
+      Аргументы:
+        logger (*Logger): экземпляр логгера
+
+      Возвращаемое значение:
+        *Node: анализируемый нод абстрактного синтаксического дерева
+    """
     self.error = logger.error
-    self.function_return_value = logger.function_return_value
+    self.return_value = logger.return_value
     self.continue_loop = logger.continue_loop
     self.break_loop = logger.break_loop
     return logger.value
 
   def success(self, value):
+    """
+      Подтверждение отсутствия ошибки в анализируемом ноде
+
+      Аргументы:
+        value (*Node): анализируемый нод синтаксического дерева
+
+      Возвращаемое значение:
+        RuntimeLogger: сам экземпляр
+    """
     self.reset()
     self.value = value
     return self
 
-  def success_return(self, value):
+  def return_signal(self, value):
+    """
+      Подтвеждение сигнала возврата функцией значения
+
+      Аргументы:
+        value (*Node): возвращаемое значение
+
+      Возвращаемое значение:
+        RuntimeLogger: сам экземпляр
+    """
     self.reset()
-    self.function_return_value = value
+    self.return_value = value
     return self
 
-  def success_continue(self):
+  def continue_signal(self):
+    """
+      Подтвеждение сигнала продолжения цикла
+
+      Аргументы: -
+
+      Возвращаемое значение:
+        RuntimeLogger: сам экземпляр
+    """
     self.reset()
     self.continue_loop = True
     return self
 
-  def success_break(self):
+  def break_signal(self):
+    """
+      Подтвеждение сигнала прерывания цикла
+
+      Аргументы: -
+
+      Возвращаемое значение:
+        RuntimeLogger: сам экземпляр
+    """
     self.reset()
     self.break_loop = True
     return self
 
   def failure(self, error):
+    """
+      Подтверждение ошибки в анализируемом ноде
+
+      Аргументы:
+        error (*Error): ошибка, обнаруженная в анализируемом ноде
+
+      Возвращаемое значение:
+        RuntimeLogger: сам экземпляр
+    """
     self.reset()
     self.error = error
     return self
 
   def should_return(self):
-    return self.error or self.function_return_value or self.continue_loop or self.break_loop
+    """
+      Подтверждение сигнала, если он есть
+
+      Аргументы: -
+
+      Возвращаемое значение:
+        *Error, *Node или булево значение: обнаруженная ошибка, возвращаемое значение функции или сигнал продолжения/прерывания цикла; если ничего не найдено, то будет возвращено False
+    """
+    return self.error or self.return_value or self.continue_loop or self.break_loop
 
 
+# TODO: Документация
 class ParsingLogger:
+  """
+    Сборщик сигналов, работающий во время исполнения программы
+
+    Аргументы: -
+
+    Поля класса:
+      error (*Error): обнаруженная в ноде ошибка (по умолчанию - None)
+      node (*Node): анализируемый нод абстрактного синтаксического дерева (по умолчанию - None)
+      registered_count
+      next_count
+  """
+
   def __init__(self):
     self.error = None
     self.node = None
-    self.last_registered_advance_count = 0
-    self.advance_count = 0
+    self.registered_count = 0
+    self.next_count = 0
 
-  def advance(self, parser):
-    self.register_advancement()
-    parser.advance()
-
-  def register_advancement(self):
-    self.last_registered_advance_count = 1
-    self.advance_count += 1
+  def next(self, parser):
+    self.registered_count = 1
+    self.next_count += 1
+    parser.next()
 
   def register(self, logger):
-    self.last_registered_advance_count = logger.advance_count
-    self.advance_count += logger.advance_count
+    self.registered_count = logger.next_count
+    self.next_count += logger.next_count
     if logger.error:
       self.error = logger.error
 
@@ -73,7 +163,7 @@ class ParsingLogger:
 
   def try_register(self, logger):
     if logger.error:
-      self.to_reverse_count = logger.advance_count
+      self.to_reverse_count = logger.next_count
       return None
 
     return self.register(logger)
@@ -83,7 +173,7 @@ class ParsingLogger:
     return self
 
   def failure(self, error):
-    if not self.error or not self.advance_count:
+    if not self.error or not self.next_count:
       self.error = error
 
     return self
@@ -116,17 +206,9 @@ class Position:
     self.text = text
 
   def __repr__(self):
-    """
-      Репрезентация - номера строки и стобца
-
-      Аргументы: -
-
-      Возвращаемое значаение:
-        Строка: номера строки и столбца
-    """
     return f"{self.row}:{self.column}"
 
-  def advance(self, char: str = None):
+  def next(self, char: str = None):
     """
       Метод для продвижения положения
 
@@ -182,13 +264,6 @@ class Error:
     self.details = details
 
   def __repr__(self):
-    """
-      Репрезентация - отображение сообщения ошибки
-
-      Аргументы: -
-
-      Возвращаемое значение:
-    """
     result = f"Файл {self.position_start.file}, строка {self.position_start.row + 1}\n\n"
     result += f"Ошибка: {self.error}{f': {self.details}' if self.details else ''}\n"
     result += self.highlighting_with_arrows()
@@ -403,15 +478,6 @@ class RuntimeError(Error):
     self.highlight = highlight
 
   def __repr__(self):
-    """
-      Описание:
-        Репрезентация - подствеченный фрагмент кода с ошибкой
-
-      Аргументы: -
-
-      Возвращаемое значение:
-        Строка: подствеченный фрагмент кода с ошибкой
-    """
     result = "Ошибка\n"
     result += self.generate_traceback()
     result += f"{self.error}: {self.details}\n"
