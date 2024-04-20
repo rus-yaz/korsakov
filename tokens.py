@@ -29,8 +29,6 @@ class Token:
 
 global_context = Context("<программа>")
 
-FILE_EXTENSION = "корс"
-
 SPACE            = "пробел"
 PERCENT          = "процент"
 EXCLAMATION_MARK = "восклицательный знак"

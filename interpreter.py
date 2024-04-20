@@ -7,11 +7,15 @@ from loggers import *
 from tokens import *
 from classes import *
 
+
+FILE_EXTENSIONS = ["корс", "kors"]
+FILE_EXTENSION = "корс"
 PATH_SEPARATOR = "\\" if os_name == "nt" else "/"
 LANGAUGE_PATH = __file__.rsplit(PATH_SEPARATOR, 1)[0]
 BUILDIN_LIBRARIES = [
   str(file).rsplit(PATH_SEPARATOR, 1)[1]
-  for file in Path(LANGAUGE_PATH).glob(f"*.{FILE_EXTENSION}")
+  for file_extension in FILE_EXTENSIONS
+  for file in Path(LANGAUGE_PATH).glob(f"*.{file_extension}")
 ]
 
 
@@ -553,7 +557,8 @@ class Interpreter:
       module_path = f"{self.script_location}{PATH_SEPARATOR}{module_name}"
 
       get_files = getattr(Path(module_path), "glob" if depth == "*" else "rglob")
-      files = list(map(str, get_files(f"*.{FILE_EXTENSION}")))
+      files = [list(map(str, get_files(f"*.{file_extension}"))) for file_extension in FILE_EXTENSIONS]
+      files = [file for files_line in files for file in files_line]
       if self.file_path in files:
         files.remove(self.file_path)
 
@@ -565,13 +570,25 @@ class Interpreter:
     else:
       module_path = f"{self.script_location}{PATH_SEPARATOR}{module_name.rsplit(PATH_SEPARATOR, 1)[0]}"
       files = list(map(lambda x: str(x).rsplit(PATH_SEPARATOR, 1)[-1], Path(module_path).glob(f"*.{FILE_EXTENSION}")))
-      module_name = f"{module_name.rsplit(PATH_SEPARATOR, 1)[-1]}.{FILE_EXTENSION}"
+      module_name = f"{module_name.rsplit(PATH_SEPARATOR, 1)[-1]}"
 
-      if module_name not in files:
-        if module_name not in BUILDIN_LIBRARIES:
-          return logger.failure(ModuleNotFoundError(node.module.position_start, node.module.position_end, module_name))
+      found = False
+      for file in files:
+        if file.rsplit(".", 1)[0] == module_name:
+          module_name = file
+          found = True
+          break
 
-        module_path = LANGAUGE_PATH
+      if not found:
+        for file in BUILDIN_LIBRARIES:
+          if file.rsplit(".", 1)[0] == module_name:
+            module_name = file
+            module_path = LANGAUGE_PATH
+            found = True
+            break
+
+      if not found:
+        return logger.failure(ModuleNotFoundError(node.module.position_start, node.module.position_end, module_name))
 
       with open(f"{module_path}{PATH_SEPARATOR}{module_name}") as file:
         _, error = run(f"{module_path}{PATH_SEPARATOR}{module_name}", file.read())

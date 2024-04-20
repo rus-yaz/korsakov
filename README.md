@@ -1,7 +1,7 @@
 ![Фирменный блок](./Документация/Изображения/Фирменный%20блок%20(с%20фоном).svg)
 
 <p align="center">
-    <img src="https://badgen.net/badge/Текущая%20версия/v0.5.6/green" />
+    <img src="https://badgen.net/badge/Текущая%20версия/v0.5.6.1/green" />
     <img src="https://badgen.net/badge/Компилятор/В%20разработке/red" />
     <img src="https://badgen.net/badge/Интерпретатор/Python/yellow" />
     <img src="https://badgen.net/badge/Архитектуры/x86-64/green" />
