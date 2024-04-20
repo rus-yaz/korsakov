@@ -88,7 +88,7 @@ class ListNode(Node):
     self.set_position(position_start, position_end)
 
   def __repr__(self):
-    return f"ListNode(%({', '.join(map(str, self.elements))})%)"
+    return f"ListNode(%({'; '.join(map(str, self.elements))})%)"
 
 
 class DictionaryNode(Node):
@@ -113,7 +113,7 @@ class DictionaryNode(Node):
     self.set_position(position_start, position_end)
 
   def __repr__(self):
-    return f"DictionaryNode(%({', '.join(f'{str(key)}: {str(value)}' for key, value in self.elements)})%)"
+    return f"DictionaryNode(%({'; '.join(f'{str(key)}: {str(value)}' for key, value in self.elements)})%)"
 
 
 # --------------------------------------------------
@@ -142,7 +142,7 @@ class UnaryOperationNode(Node):
     self.set_position(operator.position_start, node.position_end)
 
   def __repr__(self):
-    return f"UnaryOperationNode({self.operator}, {self.node})"
+    return f"UnaryOperationNode({self.operator}; {self.node})"
 
 
 class BinaryOperationNode(Node):
@@ -171,7 +171,7 @@ class BinaryOperationNode(Node):
     self.set_position(left_node.position_start, right_node.position_end)
 
   def __repr__(self):
-    return f"BinaryOperationNode({self.left_node}, {self.operator}, {self.right_node})"
+    return f"BinaryOperationNode({self.left_node}; {self.operator}; {self.right_node})"
 
 
 # --------------------------------------------------
@@ -200,7 +200,7 @@ class VariableAccessNode(Node):
     self.set_position(position_start, position_end)
 
   def __repr__(self):
-    return f"VariableAccessNode({self.variable.value}, {self.keys})"
+    return f"VariableAccessNode({self.variable.value}; {self.keys})"
 
 
 class VariableAssignNode(Node):
@@ -229,7 +229,7 @@ class VariableAssignNode(Node):
     self.set_position(variable.position_start, variable.position_end)
 
   def __repr__(self):
-    return f"VariableAssignNode({self.variable.value}, {self.keys}, {self.value})"
+    return f"VariableAssignNode({self.variable.value}; {self.keys}; {self.value})"
 
 
 # --------------------------------------------------
@@ -258,7 +258,7 @@ class CheckNode(Node):
     self.set_position(cases[0][0].position_start, (else_case or cases[-1])[0].position_end)
 
   def __repr__(self):
-    return f"CheckNode({self.cases}, {self.else_case})"
+    return f"CheckNode({self.cases}; {self.else_case})"
 
 
 class IfNode(Node):
@@ -284,7 +284,7 @@ class IfNode(Node):
     self.set_position(cases[0][0].position_start, (else_case or cases[-1])[0].position_end)
 
   def __repr__(self):
-    return f"IfNode({self.cases}, {self.else_case})"
+    return f"IfNode({self.cases}; {self.else_case})"
 
 
 # --------------------------------------------------
@@ -328,7 +328,7 @@ class ForNode(Node):
     self.set_position(variable_name.position_start, body_node.position_end)
 
   def __repr__(self):
-    return f"ForNode({self.variable_name.value}, {self.start_node}, {self.end_node}, {self.step_node}, {self.body_node}, {self.return_null}, {self.else_case})"
+    return f"ForNode({self.variable_name.value}; {self.start_node}; {self.end_node}; {self.step_node}; {self.body_node}; {self.return_null}; {self.else_case})"
 
 
 class WhileNode(Node):
@@ -360,7 +360,7 @@ class WhileNode(Node):
     self.set_position(condition_node.position_start, body_node.position_end)
 
   def __repr__(self):
-    return f"WhileNode({self.condition_node}, {self.body_node}, {self.return_null}, {self.else_case})"
+    return f"WhileNode({self.condition_node}; {self.body_node}; {self.return_null}; {self.else_case})"
 
 
 # --------------------------------------------------
@@ -392,10 +392,10 @@ class FunctionDefinitionNode(Node):
     self.body_node      = body_node
     self.auto_return    = auto_return
 
-    self.set_position((variable_name or argument_names[0] or body_node).position_start, body_node.position_end)
+    self.set_position((variable_name or (argument_names and argument_names[0]) or body_node).position_start, body_node.position_end)
 
   def __repr__(self):
-    return f"FunctionDefinitionNode({self.variable_name.value}, {self.argument_names}, {self.body_node}, {self.auto_return})"
+    return f"FunctionDefinitionNode({self.variable_name.value}; {self.argument_names}; {self.body_node}; {self.auto_return})"
 
 
 class ClassDefinitionNode(Node):
@@ -424,7 +424,7 @@ class ClassDefinitionNode(Node):
     self.set_position(variable_name.position_start, body_node.position_end)
 
   def __repr__(self):
-    return f"ClassDefinitionNode({self.variable_name.value}, {self.body_node})"
+    return f"ClassDefinitionNode({self.variable_name.value}; {self.body_node})"
 
 
 class MethodDefinitionNode(Node):
@@ -462,7 +462,7 @@ class MethodDefinitionNode(Node):
     self.set_position((variable_name or argument_names[0] or body_node).position_start, body_node.position_end)
 
   def __repr__(self):
-    return f"MethodDefinitionNode({self.variable_name.value}, {self.argument_names}, {self.body_node}, {self.auto_return})"
+    return f"MethodDefinitionNode({self.variable_name.value}; {self.argument_names}; {self.body_node}; {self.auto_return})"
 
 
 class CallNode(Node):
@@ -488,7 +488,7 @@ class CallNode(Node):
     self.set_position(call_node.position_start, argument_nodes[-1].position_end if argument_nodes else call_node.position_end)
 
   def __repr__(self):
-    return f"CallNode({self.call_node}, {self.argument_nodes})"
+    return f"CallNode({self.call_node}; {self.argument_nodes})"
 
 
 # --------------------------------------------------
@@ -581,6 +581,9 @@ class DeleteNode(Node):
     self.variable = variable
 
     self.set_position(position_start, position_end)
+
+  def __repr__(self):
+    return f"DeleteNode({self.variable.value})"
 
 
 class IncludeNode(Node):

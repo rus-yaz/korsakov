@@ -10,8 +10,8 @@ syn match SpecialChar /\\[tnvr"\\]/
 syn match Identifier /[A-zА-яЁё_][A-zА-яЁё0-9_]\+/
 syn match Constant /[A-ZА-ЯЁ_][A-ZА-ЯЁ0-9_]\+/
 
-syn keyword Conditional check     if   then else  true   false
-syn keyword Conditional проверить если то   иначе истина ложь
+syn keyword Conditional if   then else  true   false check     при
+syn keyword Conditional если то   иначе истина ложь  проверить on
 
 syn keyword Repeat for of from to after while
 syn keyword Repeat для из от   до через пока

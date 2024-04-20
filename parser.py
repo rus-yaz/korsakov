@@ -483,13 +483,13 @@ class Parser:
 
     logger.next(self)
 
-    if not self.token.check_keyword(IF):
+    if not self.token.check_keyword(ON):
       return logger.failure(InvalidSyntaxError(
         self.token.position_start, self.token.position_end,
-        "Ожидалось `если` (`if`)"
+        "Ожидалось `при` (`on`)"
       ))
 
-    while self.token.check_keyword(IF):
+    while self.token.check_keyword(ON):
       logger.next(self)
 
       case_operator = operator
@@ -518,24 +518,16 @@ class Parser:
 
         condition = BinaryOperationNode(condition, connector, BinaryOperationNode(left, case_operator, right))
 
-      if not self.token.check_keyword(THEN):
-        return logger.failure(InvalidSyntaxError(
-          self.token.position_start, self.token.position_end,
-          "Ожидался `то` (`then`)"
-        ))
-
-      logger.next(self)
-
       if not self.token.check_type(NEWLINE):
         return logger.failure(InvalidSyntaxError(
           self.token.position_start, self.token.position_end,
-          "Ожидался перено строки"
+          "Ожидался перенос строки"
         ))
 
       logger.next(self)
 
       body = []
-      while not self.token.check_keyword(IF, ELSE):
+      while not self.token.check_keyword(ON, ELSE):
         body += [logger.register(self.statement())]
         if logger.error:
           return logger

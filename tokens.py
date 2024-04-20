@@ -79,10 +79,12 @@ AND = ["и", "and"]
 OR  = ["или", "or"]
 NOT = ["не", "not"]
 
-CHECK = ["проверить", "check"]
 IF    = ["если", "if"]
 THEN  = ["то", "then"]
 ELSE  = ["иначе", "else"]
+
+CHECK = ["проверить", "check"]
+ON = ["при", "on"]
 
 FOR   = ["для", "for"]
 OF    = ["из", "of"]
@@ -103,7 +105,8 @@ INCLUDE = ["включить", "include"]
 
 KEYWORDS =\
   AND + OR + NOT +\
-  CHECK + IF + ELSE + THEN +\
+  IF + ELSE + THEN +\
+  CHECK + ON +\
   FOR + OF + FROM + TO + AFTER +\
   WHILE + CONTINUE + BREAK +\
   CLASS + FUNCTION + RETURN +\

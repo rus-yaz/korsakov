@@ -634,7 +634,7 @@ class List(Value):
     self.context = context
 
   def __str__(self):
-    return "%(" + ", ".join(map(str, self.value)) + ")%"
+    return "%(" + "; ".join(map(str, self.value)) + ")%"
 
   def __repr__(self):
     return f"Список({str(self)})"
@@ -784,7 +784,7 @@ class Dictionary(Value):
     self.context = context
 
   def __str__(self):
-    return "%(" + ", ".join(f"{key}: {value}" for key, value in self.value) + ")%"
+    return "%(" + "; ".join(f"{key}: {value}" for key, value in self.value) + ")%"
 
   def __repr__(self):
     return f"Словарь({str(self)})"
@@ -977,7 +977,7 @@ class Function(Value):
       functions[self.name,] = dict.fromkeys(argument_names, Value)
 
   def __repr__(self):
-    return f"Функция({self.name}, {List(self.get_argument_names(self.name), self.context)})"
+    return f"Функция({self.name}; {List(self.get_argument_names(self.name), self.context)})"
 
   def copy(self):
     """
@@ -1562,7 +1562,7 @@ class Class(Function):
     self.initial_method.argument_names = {argument_name: Value for argument_name in self.initial_method.argument_names}
 
   def __repr__(self):
-    return f"Класс({self.name}, {self.value}, {self.parents})"
+    return f"Класс({self.name}; {self.value}; {self.parents})"
 
   def copy(self):
     """
@@ -1682,7 +1682,7 @@ class Method(Function):
     super().__init__(name, value, argument_names, is_oneline, context)
 
   def __repr__(self):
-    return f"Метод({self.name}, {list(self.get_argument_names(self.name))})"
+    return f"Метод({self.name}; {list(self.get_argument_names(self.name))})"
 
   def copy(self):
     """
