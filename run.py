@@ -4,7 +4,7 @@ from parser import Parser
 from tokenizer import Tokenizer
 from tokens import global_context
 
-COMMANDLINE_ARGUMENTS = dict.fromkeys(["debug", "nostd", "tokens", "ast", "context"], False)
+COMMANDLINE_ARGUMENTS = dict.fromkeys(["compile", "debug", "nostd", "tokens", "ast", "context"], False)
 
 
 def run(module_name: str, code: str):
@@ -20,6 +20,7 @@ def run(module_name: str, code: str):
       *Value или None: результат интерпретации или нуль
       *Error или None: сигнал ошибки или нуль
   """
+
   # Tokenization
   tokens, error = Tokenizer(module_name, code).tokenize()
   if error or not tokens:
@@ -41,10 +42,35 @@ def run(module_name: str, code: str):
 
   # ------------------------------
 
-  # Interpretation
+  # Interpretation and Compilation
 
-  interpret = Interpreter(module_name).interpret(ast.node, global_context)
+  value, error = None, None
+
+  if COMMANDLINE_ARGUMENTS["compile"]:
+    compiler = Compiler(module_name)
+    compiler.compile(ast.node, global_context)
+
+    begin = [
+      "format ELF64 executable",
+      "segment readable executable",
+      "entry main",
+      "main:",
+      "  mov r15, rsp"
+    ]
+    value = list(map(lambda x: f"  {x}", compiler.code))
+    end = list(map(lambda x: f"  {x}", [
+      "mov rax, 60",
+      "pop rdi",
+      "syscall"
+    ]))
+
+    with open(module_name.replace(".корс", ".asm"), "w") as file:
+      file.write("\n".join(begin + value + end))
+  else:
+    interpretation = Interpreter(module_name).interpret(ast.node, global_context)
+    value, error = interpretation.value, interpretation.error
+
   if COMMANDLINE_ARGUMENTS["debug"] or COMMANDLINE_ARGUMENTS["context"]:
     print(str(global_context.variables))
 
-  return interpret.value, interpret.error
+  return value, error
