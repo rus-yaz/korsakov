@@ -21,7 +21,8 @@ class Compiler:
   def __init__(self, file_name):
     self.file_path = realpath(file_name)
     self.script_location, self.file_name = self.file_path.rsplit(PATH_SEPARATOR, 1)
-    self.stack = []
+    self.stack = {}
+    self.mark_counter = 0
     self.code = []
 
   def compile(self, node, context: Context) -> Number:
@@ -44,22 +45,22 @@ class Compiler:
       self.compile(element, context)
 
   def compile_BinaryOperationNode(self, node: BinaryOperationNode, context: Context) -> Number:
-    left = self.compile(node.left_node, context)
-    right = self.compile(node.right_node, context)
+    self.compile(node.left_node, context)
+    self.compile(node.right_node, context)
 
-    if node.operator.check_type(ADDITION):         operation = "add rax, rbx"
+    if   node.operator.check_type(ADDITION):       operation = "add rax, rbx"
     elif node.operator.check_type(SUBTRACTION):    operation = "sub rax, rbx"
     elif node.operator.check_type(MULTIPLICATION): operation = "imul rbx"
     elif node.operator.check_type(DIVISION):       operation = "idiv rbx"
     # elif node.operator.check_type(POWER):          operation = " rax, rbx"
     # elif node.operator.check_type(ROOT):           operation = " rax, rbx"
 
-    elif node.operator.check_type(EQUAL):          operation = "je"
-    elif node.operator.check_type(NOT_EQUAL):      operation = "jne"
-    elif node.operator.check_type(LESS):           operation = "jl"
-    elif node.operator.check_type(MORE):           operation = "jm"
-    elif node.operator.check_type(LESS_OR_EQUAL):  operation = "jle"
-    elif node.operator.check_type(MORE_OR_EQUAL):  operation = "jme"
+    elif node.operator.check_type(EQUAL):          operation = f"je  mark{self.mark_counter}"
+    elif node.operator.check_type(NOT_EQUAL):      operation = f"jne mark{self.mark_counter}"
+    elif node.operator.check_type(LESS):           operation = f"jl  mark{self.mark_counter}"
+    elif node.operator.check_type(MORE):           operation = f"jg  mark{self.mark_counter}"
+    elif node.operator.check_type(LESS_OR_EQUAL):  operation = f"jle mark{self.mark_counter}"
+    elif node.operator.check_type(MORE_OR_EQUAL):  operation = f"jge mark{self.mark_counter}"
 
     elif node.operator.check_keyword(AND):         operation = "add rax, rbx"
     elif node.operator.check_keyword(OR):          operation = "add rax, rbx"
@@ -68,15 +69,17 @@ class Compiler:
 
     self.new_code([
         "pop rbx",
-        "pop rax",
-        operation,
-        "push rax"
+        "pop rax"
+    ] + (["cmp rax, rbx"] if node.operator.check_type(*COMPARISONS) else []) + [
+        operation
+    ] + (["push rax"] if not node.operator.check_type(*COMPARISONS) else []) + [
     ], "BinaryOperationNode")
 
   def compile_VariableAccessNode(self, node: VariableAccessNode, context: Context):
     variable = node.variable.value
+
     self.new_code([
-      f"mov rax, [rbp - {8 * (self.stack.index(variable) + 1)}]",
+      f"mov rax, [rbp - {8 * (self.stack[variable] + 1)}]",
       "push rax"
     ], "VariableAccessNode")
 
@@ -86,10 +89,31 @@ class Compiler:
     self.compile(node.value, context)
 
     if variable not in self.stack:
-      self.stack += [variable]
+      self.stack |= {variable: len(self.stack)}
 
     self.new_code([
       "pop rax",
-      f"mov [rbp - {8 * (self.stack.index(variable) + 1)}], rax",
+      f"mov [rbp - {8 * (self.stack[variable] + 1)}], rax",
       "sub rsp, 8"
     ], "VariableAssignNode")
+
+  def compile_IfNode(self, node: IfNode, context: Context):
+    end_mark = self.mark_counter + len(node.cases) + (2 if node.else_case else 0) + 1
+    for condition, expression, return_null in node.cases:
+      self.new_code([f"mark{self.mark_counter}:"], "If case")
+      self.mark_counter += 1
+      self.compile(condition, context)
+      self.new_code([f"jmp mark{self.mark_counter + 1}"], "Go to next if or Else")
+      self.new_code([f"mark{self.mark_counter}:"], "If case")
+      self.compile(expression, context)
+      self.new_code([f"jmp mark{end_mark}"], "Go to if end")
+      self.mark_counter += 1
+
+    if node.else_case:
+      expression, return_null = node.else_case
+
+      self.new_code([f"mark{self.mark_counter}:"], "Else case")
+      self.mark_counter += 1
+      self.compile(expression, context)
+    self.new_code([f"mark{end_mark}:"], "If end")
+    self.mark_counter += 1

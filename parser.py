@@ -565,40 +565,46 @@ class Parser:
         f"Ожидалось `{IF}`"
       ))
 
-    logger.next(self)
-
-    condition = logger.register(self.expression())
-    if logger.error:
-      return logger
-
-    if not self.token.check_keyword(THEN):
-      return logger.failure(InvalidSyntaxError(
-        self.token.position_start, self.token.position_end,
-        "Ожидалось `то` (`then`)"
-      ))
-
-    logger.next(self)
-
-    if self.token.check_type(NEWLINE):
+    while self.token.check_keyword(IF):
       logger.next(self)
 
-      statements = logger.register(self.statements())
+      condition = logger.register(self.expression())
       if logger.error:
         return logger
 
-      cases += [[condition, statements, True]]
+      if not self.token.check_keyword(THEN):
+        return logger.failure(InvalidSyntaxError(
+          self.token.position_start, self.token.position_end,
+          "Ожидалось `то` (`then`)"
+        ))
 
-      if self.token.check_type(END_OF_CONSTRUCTION):
+      logger.next(self)
+
+      if self.token.check_type(NEWLINE):
         logger.next(self)
 
-        return logger.success(IfNode(cases, else_case))
+        statements = logger.register(self.statements())
+        if logger.error:
+          return logger
 
-    else:
-      expression = logger.register(self.statement())
-      if logger.error:
-        return logger
+        cases += [[condition, statements, True]]
 
-      cases += [[condition, expression, False]]
+        if self.token.check_type(END_OF_CONSTRUCTION):
+          logger.next(self)
+
+          return logger.success(IfNode(cases, else_case))
+
+      else:
+        expression = logger.register(self.statement())
+        if logger.error:
+          return logger
+
+        cases += [[condition, expression, False]]
+
+      if self.token.check_keyword(ELSE):
+        logger.next(self)
+        if not self.token.check_keyword(IF):
+          self.reverse()
 
     else_case = logger.register(self.else_expression())
     if logger.error:

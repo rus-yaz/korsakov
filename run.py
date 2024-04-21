@@ -59,6 +59,8 @@ def run(module_name: str, code: str):
       "_start:",
       "  mov rbp, rsp",
     ] + list(map(lambda x: f"  {x}", compiler.code)) + [
+      "",
+      "  ; Exit",
       "  mov rax, 60",
       "  pop rdi",
       "  syscall"

@@ -83,7 +83,7 @@ class Interpreter:
     if logger.should_return():
       return logger
 
-    if node.operator.check_type(ADDITION):         result, error = left.addition(right)
+    if   node.operator.check_type(ADDITION):       result, error = left.addition(right)
     elif node.operator.check_type(SUBTRACTION):    result, error = left.subtraction(right)
     elif node.operator.check_type(MULTIPLICATION): result, error = left.multiplication(right)
     elif node.operator.check_type(DIVISION):       result, error = left.division(right)
@@ -568,7 +568,8 @@ class Interpreter:
             return logger.failure(error)
     else:
       module_path = f"{self.script_location}{PATH_SEPARATOR}{module_name.rsplit(PATH_SEPARATOR, 1)[0]}"
-      files = list(map(lambda x: str(x).rsplit(PATH_SEPARATOR, 1)[-1], Path(module_path).glob(f"*.{FILE_EXTENSION}")))
+      files = [list(map(lambda x: str(x).rsplit(PATH_SEPARATOR, 1)[-1], Path(module_path).glob(f"*.{file_extension}"))) for file_extension in FILE_EXTENSIONS]
+      files = [file for files_line in files for file in files_line]
       module_name = f"{module_name.rsplit(PATH_SEPARATOR, 1)[-1]}"
 
       found = False
