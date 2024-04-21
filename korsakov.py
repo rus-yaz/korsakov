@@ -1,6 +1,7 @@
 import readline
 from sys import argv
 
+
 from run import COMMANDLINE_ARGUMENTS, run
 
 if __name__ == "__main__":

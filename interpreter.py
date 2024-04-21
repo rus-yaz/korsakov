@@ -9,7 +9,6 @@ from classes import *
 
 
 FILE_EXTENSIONS = ["корс", "kors"]
-FILE_EXTENSION = "корс"
 PATH_SEPARATOR = "\\" if os_name == "nt" else "/"
 LANGAUGE_PATH = __file__.rsplit(PATH_SEPARATOR, 1)[0]
 BUILDIN_LIBRARIES = [

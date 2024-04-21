@@ -1,10 +1,12 @@
+from subprocess import run as run_cmd
+
 from interpreter import Interpreter
 from compiler import Compiler
 from parser import Parser
 from tokenizer import Tokenizer
 from tokens import global_context
 
-COMMANDLINE_ARGUMENTS = dict.fromkeys(["compile", "debug", "nostd", "tokens", "ast", "context"], False)
+COMMANDLINE_ARGUMENTS = dict.fromkeys(["asm", "object", "compile", "debug", "nostd", "tokens", "ast", "context"], False)
 
 
 def run(module_name: str, code: str):
@@ -50,22 +52,28 @@ def run(module_name: str, code: str):
     compiler = Compiler(module_name)
     compiler.compile(ast.node, global_context)
 
-    begin = [
-      "format ELF64 executable",
-      "segment readable executable",
-      "entry main",
-      "main:",
-      "  mov r15, rsp"
+    code = [
+      "format ELF64",
+      "section \"_start\" executable",
+      "public _start",
+      "_start:",
+      "  mov rbp, rsp",
+    ] + list(map(lambda x: f"  {x}", compiler.code)) + [
+      "  mov rax, 60",
+      "  pop rdi",
+      "  syscall"
     ]
-    value = list(map(lambda x: f"  {x}", compiler.code))
-    end = list(map(lambda x: f"  {x}", [
-      "mov rax, 60",
-      "pop rdi",
-      "syscall"
-    ]))
 
-    with open(module_name.replace(".корс", ".asm"), "w") as file:
-      file.write("\n".join(begin + value + end))
+    file_name = module_name.rsplit(".", 1)[0]
+    with open(file_name + ".asm", "w") as file:
+      file.write("\n".join(code))
+
+    run_cmd(["fasm", file_name + ".asm"])
+    if not COMMANDLINE_ARGUMENTS["asm"]:
+      run_cmd(["rm", file_name + ".asm"])
+    run_cmd(["ld", file_name + ".o", "-o", file_name])
+    if not COMMANDLINE_ARGUMENTS["object"]:
+      run_cmd(["rm", file_name + ".o"])
   else:
     interpretation = Interpreter(module_name).interpret(ast.node, global_context)
     value, error = interpretation.value, interpretation.error
