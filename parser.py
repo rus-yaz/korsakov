@@ -580,31 +580,37 @@ class Parser:
 
       logger.next(self)
 
-      if self.token.check_type(NEWLINE):
-        logger.next(self)
-
-        statements = logger.register(self.statements())
-        if logger.error:
-          return logger
-
-        cases += [[condition, statements, True]]
-
-        if self.token.check_type(END_OF_CONSTRUCTION):
-          logger.next(self)
-
-          return logger.success(IfNode(cases, else_case))
-
-      else:
+      if not self.token.check_type(NEWLINE):
         expression = logger.register(self.statement())
         if logger.error:
           return logger
 
         cases += [[condition, expression, False]]
 
+        continue
+
+      logger.next(self)
+
+      statements = logger.register(self.statements())
+      if logger.error:
+        return logger
+
+      cases += [[condition, statements, True]]
+
+      if self.token.check_type(END_OF_CONSTRUCTION):
+        logger.next(self)
+
+        return logger.success(IfNode(cases, else_case))
+
       if self.token.check_keyword(ELSE):
         logger.next(self)
         if not self.token.check_keyword(IF):
           self.reverse()
+      elif not self.token.check_type(END_OF_CONSTRUCTION):
+        return logger.failure(InvalidSyntaxError(
+          self.token.position_start, self.token.position_end,
+          "Ожидался конец конструкции"
+        ))
 
     else_case = logger.register(self.else_expression())
     if logger.error:

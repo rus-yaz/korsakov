@@ -98,7 +98,7 @@ class Compiler:
     ], "VariableAssignNode")
 
   def compile_IfNode(self, node: IfNode, context: Context):
-    end_mark = self.mark_counter + len(node.cases) + (2 if node.else_case else 0) + 1
+    end_mark = self.mark_counter + len(node.cases)*2 + (1 if node.else_case else 0)
     for condition, expression, return_null in node.cases:
       self.new_code([f"mark{self.mark_counter}:"], "If case")
       self.mark_counter += 1
@@ -115,5 +115,6 @@ class Compiler:
       self.new_code([f"mark{self.mark_counter}:"], "Else case")
       self.mark_counter += 1
       self.compile(expression, context)
+
     self.new_code([f"mark{end_mark}:"], "If end")
     self.mark_counter += 1
