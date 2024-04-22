@@ -23,6 +23,7 @@ class Compiler:
     self.script_location, self.file_name = self.file_path.rsplit(PATH_SEPARATOR, 1)
     self.stack = {}
     self.mark_counter = 0
+    self.end_mark_counter = 0
     self.code = []
 
   def compile(self, node, context: Context) -> Number:
@@ -70,12 +71,23 @@ class Compiler:
     else: operation = "push rbx"
 
     self.new_code([
-        "pop rbx",
-        "pop rax"
+      "pop rbx",
+      "pop rax"
     ] + (["cmp rax, rbx"] if node.operator.check_type(*COMPARISONS) else []) + [
-        operation
-    ] + (["push rax"] if not node.operator.check_type(*COMPARISONS) else []) + [
+      operation
     ], "Нод бинарной операции")
+
+    if node.operator.check_type(*COMPARISONS):
+      self.new_code([
+        "push 0",
+        f"jmp mark{self.mark_counter + 1}",
+        f"mark{self.mark_counter}:",
+        "push 1",
+        f"mark{self.mark_counter + 1}:"
+      ], "Нод сравнения")
+      self.mark_counter += 2
+    else:
+      self.new_code(["push rax"])
 
   def compile_VariableAccessNode(self, node: VariableAccessNode, context: Context):
     variable = node.variable.value
@@ -100,20 +112,25 @@ class Compiler:
     ], "Нод присвоения переменной")
 
   def compile_IfNode(self, node: IfNode, context: Context):
-    end_mark = self.mark_counter + len(node.cases)*2 + (1 if node.else_case else 0)
     self.new_code([], "Начало конструкции \"если-то-иначе\"")
+    self.end_mark_counter += 1
 
     for condition, expression, return_null in node.cases:
       self.new_code([f"mark{self.mark_counter}:"], "Ветвь \"если\"")
       self.mark_counter += 1
 
       self.compile(condition, context)
-      self.new_code([f"jmp mark{self.mark_counter + 1}"], "Переход к следующей ветви \"если\" или к ветви \"иначе\"")
+
+      self.new_code([
+        "pop rax",
+        "cmp rax, 1",
+        f"jne mark{self.mark_counter + 1}"
+      ], "Переход к следующей ветви \"если\" или к ветви \"иначе\"")
 
       self.new_code([f"mark{self.mark_counter}:"], "Тело ветви \"если\"")
       self.compile(expression, context)
 
-      self.new_code([f"jmp mark{end_mark}"], "Завершение конструкции \"если-то-иначе\"")
+      self.new_code([f"jmp end_mark{self.end_mark_counter}"], "Завершение конструкции \"если-то-иначе\"")
       self.mark_counter += 1
 
     if node.else_case:
@@ -123,5 +140,11 @@ class Compiler:
       self.mark_counter += 1
       self.compile(expression, context)
 
-    self.new_code([f"mark{end_mark}:"], "Завершение конструкции \"если-то-иначе\"")
+    self.code = list(map( lambda x: x.replace(
+      f"end_mark{self.end_mark_counter}",
+      f"mark{self.mark_counter}"
+    ), self.code))
+    self.new_code([f"mark{self.mark_counter}:"], "Завершение конструкции \"если-то-иначе\"")
+
     self.mark_counter += 1
+    self.end_mark_counter -= 1
