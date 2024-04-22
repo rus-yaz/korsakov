@@ -58,7 +58,7 @@ def run(module_name: str, code: str):
       "public _start",
       "_start:",
       "  mov rbp, rsp",
-    ] + list(map(lambda x: f"  {x}", compiler.code)) + [
+    ] + list(map(lambda x: x if ":" in x else f"  {x}", compiler.code)) + [
       "",
       "  ; Exit",
       "  mov rax, 60",

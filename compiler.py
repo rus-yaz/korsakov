@@ -84,7 +84,7 @@ class Compiler:
         f"mark{self.mark_counter}:",
         "push 1",
         f"mark{self.mark_counter + 1}:"
-      ], "Нод сравнения")
+      ])
       self.mark_counter += 2
     else:
       self.new_code(["push rax"])
@@ -102,14 +102,18 @@ class Compiler:
 
     self.compile(node.value, context)
 
+    new = False
     if variable not in self.stack:
+      new = True
       self.stack |= {variable: len(self.stack)}
 
     self.new_code([
       "pop rax",
       f"mov [rbp - {8 * (self.stack[variable] + 1)}], rax",
-      "sub rsp, 8"
     ], "Нод присвоения переменной")
+
+    if new:
+      self.new_code(["sub rsp, 8"])
 
   def compile_IfNode(self, node: IfNode, context: Context):
     self.new_code([], "Начало конструкции \"если-то-иначе\"")
@@ -140,11 +144,72 @@ class Compiler:
       self.mark_counter += 1
       self.compile(expression, context)
 
-    self.code = list(map( lambda x: x.replace(
+    self.code = list(map(lambda x: x.replace(
       f"end_mark{self.end_mark_counter}",
       f"mark{self.mark_counter}"
     ), self.code))
     self.new_code([f"mark{self.mark_counter}:"], "Завершение конструкции \"если-то-иначе\"")
 
     self.mark_counter += 1
+    self.end_mark_counter -= 1
+
+  def compile_WhileNode(self, node: WhileNode, context: Context):
+    self.new_code([], "Начало конструкции \"пока-иначе\"")
+    self.end_mark_counter += 1
+
+    if node.else_case:
+      self.new_code(["push 0"], "Счётчик итераций")
+
+    loop_mark = self.mark_counter
+    self.new_code([
+      f"mark{self.mark_counter}:",
+    ], "Ветвь \"пока\"")
+    self.mark_counter += 1
+
+    self.compile(node.condition_node, context)
+
+    self.new_code([
+      "pop rax",
+      "cmp rax, 1",
+      f"jne end_mark{self.end_mark_counter}"
+    ], "Переход в конец цикла при невыполнении условия")
+
+    self.new_code([f"mark{self.mark_counter}:"], "Тело ветви \"пока\"")
+    self.compile(node.body_node, context)
+
+    if node.else_case:
+      self.new_code([
+        "pop rax",
+        "inc rax",
+        "push rax",
+      ], "Увеличение счётчика итераций")
+
+    self.new_code([
+      f"jmp mark{loop_mark}",
+    ], "Возвращение к началу цикла")
+    self.mark_counter += 1
+
+    if node.else_case:
+      expression, return_null = node.else_case
+
+      self.new_code([f"mark{self.mark_counter}:"], "Ветвь \"иначе\"")
+      self.mark_counter += 1
+      self.compile(expression, context)
+      self.new_code([f"jmp mark{self.mark_counter + 1}"])
+
+    self.code = list(map( lambda x: x.replace(
+      f"end_mark{self.end_mark_counter}",
+      f"mark{self.mark_counter}"
+    ), self.code))
+
+    if node.else_case:
+      self.new_code([
+        f"mark{self.mark_counter}:",
+        "pop rax",
+        "cmp rax, 0",
+        f"je mark{self.mark_counter - 1}",
+        f"mark{self.mark_counter + 1}:"
+      ], "Переход к ветви \"иначе\", если цикл не было ни одной итерации")
+
+    self.mark_counter += 2
     self.end_mark_counter -= 1
