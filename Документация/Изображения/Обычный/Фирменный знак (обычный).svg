@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<svg viewBox="0 0 153 153" xmlns="http://www.w3.org/2000/svg">
-  <ellipse style="fill: rgb(255, 255, 255);" cx="76.391" cy="76.391" rx="76.391" ry="76.391"/>
-  <g id="Logo" transform="matrix(0.188755, 0, 0, 0.188755, 76.391663, 69.525215)" style="">
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <g id="Logo" transform="matrix(0.195333, 0, 0, 0.211968, 50.000679, 50.000969)" style="">
     <linearGradient id="SVGID_SVGID_1__1" gradientUnits="userSpaceOnUse" gradientTransform="matrix(1 0 0 1 0 0)" x1="134.6856" y1="578.1185" x2="481.5801" y2="113.0678">
       <stop offset="0" style="stop-color:#11156D;stop-opacity: 1"/>
       <stop offset="1" style="stop-color:#48569E;stop-opacity: 1"/>
