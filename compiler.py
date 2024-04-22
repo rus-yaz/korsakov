@@ -38,11 +38,13 @@ class Compiler:
   def compile_NumberNode(self, node: NumberNode, context: Context):
     self.new_code([
       f"push {node.token.value}"
-    ], "NumberNode")
+    ], "Нод числа")
 
   def compile_ListNode(self, node: ListNode, context: Context):
+    self.new_code([], "Начало нода массива")
     for element in node.elements:
       self.compile(element, context)
+    self.new_code([], "Конец кода массива")
 
   def compile_BinaryOperationNode(self, node: BinaryOperationNode, context: Context) -> Number:
     self.compile(node.left_node, context)
@@ -62,8 +64,8 @@ class Compiler:
     elif node.operator.check_type(LESS_OR_EQUAL):  operation = f"jle mark{self.mark_counter}"
     elif node.operator.check_type(MORE_OR_EQUAL):  operation = f"jge mark{self.mark_counter}"
 
-    elif node.operator.check_keyword(AND):         operation = "add rax, rbx"
-    elif node.operator.check_keyword(OR):          operation = "add rax, rbx"
+    elif node.operator.check_keyword(AND):         operation = "and rax, rbx"
+    elif node.operator.check_keyword(OR):          operation = "or rax, rbx"
 
     else: operation = "push rbx"
 
@@ -73,7 +75,7 @@ class Compiler:
     ] + (["cmp rax, rbx"] if node.operator.check_type(*COMPARISONS) else []) + [
         operation
     ] + (["push rax"] if not node.operator.check_type(*COMPARISONS) else []) + [
-    ], "BinaryOperationNode")
+    ], "Нод бинарной операции")
 
   def compile_VariableAccessNode(self, node: VariableAccessNode, context: Context):
     variable = node.variable.value
@@ -81,7 +83,7 @@ class Compiler:
     self.new_code([
       f"mov rax, [rbp - {8 * (self.stack[variable] + 1)}]",
       "push rax"
-    ], "VariableAccessNode")
+    ], "Нод обращения к переменной")
 
   def compile_VariableAssignNode(self, node: VariableAssignNode, context: Context):
     variable = node.variable.value
@@ -95,26 +97,31 @@ class Compiler:
       "pop rax",
       f"mov [rbp - {8 * (self.stack[variable] + 1)}], rax",
       "sub rsp, 8"
-    ], "VariableAssignNode")
+    ], "Нод присвоения переменной")
 
   def compile_IfNode(self, node: IfNode, context: Context):
     end_mark = self.mark_counter + len(node.cases)*2 + (1 if node.else_case else 0)
+    self.new_code([], "Начало конструкции \"если-то-иначе\"")
+
     for condition, expression, return_null in node.cases:
-      self.new_code([f"mark{self.mark_counter}:"], "If case")
+      self.new_code([f"mark{self.mark_counter}:"], "Ветвь \"если\"")
       self.mark_counter += 1
+
       self.compile(condition, context)
-      self.new_code([f"jmp mark{self.mark_counter + 1}"], "Go to next if or Else")
-      self.new_code([f"mark{self.mark_counter}:"], "If case")
+      self.new_code([f"jmp mark{self.mark_counter + 1}"], "Переход к следующей ветви \"если\" или к ветви \"иначе\"")
+
+      self.new_code([f"mark{self.mark_counter}:"], "Тело ветви \"если\"")
       self.compile(expression, context)
-      self.new_code([f"jmp mark{end_mark}"], "Go to if end")
+
+      self.new_code([f"jmp mark{end_mark}"], "Завершение конструкции \"если-то-иначе\"")
       self.mark_counter += 1
 
     if node.else_case:
       expression, return_null = node.else_case
 
-      self.new_code([f"mark{self.mark_counter}:"], "Else case")
+      self.new_code([f"mark{self.mark_counter}:"], "Ветвь \"иначе\"")
       self.mark_counter += 1
       self.compile(expression, context)
 
-    self.new_code([f"mark{end_mark}:"], "If end")
+    self.new_code([f"mark{end_mark}:"], "Завершение конструкции \"если-то-иначе\"")
     self.mark_counter += 1
