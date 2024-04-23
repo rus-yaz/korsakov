@@ -208,8 +208,10 @@ class Compiler:
         "pop rax",
         "cmp rax, 0",
         f"je mark{self.mark_counter - 1}",
-        f"mark{self.mark_counter + 1}:"
       ], "Переход к ветви \"иначе\", если цикл не было ни одной итерации")
+      self.mark_counter += 1
 
-    self.mark_counter += 2
+    self.new_code([f"mark{self.mark_counter}:"])
+
+    self.mark_counter += 1
     self.end_mark_counter -= 1
