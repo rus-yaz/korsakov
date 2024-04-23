@@ -184,20 +184,24 @@ class VariableAccessNode(Node):
 
     Аргументы:
       variable (Token): название переменной
-      keys (список): ключи/индексы (элементы - *Node)
+      keys (список): ключи/индексы (элементы - *Node, по умолчанию - пустой список)
 
     Поля класса:
       variable (Token): название переменной
-      keys (список): ключи/индексы (элементы - *Node)
+      keys (список): ключи/индексы (элементы - *Node, по умолчанию - пустой список)
       position_start (Position): начало нода
       position_end (Position): конец нода
   """
 
-  def __init__(self, variable, keys: list, position_start: Position, position_end: Position):
+  def __init__(self, variable, keys: list = []):
     self.variable = variable
     self.keys     = keys
 
-    self.set_position(position_start, position_end)
+    position_end = self.variable.position_end
+    if self.keys:
+      position_end = self.keys[-1].position_end
+
+    self.set_position(self.variable.position_start, position_end)
 
   def __repr__(self):
     return f"VariableAccessNode({self.variable.value}; {self.keys})"

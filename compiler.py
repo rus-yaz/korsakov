@@ -153,6 +153,46 @@ class Compiler:
     self.mark_counter += 1
     self.end_mark_counter -= 1
 
+  def compile_ForNode(self, node: ForNode, context: Context):
+    self.new_code([], "Начало конструкции \"для-иначе\"")
+    self.end_mark_counter += 1
+
+    self.compile(VariableAssignNode(node.variable_name, [], node.start_node), context)
+
+    loop_start_mark = self.mark_counter
+    self.new_code([f"mark{self.mark_counter}:"], "Ветвь \"для\"")
+    self.mark_counter += 1
+
+    self.compile(BinaryOperationNode(VariableAccessNode(node.variable_name, []), Token(LESS), node.end_node), context)
+
+    self.new_code([
+      "pop rax",
+      "cmp rax, 1",
+      f"jne end_mark{self.end_mark_counter}"
+    ], "Переход в конец цикла при невыполнении условия")
+
+    self.new_code([f"mark{self.mark_counter}:"], "Тело ветви \"для\"")
+    self.compile(node.body_node, context)
+
+    step = NumberNode(Token(INTEGER, 1))
+    if node.step_node:
+      step = node.step_node
+
+    self.compile(VariableAssignNode(node.variable_name, [], BinaryOperationNode(VariableAccessNode(node.variable_name, []), Token(ADDITION), step)), context)
+
+    self.new_code([f"jmp mark{loop_start_mark}"], "Возвращение к началу цикла")
+    self.mark_counter += 1
+
+    self.code = list(map(lambda x: x.replace(
+      f"end_mark{self.end_mark_counter}",
+      f"mark{self.mark_counter}"
+    ), self.code))
+
+    self.new_code([f"mark{self.mark_counter}:"])
+
+    self.mark_counter += 1
+    self.end_mark_counter -= 1
+
   def compile_WhileNode(self, node: WhileNode, context: Context):
     self.new_code([], "Начало конструкции \"пока-иначе\"")
     self.end_mark_counter += 1
@@ -160,10 +200,8 @@ class Compiler:
     if node.else_case:
       self.new_code(["push 0"], "Счётчик итераций")
 
-    loop_mark = self.mark_counter
-    self.new_code([
-      f"mark{self.mark_counter}:",
-    ], "Ветвь \"пока\"")
+    loop_start_mark = self.mark_counter
+    self.new_code([f"mark{self.mark_counter}:"], "Ветвь \"пока\"")
     self.mark_counter += 1
 
     self.compile(node.condition_node, context)
@@ -184,9 +222,7 @@ class Compiler:
         "push rax",
       ], "Увеличение счётчика итераций")
 
-    self.new_code([
-      f"jmp mark{loop_mark}",
-    ], "Возвращение к началу цикла")
+    self.new_code([f"jmp mark{loop_start_mark}"], "Возвращение к началу цикла")
     self.mark_counter += 1
 
     if node.else_case:
@@ -197,7 +233,7 @@ class Compiler:
       self.compile(expression, context)
       self.new_code([f"jmp mark{self.mark_counter + 1}"])
 
-    self.code = list(map( lambda x: x.replace(
+    self.code = list(map(lambda x: x.replace(
       f"end_mark{self.end_mark_counter}",
       f"mark{self.mark_counter}"
     ), self.code))

@@ -76,7 +76,7 @@ class Parser:
 
         if operator:
           expression = BinaryOperationNode(
-            VariableAccessNode(variable, keys, variable.position_start, variable.position_end),
+            VariableAccessNode(variable, keys),
             operator,
             expression
           )
@@ -155,11 +155,7 @@ class Parser:
 
         middle = BinaryOperationNode(middle, right_operator, right)
 
-        left = BinaryOperationNode(
-          left,
-          Token(KEYWORD, "и", self.token.position_start, self.token.position_end),
-          middle
-        )
+        left = BinaryOperationNode(left, Token(KEYWORD, AND[0]), middle)
 
     return logger.success(left)
 
@@ -177,9 +173,7 @@ class Parser:
     elif token.check_type(IDENTIFIER):
       if self.tokens[self.token_index - 2].check_type(POINT):
         logger.next(self)
-        return logger.success(VariableAccessNode(
-          token, [], token.position_start, self.token.position_end
-        ))
+        return logger.success(VariableAccessNode(token))
 
       logger.next(self)
       keys = []
@@ -202,9 +196,7 @@ class Parser:
         if logger.error:
           return logger
 
-      return logger.success(VariableAccessNode(
-        token, keys, token.position_start, self.token.position_end
-      ))
+      return logger.success(VariableAccessNode(token, keys))
 
     elif token.check_type(OPEN_PAREN):
       logger.next(self)
@@ -463,7 +455,7 @@ class Parser:
     if logger.error:
       return logger
 
-    operator = Token(EQUAL, None, self.token.position_start, self.token.position_end)
+    operator = Token(EQUAL)
 
     if not self.token.check_type(*COMPARISONS, NEWLINE):
       return logger.failure(InvalidSyntaxError(
@@ -979,14 +971,9 @@ class Parser:
       ))
 
     if all(key.token.value not in ["__инициализация__", "__init__"] for key, _ in methods):
-      initial_method_name = Token(STRING, "__инициализация__", self.token.position_start, self.token.position_end)
-
       initial_method = MethodDefinitionNode(
-        initial_method_name,
-        [VariableAccessNode(
-          Token(IDENTIFIER, "объект", self.token.position_start, self.token.position_end),
-          [], self.token.position_start, self.token.position_end
-        )],
+        Token(STRING, "__инициализация__"),
+        [VariableAccessNode(Token(IDENTIFIER, "объект"))],
         ListNode([], self.token.position_start, self.token.position_end),
         True,
         True

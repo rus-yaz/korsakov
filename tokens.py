@@ -7,6 +7,9 @@ class Token:
     self.type = type
     self.value = value
 
+    self.position_start = None
+    self.position_end = None
+
     if position_start:
       self.position_start = position_start.copy()
       self.position_end = position_start.copy()

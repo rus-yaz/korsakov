@@ -1090,28 +1090,24 @@ class Function(Value):
     logger = RuntimeLogger()
 
     if argument_names and isinstance(list(argument_names)[0], tuple):
-      position = Position(-1, 0, 0, "", "")
       temp = []
       for argument in argument_names:
         if len(argument) == 1:
-          temp += [VariableAccessNode(
-            Token(IDENTIFIER, argument[0], position, position),
-            [], position, position
-          )]
+          temp += [VariableAccessNode(Token(IDENTIFIER, argument[0]))]
           continue
 
         temp += [VariableAssignNode(
-          Token(IDENTIFIER, argument[0], position, position),
+          Token(IDENTIFIER, argument[0]),
           [],
-          NumberNode(Token(INTEGER, argument[1], position, position))
+          NumberNode(Token(INTEGER, argument[1]))
           if isinstance(argument[1], int) else
-          NumberNode(Token(FLOAT, argument[1], position, position))
+          NumberNode(Token(FLOAT, argument[1]))
           if isinstance(argument[1], float) else
-          StringNode(Token(STRING, argument[1], position, position))
+          StringNode(Token(STRING, argument[1]))
           if isinstance(argument[1], str) else
-          ListNode(argument[1], position, position)
+          ListNode(argument[1])
           if isinstance(argument[1], list) else
-          VariableAccessNode(Token(IDENTIFIER, argument[1], position, position), [], position, position),
+          VariableAccessNode(Token(IDENTIFIER, argument[1])),
         )]
 
       argument_names = temp
@@ -1188,19 +1184,18 @@ class Function(Value):
           arguments[argument[0]] = Value
           continue
 
-        position = Position(-1, 0, 0, "", "")
         argument = VariableAssignNode(
-          Token(IDENTIFIER, argument[0], position, position),
+          Token(IDENTIFIER, argument[0]),
           [],
-          NumberNode(Token(INTEGER, argument[1], position, position))
+          NumberNode(Token(INTEGER, argument[1]))
           if isinstance(argument[1], int) else
-          NumberNode(Token(FLOAT, argument[1], position, position))
+          NumberNode(Token(FLOAT, argument[1]))
           if isinstance(argument[1], float) else
-          StringNode(Token(STRING, argument[1], position, position))
+          StringNode(Token(STRING, argument[1]))
           if isinstance(argument[1], str) else
           ListNode(argument[1], position, position)
           if isinstance(argument[1], list) else
-          VariableAccessNode(Token(IDENTIFIER, argument[1], position, position), [], position, position),
+          VariableAccessNode(Token(IDENTIFIER, argument[1])),
         )
 
       argument, default_value = argument.variable.value, argument.value
