@@ -368,6 +368,7 @@ class Interpreter:
     else:
       step_value = Number(1, context)
 
+    # Случай хождения по массиву
     if end_value.value == None:
       iterator = 0
       if not isinstance(start_value, String | List):
