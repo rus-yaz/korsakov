@@ -82,7 +82,7 @@ class ListNode(Node):
       position_end (Position): конец нода
   """
 
-  def __init__(self, elements: list, position_start, position_end):
+  def __init__(self, elements: list, position_start=None, position_end=None):
     self.elements = elements
 
     self.set_position(position_start, position_end)

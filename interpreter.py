@@ -123,18 +123,17 @@ class Interpreter:
     elif node.operator.check_type(SUBTRACTION): result, error = result.multiplication(Number(-1, context))
     elif node.operator.check_type(ROOT):        result, error = Number(2, context).root(result)
 
-    elif node.operator.check_type(INCREMENT):
-      logger.register(self.interpret(VariableAssignNode(
-        node.node.variable, [], NumberNode(Token(INTEGER, result.value + 1, result.position_start))
-      ), context))
+    elif node.operator.check_type(INCREMENT, DECREMENT):
+      operation, method = [
+        [lambda a, b: a - b, result.subtraction],
+        [lambda a, b: a + b, result.addition]
+      ][node.operator.check_type(INCREMENT)]
 
-      if node.operator.value: result, error = result.addition(Number(1, context))
-    elif node.operator.check_type(DECREMENT):
-      logger.register(self.interpret(VariableAssignNode(
-        node.node.variable, [], NumberNode(Token(INTEGER, result.value - 1, result.position_start))
-      ), context))
+      logger.register(self.interpret(VariableAssignNode(node.node.variable, [], NumberNode(Token(INTEGER, operation(result.value, 1)))), context))
 
-      if node.operator.value: result, error = result.subtraction(Number(1, context))
+      # Проверка повышенного приоритета
+      if node.operator.value:
+        result, error = method(Number(1, context))
 
     if error:
       return logger.failure(error)

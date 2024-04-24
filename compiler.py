@@ -22,6 +22,7 @@ class Compiler:
     self.file_path = realpath(file_name)
     self.script_location, self.file_name = self.file_path.rsplit(PATH_SEPARATOR, 1)
     self.stack = {}
+    self.frames_count = 0
     self.mark_counter = 0
     self.end_mark_counter = 0
     self.code = []
@@ -92,28 +93,79 @@ class Compiler:
   def compile_VariableAccessNode(self, node: VariableAccessNode, context: Context):
     variable = node.variable.value
 
-    self.new_code([
-      f"mov rax, [rbp - {8 * (self.stack[variable] + 1)}]",
-      "push rax"
-    ], "Нод обращения к переменной")
+    if node.keys:
+      key = node.keys[0]
+      self.compile(IfNode([[
+        BinaryOperationNode(key, Token(LESS), NumberNode(Token(INTEGER, 0))),
+        ListNode([BinaryOperationNode(key, Token(ADDITION), NumberNode(Token(INTEGER, len(self.stack[variable]))))]),
+        False
+      ]], [key, False]), context)
+
+    if not isinstance(self.stack[variable], list):
+      self.new_code([
+        f"mov rax, [rbp - {8 * self.stack[variable]}]",
+        "push rax"
+      ], "Нод обращения к переменной")
+    else:
+      self.new_code([
+        "pop rax",
+        f"mov rax, [rbp - {8 * self.stack[variable][-1]} + rax*8]",
+        "push rax"
+      ])
 
   def compile_VariableAssignNode(self, node: VariableAssignNode, context: Context):
     variable = node.variable.value
+    is_new = variable not in self.stack
 
-    self.compile(node.value, context)
+    if not node.keys:
+      if not isinstance(node.value, ListNode):
+        self.compile(node.value, context)
 
-    new = False
-    if variable not in self.stack:
-      new = True
-      self.stack |= {variable: len(self.stack)}
+        if is_new:
+          self.stack |= {variable: self.frames_count + 1}
 
-    self.new_code([
-      "pop rax",
-      f"mov [rbp - {8 * (self.stack[variable] + 1)}], rax",
-    ], "Нод присвоения переменной")
+        self.new_code([
+          "pop rax",
+          f"mov [rbp - {8 * self.stack[variable]}], rax",
+        ], "Нод присвоения переменной")
 
-    if new:
-      self.new_code(["sub rsp, 8"])
+        self.frames_count += 1
+
+        if is_new:
+          self.new_code(["sub rsp, 8"])
+      else:
+        if is_new:
+          self.stack |= {variable: []}
+
+        for index, value in enumerate(node.value.elements[::-1]):
+          self.stack[variable] += [self.frames_count + index + 1]
+          self.compile(value, context)
+
+          self.new_code([
+            "pop rax",
+            f"mov [rbp - {8 * self.stack[variable][index]}], rax",
+            "sub rsp, 8"
+          ], "Нод присвоения переменной")
+
+        self.frames_count += len(node.value.elements)
+    else:
+      self.compile(node.value, context)
+
+      if node.keys:
+        key = node.keys[0]
+        self.compile(IfNode([[
+          BinaryOperationNode(key, Token(LESS), NumberNode(Token(INTEGER, 0))),
+          ListNode([BinaryOperationNode(key, Token(ADDITION), NumberNode(Token(INTEGER, len(self.stack[variable]))))]),
+          False
+        ]], [key, False]), context)
+
+      self.new_code([
+        "pop rbx",
+        "pop rax",
+        f"mov [rbp - {8 * self.stack[node.variable.value][-1]} + rbx*8], rax",
+      ], "Нод присвоения переменной")
+
+      self.frames_count += 1
 
   def compile_IfNode(self, node: IfNode, context: Context):
     self.new_code([], "Начало конструкции \"если-то-иначе\"")
@@ -267,3 +319,30 @@ class Compiler:
       self.mark_counter += 2
 
     self.end_mark_counter -= 1
+
+  def compile_UnaryOperationNode(self, node: UnaryOperationNode, context: Context) -> Number:
+    if node.operator.check_keyword(NOT):
+      self.new_code([], "Нод односторонней операции `не` (`not`)")
+      self.compile(BinaryOperationNode(node.node, Token(EQUAL), NumberNode(Token(INTEGER, 0))), compile)
+    elif node.operator.check_type(SUBTRACTION):
+      self.new_code([], "Нод односторонней операции арифметического отрицания")
+      self.compile(node.node, context)
+
+      self.new_code(["pop rax", "neg rax", "push rax"])
+    elif node.operator.check_type(INCREMENT, DECREMENT):
+      operator = ["dec", "inc"][node.operator.check_type(INCREMENT)]
+
+      self.compile(node.node, context)
+      self.new_code([
+        "pop rax",
+        "push rax",
+        f"{operator} rax",
+        f"mov [rbp - {8 * self.stack[node.node.variable.value]}], rax"
+      ])
+
+      if node.operator.value:
+        self.new_code([
+          "pop rax",
+          f"{operator} rax",
+          "push rax"
+        ])
