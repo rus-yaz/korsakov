@@ -189,8 +189,26 @@ class Compiler:
     ), self.code))
 
     self.new_code([f"mark{self.mark_counter}:"])
-
     self.mark_counter += 1
+
+    if node.else_case:
+      expression, return_null = node.else_case
+
+      self.compile(BinaryOperationNode(VariableAccessNode(node.variable_name, []), Token(EQUAL), node.start_node), context)
+
+      self.new_code([
+        "pop rax",
+        "cmp rax, 1",
+        f"je mark{self.mark_counter}",
+        f"jmp mark{self.mark_counter + 1}",
+        f"mark{self.mark_counter}:"
+      ], "Обработка ветви \"иначе\"")
+
+      self.compile(expression, context)
+
+      self.new_code([f"mark{self.mark_counter + 1}:"])
+      self.mark_counter += 2
+
     self.end_mark_counter -= 1
 
   def compile_WhileNode(self, node: WhileNode, context: Context):
@@ -225,29 +243,27 @@ class Compiler:
     self.new_code([f"jmp mark{loop_start_mark}"], "Возвращение к началу цикла")
     self.mark_counter += 1
 
-    if node.else_case:
-      expression, return_null = node.else_case
-
-      self.new_code([f"mark{self.mark_counter}:"], "Ветвь \"иначе\"")
-      self.mark_counter += 1
-      self.compile(expression, context)
-      self.new_code([f"jmp mark{self.mark_counter + 1}"])
-
     self.code = list(map(lambda x: x.replace(
       f"end_mark{self.end_mark_counter}",
       f"mark{self.mark_counter}"
     ), self.code))
+    self.new_code([f"mark{self.mark_counter}:"])
+    self.mark_counter += 1
 
     if node.else_case:
+      expression, return_null = node.else_case
+
       self.new_code([
-        f"mark{self.mark_counter}:",
         "pop rax",
         "cmp rax, 0",
-        f"je mark{self.mark_counter - 1}",
+        f"je mark{self.mark_counter}",
+        f"jmp mark{self.mark_counter + 1}",
+        f"mark{self.mark_counter}:"
       ], "Переход к ветви \"иначе\", если цикл не было ни одной итерации")
-      self.mark_counter += 1
 
-    self.new_code([f"mark{self.mark_counter}:"])
+      self.compile(expression, context)
 
-    self.mark_counter += 1
+      self.new_code([f"mark{self.mark_counter + 1}:"])
+      self.mark_counter += 2
+
     self.end_mark_counter -= 1
