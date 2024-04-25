@@ -22,16 +22,18 @@ class Compiler:
     self.file_path = realpath(file_name)
     self.script_location, self.file_name = self.file_path.rsplit(PATH_SEPARATOR, 1)
     self.stack = {}
+    self.functions = {}
     self.frames_count = 0
     self.mark_counter = 0
     self.end_mark_counter = 0
+    self.lambda_functions_counter = 0
     self.code = []
 
-  def compile(self, node, context: Context) -> Number:
+  def compile(self, node, context: Context):
     visitor = getattr(self, f"compile_{node.__class__.__name__}", self.no_compile_method)
     return visitor(node, context)
 
-  def no_compile_method(self, node, context: Context) -> None:
+  def no_compile_method(self, node, context: Context):
     raise Exception(f"Метод compile_{type(node).__name__} не объявлен")
 
   def new_code(self, code_lines, name_of_operation=None):
@@ -48,7 +50,7 @@ class Compiler:
       self.compile(element, context)
     self.new_code([], "Конец кода массива")
 
-  def compile_BinaryOperationNode(self, node: BinaryOperationNode, context: Context) -> Number:
+  def compile_BinaryOperationNode(self, node: BinaryOperationNode, context: Context):
     self.compile(node.left_node, context)
     self.compile(node.right_node, context)
 
@@ -119,7 +121,8 @@ class Compiler:
 
     if not node.keys:
       if not isinstance(node.value, ListNode):
-        self.compile(node.value, context)
+        if node.value:
+          self.compile(node.value, context)
 
         if is_new:
           self.stack |= {variable: self.frames_count + 1}
@@ -320,7 +323,7 @@ class Compiler:
 
     self.end_mark_counter -= 1
 
-  def compile_UnaryOperationNode(self, node: UnaryOperationNode, context: Context) -> Number:
+  def compile_UnaryOperationNode(self, node: UnaryOperationNode, context: Context):
     if node.operator.check_keyword(NOT):
       self.new_code([], "Нод односторонней операции `не` (`not`)")
       self.compile(BinaryOperationNode(node.node, Token(EQUAL), NumberNode(Token(INTEGER, 0))), compile)
@@ -346,3 +349,38 @@ class Compiler:
           f"{operator} rax",
           "push rax"
         ])
+
+  def compile_FunctionDefinitionNode(self, node: FunctionDefinitionNode, context: Context):
+    function_name = node.variable_name.value if node.variable_name else f"!функция{self.lambda_functions_counter}"
+    compiler = Compiler(function_name)
+
+    function = [
+      f"section \"{function_name}\" executable",
+      f"{function_name}:",
+      "push rbp",
+      "mov rbp, rsp",
+    ]
+
+    for index, argument_name in enumerate(node.argument_names):
+      compiler.new_code(["", f"mov rax, [rbp + {8 * (len(node.argument_names) - index + 1)}]", "push rax"])
+
+      compiler.compile(VariableAssignNode(argument_name.variable, [], None), context)
+
+    compiler.compile(node.body_node, context)
+
+    function += compiler.code + ["pop rax", f"add rsp, {8 * len(compiler.stack)}", "pop rbp", "ret"]
+
+    self.functions[function_name] = function
+
+  def compile_CallNode(self, node: CallNode, context: Context):
+    for argument in node.argument_nodes:
+      self.compile(argument, context)
+
+    self.new_code([
+      f"call {node.call_node.variable.value}"
+    ] + len(node.argument_nodes) * ["pop rbx"] + [
+      "push rax"
+    ], "Нод вызова функции")
+
+  def compile_ReturnNode(self, node: ReturnNode, context: Context):
+    self.compile(node.return_node, context)

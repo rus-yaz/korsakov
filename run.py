@@ -51,6 +51,7 @@ def run(module_name: str, code: str):
   if COMMANDLINE_ARGUMENTS["compile"]:
     compiler = Compiler(module_name)
     compiler.compile(ast.node, global_context)
+    formatter = lambda lines: list(map(lambda x: x if ":" in x or "section" in x else f"  {x}", lines))
 
     code = [
       "format ELF64",
@@ -58,13 +59,14 @@ def run(module_name: str, code: str):
       "public _start",
       "_start:",
       "  mov rbp, rsp",
-    ] + list(map(lambda x: x if ":" in x else f"  {x}", compiler.code)) + [
+    ] + formatter(compiler.code) + [
       "",
       "  ; Exit",
       "  mov rax, 60",
       "  pop rdi",
-      "  syscall"
-    ]
+      "  syscall",
+      ""
+    ] + formatter(line for function in compiler.functions.values() for line in function)
 
     file_name = module_name.rsplit(".", 1)[0]
     with open(file_name + ".asm", "w") as file:
@@ -73,6 +75,7 @@ def run(module_name: str, code: str):
     run_cmd(["fasm", file_name + ".asm"])
     if not COMMANDLINE_ARGUMENTS["asm"]:
       run_cmd(["rm", file_name + ".asm"])
+
     run_cmd(["ld", file_name + ".o", "-o", file_name])
     if not COMMANDLINE_ARGUMENTS["object"]:
       run_cmd(["rm", file_name + ".o"])
