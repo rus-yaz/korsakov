@@ -521,10 +521,10 @@ class ReturnNode(Node):
     return f"ReturnNode({self.return_node})"
 
 
-class ContinueNode(Node):
+class SkipNode(Node):
   """
     Описание:
-      Класс, описывающий нод абстрактного синтаксического дерева Continue
+      Класс, описывающий нод абстрактного синтаксического дерева Skip
 
     Аргументы:
       position_start (Position): начало нода
@@ -539,7 +539,7 @@ class ContinueNode(Node):
     self.set_position(position_start, position_end)
 
   def __repr__(self):
-    return f"ContinueNode"
+    return f"SkipNode"
 
 
 class BreakNode(Node):

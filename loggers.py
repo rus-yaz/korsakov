@@ -11,7 +11,7 @@ class RuntimeLogger:
       value (*Node): анализируемый нод абстрактного синтаксического дерева (по умолчанию - None)
       error (*Error): обнаруженная в ноде ошибка (по умолчанию - None)
       return_value (*Node): возвращаемое значение функции (по умолчанию - None)
-      continue (булево значение): обнаружение операции продолжения цикла (по умолчанию - False)
+      skip (булево значение): обнаружение операции пропуска итерации (по умолчанию - False)
       break (булево значение): обнаружение операции прерывания цикла (по умолчанию - False)
   """
 
@@ -29,7 +29,7 @@ class RuntimeLogger:
     self.value = None
     self.error = None
     self.return_value = None
-    self.continue_loop = False
+    self.skip_iteration = False
     self.break_loop = False
 
   def register(self, logger):
@@ -44,7 +44,7 @@ class RuntimeLogger:
     """
     self.error = logger.error
     self.return_value = logger.return_value
-    self.continue_loop = logger.continue_loop
+    self.skip_iteration = logger.skip_iteration
     self.break_loop = logger.break_loop
     return logger.value
 
@@ -76,9 +76,9 @@ class RuntimeLogger:
     self.return_value = value
     return self
 
-  def continue_signal(self):
+  def skip_signal(self):
     """
-      Подтвеждение сигнала продолжения цикла
+      Подтвеждение сигнала пропуска итерации
 
       Аргументы: -
 
@@ -86,7 +86,7 @@ class RuntimeLogger:
         RuntimeLogger: сам экземпляр
     """
     self.reset()
-    self.continue_loop = True
+    self.skip_iteration = True
     return self
 
   def break_signal(self):
@@ -125,7 +125,7 @@ class RuntimeLogger:
       Возвращаемое значение:
         *Error, *Node или булево значение: обнаруженная ошибка, возвращаемое значение функции или сигнал продолжения/прерывания цикла; если ничего не найдено, то будет возвращено False
     """
-    return self.error or self.return_value or self.continue_loop or self.break_loop
+    return self.error or self.return_value or self.skip_iteration or self.break_loop
 
 
 # TODO: Документация

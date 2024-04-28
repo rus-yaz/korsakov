@@ -384,13 +384,13 @@ class Interpreter:
       )
 
       value = logger.register(self.interpret(node.body_node, context))
-      if logger.should_return() and not logger.break_loop and not logger.continue_loop:
+      if logger.should_return() and not logger.break_loop and not logger.skip_iteration:
         return logger
 
       elements += [value]
       iterator += step_value.value
 
-      if logger.continue_loop: continue
+      if logger.skip_iteration: continue
       if logger.break_loop:    break
 
     if node.else_case and not elements:
@@ -419,12 +419,12 @@ class Interpreter:
       if not condition.is_true(): break
 
       value = [logger.register(self.interpret(node.body_node, context))]
-      if logger.should_return() and not logger.break_loop and not logger.continue_loop:
+      if logger.should_return() and not logger.break_loop and not logger.skip_iteration:
         return logger
 
       elements += [value]
 
-      if logger.continue_loop: continue
+      if logger.skip_iteration: continue
       if logger.break_loop: break
 
     if node.else_case and not elements:
@@ -530,8 +530,8 @@ class Interpreter:
 
     return logger.return_signal(value)
 
-  def interpret_ContinueNode(self, node: ContinueNode, context: Context):
-    return RuntimeLogger().continue_signal()
+  def interpret_SkipNode(self, node: SkipNode, context: Context):
+    return RuntimeLogger().skip_signal()
 
   def interpret_BreakNode(self, node: BreakNode, context: Context):
     return RuntimeLogger().break_signal()

@@ -25,5 +25,5 @@ syn match Delimiter /\(---\|===\|%%%\)/
 syn keyword Include include
 syn keyword Include включить
 
-syn keyword Keyword and or  not continue   break    return  delete
-syn keyword Keyword и   или не  продолжить прервать вернуть удалить
+syn keyword Keyword and or  not skip       break    return  delete
+syn keyword Keyword и   или не  пропустить прервать вернуть удалить

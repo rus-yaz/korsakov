@@ -94,7 +94,7 @@ TO    = ["до", "to"]
 AFTER = ["через", "after"]
 
 WHILE    = ["пока", "while"]
-CONTINUE = ["продолжить", "continue"]
+SKIP = ["пропустить", "skip"]
 BREAK    = ["прервать", "break"]
 
 CLASS    = ["класс", "class"]
@@ -109,7 +109,7 @@ KEYWORDS =\
   IF + ELSE + THEN +\
   CHECK + ON +\
   FOR + OF + FROM + TO + AFTER +\
-  WHILE + CONTINUE + BREAK +\
+  WHILE + SKIP + BREAK +\
   CLASS + FUNCTION + RETURN +\
   DELETE + INCLUDE
 

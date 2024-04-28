@@ -524,10 +524,10 @@ class Parser:
         if logger.error:
           return logger
 
-        if isinstance(body[-1], ContinueNode):
+        if isinstance(body[-1], SkipNode):
           return logger.failure(InvalidSyntaxError(
             body[-1].position_start, body[-1].position_end,
-            "`продолжить` может использоваться только в цикле"
+            "`пропустить` может использоваться только в цикле"
           ))
 
         logger.next(self)
@@ -1084,10 +1084,10 @@ class Parser:
 
       return logger.success(ReturnNode(expression, position_start, self.token.position_start.copy()))
 
-    elif self.token.check_keyword(CONTINUE):
+    elif self.token.check_keyword(SKIP):
       logger.next(self)
 
-      return logger.success(ContinueNode(position_start, self.token.position_start.copy()))
+      return logger.success(SkipNode(position_start, self.token.position_start.copy()))
 
     elif self.token.check_keyword(BREAK):
       logger.next(self)
@@ -1098,7 +1098,7 @@ class Parser:
     if logger.error:
       return logger.failure(InvalidSyntaxError(
         self.token.position_start, self.token.position_end,
-        "Ожидались `вернуть` (`return`), `продолжить` (`continue`), `прервать` (`break`), `если` (`if`), `для` (`for`), `пока` (`while`), `функция` (`function`), `не` (`not`), Целое число, Дробное число, Идентификатор, Математический оператор (`+`, `-`, `*`, `/`) или открывающая скобка (`(`, `%(`)"
+        "Ожидались `вернуть` (`return`), `пропустить` (`skip`), `прервать` (`break`), `если` (`if`), `для` (`for`), `пока` (`while`), `функция` (`function`), `не` (`not`), Целое число, Дробное число, Идентификатор, Математический оператор (`+`, `-`, `*`, `/`) или открывающая скобка (`(`, `%(`)"
       ))
 
     return logger.success(expression)
