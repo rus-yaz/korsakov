@@ -6,7 +6,7 @@ from parser import Parser
 from tokenizer import Tokenizer
 from tokens import global_context
 
-COMMANDLINE_ARGUMENTS = dict.fromkeys(["asm", "object", "compile", "debug", "nostd", "tokens", "ast", "context"], False)
+COMMANDLINE_ARGUMENTS = dict.fromkeys(["compile", "asm", "comments", "object", "debug", "nostd", "tokens", "ast", "context"], False)
 
 
 def run(module_name: str, code: str):
@@ -67,6 +67,13 @@ def run(module_name: str, code: str):
       "  syscall",
       ""
     ] + formatter(line for function in compiler.functions.values() for line in function)
+
+    if not COMMANDLINE_ARGUMENTS["comments"]:
+      lines = code.copy()
+      code = []
+      for line in lines:
+        if line.strip() and ";" not in line:
+          code += [line]
 
     file_name = module_name.rsplit(".", 1)[0]
     with open(file_name + ".asm", "w") as file:

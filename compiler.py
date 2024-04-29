@@ -21,7 +21,7 @@ class Compiler:
   def __init__(self, file_name):
     self.file_path = realpath(file_name)
     self.script_location, self.file_name = self.file_path.rsplit(PATH_SEPARATOR, 1)
-    self.stack = {}
+    self.variables = {}
     self.functions = {}
     self.frames_count = 0
     self.mark_counter = 0
@@ -110,7 +110,7 @@ class Compiler:
         "pop rax",
         "push rax",
         f"{operator} rax",
-        f"mov [rbp - {8 * self.stack[node.node.variable.value]}], rax"
+        f"mov [rbp - 8 * {self.variables[node.node.variable.value]}], rax"
       ])
 
       if node.operator.value:
@@ -127,25 +127,25 @@ class Compiler:
       key = node.keys[0]
       self.compile(IfNode([[
         BinaryOperationNode(key, Token(LESS), NumberNode(Token(INTEGER, 0))),
-        ListNode([BinaryOperationNode(key, Token(ADDITION), NumberNode(Token(INTEGER, len(self.stack[variable]))))]),
+        ListNode([BinaryOperationNode(key, Token(ADDITION), NumberNode(Token(INTEGER, len(self.variables[variable]))))]),
         False
       ]], [key, False]), context)
 
-    if not isinstance(self.stack[variable], list):
+    if not isinstance(self.variables[variable], list):
       self.new_code([
-        f"mov rax, [rbp - {8 * self.stack[variable]}]",
+        f"mov rax, [rbp - 8 * {self.variables[variable]}]",
         "push rax"
       ], "Нод обращения к переменной")
     else:
       self.new_code([
         "pop rax",
-        f"mov rax, [rbp - {8 * self.stack[variable][-1]} + rax*8]",
+        f"mov rax, [rbp - 8 * {self.variables[variable][-1]} + 8 * rax]",
         "push rax"
       ])
 
   def compile_VariableAssignNode(self, node: VariableAssignNode, context: Context):
     variable = node.variable.value
-    is_new = variable not in self.stack
+    is_new = variable not in self.variables
 
     if not node.keys:
       if not isinstance(node.value, ListNode):
@@ -153,28 +153,75 @@ class Compiler:
           self.compile(node.value, context)
 
         if is_new:
-          self.stack |= {variable: self.frames_count + 1}
+          self.variables |= {variable: self.frames_count + 1}
 
         self.new_code([
           "pop rax",
-          f"mov [rbp - {8 * self.stack[variable]}], rax",
+          f"mov [rbp - 8 * {self.variables[variable]}], rax",
         ], "Нод присвоения переменной")
 
-        self.frames_count += 1
-
         if is_new:
+          self.frames_count += 1
           self.new_code(["sub rsp, 8"])
       else:
+        # Заготовки для чтения массива в Рантайме
+        #
+        # elements = node.value.elements
+        #
+        # temp = [elements]
+        # flat_elements = []
+        # while temp:
+        #   item = temp.pop()
+        #   while item:
+        #     if not isinstance(item[0], ListNode):
+        #       flat_elements += [item[0]]
+        #       item = item[1:]
+        #     else:
+        #       temp += [item[1:]]
+        #       item = item[0].elements
+        #
+        # temp = [[elements, None]]
+        # indexes = []
+        # index = 0
+        # while temp:
+        #   current, parent = temp.pop()
+        #   if isinstance(current, list):
+        #     copy = []
+        #     for item in current[::-1]:
+        #       if isinstance(item, NumberNode):
+        #         item = item.token.value
+        #       elif isinstance(item, ListNode):
+        #         item = item.elements
+        #       else:
+        #         print("Неизвестный элемент: ", item)
+        #
+        #       temp += [[item, copy]]
+        #
+        #     if parent is None:
+        #       indexes += [copy]
+        #     else:
+        #       parent += [copy]
+        #   else:
+        #     current = index
+        #     index += 1
+        #
+        #     if parent is None:
+        #       indexes += [current]
+        #     else:
+        #       parent += [current]
+        #
+        # indexes = indexes[0]
+
         if is_new:
-          self.stack |= {variable: []}
+          self.variables |= {variable: []}
 
         for index, value in enumerate(node.value.elements[::-1]):
-          self.stack[variable] += [self.frames_count + index + 1]
+          self.variables[variable] += [self.frames_count + index + 1]
           self.compile(value, context)
 
           self.new_code([
             "pop rax",
-            f"mov [rbp - {8 * self.stack[variable][index]}], rax",
+            f"mov [rbp - 8 * {self.variables[variable][index]}], rax",
             "sub rsp, 8"
           ], "Нод присвоения переменной")
 
@@ -186,14 +233,14 @@ class Compiler:
         key = node.keys[0]
         self.compile(IfNode([[
           BinaryOperationNode(key, Token(LESS), NumberNode(Token(INTEGER, 0))),
-          ListNode([BinaryOperationNode(key, Token(ADDITION), NumberNode(Token(INTEGER, len(self.stack[variable]))))]),
+          ListNode([BinaryOperationNode(key, Token(ADDITION), NumberNode(Token(INTEGER, len(self.variables[variable]))))]),
           False
         ]], [key, False]), context)
 
       self.new_code([
-        "pop rbx",
         "pop rax",
-        f"mov [rbp - {8 * self.stack[node.variable.value][-1]} + rbx*8], rax",
+        "pop rbx",
+        f"mov [rbp - 8 * {self.variables[node.variable.value][-1]} + 8 * rax], rbx",
       ], "Нод присвоения переменной")
 
       self.frames_count += 1
@@ -379,13 +426,13 @@ class Compiler:
     ]
 
     for index, argument_name in enumerate(node.argument_names):
-      compiler.new_code(["", f"mov rax, [rbp + {8 * (len(node.argument_names) - index + 1)}]", "push rax"])
+      compiler.new_code(["", f"mov rax, [rbp + 8 * {len(node.argument_names)} - 8 * {index - 1}]", "push rax"])
 
       compiler.compile(VariableAssignNode(argument_name.variable, [], None), context)
 
     compiler.compile(node.body_node, context)
 
-    function += compiler.code + ["pop rax", f"add rsp, {8 * len(compiler.stack)}", "pop rbp", "ret"]
+    function += compiler.code + ["pop rax", f"add rsp, 8 * {len(compiler.variables)}", "pop rbp", "ret"]
 
     self.functions[function_name] = function
 
