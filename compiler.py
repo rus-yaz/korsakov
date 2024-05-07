@@ -19,16 +19,17 @@ BUILDIN_LIBRARIES = [
 
 class Compiler:
   def __init__(self, file_name):
-    self.file_path = realpath(file_name)
-    self.script_location, self.file_name = self.file_path.rsplit(PATH_SEPARATOR, 1)
+    self.code = []
     self.variables = {}
     self.functions = {}
-    self.frames_count = 0
+    self.if_counter = 0
+    self.loop_counter = 0
     self.mark_counter = 0
-    self.if_mark_counter = 0
-    self.loop_mark_counter = 0
-    self.lambda_functions_counter = 0
-    self.code = []
+    self.access_counter = 0
+    self.lambda_counter = 0
+    self.frames_counter = 1
+    self.file_path = realpath(file_name)
+    self.script_location, self.file_name = self.file_path.rsplit(PATH_SEPARATOR, 1)
 
   def compile(self, node, context: Context):
     visitor = getattr(self, f"compile_{node.__class__.__name__}", self.no_compile_method)
@@ -40,15 +41,25 @@ class Compiler:
   def new_code(self, code_lines, name_of_operation=None):
     self.code += (["", f"; {name_of_operation}"] if name_of_operation else []) + code_lines
 
+  def error(self, text):
+    self.new_code(["call !error"], text)
+
+  def replace_code(self, replaceable, substitute):
+    self.code = list(map(lambda x: x.replace(replaceable, substitute), self.code))
+
   def compile_NumberNode(self, node: NumberNode, context: Context):
     self.new_code([
-      f"push {node.token.value}"
+      f"push !INTEGER_IDENTIFIER",
+      f"mov rax, {node.token.value}",
+      f"push rax"
     ], "Нод числа")
 
   def compile_ListNode(self, node: ListNode, context: Context):
     self.new_code([], "Начало нода массива")
+
     for element in node.elements:
       self.compile(element, context)
+
     self.new_code([], "Конец кода массива")
 
   def compile_BinaryOperationNode(self, node: BinaryOperationNode, context: Context):
@@ -62,12 +73,12 @@ class Compiler:
     # elif node.operator.check_type(POWER):          operation = " rax, rbx"
     # elif node.operator.check_type(ROOT):           operation = " rax, rbx"
 
-    elif node.operator.check_type(EQUAL):          operation = f"je  mark{self.mark_counter}"
-    elif node.operator.check_type(NOT_EQUAL):      operation = f"jne mark{self.mark_counter}"
-    elif node.operator.check_type(LESS):           operation = f"jl  mark{self.mark_counter}"
-    elif node.operator.check_type(MORE):           operation = f"jg  mark{self.mark_counter}"
-    elif node.operator.check_type(LESS_OR_EQUAL):  operation = f"jle mark{self.mark_counter}"
-    elif node.operator.check_type(MORE_OR_EQUAL):  operation = f"jge mark{self.mark_counter}"
+    elif node.operator.check_type(EQUAL):          operation = f"je  mark{self.mark_counter + 1}"
+    elif node.operator.check_type(NOT_EQUAL):      operation = f"jne mark{self.mark_counter + 1}"
+    elif node.operator.check_type(LESS):           operation = f"jl  mark{self.mark_counter + 1}"
+    elif node.operator.check_type(MORE):           operation = f"jg  mark{self.mark_counter + 1}"
+    elif node.operator.check_type(LESS_OR_EQUAL):  operation = f"jle mark{self.mark_counter + 1}"
+    elif node.operator.check_type(MORE_OR_EQUAL):  operation = f"jge mark{self.mark_counter + 1}"
 
     elif node.operator.check_keyword(AND):         operation = "and rax, rbx"
     elif node.operator.check_keyword(OR):          operation = "or rax, rbx"
@@ -76,10 +87,24 @@ class Compiler:
 
     self.new_code([
       "pop rbx",
-      "pop rax"
-    ] + (["cmp rax, rbx"] if node.operator.check_type(*COMPARISONS) else []) + [
-      operation
-    ], "Нод бинарной операции")
+      "pop rdx",
+      "pop rax",
+      "pop rcx",
+      "cmp rcx, rdx",
+      f"je mark{self.mark_counter}"
+    ])
+
+    self.error("Несовместимые типы")
+
+    self.new_code([f"mark{self.mark_counter}:"])
+    self.mark_counter += 1
+
+    self.new_code(["push !INTEGER_IDENTIFIER"])
+
+    if node.operator.check_type(*COMPARISONS):
+      self.new_code(["cmp rax, rbx"])
+
+    self.new_code([operation])
 
     if node.operator.check_type(*COMPARISONS):
       self.new_code([
@@ -106,12 +131,24 @@ class Compiler:
       operator = ["dec", "inc"][node.operator.check_type(INCREMENT)]
 
       self.compile(node.node, context)
+
       self.new_code([
-        "pop rax",
+        "pop rax", # Значение
+        "pop rbx", # Идентификатор
+        f"cmp rbx, !INTEGER_IDENTIFIER",
+        f"je mark{self.mark_counter}"])
+      self.error("Операция может быть применена только к целому числу")
+      self.new_code([
+        f"mark{self.mark_counter}:",
+        "push rbx",
         "push rax",
         f"{operator} rax",
-        f"mov [rbp - 8 * {self.variables[node.node.variable.value]}], rax"
+        "push rbx",
+        "push rax",
       ])
+      self.mark_counter += 1
+
+      self.compile(VariableAssignNode(node.node.variable, [], None), context)
 
       if node.operator.value:
         self.new_code([
@@ -121,133 +158,62 @@ class Compiler:
         ])
 
   def compile_VariableAccessNode(self, node: VariableAccessNode, context: Context):
-    variable = node.variable.value
+    variable = node.variable.value if node.variable else None
 
-    if node.keys:
-      key = node.keys[0]
-      self.compile(IfNode([[
-        BinaryOperationNode(key, Token(LESS), NumberNode(Token(INTEGER, 0))),
-        ListNode([BinaryOperationNode(key, Token(ADDITION), NumberNode(Token(INTEGER, len(self.variables[variable]))))]),
-        False
-      ]], [key, False]), context)
+    self.access_counter += 1
 
-    if not isinstance(self.variables[variable], list):
-      self.new_code([
-        f"mov rax, [rbp - 8 * {self.variables[variable]}]",
-        "push rax"
-      ], "Нод обращения к переменной")
-    else:
-      self.new_code([
-        "pop rax",
-        f"mov rax, [rbp - 8 * {self.variables[variable][-1]} + 8 * rax]",
-        "push rax"
-      ])
+    self.new_code([
+      f"lea rcx, [rbp - 8 * {self.variables[variable]}]" if variable != None else "pop rcx"
+    ], "Получение идентификатора переменной")
+
+    self.new_code([
+      "mov rax, [rcx]",
+      "mov rbx, [rcx - 8]",
+      "cmp rax, !INTEGER_IDENTIFIER",
+      f"jne mark{self.mark_counter}",
+      "push rax",
+      "push rbx",
+      f"jmp access_mark{self.access_counter}",
+      f"mark{self.mark_counter}:"
+    ], "Если целое число")
+    self.mark_counter += 1
+
+    self.error("Неизвестный идентификатор типа")
+
+    self.new_code([f"access_mark{self.access_counter}:"])
+    self.replace_code(f"access_mark{self.access_counter}", f"mark{self.mark_counter}")
+
+    self.mark_counter += 1
+    self.access_counter -= 1
 
   def compile_VariableAssignNode(self, node: VariableAssignNode, context: Context):
     variable = node.variable.value
     is_new = variable not in self.variables
 
-    if not node.keys:
-      if not isinstance(node.value, ListNode):
-        if node.value:
-          self.compile(node.value, context)
-
-        if is_new:
-          self.variables |= {variable: self.frames_count + 1}
-
-        self.new_code([
-          "pop rax",
-          f"mov [rbp - 8 * {self.variables[variable]}], rax",
-        ], "Нод присвоения переменной")
-
-        if is_new:
-          self.frames_count += 1
-          self.new_code(["sub rsp, 8"])
-      else:
-        # Заготовки для чтения массива в Рантайме
-        #
-        # elements = node.value.elements
-        #
-        # temp = [elements]
-        # flat_elements = []
-        # while temp:
-        #   item = temp.pop()
-        #   while item:
-        #     if not isinstance(item[0], ListNode):
-        #       flat_elements += [item[0]]
-        #       item = item[1:]
-        #     else:
-        #       temp += [item[1:]]
-        #       item = item[0].elements
-        #
-        # temp = [[elements, None]]
-        # indexes = []
-        # index = 0
-        # while temp:
-        #   current, parent = temp.pop()
-        #   if isinstance(current, list):
-        #     copy = []
-        #     for item in current[::-1]:
-        #       if isinstance(item, NumberNode):
-        #         item = item.token.value
-        #       elif isinstance(item, ListNode):
-        #         item = item.elements
-        #       else:
-        #         print("Неизвестный элемент: ", item)
-        #
-        #       temp += [[item, copy]]
-        #
-        #     if parent is None:
-        #       indexes += [copy]
-        #     else:
-        #       parent += [copy]
-        #   else:
-        #     current = index
-        #     index += 1
-        #
-        #     if parent is None:
-        #       indexes += [current]
-        #     else:
-        #       parent += [current]
-        #
-        # indexes = indexes[0]
-
-        if is_new:
-          self.variables |= {variable: []}
-
-        for index, value in enumerate(node.value.elements[::-1]):
-          self.variables[variable] += [self.frames_count + index + 1]
-          self.compile(value, context)
-
-          self.new_code([
-            "pop rax",
-            f"mov [rbp - 8 * {self.variables[variable][index]}], rax",
-            "sub rsp, 8"
-          ], "Нод присвоения переменной")
-
-        self.frames_count += len(node.value.elements)
-    else:
+    if node.value:
       self.compile(node.value, context)
 
-      if node.keys:
-        key = node.keys[0]
-        self.compile(IfNode([[
-          BinaryOperationNode(key, Token(LESS), NumberNode(Token(INTEGER, 0))),
-          ListNode([BinaryOperationNode(key, Token(ADDITION), NumberNode(Token(INTEGER, len(self.variables[variable]))))]),
-          False
-        ]], [key, False]), context)
+    if is_new:
+      self.variables |= {variable: self.frames_counter}
 
-      self.new_code([
-        "pop rax",
-        "pop rbx",
-        f"mov [rbp - 8 * {self.variables[node.variable.value][-1]} + 8 * rax], rbx",
-      ], "Нод присвоения переменной")
+    self.new_code([
+      "pop rbx", # Значение
+      "pop rax", # Тип
+    ])
 
-      self.frames_count += 1
+    self.new_code([
+      f"lea rcx, [rbp - 8 * {self.variables[variable]}]",
+      "mov [rcx], rax",
+      "mov [rcx - 8], rbx",
+    ], "Нод присвоения переменной")
+
+    if is_new:
+      self.frames_counter += 2
+      self.new_code(["sub rsp, 8 * 2"])
 
   def compile_IfNode(self, node: IfNode, context: Context):
     self.new_code([], "Начало конструкции \"если-то-иначе\"")
-    self.if_mark_counter += 1
+    self.if_counter += 1
 
     for condition, expression, return_null in node.cases:
       self.new_code([f"mark{self.mark_counter}:"], "Ветвь \"если\"")
@@ -257,6 +223,7 @@ class Compiler:
 
       self.new_code([
         "pop rax",
+        "pop rbx",
         "cmp rax, 1",
         f"jne mark{self.mark_counter + 1}"
       ], "Переход к следующей ветви \"если\" или к ветви \"иначе\"")
@@ -264,7 +231,7 @@ class Compiler:
       self.new_code([f"mark{self.mark_counter}:"], "Тело ветви \"если\"")
       self.compile(expression, context)
 
-      self.new_code([f"jmp if_end_mark{self.if_mark_counter}"], "Завершение конструкции \"если-то-иначе\"")
+      self.new_code([f"jmp if_end_mark{self.if_counter}"], "Завершение конструкции \"если-то-иначе\"")
       self.mark_counter += 1
 
     if node.else_case:
@@ -274,32 +241,34 @@ class Compiler:
       self.mark_counter += 1
       self.compile(expression, context)
 
-    self.code = list(map(lambda x: x.replace(
-      f"if_end_mark{self.if_mark_counter}",
-      f"mark{self.mark_counter}"
-    ), self.code))
+    self.replace_code(f"if_end_mark{self.if_counter}", f"mark{self.mark_counter}")
+
     self.new_code([f"mark{self.mark_counter}:"], "Завершение конструкции \"если-то-иначе\"")
 
     self.mark_counter += 1
-    self.if_mark_counter -= 1
+    self.if_counter -= 1
 
   def compile_ForNode(self, node: ForNode, context: Context):
     self.new_code([], "Начало конструкции \"для-иначе\"")
-    self.loop_mark_counter += 1
+    self.loop_counter += 1
 
     self.compile(VariableAssignNode(node.variable_name, [], node.start_node), context)
 
     loop_start_mark = self.mark_counter
     self.mark_counter += 1
 
-    self.new_code([f"loop_start_mark{self.loop_mark_counter}:"], "Ветвь \"для\"")
+    self.new_code([f"loop_start_mark{self.loop_counter}:"], "Ветвь \"для\"")
 
-    self.compile(BinaryOperationNode(VariableAccessNode(node.variable_name, []), Token(LESS), node.end_node), context)
+    self.compile(
+      BinaryOperationNode(VariableAccessNode(node.variable_name, []), Token(LESS), node.end_node),
+      context
+    )
 
     self.new_code([
       "pop rax",
+      "pop rbx",
       "cmp rax, 1",
-      f"jne loop_end_mark{self.loop_mark_counter}"
+      f"jne loop_end_mark{self.loop_counter}"
     ], "Переход в конец цикла при невыполнении условия")
 
     self.new_code([f"mark{self.mark_counter}:"], "Тело ветви \"для\"")
@@ -311,31 +280,24 @@ class Compiler:
     if node.step_node:
       step = node.step_node
 
-    self.new_code([f"loop_iteration_mark{self.loop_mark_counter}:"], "Инкрементация итератора")
+    self.new_code([f"loop_iteration_mark{self.loop_counter}:"], "Инкрементация итератора")
 
-    self.compile(VariableAssignNode(node.variable_name, [], BinaryOperationNode(VariableAccessNode(node.variable_name, []), Token(ADDITION), step)), context)
+    self.compile(VariableAssignNode(
+      node.variable_name, [],
+      BinaryOperationNode(VariableAccessNode(node.variable_name, []), Token(ADDITION), step)
+    ), context)
 
-    self.code = list(map(lambda x: x.replace(
-      f"loop_iteration_mark{self.loop_mark_counter}",
-      f"mark{self.mark_counter}"
-    ), self.code))
+    self.replace_code(f"loop_iteration_mark{self.loop_counter}", f"mark{self.mark_counter}")
     self.mark_counter += 1
 
-    self.new_code([f"jmp loop_start_mark{self.loop_mark_counter}"], "Возвращение к началу цикла")
+    self.new_code([f"jmp loop_start_mark{self.loop_counter}"], "Возвращение к началу цикла")
+    self.new_code([f"loop_end_mark{self.loop_counter}:"], "Конец цикла \"для\"")
 
-    self.new_code([f"loop_end_mark{self.loop_mark_counter}:"], "Конец цикла \"для\"")
-
-    self.code = list(map(lambda x: x.replace(
-      f"loop_start_mark{self.loop_mark_counter}",
-      f"mark{loop_start_mark}"
-    ), self.code))
-    self.code = list(map(lambda x: x.replace(
-      f"loop_end_mark{self.loop_mark_counter}",
-      f"mark{self.mark_counter}"
-    ), self.code))
+    self.replace_code(f"loop_start_mark{self.loop_counter}", f"mark{loop_start_mark}")
+    self.replace_code(f"loop_end_mark{self.loop_counter}", f"mark{self.mark_counter}")
 
     self.mark_counter += 1
-    self.loop_mark_counter -= 1
+    self.loop_counter -= 1
 
     if node.else_case:
       expression, return_null = node.else_case
@@ -344,6 +306,7 @@ class Compiler:
 
       self.new_code([
         "pop rax",
+        "pop rbx",
         "cmp rax, 1",
         f"je mark{self.mark_counter}",
         f"jmp mark{self.mark_counter + 1}",
@@ -357,7 +320,7 @@ class Compiler:
 
   def compile_WhileNode(self, node: WhileNode, context: Context):
     self.new_code([], "Начало конструкции \"пока-иначе\"")
-    self.loop_mark_counter += 1
+    self.loop_counter += 1
 
     if node.else_case:
       self.new_code(["push 0"], "Счётчик итераций")
@@ -370,8 +333,9 @@ class Compiler:
 
     self.new_code([
       "pop rax",
+      "pop rbx",
       "cmp rax, 1",
-      f"jne loop_end_mark{self.loop_mark_counter}"
+      f"jne loop_end_mark{self.loop_counter}"
     ], "Переход в конец цикла при невыполнении условия")
 
     self.new_code([f"mark{self.mark_counter}:"], "Тело ветви \"пока\"")
@@ -388,15 +352,12 @@ class Compiler:
     self.new_code([f"jmp mark{loop_start_mark}"], "Возвращение к началу цикла")
     self.mark_counter += 1
 
-    self.new_code([f"loop_end_mark{self.loop_mark_counter}:"], "Конец цикла \"пока\"")
+    self.new_code([f"loop_end_mark{self.loop_counter}:"], "Конец цикла \"пока\"")
 
-    self.code = list(map(lambda x: x.replace(
-      f"loop_end_mark{self.loop_mark_counter}",
-      f"mark{self.mark_counter}"
-    ), self.code))
+    self.replace_code(f"loop_end_mark{self.loop_counter}", f"mark{self.mark_counter}")
     self.mark_counter += 1
 
-    self.loop_mark_counter -= 1
+    self.loop_counter -= 1
 
     if node.else_case:
       expression, return_null = node.else_case
@@ -415,42 +376,53 @@ class Compiler:
       self.mark_counter += 2
 
   def compile_FunctionDefinitionNode(self, node: FunctionDefinitionNode, context: Context):
-    function_name = node.variable_name.value if node.variable_name else f"!функция{self.lambda_functions_counter}"
+    function_name = node.variable_name.value if node.variable_name else f"!функция{self.lambda_counter}"
     compiler = Compiler(function_name)
 
     function = [
       f"section \"{function_name}\" executable",
       f"{function_name}:",
-      "push rbp",
-      "mov rbp, rsp",
+      "enter 0, 0",
     ]
 
     for index, argument_name in enumerate(node.argument_names):
-      compiler.new_code(["", f"mov rax, [rbp + 8 * {len(node.argument_names)} - 8 * {index - 1}]", "push rax"])
-
+      compiler.new_code([
+        f"mov rax, [rbp + 8 * (2 + {len(node.argument_names)} - {index} - 1)]",
+        "push rax"
+      ])
+      compiler.compile(VariableAccessNode(None, []), context)
       compiler.compile(VariableAssignNode(argument_name.variable, [], None), context)
 
     compiler.compile(node.body_node, context)
+    compiler.replace_code("mark", ".mark")
 
-    function += compiler.code + ["pop rax", f"add rsp, 8 * {len(compiler.variables)}", "pop rbp", "ret"]
+    function += compiler.code + ["lea rax, [rsp + 8]", "leave", "ret"]
 
     self.functions[function_name] = function
 
   def compile_CallNode(self, node: CallNode, context: Context):
-    for argument in node.argument_nodes:
+    for index, argument in enumerate(node.argument_nodes):
       self.compile(argument, context)
+      self.compile(VariableAssignNode(Token(STRING, f"!{index}"), [], None), context)
+
+    for index in range(len(node.argument_nodes)):
+      self.new_code([
+        f"lea rax, [rbp - 8 * {self.variables[f"!{index}"]}]",
+        "push rax"
+      ])
 
     self.new_code([
       f"call {node.call_node.variable.value}"
-    ] + len(node.argument_nodes) * ["pop rbx"] + [
+    ] + ["pop rbx"] * len(node.argument_nodes) + [
       "push rax"
     ], "Нод вызова функции")
+    self.compile(VariableAccessNode(None, []), context)
 
   def compile_ReturnNode(self, node: ReturnNode, context: Context):
     self.compile(node.return_node, context)
 
   def compile_SkipNode(self, node: SkipNode, context: Context):
-    self.new_code([f"jmp loop_iteration_mark{self.loop_mark_counter}"], "Нод пропуска итерации")
+    self.new_code([f"jmp loop_iteration_mark{self.loop_counter}"], "Нод пропуска итерации")
 
   def compile_BreakNode(self, node: BreakNode, context: Context):
-    self.new_code([f"jmp loop_end_mark{self.loop_mark_counter}"], "Нод прерывания функции")
+    self.new_code([f"jmp loop_end_mark{self.loop_counter}"], "Нод прерывания функции")

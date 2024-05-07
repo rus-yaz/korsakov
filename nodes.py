@@ -197,11 +197,19 @@ class VariableAccessNode(Node):
     self.variable = variable
     self.keys     = keys
 
-    position_end = self.variable.position_end
-    if self.keys:
-      position_end = self.keys[-1].position_end
+    if self.variable:
+      position_start = self.variable.value
+    else:
+      position_start = Position(0, 0, 0, 0, "")
 
-    self.set_position(self.variable.position_start, position_end)
+    if self.variable:
+      position_end = self.variable.position_end
+    elif self.keys:
+      position_end = self.keys[-1].position_end
+    else:
+      position_end = Position(0, 0, 0, 0, "")
+
+    self.set_position(position_start, position_end)
 
   def __repr__(self):
     return f"VariableAccessNode({self.variable.value}; {self.keys})"

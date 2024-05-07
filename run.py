@@ -51,6 +51,7 @@ def run(module_name: str, code: str):
   if COMMANDLINE_ARGUMENTS["compile"]:
     compiler = Compiler(module_name)
     compiler.compile(ast.node, global_context)
+    compiler.replace_code("mark", ".mark")
     formatter = lambda lines: list(map(lambda x: x if ":" in x or "section" in x else f"  {x}", lines))
 
     code = [
@@ -66,7 +67,25 @@ def run(module_name: str, code: str):
       "  pop rdi",
       "  syscall",
       ""
-    ] + formatter(line for function in compiler.functions.values() for line in function)
+    ] + formatter(line for function in compiler.functions.values() for line in function) + [
+      "; Error function",
+      "!error:",
+      "  mov rax, 1",
+      "  mov rdi, 1",
+      "  mov rsi, !error_message",
+      "  mov rdx, !error_message_length",
+      "  syscall",
+      "  mov rax, 60",
+      "  mov rdi, 200",
+      "  syscall",
+      ""
+    ] + [
+      "section \"_data\" writable",
+      "  !INTEGER_IDENTIFIER = 0",
+      "  !LIST_IDENTIFIER = 1",
+      "  !error_message db \"Error\", 10",
+      "  !error_message_length = 6"
+    ]
 
     if not COMMANDLINE_ARGUMENTS["comments"]:
       lines = code.copy()
