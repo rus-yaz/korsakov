@@ -104,10 +104,25 @@ class Tokenizer:
             token = END_OF_CONSTRUCTION
         case "*":
           token = MULTIPLICATION
-          if self.tokens and previous_token.check_type(MULTIPLICATION):
-            token = POWER
-            position_start = previous_token.position_start
-            self.tokens.pop()
+          if self.tokens:
+            if previous_token.check_type(MULTIPLICATION):
+              token = POWER
+              position_start = previous_token.position_start
+              self.tokens.pop()
+            if previous_token.check_type(EXCLAMATION_MARK):
+              self.tokens.pop()
+
+              while self.character:
+                if self.character == "*":
+                  self.next()
+                  if self.character == "!":
+                    break
+
+                  continue
+
+                self.next()
+
+              token = NEWLINE if self.tokens and not self.tokens[-1].check_type(NEWLINE) else None
         case "/":
           token = DIVISION
           if self.tokens:
