@@ -187,15 +187,12 @@ class Interpreter:
 
         if value == None:
           if is_dictionary:
-            return logger.failure(InvalidKeyError(key.position_start, key.position_end))
+            return logger.failure(InvalidKeyError(key.position_start, key.position_end, key))
 
           return logger.failure(IndexOutOfRangeError(
             key.position_start, key.position_end,
             f"Длина массива - {len(list_value.value)}, индекс - {key}"
           ))
-
-    if value == None:
-      return logger.failure(BadIdentifierError(node.position_start, node.position_end, f"`{variable.value}`"))
 
     return logger.success(value.set_context(context).set_position(node.position_start, node.position_end))
 
