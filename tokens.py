@@ -115,8 +115,7 @@ KEYWORDS =\
 
 
 def set_default_variables():
-  from classes import Number, String, Function, functions
-  from nodes import VariableAccessNode, VariableAssignNode
+  from classes import Function, Number, functions
 
   global_context.set_many_variables([
     [["null", "нуль"], Number(None, global_context)],

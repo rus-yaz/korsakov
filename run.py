@@ -1,8 +1,8 @@
+from parser import Parser
 from subprocess import run as run_cmd
 
-from interpreter import Interpreter
 from compiler import Compiler
-from parser import Parser
+from interpreter import Interpreter
 from tokenizer import Tokenizer
 from tokens import global_context
 
@@ -51,7 +51,7 @@ def run(module_name: str, code: str):
   if COMMANDLINE_ARGUMENTS["compile"]:
     compiler = Compiler(module_name)
 
-    compiler.compile_sequence(ast.node, global_context)
+    compiler.compile_program(ast.node)
 
     compiler.replace_code("mark", ".mark")
     formatter = lambda lines: list(map(lambda x: x if ":" in x or "section" in x else f"  {x}", lines))
