@@ -104,12 +104,30 @@ class Compiler:
     for destination, source in operands:
       self.lea(destination, source)
 
+  def jump(self, mark_index=None, mark_name="mark"):
+    if mark_index is None:
+      mark_index = self.counters["mark"]
+
+    self.operation("jmp", f"{mark_name}{mark_index}")
+
   def mark(self, mark_index=None, mark_name="mark"):
     if mark_index is None:
       mark_index = self.counters["mark"]
       self.counters["mark"] += 1
 
-    self.operation(f"{mark_name}{mark_index}:")
+    self.operation(f"\n{mark_name}{mark_index}:")
+
+  def compare(self, first, second, condition, mark_index=None, mark_name="mark"):
+    if mark_index is None:
+      mark_index = self.counters["mark"]
+
+    self.operations(
+      ["cmp", first, second],
+      [f"j{condition}", f"{mark_name}{mark_index}"]
+    )
+
+  def replace_code(self, replaceable, substitute):
+    self.code = list(map(lambda x: x.replace(replaceable, substitute), self.code))
 
   def enter(self):
     self.backups += [[self.variables.copy(), self.counters["frame"]]]
@@ -128,21 +146,9 @@ class Compiler:
 
   def error(self, text):
     self.counters["error"] += 1
+    self.comment(text)
     self.mov("rbx", self.counters["error"])
     self.operation("call", "!error")
-    self.comment(text)
-
-  def compare(self, first, second, condition, mark_index=None, mark_name="mark"):
-    if mark_index is None:
-      mark_index = self.counters["mark"]
-
-    self.operations(
-      ["cmp", first, second],
-      [f"j{condition}", f"{mark_name}{mark_index}"]
-    )
-
-  def replace_code(self, replaceable, substitute):
-    self.code = list(map(lambda x: x.replace(replaceable, substitute), self.code))
 
   def compile_NumberNode(self, node: NumberNode):
     self.comment("Нод числа")
@@ -150,14 +156,36 @@ class Compiler:
     self.pushs("!INTEGER_IDENTIFIER", "rax")
 
   def compile_ListNode(self, node: ListNode):
-    self.comment("Начало нода массива")
+    self.comment("Начало нода списка")
+
+    self.comment("Начало элементов списка")
 
     self.compile_sequence(node.elements[::-1])
 
-    self.mov("rax", f"{len(node.elements)} * 2")
+    self.comment("Конец элементов списка")
+
+    self.comment("Количество элементов")
+    self.mov("rax", f"{len(node.elements)}")
+    self.pushs("!INTEGER_IDENTIFIER", "rax")
+
+    elements_count = 0
+    stack = [node.elements]
+    while stack:
+      current = stack.pop()
+      for element in current:
+        if isinstance(element, ListNode):
+          stack += [element.elements]
+          elements_count += 1
+
+        elements_count += 1
+
+    elements_count += 2
+
+    self.comment("Полная длина")
+    self.mov("rax", f"{elements_count}")
     self.pushs("!LIST_IDENTIFIER", "rax")
 
-    self.comment("Конец кода массива")
+    self.comment("Конец нода списка")
 
   def compile_BinaryOperationNode(self, node: BinaryOperationNode):
     self.compile(node.left_node)
@@ -197,19 +225,20 @@ class Compiler:
       return
 
     self.pops("rbx", "rdx", "rax", "rcx")
+
     self.compare("rcx", "rdx", "e")
-
     self.error("Несовместимые типы")
-
     self.mark()
 
     self.push("!INTEGER_IDENTIFIER")
 
     if operands is None:
       self.compare("rax", "rbx", operator)
+
       self.push(0)
-      self.operation("jmp", f"mark{self.counters['mark'] + 1}")
+      self.jump(self.counters["mark"] + 1)
       self.mark()
+
       self.push(1)
       self.mark()
     else:
@@ -233,11 +262,10 @@ class Compiler:
       self.compile(node.node)
 
       self.pops("rax", "rbx")
+
       self.compare("rbx", "!INTEGER_IDENTIFIER", "e")
       self.error("Операция может быть применена только к целому числу")
-
-      self.mark(self.counters["mark"])
-      self.counters["mark"] += 1
+      self.mark()
 
       self.pushs("rbx", "rax")
       self.operation(operator, "rax")
@@ -260,10 +288,10 @@ class Compiler:
       self.error(f"Переменная {variable} не объявлена")
       return
 
-    if variable is not None:
-      self.lea("rcx", f"[rbp - 8 * {self.variables[variable]}]")
-    else:
+    if variable is None:
       self.pop("rcx")
+    else:
+      self.lea("rcx", f"[rbp - 8 * {self.variables[variable]}]")
 
     self.comment("Получение идентификатора переменной")
 
@@ -273,7 +301,7 @@ class Compiler:
     )
     self.compare("rax", "!INTEGER_IDENTIFIER", "ne")
     self.pushs("rax", "rbx")
-    self.operation("jmp", f"access_mark{self.counters['access']}")
+    self.jump(self.counters["access"], "access_mark")
 
     self.mark()
     self.compare("rax", "!LIST_IDENTIFIER", "ne", self.counters["access"], "list_mark")
@@ -281,58 +309,59 @@ class Compiler:
     if node.keys:
       keys = node.keys.copy()
 
-      self.lea("rdi", f"[rbp - 8 * {self.variables[variable]}]")
+      self.mov("rdi", "rcx")
 
       while keys:
-        self.compare("rax", "!LIST_IDENTIFIER", "e", self.counters["mark"] + 1)
+        self.compare("rax", "!LIST_IDENTIFIER", "e")
         self.error("Индекс можно взять только у типа Список")
-        self.counters["mark"] += 1
+        self.mark()
 
-        self.mark(self.counters['mark'])
+        self.pushs("rax", "rbx", "rdi")
 
         key, *keys = keys
         self.compile(key)
+        self.pops("rdx", "rcx")
 
-        self.pop("rdx")
-        self.operation("imul", "rdx", 2)
-        self.pop("rcx")
+        self.pops("rdi", "rbx", "rax")
 
-        self.compare("rcx", "!INTEGER_IDENTIFIER", "e", self.counters['mark'] + 1)
+        self.compare("rcx", "!INTEGER_IDENTIFIER", "e")
         self.error("Индекс должен иметь тип Число")
-        self.counters["mark"] += 1
-
         self.mark()
+
+        self.operation("add", "rdi", 8 * 2)
+        self.mov("rsi", "[rdi - 8]")
+        self.operation("add", "rdi", 8 * 2)
+
         self.compare("rdx", 0, "ge")
-        self.operation("add", "rdx", "rbx")
+        self.operation("add", "rdx", "rsi")
 
-        self.mark()
         self.compare("rdx", 0, "ge")
         self.error("Индекс выходит за пределы")
-
         self.mark()
-        self.compare("rdx", "rbx", "l")
+
+        self.compare("rdx", "rsi", "l")
         self.error("Индекс выходит за пределы")
-
         self.mark()
+
         self.operations(
-          ["add", "rdx", 1],
-          ["imul", "rdx", 8],
+          ["imul", "rdx", 8 * 2],
           ["add", "rdi", "rdx"]
         )
+
         self.movs(
           ["rax", "[rdi]"],
-          ["rbx", "[rdi + 8]"]
+          ["rbx", "[rdi - 8]"]
         )
 
     self.replace_code(f"list_mark{self.counters["access"]}", f"mark{self.counters["mark"]}")
 
-    self.pushs("rbx", "rax")
-    self.operation("jmp", f"access_mark{self.counters['access']}")
+    self.pushs("rax", "rbx")
+    self.jump(self.counters["access"], "access_mark")
     self.mark()
 
     self.error("Неизвестный идентификатор типа")
+    self.mark(self.counters["access"], "access_mark")
 
-    self.mark(self.counters['access'], "access_mark")
     self.replace_code(f"access_mark{self.counters['access']}", f"mark{self.counters['mark']}")
 
     self.counters["mark"] += 1
@@ -346,62 +375,72 @@ class Compiler:
     self.comment("Нод присвоения переменной")
 
     if node.value:
+      self.comment("Исполнение присваиваемого")
       self.compile(node.value)
 
     if is_new:
-      self.variables |= {variable: self.counters["frame"]}
+      self.variables[variable] = self.counters["frame"]
 
     self.pops("rbx", "rax")
+
+    self.comment("Проверка типа присваиваемого")
+
     self.compare("rax", "!INTEGER_IDENTIFIER", "ne")
+
     self.lea("rdx", f"[rbp - 8 * {self.variables[variable]}]")
     self.movs(
       ["[rdx]", "rax"],
       ["[rdx - 8]", "rbx"]
     )
-    self.operation("jmp", f"assign_mark{self.counters['assign']}")
-    self.mark()
-    self.compare("rax", "!LIST_IDENTIFIER", "ne", self.counters["mark"] + 2)
+    self.jump(self.counters["assign"], "assign_mark")
 
+    self.mark()
+
+    self.compare("rax", "!LIST_IDENTIFIER", "ne", self.counters["mark"] + 2)
+    self.pushs("rax", "rbx")
+    self.operation("imul", "rbx", 2)
     self.leas(
       ["rcx", f"[rbp - 8 * {self.variables[variable]}]"],
       ["rdx", "[rsp + 8 * rbx - 8 * 1]"]
     )
     self.mov("rdi", 0)
     self.mark()
-    self.compare("rbx", "rdi", "e")
 
+    self.compare("rbx", "rdi", "e")
     self.movs(
       ["rax", "[rdx]"],
-      ["[rcx]", "rax"]
+      ["[rcx]", "rax"],
     )
     self.operations(
       ["sub", "rdx", 8],
       ["sub", "rcx", 8],
       ["inc", "rdi"],
-      ["jmp", f"mark{self.counters["mark"] - 1}"]
     )
-
+    self.jump(self.counters["mark"] - 1)
     self.mark()
-    self.movs(
-      ["rax", "!LIST_IDENTIFIER"],
-      ["[rcx]", "rax"],
-      ["[rcx - 8]", "rbx"]
-    )
-    self.operation("jmp", f"assign_mark{self.counters['assign']}")
 
-    self.mark(self.counters["assign"], "assign_mark")
     self.replace_code(f"assign_mark{self.counters["assign"]}", f"mark{self.counters["mark"]}")
-    self.counters["mark"] += 1
+    self.mark()
+
+    if isinstance(node.value, ListNode):
+      elements_count = 0
+      stack = [node.value.elements]
+      while stack:
+        current = stack.pop()
+        for element in current:
+          if isinstance(element, ListNode):
+            stack += [element.elements]
+            elements_count += 1
+
+          elements_count += 1
+
+      self.counters["frame"] += (elements_count + 1) * 2
+      self.variables[variable] = self.counters["frame"]
+      self.operation("add", "rsp", 8 * 2)
 
     if is_new:
       self.counters["frame"] += 2
-      self.operation("sub", "rsp", "8 * 2")
-
-    if isinstance(node.value, ListNode):
-      self.counters["frame"] += len(node.value.elements) * 2
-      self.variables[variable] = self.counters["frame"] - 2
-
-    self.mark()
+      self.operation("sub", "rsp", 8 * 2)
 
     self.counters["assign"] -= 1
 
@@ -428,8 +467,7 @@ class Compiler:
         self.compile(case_body)
 
       self.comment("Завершение конструкции \"если-то-иначе\"")
-      self.operation("jmp", f"if_end_mark{self.counters['if']}")
-      self.counters["mark"] += 1
+      self.jump(self.counters["if"], "if_end_mark")
 
       self.replace_code(f"if_else_mark{self.counters["if"]}", f"mark{self.counters["mark"]}")
 
@@ -496,7 +534,7 @@ class Compiler:
     self.counters["mark"] += 1
 
     self.comment("Возвращение к началу цикла")
-    self.operation("jmp", f"loop_start_mark{self.counters['loop']}")
+    self.jump(self.counters["loop"], "loop_start_mark")
 
     self.comment("Конец цикла \"для\"")
     self.mark(self.counters["loop"], "loop_end_mark")
@@ -515,7 +553,7 @@ class Compiler:
       self.comment("Обработка ветви \"иначе\"")
       self.pops("rax", "rbx")
       self.compare("rax", 1, "e")
-      self.operation("jmp", f"mark{self.counters['mark'] + 1}")
+      self.jump(self.counters["mark"] + 1)
       self.mark()
 
       self.compile(expression)
@@ -558,7 +596,7 @@ class Compiler:
       self.push("rax")
 
     self.comment("Возвращение к началу цикла")
-    self.operation("jmp", f"mark{loop_start_mark}")
+    self.jump(loop_start_mark)
     self.counters["mark"] += 1
 
     self.comment("Конец цикла \"пока\"")
@@ -575,7 +613,7 @@ class Compiler:
       self.comment("Переход к ветви \"иначе\", если цикл не было ни одной итерации")
       self.pop("rax")
       self.compare("rax", 0, "e")
-      self.operation("jmp", f"mark{self.counters['mark'] + 1}")
+      self.jump(self.counters["mark"] + 1)
       self.mark()
 
       self.compile(expression)
@@ -632,8 +670,8 @@ class Compiler:
 
   def compile_SkipNode(self, _):
     self.comment("Нод пропуска итерации")
-    self.operation("jmp", f"loop_iteration_mark{self.counters["loop"]}")
+    self.jump(self.counters["loop"], "loop_iteration_mark")
 
   def compile_BreakNode(self, _):
     self.comment("Нод прерывания итерации")
-    self.operation("jmp", f"loop_end_mark{self.counters["loop"]}")
+    self.jump(self.counters["loop"], "loop_end_mark")
