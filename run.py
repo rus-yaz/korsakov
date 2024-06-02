@@ -9,7 +9,18 @@ from tokens import global_context
 COMMANDLINE_ARGUMENTS = dict.fromkeys(["compile", "asm", "comments", "object", "debug", "nostd", "tokens", "ast", "context"], False)
 
 def formatter(lines) -> list[str]:
-  return list(map(lambda x: x if ":" in x or "section" in x else f"  {x}", lines))
+  exceptions = ":", "section", "format", "public"
+  code = []
+  for line in lines:
+    is_exception = False
+    for exception in exceptions:
+      if exception in line:
+        is_exception = True
+        break
+
+    code += [line if is_exception else f"  {line}"]
+
+  return code
 
 def run(module_name: str, source_code: str):
   """
@@ -62,13 +73,15 @@ def run(module_name: str, source_code: str):
       "section \"_start\" executable",
       "public _start",
       "_start:",
-      "  mov rbp, rsp",
+      "mov rbp, rsp",
     ] + compiler.code + [
       "",
-      "  ; Exit",
-      "  mov rax, !SYSCALL_EXIT",
-      "  mov rdi, 0",
-      "  syscall",
+      "push !INTEGER_IDENTIFIER",
+      "mov rax, 0",
+      "push rax",
+      "lea rax, [rsp + 8]",
+      "push rax",
+      "call exit",
       "",
     ] + [line for function in compiler.functions.values() for line in function] + [
       "section \"_data\" writable",

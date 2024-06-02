@@ -15,27 +15,69 @@ BUILDIN_LIBRARIES = [
 ]
 
 ASSEMBLY_FUNCTIONS = {
+  ("exit", "выход"): [
+    "enter 0, 0",
+    "mov rax, [rbp + 8 * 2]",
+
+    "mov rbx, [rax - 8]",
+    "mov rax, [rax]",
+
+    "cmp rax, !INTEGER_IDENTIFIER",
+    "je .mark0",
+
+    "push !INTEGER_IDENTIFIER",
+    "mov rax, -1",
+    "push rax",
+    "lea rax, [rsp + 8]",
+    "push rax",
+    "call error",
+
+    ".mark0:"
+    "mov rax, !SYSCALL_EXIT",
+    "mov rdi, rbx",
+    "syscall",
+  ],
   ("error", "ошибка"): [
-    "mov rbx, rax",
+    "enter 0, 0",
+    "mov rax, [rbp + 8 * 2]",
+
+    "mov rbx, [rax - 8]",
+    "mov rax, [rax]",
+
+    "cmp rax, !INTEGER_IDENTIFIER",
+    "je .mark0",
+
+    "push !INTEGER_IDENTIFIER",
+    "mov rax, -1",
+    "push rax",
+    "lea rax, [rsp + 8]",
+    "push rax",
+    "call error",
+
+    ".mark0:",
     "mov rax, !SYSCALL_WRITE",
     "mov rdi, !FILE_DESCRIPTOR_ERROR",
     "mov rsi, !error_message",
     "mov rdx, !error_message_length",
     "syscall",
-    "mov rax, !SYSCALL_EXIT",
-    "mov rdi, rbx",
-    "syscall",
+
+    "push !INTEGER_IDENTIFIER",
+    "push rbx",
+    "lea rax, [rsp + 8]",
+    "push rax",
+    "call exit",
   ],
   ("print_number", "показать_число", "показать"): [
     "enter 0, 0",
-    "lea rax, [rbp + 8 * 2]",
+    "mov rax, [rbp + 8 * 2]",
 
-    "mov rax, [rax + 8]",
+    "mov rax, [rax - 8]",
     "mov rbx, !buffer",
     "mov rcx, !buffer_size",
-    "call number_to_string",
-    "mov rax, !buffer",
-    "call print_string",
+    "call !number_to_buffer",
+
+    "call !print_buffer",
+
     "push 10",
     "mov rax, !SYSCALL_WRITE",
     "mov rdi, !FILE_DESCRIPTOR_OUTPUT",
@@ -43,24 +85,27 @@ ASSEMBLY_FUNCTIONS = {
     "mov rdx, 8",
     "syscall",
     "pop rax",
-    "mov rax, !INTEGER_IDENTIFIER",
-    "push rax",
+
+    "push !INTEGER_IDENTIFIER",
     "mov rax, 0",
     "push rax",
     "lea rax, [rsp + 8]",
+
     "leave",
     "ret",
   ],
-  ("print_string", "показать_строку"): [
-    "mov rsi, rax",
-    "call length",
+  ("!print_buffer", ): [
+    "mov rsi, !buffer",
+    "mov rax, rsi",
+    "call !buffer_length",
     "mov rdx, rax",
+
     "mov rax, !SYSCALL_WRITE",
     "mov rdi, !FILE_DESCRIPTOR_OUTPUT",
     "syscall",
     "ret",
   ],
-  ("length", "длина"): [
+  ("!buffer_length",): [
     "mov rbx, 0",
     "mov rcx, 0",
     ".mark0:",
@@ -72,9 +117,10 @@ ASSEMBLY_FUNCTIONS = {
     "mov rax, rbx",
     "ret",
   ],
-  ("number_to_string", "число_в_строку"): [
+  ("!number_to_buffer", ): [
     "mov rsi, rcx",
     "mov rcx, 0",
+
     ".mark0:",
     "push rbx",
     "mov rbx, 10",
@@ -87,9 +133,11 @@ ASSEMBLY_FUNCTIONS = {
     "cmp rax, 0",
     "je .mark1",
     "jmp .mark0",
+
     ".mark1:",
     "mov rdx, rcx",
-    "xor rcx, rcx",
+    "mov rcx, 0",
+
     ".mark2:",
     "cmp rcx, rdx",
     "je .mark3",
@@ -97,12 +145,14 @@ ASSEMBLY_FUNCTIONS = {
     "mov [rbx + rcx], rax",
     "inc rcx",
     "jmp .mark2",
+
     ".mark3:",
     "cmp rcx, rdx",
     "je .mark4",
     "pop rax",
     "inc rcx",
     "jmp .mark3",
+
     ".mark4:",
     "ret",
   ],
@@ -230,7 +280,9 @@ class Compiler:
   def error(self, text):
     self.counters["error"] += 1
     self.comment(text)
-    self.mov("rax", self.counters["error"])
+    self.pushs("!INTEGER_IDENTIFIER", self.counters["error"])
+    self.lea("rax", "[rsp + 8]")
+    self.push("rax")
     self.operation("call", "error")
 
   def compile_NumberNode(self, node: NumberNode):
@@ -242,9 +294,7 @@ class Compiler:
     self.comment("Начало нода списка")
 
     self.comment("Начало элементов списка")
-
     self.compile_sequence(node.elements[::-1])
-
     self.comment("Конец элементов списка")
 
     self.comment("Количество элементов")
@@ -716,7 +766,7 @@ class Compiler:
 
     compiler.comment("Извлечение аргументов")
     for index, argument_name in enumerate(node.argument_names):
-      compiler.mov("rax", f"[rbp + 8 * (2 + {len(node.argument_names)} - {index} - 1)]")
+      compiler.mov("rax", f"[rbp + 8 * (1 + {len(node.argument_names)} - {index})]")
       compiler.push("rax")
 
       compiler.compile(VariableAccessNode(None, []))
