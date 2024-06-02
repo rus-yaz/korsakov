@@ -519,7 +519,7 @@ class Parser:
       logger.next(self)
 
       body = []
-      while not self.token.check_keyword(ON, ELSE):
+      while not self.token.check_keyword(ON, ELSE) and not self.token.check_type(END_OF_CONSTRUCTION):
         body += [logger.register(self.statement())]
         if logger.error:
           return logger
@@ -534,15 +534,13 @@ class Parser:
 
       cases += [[condition, ListNode(body, None, None), False]]
 
-    if not self.token.check_type(END_OF_CONSTRUCTION):
+    else_case = None
+    if self.token.check_keyword(ELSE):
       else_case = logger.register(self.else_expression())
       if logger.error:
         return logger
-
-      return logger.success(CheckNode(cases, else_case))
-
-    else_case = None
-    logger.next(self)
+    else:
+      logger.next(self)
 
     return logger.success(CheckNode(cases, else_case))
 

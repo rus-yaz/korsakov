@@ -2,11 +2,10 @@ from os import name as os_name
 from os.path import realpath
 from pathlib import Path
 
-from nodes import *
-from loggers import *
-from tokens import *
 from classes import *
-
+from loggers import *
+from nodes import *
+from tokens import *
 
 FILE_EXTENSIONS = ["корс", "kors"]
 PATH_SEPARATOR = "\\" if os_name == "nt" else "/"
@@ -27,7 +26,7 @@ class Interpreter:
     visitor = getattr(self, f"interpret_{node.__class__.__name__}", self.no_interpret_method)
     return visitor(node, context)
 
-  def no_interpret_method(self, node, context: Context) -> None:
+  def no_interpret_method(self, node, _) -> None:
     raise Exception(f"Метод interpret_{type(node).__name__} не объявлен")
 
   def interpret_NumberNode(self, node: NumberNode, context: Context):

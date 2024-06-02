@@ -170,7 +170,7 @@ class Compiler:
     self.backups = []
     self.functions = BUILDIN_FUNCTIONS.copy()
     self.counters = dict.fromkeys([
-      "if", "rsp", "loop", "mark", "error", "frame", "access", "assign", "lambda"
+      "if", "rsp", "loop", "mark", "check", "error", "frame", "access", "assign", "lambda"
     ], 0)
     self.counters["frame"] = 1 # Смещение с [rbp]
     self.file_path = realpath(file_name)
@@ -377,6 +377,43 @@ class Compiler:
     else:
       self.operation(operator, *operands)
       self.push("rax")
+
+  def compile_CheckNode(self, node: CheckNode):
+    self.counters["check"] += 1
+    self.pushs("!INTEGER_IDENTIFIER", 0)
+    self.compile(VariableAssignNode(Token(STRING, f"!check{self.counters['check']}"), [], None))
+
+    for case in node.cases:
+      self.compile(VariableAccessNode(Token(STRING, f"!check{self.counters['check']}")))
+      self.pop("rax")
+      self.pop("rbx")
+      self.compare("rax", 0, "ne", 0, "condition_end_mark")
+
+      self.compile(case[0])
+      self.pop("rax")
+      self.pop("rbx")
+      self.compare("rax", 0, "e", 0, "condition_end_mark")
+
+      self.pushs("!INTEGER_IDENTIFIER", 1)
+      self.compile(VariableAssignNode(Token(STRING, f"!check{self.counters['check']}"), [], None))
+
+      self.replace_code("condition_end_mark0", f"mark{self.counters['mark']}")
+      self.mark()
+
+      self.compile(IfNode([case], None))
+
+    if node.else_case:
+      self.compile(VariableAccessNode(Token(STRING, f"!check{self.counters['check']}")))
+      self.pop("rax")
+      self.pop("rbx")
+      self.compare("rax", 0, "ne", self.counters["check"], "check_end_mark")
+      self.compile(node.else_case[0])
+
+    self.replace_code("break", f"mark{self.counters['mark']}")
+    self.replace_code(f"check_end_mark{self.counters['check']}", f"mark{self.counters['mark']}")
+    self.mark()
+
+    self.counters["check"] -= 1
 
   def compile_UnaryOperationNode(self, node: UnaryOperationNode):
     if node.operator.check_keyword(NOT):
@@ -662,7 +699,7 @@ class Compiler:
       BinaryOperationNode(VariableAccessNode(node.variable_name, []), Token(ADDITION), step)
     ))
 
-    self.replace_code(f"loop_iteration_mark{self.counters['loop']}", f"mark{self.counters["mark"]}")
+    iteration_mark = self.counters["mark"]
     self.counters["mark"] += 1
 
     self.comment("Возвращение к началу цикла")
@@ -672,7 +709,12 @@ class Compiler:
     self.mark(self.counters["loop"], "loop_end_mark")
 
     self.replace_code(f"loop_start_mark{self.counters['loop']}", f"mark{loop_start_mark}")
+
     self.replace_code(f"loop_end_mark{self.counters['loop']}", f"mark{self.counters["mark"]}")
+    self.replace_code("break", f"mark{self.counters["mark"]}")
+
+    self.replace_code(f"loop_iteration_mark{self.counters['loop']}", f"mark{iteration_mark}")
+    self.replace_code("skip", f"mark{iteration_mark}")
 
     self.counters["mark"] += 1
     self.counters["loop"] -= 1
@@ -734,7 +776,11 @@ class Compiler:
     self.comment("Конец цикла \"пока\"")
     self.mark(self.counters["loop"], "loop_end_mark")
 
-    self.replace_code(f"loop_end_mark{self.counters["loop"]}", f"mark{self.counters["mark"]}")
+    self.replace_code(f"loop_end_mark{self.counters['loop']}", f"mark{self.counters['mark']}")
+    self.replace_code("break", f"mark{self.counters['mark']}")
+
+    self.replace_code("skip", f"mark{loop_start_mark}")
+
     self.counters["mark"] += 1
 
     self.counters["loop"] -= 1
@@ -815,8 +861,8 @@ class Compiler:
 
   def compile_SkipNode(self, _):
     self.comment("Нод пропуска итерации")
-    self.jump(self.counters["loop"], "loop_iteration_mark")
+    self.jump("", "skip")
 
   def compile_BreakNode(self, _):
     self.comment("Нод прерывания итерации")
-    self.jump(self.counters["loop"], "loop_end_mark")
+    self.jump("", "break")
