@@ -14,21 +14,104 @@ BUILDIN_LIBRARIES = [
   for file in Path(LANGAUGE_PATH).glob(f"*.{file_extension}")
 ]
 
-BUILDIN_FUNCTIONS = {
-  "!error": [
-    "section \"!error\" executable",
-    "!error:",
-    "mov rax, 1",
-    "mov rdi, 1",
+ASSEMBLY_FUNCTIONS = {
+  ("error", "ошибка"): [
+    "mov rbx, rax",
+    "mov rax, !SYSCALL_WRITE",
+    "mov rdi, !FILE_DESCRIPTOR_ERROR",
     "mov rsi, !error_message",
     "mov rdx, !error_message_length",
     "syscall",
-    "mov rax, 60",
+    "mov rax, !SYSCALL_EXIT",
     "mov rdi, rbx",
     "syscall",
-  ]
+  ],
+  ("print_number", "показать_число", "показать"): [
+    "enter 0, 0",
+    "lea rax, [rbp + 8 * 2]",
+
+    "mov rax, [rax + 8]",
+    "mov rbx, !buffer",
+    "mov rcx, !buffer_size",
+    "call number_to_string",
+    "mov rax, !buffer",
+    "call print_string",
+    "push 10",
+    "mov rax, !SYSCALL_WRITE",
+    "mov rdi, !FILE_DESCRIPTOR_OUTPUT",
+    "mov rsi, rsp",
+    "mov rdx, 8",
+    "syscall",
+    "pop rax",
+    "mov rax, !INTEGER_IDENTIFIER",
+    "push rax",
+    "mov rax, 0",
+    "push rax",
+    "lea rax, [rsp + 8]",
+    "leave",
+    "ret",
+  ],
+  ("print_string", "показать_строку"): [
+    "mov rsi, rax",
+    "call length",
+    "mov rdx, rax",
+    "mov rax, !SYSCALL_WRITE",
+    "mov rdi, !FILE_DESCRIPTOR_OUTPUT",
+    "syscall",
+    "ret",
+  ],
+  ("length", "длина"): [
+    "mov rbx, 0",
+    "mov rcx, 0",
+    ".mark0:",
+    "cmp [rax + rbx], rcx",
+    "je .mark1",
+    "inc rbx",
+    "jmp .mark0",
+    ".mark1:",
+    "mov rax, rbx",
+    "ret",
+  ],
+  ("number_to_string", "число_в_строку"): [
+    "mov rsi, rcx",
+    "mov rcx, 0",
+    ".mark0:",
+    "push rbx",
+    "mov rbx, 10",
+    "mov rdx, 0",
+    "div rbx",
+    "pop rbx",
+    "add rdx, !ASCII_0",
+    "push rdx",
+    "inc rcx",
+    "cmp rax, 0",
+    "je .mark1",
+    "jmp .mark0",
+    ".mark1:",
+    "mov rdx, rcx",
+    "xor rcx, rcx",
+    ".mark2:",
+    "cmp rcx, rdx",
+    "je .mark3",
+    "pop rax",
+    "mov [rbx + rcx], rax",
+    "inc rcx",
+    "jmp .mark2",
+    ".mark3:",
+    "cmp rcx, rdx",
+    "je .mark4",
+    "pop rax",
+    "inc rcx",
+    "jmp .mark3",
+    ".mark4:",
+    "ret",
+  ],
 }
 
+BUILDIN_FUNCTIONS = {}
+for function_names, function_body in ASSEMBLY_FUNCTIONS.items():
+  for function_name in function_names:
+    BUILDIN_FUNCTIONS[function_name] = [f'section "{function_name}" executable', f"{function_name}:"] + function_body
 
 class Compiler:
   def __init__(self, file_name):
@@ -60,7 +143,7 @@ class Compiler:
 
       self.compile(expression)
 
-      if not isinstance(expression, VariableAssignNode):
+      if not isinstance(expression, (VariableAssignNode, ReturnNode)):
         self.leave()
 
   def no_compile_method(self, node):
@@ -147,8 +230,8 @@ class Compiler:
   def error(self, text):
     self.counters["error"] += 1
     self.comment(text)
-    self.mov("rbx", self.counters["error"])
-    self.operation("call", "!error")
+    self.mov("rax", self.counters["error"])
+    self.operation("call", "error")
 
   def compile_NumberNode(self, node: NumberNode):
     self.comment("Нод числа")
@@ -381,28 +464,27 @@ class Compiler:
     if is_new:
       self.variables[variable] = self.counters["frame"]
 
-    self.pops("rbx", "rax")
-
     self.comment("Проверка типа присваиваемого")
+
+    self.pops("rbx", "rax")
+    self.lea("rcx", f"[rbp - 8 * {self.variables[variable]}]")
 
     self.compare("rax", "!INTEGER_IDENTIFIER", "ne")
 
-    self.lea("rdx", f"[rbp - 8 * {self.variables[variable]}]")
     self.movs(
-      ["[rdx]", "rax"],
-      ["[rdx - 8]", "rbx"]
+      ["[rcx]", "rax"],
+      ["[rcx - 8]", "rbx"]
     )
-    self.jump(self.counters["assign"], "assign_mark")
 
+    self.jump(self.counters["assign"], "assign_mark")
     self.mark()
 
     self.compare("rax", "!LIST_IDENTIFIER", "ne", self.counters["mark"] + 2)
     self.pushs("rax", "rbx")
+
     self.operation("imul", "rbx", 2)
-    self.leas(
-      ["rcx", f"[rbp - 8 * {self.variables[variable]}]"],
-      ["rdx", "[rsp + 8 * rbx - 8 * 1]"]
-    )
+    self.lea("rdx", "[rsp + 8 * rbx - 8 * 1]")
+
     self.mov("rdi", 0)
     self.mark()
 
@@ -632,6 +714,7 @@ class Compiler:
       "enter 0, 0",
     ]
 
+    compiler.comment("Извлечение аргументов")
     for index, argument_name in enumerate(node.argument_names):
       compiler.mov("rax", f"[rbp + 8 * (2 + {len(node.argument_names)} - {index} - 1)]")
       compiler.push("rax")
@@ -639,9 +722,12 @@ class Compiler:
       compiler.compile(VariableAccessNode(None, []))
       compiler.compile(VariableAssignNode(argument_name.variable, [], None))
 
-    compiler.compile_program(node.body_node)
+    compiler.comment("Исполнение тела функции")
 
+    compiler.compile_program(node.body_node)
     compiler.replace_code("mark", ".mark")
+
+    compiler.comment("Завершение функции")
 
     compiler.lea("rax", "[rsp + 8]")
     compiler.operations(["leave"], ["ret"])
@@ -650,15 +736,20 @@ class Compiler:
 
   def compile_CallNode(self, node: CallNode):
     self.enter()
+
+    self.comment("Исполнение аргументов")
     for index, argument in enumerate(node.argument_nodes):
       self.compile(argument)
       self.compile(VariableAssignNode(Token(STRING, f"!{index}"), [], None))
 
+    self.comment("Сохранение аргументов")
     for index in range(len(node.argument_nodes)):
       self.lea("rax", f"[rbp - 8 * {self.variables[f'!{index}']}]")
       self.push("rax")
 
+    self.comment("Вызов функции")
     self.operation("call", node.call_node.variable.value)
+
     self.mov("r15", "rax")
     self.leave()
     self.push("r15")
@@ -666,7 +757,11 @@ class Compiler:
     self.compile(VariableAccessNode(None, []))
 
   def compile_ReturnNode(self, node: ReturnNode):
+    self.comment("Возвращение значения из функции")
+    self.leave()
     self.compile(node.return_node)
+    self.lea("rax", "[rsp + 8]")
+    self.operations(["leave"], ["ret"])
 
   def compile_SkipNode(self, _):
     self.comment("Нод пропуска итерации")

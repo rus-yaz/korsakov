@@ -8,8 +8,10 @@ from tokens import global_context
 
 COMMANDLINE_ARGUMENTS = dict.fromkeys(["compile", "asm", "comments", "object", "debug", "nostd", "tokens", "ast", "context"], False)
 
+def formatter(lines) -> list[str]:
+  return list(map(lambda x: x if ":" in x or "section" in x else f"  {x}", lines))
 
-def run(module_name: str, code: str):
+def run(module_name: str, source_code: str):
   """
     Описание:
       Функция запуска кода из строки
@@ -24,7 +26,7 @@ def run(module_name: str, code: str):
   """
 
   # Tokenization
-  tokens, error = Tokenizer(module_name, code).tokenize()
+  tokens, error = Tokenizer(module_name, source_code).tokenize()
   if error or not tokens:
     return None, error
 
@@ -54,28 +56,40 @@ def run(module_name: str, code: str):
     compiler.compile_program(ast.node)
 
     compiler.replace_code("mark", ".mark")
-    formatter = lambda lines: list(map(lambda x: x if ":" in x or "section" in x else f"  {x}", lines))
 
-    code = [
+    code: list[str] = [
       "format ELF64",
       "section \"_start\" executable",
       "public _start",
       "_start:",
       "  mov rbp, rsp",
-    ] + formatter(compiler.code) + [
+    ] + compiler.code + [
       "",
       "  ; Exit",
-      "  mov rax, 60",
-      "  pop rdi",
+      "  mov rax, !SYSCALL_EXIT",
+      "  mov rdi, 0",
       "  syscall",
-      ""
-    ] + formatter(line for function in compiler.functions.values() for line in function) + [
+      "",
+    ] + [line for function in compiler.functions.values() for line in function] + [
       "section \"_data\" writable",
-      "  !INTEGER_IDENTIFIER = 0",
-      "  !LIST_IDENTIFIER = 1",
-      "  !error_message db \"Error\", 10",
-      "  !error_message_length = 6",
-      "  !rsp dq 0"
+      "!INTEGER_IDENTIFIER = 0",
+      "!LIST_IDENTIFIER    = 1",
+
+      "!SYSCALL_WRITE = 1",
+      "!SYSCALL_EXIT  = 60",
+
+      "!FILE_DESCRIPTOR_OUTPUT = 1",
+      "!FILE_DESCRIPTOR_ERROR  = 2",
+
+      "!ASCII_0 = 48",
+
+      "!error_message db \"Error\", 10",
+      "!error_message_length = 6",
+
+      "!buffer_size = 1024",
+      "!buffer rb !buffer_size",
+
+      "!rsp dq 0",
     ]
 
     if not COMMANDLINE_ARGUMENTS["comments"]:
@@ -87,7 +101,7 @@ def run(module_name: str, code: str):
 
     file_name = module_name.rsplit(".", 1)[0]
     with open(file_name + ".asm", "w") as file:
-      file.write("\n".join(code))
+      file.write("\n".join(formatter(code)))
 
     run_cmd(["fasm", file_name + ".asm"])
     if not COMMANDLINE_ARGUMENTS["asm"]:
