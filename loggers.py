@@ -206,7 +206,7 @@ class Position:
     self.text = text
 
   def __repr__(self):
-    return f"{self.row}:{self.column}"
+    return f"Position(index={self.index}, row={self.row}, column={self.column})"
 
   def next(self, char: str = None):
     """

@@ -1,5 +1,6 @@
 from parser import Parser
-from subprocess import run as run_cmd
+from subprocess import DEVNULL
+from subprocess import run as cmd
 
 from compiler import Compiler
 from interpreter import Interpreter
@@ -7,6 +8,11 @@ from tokenizer import Tokenizer
 from tokens import global_context
 
 COMMANDLINE_ARGUMENTS = dict.fromkeys(["compile", "asm", "comments", "object", "debug", "nostd", "tokens", "ast", "context"], False)
+
+def run_command(command, comment=None):
+  cmd(command, stdout=DEVNULL)
+  if COMMANDLINE_ARGUMENTS["debug"] and comment:
+    print(f"[ЗАПУСК] {comment}")
 
 def formatter(lines) -> list[str]:
   exceptions = ":", "section", "format", "public"
@@ -42,7 +48,7 @@ def run(module_name: str, source_code: str):
     return None, error
 
   if COMMANDLINE_ARGUMENTS["debug"] or COMMANDLINE_ARGUMENTS["tokens"]:
-    [print("[DEBUG]", i) for i in tokens]
+    [print("[ТОКЕНЫ]", i) for i in tokens]
 
   # ------------------------------
 
@@ -96,14 +102,14 @@ def run(module_name: str, source_code: str):
 
       "!ASCII_0 = 48",
 
-      "!error_message db \"Error\", 10",
-      "!error_message_length = 6",
+      "!error_message dq \"E\", \"r\", \"r\", \"o\", \"r\"",
+      "!error_message_length = 5",
 
       "!buffer_size = 1024",
       "!buffer rb !buffer_size",
 
-      "!rsp dq 0",
-    ]
+      "!variables_counter dq 0",
+    ] + [f"{variable} dq 0"for variable in compiler.variables]
 
     if not COMMANDLINE_ARGUMENTS["comments"]:
       lines = code.copy()
@@ -113,16 +119,18 @@ def run(module_name: str, source_code: str):
           code += [line]
 
     file_name = module_name.rsplit(".", 1)[0]
-    with open(file_name + ".asm", "w") as file:
+    asm_file_name = file_name + ".asm"
+    obj_file_name = file_name + ".o"
+    with open(asm_file_name, "w") as file:
       file.write("\n".join(formatter(code)))
 
-    run_cmd(["fasm", file_name + ".asm"])
+    run_command(["fasm", asm_file_name], f"Компиляция {asm_file_name}")
     if not COMMANDLINE_ARGUMENTS["asm"]:
-      run_cmd(["rm", file_name + ".asm"])
+      run_command(["rm", asm_file_name], f"Удаление {asm_file_name}")
 
-    run_cmd(["ld", file_name + ".o", "-o", file_name])
+    run_command(["ld", obj_file_name, "-o", file_name], f"Линковка {obj_file_name}")
     if not COMMANDLINE_ARGUMENTS["object"]:
-      run_cmd(["rm", file_name + ".o"])
+      run_command(["rm", obj_file_name], f"Удаление {obj_file_name}")
   else:
     interpretation = Interpreter(module_name).interpret(ast.node, global_context)
     value, error = interpretation.value, interpretation.error

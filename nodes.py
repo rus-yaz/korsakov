@@ -63,7 +63,7 @@ class StringNode(Node):
     self.set_position(token.position_start, token.position_end)
 
   def __repr__(self):
-    return f"StringNode(\"{self.token.value}\")"
+    return f"StringNode({self.token.value!r})"
 
 
 class ListNode(Node):
@@ -547,7 +547,7 @@ class SkipNode(Node):
     self.set_position(position_start, position_end)
 
   def __repr__(self):
-    return f"SkipNode"
+    return "SkipNode"
 
 
 class BreakNode(Node):
@@ -568,7 +568,7 @@ class BreakNode(Node):
     self.set_position(position_start, position_end)
 
   def __repr__(self):
-    return f"BreakNode"
+    return "BreakNode"
 
 
 # --------------------------------------------------

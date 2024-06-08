@@ -18,7 +18,7 @@ class Token:
       self.position_end = position_end.copy()
 
   def __repr__(self):
-    return f"{self.position_start}::{self.position_end} ::: {self.type}{f':{self.value}' if self.value != None else ''}"
+    return f"Token(type={self.type!r}, value={self.value!r}, position_start={self.position_start}, position_end={self.position_end})"
 
   def copy(self):
     return Token(self.type, self.value, self.position_start, self.position_end)

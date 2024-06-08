@@ -447,7 +447,7 @@ class Interpreter:
       function_name, body_node, argument_names, node.auto_return, context
     ).set_position(node.position_start, node.position_end)
 
-    if node.variable_name:
+    if function_name:
       context.set_variable(function_name, function_value)
 
     return logger.success(function_value)

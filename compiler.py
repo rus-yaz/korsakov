@@ -39,30 +39,71 @@ ASSEMBLY_FUNCTIONS = {
   ],
   ("error", "ошибка"): [
     "enter 0, 0",
+
+    "mov rcx, 0",
+
+    "mov rax, 10",
+    "push rax",
+    "inc rcx",
+
     "mov rax, [rbp + 8 * 2]",
+    "mov rbx, [rax]",
+    "mov rax, [rax - 8]",
 
-    "mov rbx, [rax - 8]",
-    "mov rax, [rax]",
+    "cmp rbx, !INTEGER_IDENTIFIER",
+    "je .mark1",
 
-    "cmp rax, !INTEGER_IDENTIFIER",
-    "je .mark0",
-
-    "push !INTEGER_IDENTIFIER",
     "mov rax, -1",
+    "push !INTEGER_IDENTIFIER",
     "push rax",
     "lea rax, [rsp + 8]",
     "push rax",
     "call error",
+    ".mark1:",
 
-    ".mark0:",
-    "mov rax, !SYSCALL_WRITE",
-    "mov rdi, !FILE_DESCRIPTOR_ERROR",
-    "mov rsi, !error_message",
-    "mov rdx, !error_message_length",
+    "mov rbx, 10",
+    "mov rdi, rcx",
+    "mov rcx, 0",
+
+    ".mark2:",
+    "cmp rax, 0",
+    "je .mark3",
+
+    "mov rdx, 0",
+    "div rbx",
+    "add rdx, 48",
+    "push rdx",
+
+    "inc rcx",
+    "jmp .mark2",
+    ".mark3:",
+    "add rcx, rdi",
+
+    "mov rax, 32",
+    "push rax",
+    "inc rcx",
+
+    "mov rax, !error_message",
+    "mov rbx, !error_message_length",
+    "add rcx, rbx",
+    ".mark4:",
+    "cmp rbx, 0",
+    "je .mark5",
+    "dec rbx",
+    "mov rdx, [rax + rbx * 8]",
+    "push rdx",
+    "jmp .mark4",
+    ".mark5:",
+
+    "mov rax, 1",
+    "mov rdi, 2",
+    "mov rsi, rsp",
+    "imul rcx, 8",
+    "mov rdx, rcx",
     "syscall",
 
     "push !INTEGER_IDENTIFIER",
-    "push rbx",
+    "push 1",
     "lea rax, [rsp + 8]",
     "push rax",
     "call exit",
@@ -166,13 +207,13 @@ for function_names, function_body in ASSEMBLY_FUNCTIONS.items():
 class Compiler:
   def __init__(self, file_name):
     self.code = []
-    self.variables = {}
+    self.parent_variables = set()
+    self.variables = set()
     self.backups = []
     self.functions = BUILDIN_FUNCTIONS.copy()
     self.counters = dict.fromkeys([
-      "if", "rsp", "loop", "mark", "check", "error", "frame", "access", "assign", "lambda"
+      "if", "rsp", "loop", "mark", "check", "error", "access", "assign", "lambda"
     ], 0)
-    self.counters["frame"] = 1 # Смещение с [rbp]
     self.file_path = realpath(file_name)
     self.script_location, self.file_name = self.file_path.rsplit(PATH_SEPARATOR, 1)
 
@@ -188,12 +229,12 @@ class Compiler:
     # .enter и .leave нужны для очистки от мусора на стеке (к примеру, инкремент/декремент)
 
     for expression in node.elements:
-      if not isinstance(expression, VariableAssignNode):
+      if not isinstance(expression, (VariableAssignNode, FunctionDefinitionNode)):
         self.enter()
 
       self.compile(expression)
 
-      if not isinstance(expression, (VariableAssignNode, ReturnNode)):
+      if not isinstance(expression, (VariableAssignNode, FunctionDefinitionNode, ReturnNode)):
         self.leave()
 
   def no_compile_method(self, node):
@@ -263,24 +304,19 @@ class Compiler:
     self.code = list(map(lambda x: x.replace(replaceable, substitute), self.code))
 
   def enter(self):
-    self.backups += [[self.variables.copy(), self.counters["frame"]]]
-    self.pushs("!INTEGER_IDENTIFIER", "[!rsp]")
-    self.compile(VariableAssignNode(Token(STRING, f"!rsp{self.counters["rsp"]}"), [], None))
-    self.mov("[!rsp]", "rsp")
-    self.counters["rsp"] += 1
+    self.push("[!variables_counter]")
+    self.mov("[!variables_counter]", 0)
+    self.operation("enter", 0, 0)
 
   def leave(self):
-    self.counters["rsp"] -= 1
-    self.mov("rsp", "[!rsp]")
-    self.compile(VariableAccessNode(Token(STRING, f"!rsp{self.counters["rsp"]}"), []))
-    self.pops("[!rsp]", "rax")
-    self.operation("add", "rsp", "8 * 2")
-    self.variables, self.counters["frame"] = self.backups.pop()
+    self.operation("leave")
+    self.pop("[!variables_counter]")
 
   def error(self, text):
     self.counters["error"] += 1
     self.comment(text)
-    self.pushs("!INTEGER_IDENTIFIER", self.counters["error"])
+    self.mov("rax", self.counters["error"])
+    self.pushs("!INTEGER_IDENTIFIER", "rax")
     self.lea("rax", "[rsp + 8]")
     self.push("rax")
     self.operation("call", "error")
@@ -379,19 +415,19 @@ class Compiler:
       self.push("rax")
 
   def compile_CheckNode(self, node: CheckNode):
+    self.comment("Нод `проверить-при-иначе`")
     self.counters["check"] += 1
+    self.comment("Вспомогательная переменная для ветви `иначе`")
     self.pushs("!INTEGER_IDENTIFIER", 0)
     self.compile(VariableAssignNode(Token(STRING, f"!check{self.counters['check']}"), [], None))
 
     for case in node.cases:
       self.compile(VariableAccessNode(Token(STRING, f"!check{self.counters['check']}")))
-      self.pop("rax")
-      self.pop("rbx")
+      self.pops("rax", "rbx")
       self.compare("rax", 0, "ne", 0, "condition_end_mark")
 
       self.compile(case[0])
-      self.pop("rax")
-      self.pop("rbx")
+      self.pops("rax", "rbx")
       self.compare("rax", 0, "e", 0, "condition_end_mark")
 
       self.pushs("!INTEGER_IDENTIFIER", 1)
@@ -454,16 +490,16 @@ class Compiler:
     self.comment("Нод получения переменной")
     self.counters["access"] += 1
 
-    if variable is not None and variable not in self.variables:
-      self.error(f"Переменная {variable} не объявлена")
-      return
-
     if variable is None:
       self.pop("rcx")
     else:
-      self.lea("rcx", f"[rbp - 8 * {self.variables[variable]}]")
+      self.mov("rcx", f"[{variable}]")
 
     self.comment("Получение идентификатора переменной")
+
+    self.compare("rcx", 0, "ne")
+    self.error(f"Переменная {variable} не объявлена")
+    self.mark()
 
     self.movs(
       ["rax", "[rcx]"],
@@ -539,8 +575,10 @@ class Compiler:
 
   def compile_VariableAssignNode(self, node: VariableAssignNode):
     self.counters["assign"] += 1
+
     variable = node.variable.value
     is_new = variable not in self.variables
+    self.variables.add(variable)
 
     self.comment("Нод присвоения переменной")
 
@@ -549,12 +587,16 @@ class Compiler:
       self.compile(node.value)
 
     if is_new:
-      self.variables[variable] = self.counters["frame"]
+      self.operation("inc [!variables_counter]")
+      self.mov(f"[{variable}]", "rbp")
+      self.operations(
+        ["imul", "rax", "[!variables_counter]", 8 * 2],
+        ["sub", f"[{variable}]", "rax"],
+        ["add", f"[{variable}]", "8"],
+      )
 
-    self.comment("Проверка типа присваиваемого")
-
+    self.mov("rcx", f"[{variable}]")
     self.pops("rbx", "rax")
-    self.lea("rcx", f"[rbp - 8 * {self.variables[variable]}]")
 
     self.compare("rax", "!INTEGER_IDENTIFIER", "ne")
 
@@ -566,49 +608,50 @@ class Compiler:
     self.jump(self.counters["assign"], "assign_mark")
     self.mark()
 
-    self.compare("rax", "!LIST_IDENTIFIER", "ne", self.counters["mark"] + 2)
-    self.pushs("rax", "rbx")
+    self.comment("Проверка типа присваиваемого")
 
-    self.operation("imul", "rbx", 2)
-    self.lea("rdx", "[rsp + 8 * rbx - 8 * 1]")
-
-    self.mov("rdi", 0)
-    self.mark()
-
-    self.compare("rbx", "rdi", "e")
-    self.movs(
-      ["rax", "[rdx]"],
-      ["[rcx]", "rax"],
-    )
-    self.operations(
-      ["sub", "rdx", 8],
-      ["sub", "rcx", 8],
-      ["inc", "rdi"],
-    )
-    self.jump(self.counters["mark"] - 1)
-    self.mark()
+    # self.compare("rax", "!LIST_IDENTIFIER", "ne", self.counters["mark"] + 2)
+    # self.pushs("rax", "rbx")
+    #
+    # self.operation("imul", "rbx", 2)
+    # self.lea("rdx", "[rsp + 8 * rbx - 8 * 1]")
+    #
+    # self.mov("rdi", 0)
+    # self.mark()
+    #
+    # self.compare("rbx", "rdi", "e")
+    # self.movs(
+    #   ["rax", "[rdx]"],
+    #   ["[rcx]", "rax"],
+    # )
+    # self.operations(
+    #   ["sub", "rdx", 8],
+    #   ["sub", "rcx", 8],
+    #   ["inc", "rdi"],
+    # )
+    # self.jump(self.counters["mark"] - 1)
+    # self.mark()
 
     self.replace_code(f"assign_mark{self.counters["assign"]}", f"mark{self.counters["mark"]}")
     self.mark()
 
-    if isinstance(node.value, ListNode):
-      elements_count = 0
-      stack = [node.value.elements]
-      while stack:
-        current = stack.pop()
-        for element in current:
-          if isinstance(element, ListNode):
-            stack += [element.elements]
-            elements_count += 1
-
-          elements_count += 1
-
-      self.counters["frame"] += (elements_count + 1) * 2
-      self.variables[variable] = self.counters["frame"]
-      self.operation("add", "rsp", 8 * 2)
+    # if isinstance(node.value, ListNode):
+    #   elements_count = 0
+    #   stack = [node.value.elements]
+    #   while stack:
+    #     current = stack.pop()
+    #     for element in current:
+    #       if isinstance(element, ListNode):
+    #         stack += [element.elements]
+    #         elements_count += 1
+    #
+    #       elements_count += 1
+    #
+    #   self.counters["frame"] += (elements_count + 1) * 2
+    #   self.variables[variable] = self.counters["frame"]
+    #   self.operation("add", "rsp", 8 * 2)
 
     if is_new:
-      self.counters["frame"] += 2
       self.operation("sub", "rsp", 8 * 2)
 
     self.counters["assign"] -= 1
@@ -803,16 +846,21 @@ class Compiler:
   def compile_FunctionDefinitionNode(self, node: FunctionDefinitionNode):
     function_name = node.variable_name.value if node.variable_name else f"!функция{self.counters["lambda"]}"
     compiler = Compiler(function_name)
+    compiler.counters = self.counters.copy()
+    compiler.parent_variables = self.variables.copy() | self.parent_variables.copy()
 
     function_header = [
       f"section \"{function_name}\" executable",
       f"{function_name}:",
-      "enter 0, 0",
     ]
+
+    compiler.enter()
+
+    compiler.operation(f"save_point_{function_name}")
 
     compiler.comment("Извлечение аргументов")
     for index, argument_name in enumerate(node.argument_names):
-      compiler.mov("rax", f"[rbp + 8 * (1 + {len(node.argument_names)} - {index})]")
+      compiler.mov("rax", f"[rbp + 8 * ({len(node.argument_names)} - {index} + 2)]")
       compiler.push("rax")
 
       compiler.compile(VariableAccessNode(None, []))
@@ -825,30 +873,60 @@ class Compiler:
 
     compiler.comment("Завершение функции")
 
-    compiler.lea("rax", "[rsp + 8]")
-    compiler.operations(["leave"], ["ret"])
+    compiler.mark("", "return")
+    compiler.replace_code("return", f".mark{compiler.counters['mark']}")
+
+    compiler.lea("rbx", "[rsp + 8]")
+
+    local_variables = compiler.variables.copy()
+    save_point = "\n".join(
+      f"push !INTEGER_IDENTIFIER\npush [{variable}]" for variable in local_variables
+    ) + f"\nmov [!variables_counter], {len(local_variables)}"
+
+    compiler.replace_code(f"save_point_{function_name}", save_point)
+
+    for index, variable in enumerate(local_variables):
+      compiler.movs(
+        ["rax", f"[rbp - 8 * ({index + 1} * 2)]"],
+        [f"[{variable}]", "rax"]
+      )
+
+    compiler.leave()
+
+    compiler.mov("rax", "rbx")
+    compiler.operation("ret")
 
     self.functions[function_name] = function_header + compiler.code
+    self.variables |= local_variables
+    self.counters = compiler.counters
 
   def compile_CallNode(self, node: CallNode):
+    if node.call_node.variable.value not in self.functions:
+      self.error("Функция не объявлена")
+      return
+
     self.enter()
 
     self.comment("Исполнение аргументов")
     for index, argument in enumerate(node.argument_nodes):
+      variable = f"!{function_name}_argument_{index}"
+      self.variables.add(variable)
+
       self.compile(argument)
-      self.compile(VariableAssignNode(Token(STRING, f"!{index}"), [], None))
+      self.mov(f"[{variable}]", "rsp")
+      self.operation("add", f"[{variable}]", 8)
 
     self.comment("Сохранение аргументов")
     for index in range(len(node.argument_nodes)):
-      self.lea("rax", f"[rbp - 8 * {self.variables[f'!{index}']}]")
+      self.mov("rax", f"[!{function_name}_argument_{index}]")
       self.push("rax")
 
     self.comment("Вызов функции")
     self.operation("call", node.call_node.variable.value)
 
-    self.mov("r15", "rax")
     self.leave()
-    self.push("r15")
+
+    self.push("rax")
 
     self.compile(VariableAccessNode(None, []))
 
@@ -856,8 +934,7 @@ class Compiler:
     self.comment("Возвращение значения из функции")
     self.leave()
     self.compile(node.return_node)
-    self.lea("rax", "[rsp + 8]")
-    self.operations(["leave"], ["ret"])
+    self.jump("", "return")
 
   def compile_SkipNode(self, _):
     self.comment("Нод пропуска итерации")
