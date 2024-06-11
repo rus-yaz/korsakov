@@ -218,23 +218,21 @@ class Compiler:
     self.script_location, self.file_name = self.file_path.rsplit(PATH_SEPARATOR, 1)
 
   def compile(self, node):
-    visitor = getattr(self, f"compile_{node.__class__.__name__}", self.no_compile_method)
-    return visitor(node)
+    if not isinstance(node, ListNode):
+      return getattr(
+        self,
+        f"compile_{node.__class__.__name__}",
+        self.no_compile_method
+      )(node)
 
-  def compile_sequence(self, nodes: list):
-    for node in nodes:
-      self.compile(node)
-
-  def compile_program(self, node: ListNode):
     # .enter и .leave нужны для очистки от мусора на стеке (к примеру, инкремент/декремент)
-
     for expression in node.elements:
-      if not isinstance(expression, (VariableAssignNode, FunctionDefinitionNode)):
+      if isinstance(expression, (BinaryOperationNode, UnaryOperationNode, ReturnNode)):
         self.enter()
 
       self.compile(expression)
 
-      if not isinstance(expression, (VariableAssignNode, FunctionDefinitionNode, ReturnNode)):
+      if isinstance(expression, (BinaryOperationNode, UnaryOperationNode)):
         self.leave()
 
   def no_compile_method(self, node):
@@ -330,7 +328,10 @@ class Compiler:
     self.comment("Начало нода списка")
 
     self.comment("Начало элементов списка")
-    self.compile_sequence(node.elements[::-1])
+
+    for element in node.elements[::-1]:
+      self.compile(element)
+
     self.comment("Конец элементов списка")
 
     self.comment("Количество элементов")
@@ -586,16 +587,24 @@ class Compiler:
       self.comment("Исполнение присваиваемого")
       self.compile(node.value)
 
-    if is_new:
-      self.operation("inc [!variables_counter]")
-      self.mov(f"[{variable}]", "rbp")
-      self.operations(
-        ["imul", "rax", "[!variables_counter]", 8 * 2],
-        ["sub", f"[{variable}]", "rax"],
-        ["add", f"[{variable}]", "8"],
-      )
-
     self.mov("rcx", f"[{variable}]")
+
+    self.mov("rdx", int(is_new))
+    self.compare("rcx", 0, "ne")
+    self.mov("rdx", 1)
+    self.mark()
+
+    self.compare("rdx", 0, "e")
+    self.operation("inc [!variables_counter]")
+    self.mov(f"[{variable}]", "rbp")
+    self.operations(
+      ["imul", "rax", "[!variables_counter]", 8 * 2],
+      ["sub", f"[{variable}]", "rax"],
+      ["add", f"[{variable}]", "8"],
+    )
+    self.mov("rcx", f"[{variable}]")
+    self.mark()
+
     self.pops("rbx", "rax")
 
     self.compare("rax", "!INTEGER_IDENTIFIER", "ne")
@@ -651,8 +660,9 @@ class Compiler:
     #   self.variables[variable] = self.counters["frame"]
     #   self.operation("add", "rsp", 8 * 2)
 
-    if is_new:
-      self.operation("sub", "rsp", 8 * 2)
+    self.compare("rdx", 0, "e")
+    self.operation("sub", "rsp", 8 * 2)
+    self.mark()
 
     self.counters["assign"] -= 1
 
@@ -674,7 +684,7 @@ class Compiler:
       self.mark()
 
       if isinstance(case_body, ListNode):
-        self.compile_sequence(case_body.elements)
+        self.compile(case_body)
       else:
         self.compile(case_body)
 
@@ -690,7 +700,7 @@ class Compiler:
       self.mark()
 
       if isinstance(body, ListNode):
-        self.compile_sequence(body.elements)
+        self.compile(body)
       else:
         self.compile(body)
 
@@ -705,15 +715,15 @@ class Compiler:
     self.comment("Начало конструкции \"для-иначе\"")
     self.counters["loop"] += 1
 
-    self.enter()
+    self.comment("Ветвь \"для\"")
 
     self.compile(VariableAssignNode(node.variable_name, [], node.start_node))
 
-    loop_start_mark = self.counters["mark"]
-    self.counters["mark"] += 1
+    self.enter()
 
-    self.comment("Ветвь \"для\"")
+    loop_start_mark = self.counters["mark"]
     self.mark(self.counters["loop"], "loop_start_mark")
+    self.counters["mark"] += 1
 
     self.compile(BinaryOperationNode(
       VariableAccessNode(node.variable_name, []),
@@ -728,7 +738,7 @@ class Compiler:
     self.comment("Тело ветви \"для\"")
     self.mark()
 
-    self.compile_sequence(node.body_node.elements)
+    self.compile(ListNode(node.body_node.elements))
 
     step = NumberNode(Token(INTEGER, "1"))
     if node.step_node:
@@ -753,30 +763,32 @@ class Compiler:
 
     self.replace_code(f"loop_start_mark{self.counters['loop']}", f"mark{loop_start_mark}")
 
-    self.replace_code(f"loop_end_mark{self.counters['loop']}", f"mark{self.counters["mark"]}")
-    self.replace_code("break", f"mark{self.counters["mark"]}")
+    self.replace_code(f"loop_end_mark{self.counters['loop']}", f"mark{self.counters['mark']}")
+    self.replace_code("break", f"mark{self.counters['mark']}")
+    self.counters["mark"] += 1
 
     self.replace_code(f"loop_iteration_mark{self.counters['loop']}", f"mark{iteration_mark}")
     self.replace_code("skip", f"mark{iteration_mark}")
 
-    self.counters["mark"] += 1
-    self.counters["loop"] -= 1
-
     if node.else_case:
       expression, return_null = node.else_case
 
-      self.compile(BinaryOperationNode(VariableAccessNode(node.variable_name, []), Token(EQUAL), node.start_node))
+      self.compile(BinaryOperationNode(
+        VariableAccessNode(node.variable_name, []),
+        Token(EQUAL),
+        node.start_node
+      ))
 
       self.comment("Обработка ветви \"иначе\"")
       self.pops("rax", "rbx")
-      self.compare("rax", 1, "e")
-      self.jump(self.counters["mark"] + 1)
-      self.mark()
+      self.compare("rax", 0, "e", self.counters['loop'], "loop_else_end")
 
       self.compile(expression)
 
-      self.counters["mark"] += 1
+      self.replace_code(f"loop_else_end{self.counters['loop']}", f"mark{self.counters['mark']}")
       self.mark()
+
+    self.counters["loop"] -= 1
 
     self.leave()
 
@@ -804,7 +816,7 @@ class Compiler:
     self.comment("Тело ветви \"пока\"")
     self.mark()
 
-    self.compile_sequence(node.body_node.elements)
+    self.compile(node.body_node)
 
     if node.else_case:
       self.comment("Увеличение счётчика итераций")
@@ -868,7 +880,7 @@ class Compiler:
 
     compiler.comment("Исполнение тела функции")
 
-    compiler.compile_program(node.body_node)
+    compiler.compile(node.body_node)
     compiler.replace_code("mark", ".mark")
 
     compiler.comment("Завершение функции")

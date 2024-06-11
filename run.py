@@ -70,7 +70,7 @@ def run(module_name: str, source_code: str):
   if COMMANDLINE_ARGUMENTS["compile"]:
     compiler = Compiler(module_name)
 
-    compiler.compile_program(ast.node)
+    compiler.compile(ast.node)
 
     compiler.replace_code("mark", ".mark")
 

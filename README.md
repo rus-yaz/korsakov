@@ -72,17 +72,17 @@ $ python korsakov.py [флаги]
 
 #### Vim
 
-```console
-$ cd Подсветка\ синтаксиса/vim
-$ mkdir -p ~/.vim/syntax
-$ cp korsakov.vim ~/.vim/syntax/
-$ echo "au BufNewFile,BufRead *.kors :set filetype=korsakov
+```shell
+cd Подсветка\ синтаксиса/vim
+mkdir -p ~/.vim/syntax
+cp korsakov.vim ~/.vim/syntax/
+echo "au BufNewFile,BufRead *.kors :set filetype=korsakov
 au BufNewFile,BufRead *.корс :set filetype=korsakov" >> ~/.vimrc
 ```
 
 #### Neovim
 
-```console
-$ cd Подсветка\ синтаксиса/nvim
-$ cp -r syntax ftdetect ~/.config/nvim
+```shell
+cd Подсветка\ синтаксиса/nvim
+cp -r syntax ftdetect ~/.config/nvim
 ```
