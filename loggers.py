@@ -472,7 +472,7 @@ class RuntimeError(Error):
       highlight (bool): переменная, отвечающая за подстветку ошибки
   """
 
-  def __init__(self, position_start: Position, position_end: Position, details: str, context: Context, highlight: bool = True):
+  def __init__(self, position_start: Position, position_end: Position, details: str, context: Context | None, highlight: bool = True):
     super().__init__(position_start, position_end, "Ошибка во время выполнения", details)
     self.context = context
     self.highlight = highlight

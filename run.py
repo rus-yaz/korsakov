@@ -6,6 +6,7 @@ from compiler import Compiler
 from interpreter import Interpreter
 from tokenizer import Tokenizer
 from tokens import global_context
+from loggers import Position, RuntimeError
 
 COMMANDLINE_ARGUMENTS = dict.fromkeys(["compile", "asm", "comments", "object", "debug", "nostd", "tokens", "ast", "context"], False)
 
@@ -42,10 +43,16 @@ def run(module_name: str, source_code: str):
       *Error или None: сигнал ошибки или нуль
   """
 
+  error_position = Position(0, 0, 0, module_name, "")
+  if source_code == "":
+    return None, RuntimeError(error_position, error_position, "Пустой файл", None, False)
+
   # Tokenization
   tokens, error = Tokenizer(module_name, source_code).tokenize()
-  if error or not tokens:
+  if error:
     return None, error
+  elif tokens == []:
+    return None, RuntimeError(error_position, error_position, "Нечего исполнять", None, False)
 
   if COMMANDLINE_ARGUMENTS["debug"] or COMMANDLINE_ARGUMENTS["tokens"]:
     [print("[ТОКЕНЫ]", i) for i in tokens]
@@ -70,7 +77,7 @@ def run(module_name: str, source_code: str):
   if COMMANDLINE_ARGUMENTS["compile"]:
     compiler = Compiler(module_name)
 
-    compiler.compile(ast.node)
+    compiler.compile(ast.node.elements)
 
     compiler.replace_code("mark", ".mark")
 
@@ -108,7 +115,8 @@ def run(module_name: str, source_code: str):
       "!buffer_size = 1024",
       "!buffer rb !buffer_size",
 
-      "!variables_counter dq 0",
+      "!frames_counter dq 0",
+      "!check dq 0",
     ] + [f"{variable} dq 0"for variable in compiler.variables]
 
     if not COMMANDLINE_ARGUMENTS["comments"]:
