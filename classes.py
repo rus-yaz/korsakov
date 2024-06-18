@@ -5,103 +5,29 @@ from tokens import *
 
 
 class Value:
-  """
-    Описание:
-      Родительский класс типов данных в языке. Все методы обработки операций, передаваемые потомкам, возвращают сигнал ошибки о неизвестной операции
-
-    Аргументы: -
-
-    Поля класса:
-      position_start (Position): позиция начала элемента
-      position_end (Position): позиция конца элемента
-  """
-
   def __init__(self):
     self.set_position()
     self.set_context()
 
   def set_position(self, position_start=None, position_end=None):
-    """
-      Описание:
-        Установка переданных позиций начала и конца элемента
-
-      Аргументы:
-        position_start (Position): позиция начала элемента
-        position_end (Position): позиция конца элемента
-
-      Возвращаемое значение:
-        Value: сам экземпляр
-    """
     self.position_start = position_start
     self.position_end = position_end
     return self
 
   def set_context(self, context=None):
-    """
-      Описание:
-        Установка переданного контекста
-
-      Аргументы:
-        context (Context): хранилище, в котором находится элемент
-
-      Возвращаемое значение:
-        Value: сам экземпляр
-    """
     self.context = context
     return self
 
   def both(self, operand):
-    """
-      Описание:
-        Логическая операция "и"
-
-      Аргументы:
-        operand (Value): второй операнд
-
-      Возвращаемое значение:
-        Number: результат логической операции "и"
-        None: сигнал об отсутствии ошибки
-    """
     return Number(self.is_true() and operand.is_true(), self.context), None
 
   def some(self, operand):
-    """
-      Описание:
-        Логическая операция "или"
-
-      Аргументы:
-        operand (Value): второй операнд
-
-      Возвращаемое значение:
-        Number: результат логической операции "или"
-        None: сигнал об отсутствии ошибки
-    """
     return Number(self.is_true() or operand.is_true(), self.context), None
 
   def denial(self):
-    """
-      Описание:
-        Логическая операция "не"
-
-      Аргументы: -
-
-      Возвращаемое значение:
-        Number: результат логической операции "не"
-        None: сигнал об отсутствии ошибки
-    """
     return Number(not self.is_true(), self.context), None
 
   def illegal_operation(self, operand=None):
-    """
-      Описание:
-        Сигнал ошибки о неизвестной оперции для операнда или пары операндов
-
-      Аргументы:
-        operand (*Value): второй операнд (по умолчанию - нуль)
-
-      Возвращаемое значение:
-        RuntimeError: сигнал ошибки о неизвестной операции над одним или двумя операндами
-    """
     return RuntimeError(
       self.position_start, operand.position_end,
       f"Неизвестная операция для {self.__class__.__name__}{"и" + operand.__class__.__name__ if operand else ""}",
@@ -140,19 +66,6 @@ class Value:
 
 
 class Number(Value):
-  """
-    Описание:
-      Класс типа Число. Содержит целое или дробное число
-
-    Аргументы:
-      value (число): значение элемента
-      context (Context): хранилище, в котором находится элемент
-
-    Поля класса:
-      value (число): значение элемента
-      context (Context): хранилище, в котором находится элемент
-  """
-
   def __init__(self, value, context):
     super().__init__()
     self.value = int(value) if isinstance(value, bool) else value
@@ -165,92 +78,30 @@ class Number(Value):
     return f"Число({self.value})"
 
   def copy(self):
-    """
-      Описание:
-        Копирование элемента
-
-      Аргументы: -
-
-      Возвращаемое значение:
-        Number: копия самого экзмепляра
-    """
     return Number(self.value, self.context).set_position(self.position_start, self.position_end)
 
   def is_true(self):
-    """
-      Описание:
-        Проверка на истинность
-
-      Аргументы: -
-
-      Возвращаемое значение:
-        Булево значение: если значение не равно нулю - истина, иначе - ложь
-    """
     return self.value not in [0, None]
 
   def addition(self, operand):
-    """
-      Описание:
-        Операция сложения между Number и Number
-
-      Аргументы:
-        operand (Number): второй операнд
-
-      Возвращаемое значение:
-        Number или None: результат сложения или нуль
-        RuntimeError или None: сигнал ошибки или нуль
-    """
     if isinstance(operand, Number):
       return Number(self.value + operand.value, self.context), None
 
     return None, Value.illegal_operation(self, operand)
 
   def subtraction(self, operand):
-    """
-      Описание:
-        Операция сложения между Number и Number
-
-      Аргументы:
-        operand (Number): второй операнд
-
-      Возвращаемое значение:
-        Number или None: результат вычитания или нуль
-        RuntimeError или None: сигнал ошибки или нуль
-    """
     if isinstance(operand, Number):
       return Number(self.value - operand.value, self.context), None
 
     return None, Value.illegal_operation(self, operand)
 
   def multiplication(self, operand):
-    """
-      Описание:
-        Операция произведения между Number и Number, String или List
-
-      Аргументы:
-        operand (Number, String или List): второй операнд
-
-      Возвращаемое значение:
-        Number, String, List или None: результат произведения или нуль
-        RuntimeError или None: сигнал ошибки или нуль
-    """
     if isinstance(operand, List | Number | String):
       return type(operand)(self.value * operand.value, self.context), None
 
     return None, Value.illegal_operation(self, operand)
 
   def division(self, operand):
-    """
-      Описание:
-        Операция деления между Number и Number
-
-      Аргументы:
-        operand (Number): второй операнд
-
-      Возвращаемое значение:
-        Number или None: результат деления или нуль
-        RuntimeError или None: сигнал ошибки или нуль
-    """
     if isinstance(operand, Number):
       if operand.value == 0:
         return None, RuntimeError(operand.position_start, operand.position_end, "Деление на ноль", self.context)
@@ -260,136 +111,48 @@ class Number(Value):
     return None, Value.illegal_operation(self, operand)
 
   def power(self, operand):
-    """
-      Описание:
-        Операция возведения в степень между Number и Number
-
-      Аргументы:
-        operand (Number): второй операнд (степень)
-
-      Возвращаемое значение:
-        Number или None: результат возведения в степень или нуль
-        RuntimeError или None: сигнал ошибки или нуль
-    """
     if isinstance(operand, Number):
       return Number(self.value ** operand.value, self.context), None
 
     return None, Value.illegal_operation(self, operand)
 
   def root(self, operand):
-    """
-      Описание:
-        Операция извлечения корня между Number и Number
-
-      Аргументы:
-        operand (Number): второй операнд (подкоренное выражение)
-
-      Возвращаемое значение:
-        Number или None: результат извлечения корня или нуль
-        RuntimeError или None: сигнал ошибки или нуль
-    """
     if isinstance(operand, Number):
       return Number(operand.value ** (1 / self.value), self.context), None
 
     return None, Value.illegal_operation(self, operand)
 
   def equal(self, operand):
-    """
-      Описание:
-        Операция равенства между Number и Number
-
-      Аргументы:
-        operand (Number): второй операнд
-
-      Возвращаемое значение:
-        Number или None: результат операции равенства или нуль
-        RuntimeError или None: сигнал ошибки или нуль
-    """
     if isinstance(operand, Number):
       return Number(self.value == operand.value, self.context), None
 
     return None, Value.illegal_operation(self, operand)
 
   def not_equal(self, operand):
-    """
-      Описание:
-        Операция неравества между Number и Number
-
-      Аргументы:
-        operand (Number): второй операнд
-
-      Возвращаемое значение:
-        Number или None: результат операции неравенства или нуль
-        RuntimeError или None: сигнал ошибки или нуль
-    """
     if isinstance(operand, Number):
       return Number(self.value != operand.value, self.context), None
 
     return None, Value.illegal_operation(self, operand)
 
   def less(self, operand):
-    """
-      Описание:
-        Операция сравнения "меньше" между Number и Number
-
-      Аргументы:
-        operand (Number): второй операнд
-
-      Возвращаемое значение:
-        Number или None: результат операции сравнения "меньше" или нуль
-        RuntimeError или None: сигнал ошибки или нуль
-    """
     if isinstance(operand, Number):
       return Number(self.value < operand.value, self.context), None
 
     return None, Value.illegal_operation(self, operand)
 
   def more(self, operand):
-    """
-      Описание:
-        Операция сравнения "больше" между Number и Number
-
-      Аргументы:
-        operand (Number): второй операнд
-
-      Возвращаемое значение:
-        Number или None: результат операции сравнения "меньше" или нуль
-        RuntimeError или None: сигнал ошибки или нуль
-    """
     if isinstance(operand, Number):
       return Number(self.value > operand.value, self.context), None
 
     return None, Value.illegal_operation(self, operand)
 
   def less_or_equal(self, operand):
-    """
-      Описание:
-        Операция сравнения "меньше или равно" между Number и Number
-
-      Аргументы:
-        operand (Number): второй операнд
-
-      Возвращаемое значение:
-        Number или None: результат операции сравнения "меньше или равно" или нуль
-        RuntimeError или None: сигнал ошибки или нуль
-    """
     if isinstance(operand, Number):
       return Number(self.value <= operand.value, self.context), None
 
     return None, Value.illegal_operation(self, operand)
 
   def more_or_equal(self, operand):
-    """
-      Описание:
-        Операция сравнения "больше или равно" между Number и Number
-
-      Аргументы:
-        operand (Number): второй операнд
-
-      Возвращаемое значение:
-        Number или None: результат операции сравнения "больше или равно" или нуль
-        RuntimeError или None: сигнал ошибки или нуль
-    """
     if isinstance(operand, Number):
       return Number(self.value >= operand.value, self.context), None
 
@@ -397,19 +160,6 @@ class Number(Value):
 
 
 class String(Value):
-  """
-    Описание:
-      Класс типа Строка. Содержит строковые литералы
-
-    Аргументы:
-      value (строка): значение элемента
-      context (Context): хранилище, в котором находится элемент
-
-    Поля класса:
-      value (строка): значение элемента
-      context (Context): хранилище, в котором находится элемент
-  """
-
   def __init__(self, value, context):
     super().__init__()
     self.value = value
@@ -422,192 +172,64 @@ class String(Value):
     return f"Строка(\"{self.value}\")"
 
   def copy(self):
-    """
-      Описание:
-        Копирование элемента
-
-      Аргументы: -
-
-      Возвращаемое значение:
-        String: копия самого экзмепляра
-    """
     return String(self.value, self.context).set_position(self.position_start, self.position_end)
 
   def is_true(self):
-    """
-      Описание:
-        Проверка на истинность
-
-      Аргументы: -
-
-      Возвращаемое значение:
-        Булево значение: если значение не равно пустой строке - истина, иначе - ложь
-    """
     return self.value != ""
 
   def get(self, index: Number, default_value: Value = None):
-    """
-      Описание:
-        Операция получения символа по индексу
-
-      Аргументы:
-        index (Number): индекс элемента
-        default_value (Value): значение, которое будет отправлено в случае, если индекс выходит за рамки строки
-
-      Возвращаемое значение:
-        String или Value: символ из строки или значение по умолчанию
-    """
     if -len(self.value) <= index.value < len(self.value):
       return String(self.value[index.value], self.context)
 
     return default_value
 
   def set(self, index: Number, value):
-    """
-      Описание:
-        Операция замены символа по индексу
-
-      Аргументы:
-        index (Number): индекс символа
-        value (String): заменяющий символ
-
-      Возвращаемое значение:
-        String: сам экземпляр
-    """
     self.value = self.value[:index.value] + value.value + self.value[index.value + 1:]
     return self
 
   def addition(self, operand):
-    """
-      Описание:
-        Операция сложения между String и String
-
-      Аргументы:
-        operand (String): второй операнд
-
-      Возвращаемое значение:
-        String или None: результат сложения или нуль
-        RuntimeError или None: сигнал ошибки или нуль
-    """
     if isinstance(operand, String):
       return String(self.value + operand.value, self.context), None
 
     return None, Value.illegal_operation(self, operand)
 
   def multiplication(self, operand):
-    """
-      Описание:
-        Операция произведения между String и Number
-
-      Аргументы:
-        operand (Number): второй операнд
-
-      Возвращаемое значение:
-        String или None: результат произведения или нуль
-        RuntimeError или None: сигнал ошибки или нуль
-    """
     if isinstance(operand, Number):
       return String(self.value * operand.value, self.context), None
 
     return None, Value.illegal_operation(self, operand)
 
   def equal(self, operand):
-    """
-      Описание:
-        Операция равенства между String и String
-
-      Аргументы:
-        operand (String): второй операнд
-
-      Возвращаемое значение:
-        Number или None: результат операции равенства или нуль
-        RuntimeError или None: сигнал ошибки или нуль
-    """
     if isinstance(operand, String):
       return Number(self.value == operand.value, self.context), None
 
     return None, Value.illegal_operation(self, operand)
 
   def not_equal(self, operand):
-    """
-      Описание:
-        Операция неравества между String и String
-
-      Аргументы:
-        operand (String): второй операнд
-
-      Возвращаемое значение:
-        Number или None: результат операции неравенства или нуль
-        RuntimeError или None: сигнал ошибки или нуль
-    """
     if isinstance(operand, String):
       return Number(self.value != operand.value, self.context), None
 
     return None, Value.illegal_operation(self, operand)
 
   def less(self, operand):
-    """
-      Описание:
-        Операция сравнения "меньше" между String и String
-
-      Аргументы:
-        operand (String): второй операнд
-
-      Возвращаемое значение:
-        Number или None: результат операции сравнения "меньше" или нуль
-        RuntimeError или None: сигнал ошибки или нуль
-    """
     if isinstance(operand, String):
       return Number(self.value < operand.value, self.context), None
 
     return None, Value.illegal_operation(self, operand)
 
   def more(self, operand):
-    """
-      Описание:
-        Операция сравнения "больше" между String и String
-
-      Аргументы:
-        operand (String): второй операнд
-
-      Возвращаемое значение:
-        Number или None: результат операции сравнения "меньше" или нуль
-        RuntimeError или None: сигнал ошибки или нуль
-    """
     if isinstance(operand, String):
       return Number(self.value > operand.value, self.context), None
 
     return None, Value.illegal_operation(self, operand)
 
   def less_or_equal(self, operand):
-    """
-      Описание:
-        Операция сравнения "меньше или равно" между String и String
-
-      Аргументы:
-        operand (String): второй операнд
-
-      Возвращаемое значение:
-        Number или None: результат операции сравнения "меньше или равно" или нуль
-        RuntimeError или None: сигнал ошибки или нуль
-    """
     if isinstance(operand, String):
       return Number(self.value <= operand.value, self.context), None
 
     return None, Value.illegal_operation(self, operand)
 
   def more_or_equal(self, operand):
-    """
-      Описание:
-        Операция сравнения "больше или равно" между String и String
-
-      Аргументы:
-        operand (String): второй операнд
-
-      Возвращаемое значение:
-        Number или None: результат операции сравнения "больше или равно" или нуль
-        RuntimeError или None: сигнал ошибки или нуль
-    """
     if isinstance(operand, String):
       return Number(self.value >= operand.value, self.context), None
 
@@ -615,19 +237,6 @@ class String(Value):
 
 
 class List(Value):
-  """
-    Описание:
-      Класс типа Список. Содержит некоторое количество элементов
-
-    Аргументы:
-      value (список): значение элемента
-      context (Context): хранилище, в котором находится элемент
-
-    Поля класса:
-      value (список): значение элемента
-      context (Context): хранилище, в котором находится элемент
-  """
-
   def __init__(self, values: list, context):
     super().__init__()
     self.value = values.copy()
@@ -640,124 +249,40 @@ class List(Value):
     return f"Список({str(self)})"
 
   def copy(self):
-    """
-      Описание:
-        Копирование элемента
-
-      Аргументы: -
-
-      Возвращаемое значение:
-        List: копия самого экзмепляра
-    """
     return List(self.value.copy(), self.context).set_position(self.position_start, self.position_end)
 
   def is_true(self):
-    """
-      Описание:
-        Проверка на истинность
-
-      Аргументы: -
-
-      Возвращаемое значение:
-        Булево значение: если значение не равно пустому списку - истина, иначе - ложь
-    """
     return self.value != []
 
   def get(self, index: Number, default_value: Value = None):
-    """
-      Описание:
-        Операция получения символа по индексу
-
-      Аргументы:
-        index (Number): индекс элемента
-        default_value (Value): значение, которое будет отправлено в случае, если индекс выходит за рамки строки
-
-      Возвращаемое значение:
-        Value: элемент из списка или значение по умолчанию
-    """
     if -len(self.value) <= index.value < len(self.value):
       return self.value[index.value]
 
     return default_value
 
   def set(self, index: Number, value: Value):
-    """
-      Описание:
-        Операция замены элемента по индексу
-
-      Аргументы:
-        index (Number): индекс элемента
-        value (Value): заменяющий элемент
-
-      Возвращаемое значение:
-        List: сам экземпляр
-    """
     self.value[index.value] = value
     return self
 
   def addition(self, operand):
-    """
-      Описание:
-        Операция сложения между List и List
-
-      Аргументы:
-        operand (List): второй операнд
-
-      Возвращаемое значение:
-        List или None: результат сложения или нуль
-        RuntimeError или None: сигнал ошибки или нуль
-    """
     if isinstance(operand, List):
       return List(self.value + operand.value, self.context), None
 
     return None, Value.illegal_operation(self, operand)
 
   def multiplication(self, operand: Number):
-    """
-      Описание:
-        Операция произведения между List и Number
-
-      Аргументы:
-        operand (Number): второй операнд
-
-      Возвращаемое значение:
-        List или None: результат произведения или нуль
-        RuntimeError или None: сигнал ошибки или нуль
-    """
     if isinstance(operand, Number):
       return List(self.value * operand.value, self.context), None
 
     return None, Value.illegal_operation(self, operand)
 
   def equal(self, operand):
-    """
-      Описание:
-        Операция равенства между List и List
-
-      Аргументы:
-        operand (List): второй операнд
-
-      Возвращаемое значение:
-        Number или None: результат операции равенства или нуль
-        RuntimeError или None: сигнал ошибки или нуль
-    """
     if isinstance(operand, List):
       return Number(self.value == operand.value, self.context), None
 
     return None, Value.illegal_operation(self, operand)
 
   def not_equal(self, operand):
-    """
-      Описание:
-        Операция неравества между List и List
-
-      Аргументы:
-        operand (List): второй операнд
-
-      Возвращаемое значение:
-        Number или None: результат операции неравенства или нуль
-        RuntimeError или None: сигнал ошибки или нуль
-    """
     if isinstance(operand, List):
       return Number(self.value != operand.value, self.context), None
 
@@ -765,19 +290,6 @@ class List(Value):
 
 
 class Dictionary(Value):
-  """
-    Описание:
-      Класс типа Словарь. Содержит некоторое количество пар ключ-значение
-
-    Аргументы:
-      value (список): значение элемента
-      context (Context): хранилище, в котором находится элемент
-
-    Поля класса:
-      value (список): значение элемента
-      context (Context): хранилище, в котором находится элемент
-  """
-
   def __init__(self, value: list[list], context):
     super().__init__()
     self.value = value
@@ -790,58 +302,18 @@ class Dictionary(Value):
     return f"Словарь({str(self)})"
 
   def copy(self):
-    """
-      Описание:
-        Копирование элемента
-
-      Аргументы: -
-
-      Возвращаемое значение:
-        Dictionary: копия самого экзмепляра
-    """
     return Dictionary(self.value.copy(), self.context).set_position(self.position_start, self.position_end)
 
   def is_true(self):
-    """
-      Описание:
-        Проверка на истинность
-
-      Аргументы: -
-
-      Возвращаемое значение:
-        Булево значение: если значение не равно пустому списку - истина, иначе - ложь
-    """
     return self.value != []
 
   def get(self, target: String | Number, default_value: Value = None):
-    """
-      Описание:
-        Операция получения значения по ключу
-
-      Аргументы:
-        key (Number или Sring): ключ
-        default_value (Value): значение, которое будет отправлено в случае, если индекс выходит за рамки строки
-
-      Возвращаемое значение:
-        Value: элемент из списка или значение по умолчанию
-    """
     for key, value in self.value:
       if key.value == target.value: return value
 
     return default_value
 
   def set(self, key: String | Number, value: Value):
-    """
-      Описание:
-        Операция замены/внесения значения по ключу
-
-      Аргументы:
-        key (Number или String): ключ
-        value (Value): заменяющий элемент
-
-      Возвращаемое значение:
-        Dictionary: сам экземпляр
-    """
     for index, pair in enumerate(self.value):
       if pair[0].value == key.value:
         self.value.pop(index)
@@ -851,53 +323,15 @@ class Dictionary(Value):
     return self
 
   def items(self):
-    """
-      Описание:
-        Операция получения пар в виде списков из двух элементов
-
-      Аргументы: -
-
-      Возвращаемое значение:
-        Список: пары
-    """
     return self.value.copy()
 
   def values(self):
-    """
-      Описание:
-        Операция получения значений в парах
-
-      Аргументы: -
-
-      Возвращаемое значение:
-        Список: значения из пар
-    """
     return [value for key, value in self.value]
 
   def keys(self):
-    """
-      Описание:
-        Операция получения ключей в парах
-
-      Аргументы: -
-
-      Возвращаемое значение:
-        List: ключи из пар
-    """
     return [key for key, value in self.value]
 
   def addition(self, operand):
-    """
-      Описание:
-        Операция сложения между Dictionary и Dictionary
-
-      Аргументы:
-        operand (Dictionary): второй операнд
-
-      Возвращаемое значение:
-        Dictionary или None: результат сложения или нуль
-        RuntimeError или None: сигнал ошибки или нуль
-    """
     if isinstance(operand, Dictionary):
       result = self.copy()
       for key, value in operand.value:
@@ -908,34 +342,12 @@ class Dictionary(Value):
     return None, Value.illegal_operation(self, operand)
 
   def equal(self, operand):
-    """
-      Описание:
-        Операция равенства между Dictionary и Dictionary
-
-      Аргументы:
-        operand (Dictionary): второй операнд
-
-      Возвращаемое значение:
-        Number или None: результат операции равенства или нуль
-        RuntimeError или None: сигнал ошибки или нуль
-    """
     if isinstance(operand, Dictionary):
       return Number(self.value == operand.value, self.context), None
 
     return None, Value.illegal_operation(self, operand)
 
   def not_equal(self, operand):
-    """
-      Описание:
-        Операция неравества между Dictionary и Dictionary
-
-      Аргументы:
-        operand (Dictionary): второй операнд
-
-      Возвращаемое значение:
-        Number или None: результат операции неравенства или нуль
-        RuntimeError или None: сигнал ошибки или нуль
-    """
     if isinstance(operand, Dictionary):
       return Number(self.value != operand.value, self.context), None
 
@@ -943,26 +355,6 @@ class Dictionary(Value):
 
 
 class Function(Value):
-  """
-    Описание:
-      Класс типа Функция. Содержит набор выражений, которые нужно выполнить при вызове функции
-
-    Аргументы:
-      name (строка): название функции
-      value (ListNode): список строк функции (элементы - *Node)
-      argument_names (список): список аргументов со значениями по умолчанию (элементы - VariableAccessNode или VariableAssignNode)
-      is_oneline (булево значение): является ли функция однострочной
-      context (Context): хранилище, в котором находится элемент
-
-    Поля класса:
-      name (строка): название функции
-      value (ListNode): список строк функции (элементы - *Node)
-      argument_names (список): список аргументов со значениями по умолчанию (элементы - VariableAccessNode или VariableAssignNode)
-      is_oneline (булево значение): является ли функция однострочной
-      context (Context): хранилище, в котором находится элемент
-      is_buildin (булево значение): параметр, отображающий, является ли функция встроенной
-      internal_context (Context): внутреннее хранилище функции
-  """
   def __init__(self, name, value, argument_names, is_oneline, context):
     super().__init__()
     self.name             = name or "<безымянная>"
@@ -980,28 +372,9 @@ class Function(Value):
     return f"Функция({self.name}; {List(self.get_argument_names(self.name), self.context)})"
 
   def copy(self):
-    """
-      Описание:
-        Копирование элемента
-
-      Аргументы: -
-
-      Возвращаемое значение:
-        Function: копия самого экзмепляра
-    """
     return Function(self.name, self.value, self.argument_names, self.is_oneline, self.context).set_position(self.position_start, self.position_end)
 
   def execute(self, arguments):
-    """
-      Описание:
-        Метод, отвечающий за исполнение функции
-
-      Аргументы:
-        arguments (список): список аргументов, передаваемых в функцию (элементы - VariableAccessNode и VariableAssignNode)
-
-      Возвращаемое значение:
-        RuntimeError или *Value: сигнал ошибки или возвращаемое значениее функции
-    """
     logger = RuntimeLogger()
 
     argument_names = self.get_argument_names(self.name)
@@ -1041,20 +414,6 @@ class Function(Value):
     return logger.success(return_value)
 
   def check_instance(self, value, argument_name, context, types, custom_message=""):
-    """
-      Описание:
-        Если тип не входит в список type, то будет возвращёт сигнал ошибки
-
-      Аргументы:
-        value (Value): проверяемое значение
-        argument_name (строка): название проверяемого аргумента
-        context (Context): хранилище, в котором находится элемент
-        type (список): список типов, один из которых должен принадлежать тип аргумента value
-        custom_message (строка): настраиваемое сообещние (по умолчанию - "")
-
-      Возвращаемое значение:
-        RuntimeError или None: сигнал об ошибке или нуль
-    """
     if isinstance(value, types):
       return False
 
@@ -1071,18 +430,6 @@ class Function(Value):
     ))
 
   def populate_arguments(self, argument_names, arguments, context):
-    """
-      Описание:
-        Метод, отвечающий за проверку и внесение значений аргументов в хранилище
-
-      Аргументы:
-        argument_names (список): названия аргументов
-        arguments (список): значения аргументов
-        context (Context): хранилище, в котором находится элемент
-
-      Возвращаемое значение:
-        RuntimeError или None: сигнал ошибки или нуль
-    """
     from interpreter import Interpreter
 
     interpreter = Interpreter(self.name)
@@ -1151,19 +498,6 @@ class Function(Value):
     return logger.success(None)
 
   def get_arguments(self, context: Context, function_name, argument_names=None):
-    """
-      Описание:
-        Метод для получения переменных из хранилища по именам
-
-      Аргументы:
-        context (Context): хранилище, в котором располагаются значения аргументов
-        function_name (строка): название функции
-        argument_names (список): названия аргументов (элементы - строки)
-
-      Возвращаемое значение:
-        RuntimeError или None: сигнал ошибки или нуль
-        Неопределённое количество *Value: несколько значений, количетсво которых соответствует количеству аргументов
-    """
     from interpreter import Interpreter
 
     interpreter = Interpreter(self.name)
@@ -1214,30 +548,14 @@ class Function(Value):
 
     return None, *values
 
-  def get_argument_names(self, function_name):
-    """
-      Описание:
-        Метод для получения названий аргументов
-
-      Аргументы:
-        function_name (строка): название функции
-
-      Возвращаемое значение:
-        Список: названия аргументов функции
-    """
+  def get_argument_names(self, function_name) -> dict[tuple[str], type]:
     for function_names, arguments in functions.items():
       if function_name in function_names:
         return arguments
 
+    return {}
+
   def no_interpret_method(self):
-    """
-      Описание:
-        Метод, вызывающий ошибку о том, что встроенная функция не объявлена
-
-      Аргументы: -
-
-      Возвращаемое значение: -
-    """
     raise Exception(f"Метод _{self.name} не объявлен")
 
   # BuildIn Functions
@@ -1531,23 +849,6 @@ build_in_functions_names = [name for function_names in functions.keys() for name
 
 
 class Class(Function):
-  """
-    Описание:
-      Класс типа Класс. Содержит набор выражений, которые нужно выполнить при создании экземпляра класса
-
-    Аргументы:
-      name (строка): название класса
-      value (ListNode): список строк тела класса (элементы - *Node)
-      parents (список): список названий родительских классов (элементы - строки)
-      context (Context): хранилище, в котором находится элемент
-
-    Поля класса:
-      name (строка): название класса
-      value (ListNode): список строк тела класса (элементы - *Node)
-      parents (список): список названий родительских классов (элементы - строки)
-      context (Context): хранилище, в котором находится элемент
-      internal_context (Context): внутреннее хранилище функции
-  """
   def __init__(self, name, value, parents, context):
     self.name = name
     self.value: Dictionary = value
@@ -1560,28 +861,9 @@ class Class(Function):
     return f"Класс({self.name}; {self.value}; {self.parents})"
 
   def copy(self):
-    """
-      Описание:
-        Копирование элемента
-
-      Аргументы: -
-
-      Возвращаемое значение:
-        Class: копия самого экзмепляра
-    """
     return Class(self.name, self.value, self.parents, self.context).set_position(self.position_start, self.position_end)
 
   def execute(self, arguments):
-    """
-      Описание:
-        Метод, отвечающий за создание экземпляров класса
-
-      Аргументы:
-        arguments (список): список аргументов, передаваемых в функцию (элементы - VariableAccessNode и VariableAssignNode)
-
-      Возвращаемое значение:
-        RuntimeError или Object: сигнал ошибки или экземпляр класса
-    """
     logger = RuntimeLogger()
 
     context = Context(self.name, self.context.variables, self.context, self.position_start)
@@ -1634,17 +916,6 @@ class Class(Function):
 
 
 class Object(Dictionary):
-  """
-    Описание:
-      Класс типа Объект. Содержит набор методов и полей для создаваемого экземпляра класса
-
-    Аргументы:
-      value (список): значение элемента. Набор методов и полей
-      context (Context): хранилище, в котором находится элемент
-  """
-  def __init__(self, value, context):
-    super().__init__(value, context)
-
   def __repr__(self):
     return f"Объект({str(self)})"
 
@@ -1653,40 +924,8 @@ class Object(Dictionary):
 
 
 class Method(Function):
-  """
-    Описание:
-      Класс типа Метод. Содержит набор выражений, которые нужно выполнить при вызове функции
-
-    Аргументы:
-      name (строка): название функции
-      value (ListNode): список строк функции (элементы - *Node)
-      argument_names (список): список аргументов со значениями по умолчанию (элементы - VariableAccessNode или VariableAssignNode)
-      is_oneline (булево значение): является ли функция однострочной
-      context (Context): хранилище, в котором находится элемент
-
-    Поля класса:
-      name (строка): название функции
-      value (ListNode): список строк функции (элементы - *Node)
-      argument_names (список): список аргументов со значениями по умолчанию (элементы - VariableAccessNode или VariableAssignNode)
-      is_oneline (булево значение): является ли функция однострочной
-      context (Context): хранилище, в котором находится элемент
-      is_buildin (булево значение): параметр, отображающий, является ли функция встроенной
-      internal_context (Context): внутреннее хранилище функции
-  """
-  def __init__(self, name, value, argument_names, is_oneline, context):
-    super().__init__(name, value, argument_names, is_oneline, context)
-
   def __repr__(self):
     return f"Метод({self.name}; {list(self.get_argument_names(self.name))})"
 
   def copy(self):
-    """
-      Описание:
-        Копирование элемента
-
-      Аргументы: -
-
-      Возвращаемое значение:
-        Method: копия самого экзмепляра
-    """
     return Method(self.name, self.value, self.argument_names, self.is_oneline, self.context).set_position(self.position_start, self.position_end)

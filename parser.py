@@ -4,7 +4,7 @@ from tokens import *
 
 
 class Parser:
-  def __init__(self, tokens: [Token]):
+  def __init__(self, tokens: list[Token]):
     self.tokens = tokens
 
     self.token_index = 0
@@ -969,11 +969,11 @@ class Parser:
       ))
 
     if all(key.token.value not in ["__инициализация__", "__init__"] for key, _ in methods):
+      initial_method_name = Token(STRING, "__инициализация__")
       initial_method = MethodDefinitionNode(
-        Token(STRING, "__инициализация__"),
+        initial_method_name,
         [VariableAccessNode(Token(IDENTIFIER, "объект"))],
         ListNode([], self.token.position_start, self.token.position_end),
-        True,
         True
       )
 

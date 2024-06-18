@@ -763,7 +763,10 @@ class Compiler:
     self.comment("Тело ветви \"для\"")
     self.mark()
 
-    self.compile(node.body_node.elements)
+    if isinstance(node.body_node, ListNode):
+      self.compile(node.body_node.elements)
+    else:
+      self.compile(node.body_node)
 
     self.comment("Инкрементация итератора")
 
@@ -792,7 +795,10 @@ class Compiler:
       self.replace_mark(self.counters["indent"], "loop_else_end")
       self.mark()
 
-      self.compile(else_body.elements)
+      if isinstance(else_body, ListNode):
+        self.compile(else_body.elements)
+      else:
+        self.compile(else_body)
 
     self.replace_mark(self.counters["indent"], "loop_end_mark")
     self.replace_mark("", "break")
@@ -824,7 +830,11 @@ class Compiler:
 
     self.comment("Тело ветви \"пока\"")
     self.mark()
-    self.compile(node.body_node.elements)
+
+    if isinstance(node.body_node, ListNode):
+      self.compile(node.body_node.elements)
+    else:
+      self.compile(node.body_node)
 
     self.comment("Возвращение к началу цикла")
     self.jump(loop_start_mark)
@@ -838,6 +848,11 @@ class Compiler:
       self.mark()
 
       self.compile(else_body.elements)
+
+      if isinstance(else_body, ListNode):
+        self.compile(else_body.elements)
+      else:
+        self.compile(else_body)
 
     self.comment("Конец цикла \"пока\"")
     self.replace_mark(self.counters["indent"], "loop_end_mark")

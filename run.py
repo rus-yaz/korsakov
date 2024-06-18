@@ -4,9 +4,9 @@ from subprocess import run as cmd
 
 from compiler import Compiler
 from interpreter import Interpreter
+from loggers import Position, RuntimeError
 from tokenizer import Tokenizer
 from tokens import global_context
-from loggers import Position, RuntimeError
 
 COMMANDLINE_ARGUMENTS = dict.fromkeys(["compile", "asm", "comments", "object", "debug", "nostd", "tokens", "ast", "context"], False)
 

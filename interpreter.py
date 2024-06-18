@@ -22,11 +22,11 @@ class Interpreter:
     self.file_path = realpath(file_name)
     self.script_location, self.file_name = self.file_path.rsplit(PATH_SEPARATOR, 1)
 
-  def interpret(self, node, context: Context) -> Number:
+  def interpret(self, node, context: Context):
     visitor = getattr(self, f"interpret_{node.__class__.__name__}", self.no_interpret_method)
     return visitor(node, context)
 
-  def no_interpret_method(self, node, _) -> None:
+  def no_interpret_method(self, node, _):
     raise Exception(f"Метод interpret_{type(node).__name__} не объявлен")
 
   def interpret_NumberNode(self, node: NumberNode, context: Context):
@@ -67,7 +67,7 @@ class Interpreter:
 
     return logger.success(List(elements, context).set_position(node.position_start, node.position_end))
 
-  def interpret_BinaryOperationNode(self, node: BinaryOperationNode, context: Context) -> Number:
+  def interpret_BinaryOperationNode(self, node: BinaryOperationNode, context: Context):
     logger = RuntimeLogger()
     error = None
 
@@ -110,7 +110,7 @@ class Interpreter:
 
     return logger.success(result.set_position(node.position_start, node.position_end))
 
-  def interpret_UnaryOperationNode(self, node: UnaryOperationNode, context: Context) -> Number:
+  def interpret_UnaryOperationNode(self, node: UnaryOperationNode, context: Context):
     logger = RuntimeLogger()
     error = None
 

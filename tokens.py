@@ -1,10 +1,12 @@
+from typing import Optional, Union
+
 from context import Context
 from loggers import Position
 
 
 class Token:
-  def __init__(self, type: str, value: str = None, position_start: Position = None, position_end: Position = None):
-    self.type = type
+  def __init__(self, token_type: str, value: Optional[Union[str, int, float]] = None, position_start: Optional[Position] = None, position_end: Optional[Position] = None):
+    self.token_type = token_type
     self.value = value
 
     self.position_start = None
@@ -18,13 +20,13 @@ class Token:
       self.position_end = position_end.copy()
 
   def __repr__(self):
-    return f"Token(type={self.type!r}, value={self.value!r}, position_start={self.position_start}, position_end={self.position_end})"
+    return f"Token(type={self.token_type!r}, value={self.value!r}, position_start={self.position_start}, position_end={self.position_end})"
 
   def copy(self):
-    return Token(self.type, self.value, self.position_start, self.position_end)
+    return Token(self.token_type, self.value, self.position_start, self.position_end)
 
   def check_type(self, *types):
-    return self.type in types
+    return self.token_type in types
 
   def check_keyword(self, *keywords):
     return self.value in [keyword for keywords_pair in keywords for keyword in keywords_pair]

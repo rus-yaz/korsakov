@@ -1,112 +1,129 @@
-from loggers import *
-from tokens import *
+from typing import Optional
+
+from loggers import Error, IllegalCharacterError, InvalidSyntaxError, Position
+from tokens import (ADDITION, ASSIGN, BACK_SLASH, CLOSED_LIST_PAREN,
+                    CLOSED_PAREN, COLON, DECREMENT, DIVISION,
+                    END_OF_CONSTRUCTION, END_OF_FILE, EQUAL, ESCAPE_SEQUENCES,
+                    EXCLAMATION_MARK, FLOAT, IDENTIFIER, INCREMENT, INTEGER,
+                    KEYWORD, KEYWORDS, LESS, LESS_OR_EQUAL, MORE,
+                    MORE_OR_EQUAL, MULTIPLICATION, NEWLINE, NOT_EQUAL,
+                    OPEN_LIST_PAREN, OPEN_PAREN, PERCENT, POINT, POWER, ROOT,
+                    SEMICOLON, SPACE, STRING, SUBTRACTION, Token)
 
 
 class Tokenizer:
-  def __init__(self, file_name, text: str) -> None:
+  def __init__(self, file_name: str, text: str):
     self.file_name = file_name
     self.text = text
+    self.tokens: list[Token] = []
     self.reset()
     self.next()
 
-  def reset(self) -> None:
+  def reset(self):
     self.position = Position(-1, 0, 0, self.file_name, self.text)
-    self.character = None
+    self.character: Optional[str] = None
 
-  def next(self) -> None:
+  def next(self):
     self.position.next(self.character)
     self.character = self.text[self.position.index] if self.position.index < len(self.text) else None
 
-  def tokenize(self) -> [[Token], None | Error]:
-    self.tokens: list[Token] = []
-
-    while self.character != None:
-      token: Token = None
-      previous_token: Token = self.tokens[-1] if self.tokens else None
+  def tokenize(self) -> tuple[Optional[list[Token]], Optional[Error]]:
+    while self.character is not None:
+      token_type: Optional[str] = None
+      previous_token: Optional[Token] = self.tokens[-1] if self.tokens else None
       position_start = self.position.copy()
 
-      if self.character.isdigit():
-        self.tokens += [self.make_number()]
-        continue
-      elif self.character.isalpha() or self.character == "_":
+      if self.character.isalpha() or self.character == "_":
         self.tokens += [self.make_identifier()]
         continue
-      elif self.character == "\"":
+
+      if self.character.isdigit():
+        number, error = self.make_number()
+        if not number or error:
+          return None, error
+
+        self.tokens += [number]
+        continue
+
+      if self.character == "\"":
         string, error = self.make_string()
-        if error:
+        if not string or error:
           return None, error
 
         self.tokens += [string]
         continue
 
       match self.character:
-        case " " | "\t": token = None if not self.tokens or self.tokens[-1].check_type(SPACE, NEWLINE) else SPACE
-        case "\n": token = None if not self.tokens or self.tokens[-1].check_type(NEWLINE) else NEWLINE
+        case " " | "\t": token_type = None if not self.tokens or self.tokens[-1].check_type(SPACE, NEWLINE) else SPACE
+        case "\n": token_type = None if not self.tokens or self.tokens[-1].check_type(NEWLINE) else NEWLINE
 
-        case ":": token = COLON
-        case ";": token = SEMICOLON
-        case ".": token = POINT
+        case ":": token_type = COLON
+        case ";": token_type = SEMICOLON
+        case ".": token_type = POINT
 
         case "!":
-          token = EXCLAMATION_MARK
-          if self.tokens and previous_token.check_type(EXCLAMATION_MARK):
+          token_type = EXCLAMATION_MARK
+          if previous_token and previous_token.check_type(EXCLAMATION_MARK):
             self.tokens.pop()
 
             while self.character not in ["\n", None]:
               self.next()
 
-            token = NEWLINE if self.tokens and not self.tokens[-1].check_type(NEWLINE) else None
+            token_type = NEWLINE if previous_token and not self.tokens[-1].check_type(NEWLINE) else None
         case "=":
-          token = ASSIGN
-          if self.tokens:
+          token_type = ASSIGN
+          if previous_token:
             if previous_token.check_type(EXCLAMATION_MARK):
-              token = NOT_EQUAL
+              token_type = NOT_EQUAL
             elif previous_token.check_type(ASSIGN):
-              token = EQUAL
+              token_type = EQUAL
             elif previous_token.check_type(MORE):
-              token = MORE_OR_EQUAL
+              token_type = MORE_OR_EQUAL
             elif previous_token.check_type(LESS):
-              token = LESS_OR_EQUAL
+              token_type = LESS_OR_EQUAL
 
             elif previous_token.check_type(EQUAL):
-              token = END_OF_CONSTRUCTION
+              token_type = END_OF_CONSTRUCTION
 
-          if token != ASSIGN:
-            position_start = previous_token.position_start
-            self.tokens.pop()
+            if token_type != ASSIGN:
+              position_start = previous_token.position_start
+              self.tokens.pop()
 
         case "+":
-          token = ADDITION
-          if self.tokens and previous_token.check_type(ADDITION):
-            token = None
+          token_type = ADDITION
+          if previous_token and previous_token.check_type(ADDITION):
+            token_type = None
             self.tokens.pop()
             identifier = None
-            if self.tokens and self.tokens[-1].check_type(IDENTIFIER):
+            if previous_token and self.tokens[-1].check_type(IDENTIFIER):
               identifier = self.tokens.pop()
 
-            self.tokens += [Token(INCREMENT, not identifier, position_start, self.position.copy()), identifier]
+            self.tokens += [Token(INCREMENT, not identifier, position_start, self.position.copy())]
+            if identifier:
+              self.tokens += [identifier]
+
             position_start = previous_token.position_start
         case "-":
-          token = SUBTRACTION
-          if self.tokens and previous_token.check_type(SUBTRACTION):
+          token_type = SUBTRACTION
+          if previous_token and previous_token.check_type(SUBTRACTION):
             self.tokens.pop()
             self.next()
 
             if self.character != "-":
               identifier = None
-              if self.tokens and self.tokens[-1].check_type(IDENTIFIER):
+              if previous_token and self.tokens[-1].check_type(IDENTIFIER):
                 identifier = self.tokens.pop()
 
               self.tokens += [Token(DECREMENT, not identifier, position_start, self.position.copy()), identifier]
               position_start = previous_token.position_start
               continue
 
-            token = END_OF_CONSTRUCTION
+            token_type = END_OF_CONSTRUCTION
         case "*":
-          token = MULTIPLICATION
-          if self.tokens:
+          token_type = MULTIPLICATION
+          if previous_token:
             if previous_token.check_type(MULTIPLICATION):
-              token = POWER
+              token_type = POWER
               position_start = previous_token.position_start
               self.tokens.pop()
             if previous_token.check_type(EXCLAMATION_MARK):
@@ -122,61 +139,66 @@ class Tokenizer:
 
                 self.next()
 
-              token = NEWLINE if self.tokens and not self.tokens[-1].check_type(NEWLINE) else None
+              token_type = NEWLINE if previous_token and not self.tokens[-1].check_type(NEWLINE) else None
         case "/":
-          token = DIVISION
-          if self.tokens:
+          token_type = DIVISION
+          if previous_token:
             if previous_token.check_type(BACK_SLASH):
-              token = LESS
+              token_type = LESS
             elif previous_token.check_type(DIVISION):
-              token = ROOT
+              token_type = ROOT
 
-          if token != DIVISION:
-            position_start = previous_token.position_start
-            self.tokens.pop()
+            if token_type != DIVISION:
+              position_start = previous_token.position_start
+              self.tokens.pop()
 
         case "\\":
-          token = BACK_SLASH
-          if self.tokens and previous_token.check_type(DIVISION):
-            token = MORE
+          token_type = BACK_SLASH
+          if previous_token and previous_token.check_type(DIVISION):
+            token_type = MORE
             position_start = previous_token.position_start
             self.tokens.pop()
 
         case "(":
-          token = OPEN_PAREN
-          if self.tokens and previous_token.check_type(PERCENT):
-            token = OPEN_LIST_PAREN
+          token_type = OPEN_PAREN
+          if previous_token and previous_token.check_type(PERCENT):
+            token_type = OPEN_LIST_PAREN
             position_start = previous_token.position_start
             self.tokens.pop()
         case ")":
-          token = CLOSED_PAREN
+          token_type = CLOSED_PAREN
 
         case "%":
-          token = PERCENT
-          if self.tokens:
+          token_type = PERCENT
+          if previous_token:
             if previous_token.check_type(CLOSED_PAREN):
-              token = CLOSED_LIST_PAREN
-            elif len(self.tokens) > 1 and [self.tokens[-1].type, self.tokens[-2].type] == [PERCENT, PERCENT]:
-              token = END_OF_CONSTRUCTION
+              token_type = CLOSED_LIST_PAREN
+            elif len(self.tokens) > 1 and [self.tokens[-1].token_type, self.tokens[-2].token_type] == [PERCENT, PERCENT]:
+              token_type = END_OF_CONSTRUCTION
               self.tokens.pop()
 
-          if token != PERCENT:
-            position_start = previous_token.position_start
-            self.tokens.pop()
+            if token_type != PERCENT:
+              position_start = previous_token.position_start
+              self.tokens.pop()
 
         case _:
           position_start = self.position.copy()
           char = self.character
           self.next()
-          print(self.character)
           return [], IllegalCharacterError(position_start, self.position.copy(), f"`{char}`")
 
-      self.tokens += [Token(token, None, position_start, self.position.copy())] if token else []
+      self.tokens += [Token(token_type, None, position_start, self.position.copy())] if token_type else []
       self.next()
 
     if self.tokens:
       self.tokens += [Token(END_OF_FILE, None, self.position.copy())]
-    return list(filter(lambda token: token and not token.check_type(SPACE), self.tokens)), None
+
+    tokens = []
+    for token in self.tokens:
+      if token and not token.check_type(SPACE):
+        tokens += [token]
+
+    return tokens, None
 
   def make_number(self):
     number = ""
@@ -202,31 +224,33 @@ class Tokenizer:
       position_end = self.position.copy()
       self.next()
 
-    return Token(FLOAT, float(number.replace(",", ".")), position_start, position_end) if float_point and not integer else Token(INTEGER, int(number), position_start, position_end)
+    if self.character is not None and self.character.isalpha():
+      return None, InvalidSyntaxError(self.position.copy(), self.position.copy(), "Ожидалось число")
+
+    if float_point and not integer:
+      return Token(FLOAT, float(number.replace(",", ".")), position_start, position_end), None
+
+    return Token(INTEGER, int(number), position_start, position_end), None
 
   def make_identifier(self):
     identifier = ""
     position_start = self.position.copy()
     position_end = self.position.copy()
 
-    while self.character != None and (self.character.isalnum() or self.character == "_"):
-      # Меня заставили
-      if self.character == "ё":
-        self.character = "е"
-
+    while self.character is not None and (self.character.isalnum() or self.character == "_"):
       identifier += self.character
       position_end = self.position.copy()
       self.next()
 
     return Token(KEYWORD if identifier in KEYWORDS else IDENTIFIER, identifier, position_start, position_end)
 
-  def make_string(self):
+  def make_string(self) -> tuple[Optional[Token], Optional[Error]]:
     string = ""
     position_start = self.position.copy()
     escape_sequence = False
     self.next()
 
-    while self.character != None and (self.character != "\"" or escape_sequence):
+    while self.character is not None and (self.character != "\"" or escape_sequence):
       if escape_sequence:
         string += ESCAPE_SEQUENCES.get(self.character, self.character)
         escape_sequence = False

@@ -1,31 +1,17 @@
+from typing import Optional
+
 from context import Context
 
 
 class RuntimeLogger:
-  """
-    Сборщик сигналов, работающий во время исполнения программы
-
-    Аргументы: -
-
-    Поля класса:
-      value (*Node): анализируемый нод абстрактного синтаксического дерева (по умолчанию - None)
-      error (*Error): обнаруженная в ноде ошибка (по умолчанию - None)
-      return_value (*Node): возвращаемое значение функции (по умолчанию - None)
-      skip (булево значение): обнаружение операции пропуска итерации (по умолчанию - False)
-      break (булево значение): обнаружение операции прерывания цикла (по умолчанию - False)
-  """
-
   def __init__(self):
-    self.reset()
+    self.value = None
+    self.error = None
+    self.return_value = None
+    self.skip_iteration = False
+    self.break_loop = False
 
   def reset(self):
-    """
-      Сброс значений сборщика на начальные
-
-      Аргументы: -
-
-      Возвращаемое значение: -
-    """
     self.value = None
     self.error = None
     self.return_value = None
@@ -33,15 +19,6 @@ class RuntimeLogger:
     self.break_loop = False
 
   def register(self, logger):
-    """
-      Регистрация предыдущих обработок из сборщика logger
-
-      Аргументы:
-        logger (*Logger): экземпляр логгера
-
-      Возвращаемое значение:
-        *Node: анализируемый нод абстрактного синтаксического дерева
-    """
     self.error = logger.error
     self.return_value = logger.return_value
     self.skip_iteration = logger.skip_iteration
@@ -49,103 +26,40 @@ class RuntimeLogger:
     return logger.value
 
   def success(self, value):
-    """
-      Подтверждение отсутствия ошибки в анализируемом ноде
-
-      Аргументы:
-        value (*Node): анализируемый нод синтаксического дерева
-
-      Возвращаемое значение:
-        RuntimeLogger: сам экземпляр
-    """
     self.reset()
     self.value = value
     return self
 
   def return_signal(self, value):
-    """
-      Подтвеждение сигнала возврата функцией значения
-
-      Аргументы:
-        value (*Node): возвращаемое значение
-
-      Возвращаемое значение:
-        RuntimeLogger: сам экземпляр
-    """
     self.reset()
     self.return_value = value
     return self
 
   def skip_signal(self):
-    """
-      Подтвеждение сигнала пропуска итерации
-
-      Аргументы: -
-
-      Возвращаемое значение:
-        RuntimeLogger: сам экземпляр
-    """
     self.reset()
     self.skip_iteration = True
     return self
 
   def break_signal(self):
-    """
-      Подтвеждение сигнала прерывания цикла
-
-      Аргументы: -
-
-      Возвращаемое значение:
-        RuntimeLogger: сам экземпляр
-    """
     self.reset()
     self.break_loop = True
     return self
 
   def failure(self, error):
-    """
-      Подтверждение ошибки в анализируемом ноде
-
-      Аргументы:
-        error (*Error): ошибка, обнаруженная в анализируемом ноде
-
-      Возвращаемое значение:
-        RuntimeLogger: сам экземпляр
-    """
     self.reset()
     self.error = error
     return self
 
   def should_return(self):
-    """
-      Подтверждение сигнала, если он есть
-
-      Аргументы: -
-
-      Возвращаемое значение:
-        *Error, *Node или булево значение: обнаруженная ошибка, возвращаемое значение функции или сигнал продолжения/прерывания цикла; если ничего не найдено, то будет возвращено False
-    """
     return self.error or self.return_value or self.skip_iteration or self.break_loop
 
 
-# TODO: Документация
 class ParsingLogger:
-  """
-    Сборщик сигналов, работающий во время исполнения программы
-
-    Аргументы: -
-
-    Поля класса:
-      error (*Error): обнаруженная в ноде ошибка (по умолчанию - None)
-      node (*Node): анализируемый нод абстрактного синтаксического дерева (по умолчанию - None)
-      registered_count
-      next_count
-  """
-
   def __init__(self):
     self.error = None
-    self.node = None
+    self.node: Optional[Node] = None
     self.registered_count = 0
+    self.to_reverse_count = 0
     self.next_count = 0
 
   def next(self, parser):
@@ -180,24 +94,6 @@ class ParsingLogger:
 
 
 class Position:
-  """
-    Класс, экземпляры которого обозначают положение элемента для отображения ошибок
-
-    Аргументы:
-      index (число): индекс элемента в очереди
-      row (число): номер строки, на которой находится элемент
-      column (число): номер столбец (символ), на котором находится элемент
-      file (строка): название файла, в котором был обнаружен элемент
-      text (строка): текст файла
-
-    Поля класса:
-      index (число): индекс элемента в очереди
-      row (число): номер строки, на которой находится элемент
-      column (число): номер столбец (символ), на котором находится элемент
-      file (строка): название файла, в котором был обнаружен элемент
-      text (строка): текст файла
-  """
-
   def __init__(self, index: int, row: int, column: int, file: str, text: str):
     self.index = index
     self.row = row
@@ -208,16 +104,7 @@ class Position:
   def __repr__(self):
     return f"Position(index={self.index}, row={self.row}, column={self.column})"
 
-  def next(self, char: str = None):
-    """
-      Метод для продвижения положения
-
-      Аргументы:
-        char (строка): символ, положение которого определяется
-
-      Возвращаемое значение:
-        Position: сам экземпляр класса
-    """
+  def next(self, char: Optional[str] = None):
     self.index += 1
     self.column += 1
 
@@ -228,35 +115,10 @@ class Position:
     return self
 
   def copy(self):
-    """
-      Дублирование экземпляра класса
-
-      Аргументы: -
-
-      Возвращаемое значение:
-        Position: копия экземпляра класса
-    """
     return Position(self.index, self.row, self.column, self.file, self.text)
 
 
 class Error:
-  """
-    Описание:
-      Родительский класс ошибок
-
-    Аргументы:
-      position_start (Position): начальная позиция элемента, в котором найдена ошибка
-      position_end (Position): конечная позиция элемента, в котором найдена ошибка
-      error (строка): текст ошибки
-      details (строка): детали ошибки (по умолчанию: "")
-
-    Поля класса:
-      position_start (Position): начальная позиция элемента, в котором найдена ошибка
-      position_end (Position): конечная позиция элемента, в котором найдена ошибка
-      error (строка): текст ошибки
-      details (строка): детали ошибки
-  """
-
   def __init__(self, position_start: Position, position_end: Position, error: str, details: str = ""):
     self.position_start = position_start
     self.position_end = position_end
@@ -271,15 +133,6 @@ class Error:
     return result
 
   def highlighting_with_arrows(self):
-    """
-      Описание:
-        Метод для выделения места ошибки
-
-      Аргументы: -
-
-      Возвращаемое значение:
-        Строка: подсвеченный фрагмент кода, где произошла ошибка
-    """
     result = ""
     text = self.position_start.text
 
@@ -305,173 +158,41 @@ class Error:
 
 
 class IllegalCharacterError(Error):
-  """
-    Описание:
-      Ошибка, описывающая обнаружение неизвестного символа
-
-    Аргументы:
-      position_start (Position): начальная позиция элемента, в котором найдена ошибка
-      position_end (Position): конечная позиция элемента, в котором найдена ошибка
-      details (строка): детали ошибки (по умолчанию: "")
-
-    Поля класса:
-      position_start (Position): начальная позиция элемента, в котором найдена ошибка
-      position_end (Position): конечная позиция элемента, в котором найдена ошибка
-      error (строка): текст ошибки
-      details (строка): детали ошибки
-  """
-
   def __init__(self, position_start: Position, position_end: Position, details: str = ""):
     super().__init__(position_start, position_end, "Неизвестный символ", details)
 
 
 class BadIdentifierError(Error):
-  """
-    Описание:
-      Ошибка, описывающая обнаружение неизвестного идентификатора
-
-    Аргументы:
-      position_start (Position): начальная позиция элемента, в котором найдена ошибка
-      position_end (Position): конечная позиция элемента, в котором найдена ошибка
-      details (строка): детали ошибки (по умолчанию: "")
-
-    Поля класса:
-      position_start (Position): начальная позиция элемента, в котором найдена ошибка
-      position_end (Position): конечная позиция элемента, в котором найдена ошибка
-      error (строка): текст ошибки
-      details (строка): детали ошибки
-  """
-
   def __init__(self, position_start: Position, position_end: Position, details: str = ""):
     super().__init__(position_start, position_end, "Неизвестный идентификатор", details)
 
 
 class BadCharacterError(Error):
-  """
-    Описание:
-      Ошибка, описывающая обнаружение неподходящего символа
-
-    Аргументы:
-      position_start (Position): начальная позиция элемента, в котором найдена ошибка
-      position_end (Position): конечная позиция элемента, в котором найдена ошибка
-      details (строка): детали ошибки (по умолчанию: "")
-
-    Поля класса:
-      position_start (Position): начальная позиция элемента, в котором найдена ошибка
-      position_end (Position): конечная позиция элемента, в котором найдена ошибка
-      error (строка): текст ошибки
-      details (строка): детали ошибки
-  """
-
   def __init__(self, position_start: Position, position_end: Position, details: str = ""):
     super().__init__(position_start, position_end, "Неподходящий символ", details)
 
 
 class InvalidSyntaxError(Error):
-  """
-    Описание:
-      Ошибка, описывающая обнаружение неверного синтаксиса
-
-    Аргументы:
-      position_start (Position): начальная позиция элемента, в котором найдена ошибка
-      position_end (Position): конечная позиция элемента, в котором найдена ошибка
-      details (строка): детали ошибки (по умолчанию: "")
-
-    Поля класса:
-      position_start (Position): начальная позиция элемента, в котором найдена ошибка
-      position_end (Position): конечная позиция элемента, в котором найдена ошибка
-      error (строка): текст ошибки
-      details (строка): детали ошибки
-  """
-
   def __init__(self, position_start: Position, position_end: Position, details: str = ""):
     super().__init__(position_start, position_end, "Неверный синтаксис", details)
 
 
 class InvalidKeyError(Error):
-  """
-    Описание:
-      Ошибка, описывающая обнаружение неверного ключа
-
-    Аргументы:
-      position_start (Position): начальная позиция элемента, в котором найдена ошибка
-      position_end (Position): конечная позиция элемента, в котором найдена ошибка
-      details (строка): детали ошибки (по умолчанию: "")
-
-    Поля класса:
-      position_start (Position): начальная позиция элемента, в котором найдена ошибка
-      position_end (Position): конечная позиция элемента, в котором найдена ошибка
-      error (строка): текст ошибки
-      details (строка): детали ошибки
-  """
-
   def __init__(self, position_start: Position, position_end: Position, details: str = ""):
     super().__init__(position_start, position_end, "Неверный ключ", details)
 
 
 class IndexOutOfRangeError(Error):
-  """
-    Описание:
-      Ошибка, описывающая обнаружение индекса, выходящего за пределы диапазона
-
-    Аргументы:
-      position_start (Position): начальная позиция элемента, в котором найдена ошибка
-      position_end (Position): конечная позиция элемента, в котором найдена ошибка
-      details (строка): детали ошибки (по умолчанию: "")
-
-    Поля класса:
-      position_start (Position): начальная позиция элемента, в котором найдена ошибка
-      position_end (Position): конечная позиция элемента, в котором найдена ошибка
-      error (строка): текст ошибки
-      details (строка): детали ошибки
-  """
-
   def __init__(self, position_start: Position, position_end: Position, details: str = ""):
     super().__init__(position_start, position_end, "Индекс вне диапазона", details)
 
 
 class ModuleNotFoundError(Error):
-  """
-    Описание:
-      Ошибка, описывающая обнаружение неизвестного модуля
-
-    Аргументы:
-      position_start (Position): начальная позиция элемента, в котором найдена ошибка
-      position_end (Position): конечная позиция элемента, в котором найдена ошибка
-      details (строка): детали ошибки (по умолчанию: "")
-
-    Поля класса:
-      position_start (Position): начальная позиция элемента, в котором найдена ошибка
-      position_end (Position): конечная позиция элемента, в котором найдена ошибка
-      error (строка): текст ошибки
-      details (строка): детали ошибки
-  """
-
   def __init__(self, position_start: Position, position_end: Position, details: str = ""):
     super().__init__(position_start, position_end, "Модуль не найден", details)
 
 
 class RuntimeError(Error):
-  """
-    Описание:
-      Ошибка, описывающая обнаружение неизвестного модуля
-
-    Аргументы:
-      position_start (Position): начальная позиция элемента, в котором найдена ошибка
-      position_end (Position): конечная позиция элемента, в котором найдена ошибка
-      details (строка): детали ошибки (по умолчанию: "")
-      context (Context): контекст, в котором найдена ошибка
-      highlight (bool): переменная, отвечающая за подстветку ошибки (по умолчанию: True)
-
-    Поля класса:
-      position_start (Position): начальная позиция элемента, в котором найдена ошибка
-      position_end (Position): конечная позиция элемента, в котором найдена ошибка
-      error (строка): текст ошибки
-      details (строка): детали ошибки
-      context (Context): контекст, в котором найдена ошибка
-      highlight (bool): переменная, отвечающая за подстветку ошибки
-  """
-
   def __init__(self, position_start: Position, position_end: Position, details: str, context: Context | None, highlight: bool = True):
     super().__init__(position_start, position_end, "Ошибка во время выполнения", details)
     self.context = context
@@ -487,15 +208,6 @@ class RuntimeError(Error):
     return result
 
   def generate_traceback(self):
-    """
-      Описание:
-        Генерация обратной связи (полное сообщение об ошибке)
-
-      Аргументы: -
-
-      Возвращаемое значение:
-        Строка: обратная связь (полное сообщение об ошибке)
-    """
     traceback = ""
     position = self.position_start
     context = self.context
