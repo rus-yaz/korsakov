@@ -302,7 +302,7 @@ class Compiler:
     self.code = list(map(lambda x: x.replace(replaceable, substitute), self.code))
 
   def replace_mark(self, replaceable_mark_index, replaceable_mark_name, substitute_mark_index=None, substitute_mark_name="mark"):
-    if substitute_mark_index == None:
+    if substitute_mark_index is None:
       substitute_mark_index = self.counters["mark"]
 
     self.replace_code(
@@ -468,8 +468,6 @@ class Compiler:
     else:
       self.mov("rcx", f"[{variable}]")
 
-    self.comment("Получение идентификатора переменной")
-
     self.compare("rcx", 0, "ne")
     self.error(f"Переменная {variable} не объявлена")
     self.mark()
@@ -533,6 +531,7 @@ class Compiler:
         )
 
     self.replace_mark(self.counters["indent"], "list_mark")
+    self.mark()
 
     self.pushs("rax", "rbx")
     self.jump(self.counters["indent"], "access_mark")
@@ -591,7 +590,13 @@ class Compiler:
 
     self.comment("Проверка типа присваиваемого")
 
+    if node.keys:
+      self.compare("rax", "!LIST_IDENTIFIER", "e")
+      self.error("Индекс можно взять только у Списка")
+      self.mark()
+
     self.compare("rax", "!INTEGER_IDENTIFIER", "ne")
+
     self.movs(
       ["[rcx]", "rax"],
       ["[rcx - 8]", "rbx"]
@@ -624,6 +629,9 @@ class Compiler:
 
     self.jump(self.counters["mark"] - 1)
     self.mark()
+
+    self.operation("add", "rcx", 8*2)
+    self.mov(f"[{variable}]", "rcx")
 
     self.jump(self.counters["indent"], "assign_end_mark")
 
@@ -701,7 +709,7 @@ class Compiler:
         self.compile(case_body)
 
       self.comment("Завершение конструкции \"если-то-иначе\"")
-      self.jump(self.counters['indent'], "if_end_mark")
+      self.jump(self.counters["indent"], "if_end_mark")
 
       self.replace_mark(self.counters["indent"], "if_else_mark")
 
