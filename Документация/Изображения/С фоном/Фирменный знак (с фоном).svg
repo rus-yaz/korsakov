@@ -1,11 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<svg viewBox="0 0 150 150" xmlns="http://www.w3.org/2000/svg">
-  <ellipse style="fill: rgb(255, 255, 255);" cx="75" cy="75" rx="75" ry="75"/>
-  <g id="Logo" transform="matrix(0.195333, 0, 0, 0.211968, 75.003464, 65.710356)" style="transform-origin: -0.003464px 11.7896px;">
+<svg viewBox="0 0 2000 2000" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:bx="https://boxy-svg.com">
+  <defs>
+    <bx:export>
+      <bx:file format="png" excluded="true" xlink:href="#object-0"/>
+      <bx:file format="png" path="Untitled 2.png" excluded="true" xlink:href="#Logo"/>
+      <bx:file format="png" path="Untitled 4.png" excluded="true"/>
+      <bx:file format="gif"/>
+    </bx:export>
+  </defs>
+  <ellipse style="fill: rgb(255, 255, 255);" cx="1000" cy="1000" rx="1000" ry="1000" id="object-0"/>
+  <g id="Logo" transform="matrix(2.441659, 0, 0, 2.649603, 1000.003479, 1025.945557)" style="transform-origin: -0.003464px 15.7212px;">
     <linearGradient id="SVGID_SVGID_1__1" gradientUnits="userSpaceOnUse" gradientTransform="matrix(1 0 0 1 0 0)" x1="134.6856" y1="578.1185" x2="481.5801" y2="113.0678">
       <stop offset="0" style="stop-color:#11156D;stop-opacity: 1"/>
       <stop offset="1" style="stop-color:#48569E;stop-opacity: 1"/>
     </linearGradient>
-    <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: url('#SVGID_SVGID_1__1'); fill-rule: nonzero; opacity: 1; filter: url('#SVGID_437'); paint-order: fill;" transform=" translate(-256.03, -256.02)" d="M 486.2 405.6 L 298.8 81 c -19.9 -30.2 -43.9 -97.7 -78.7 -35.2 L 4.8 418.7 c -13.6 23.6 3.7 73.2 30.6 73.2 L 220 172 l 0 0 c 33.6 -62.5 58.1 1.4 78.8 35.4 l 127.8 221.4 h -25.5 c -25.5 0 -38.4 -6 -51.1 -18.8 l -60.2 -60.2 c -22.7 -22.7 -34.6 -25.8 -50.4 -25.8 h -20.2 c -31.1 0 -37.3 45.4 -56.1 63.1 h 43.7 c 28.7 0 38.2 7.2 56.8 25.8 l 58.7 58.7 c 17.2 17.2 33.7 20.3 63 20.3 H 512 C 512 466.2 512 448.5 486.2 405.6 z" stroke-linecap="round"/>
+    <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: url('#SVGID_SVGID_1__1'); fill-rule: nonzero; opacity: 1; filter: url('#SVGID_437'); paint-order: fill;" d="M 486.2 405.6 L 298.8 81 c -19.9 -30.2 -43.9 -97.7 -78.7 -35.2 L 4.8 418.7 c -13.6 23.6 3.7 73.2 30.6 73.2 L 220 172 l 0 0 c 33.6 -62.5 58.1 1.4 78.8 35.4 l 127.8 221.4 h -25.5 c -25.5 0 -38.4 -6 -51.1 -18.8 l -60.2 -60.2 c -22.7 -22.7 -34.6 -25.8 -50.4 -25.8 h -20.2 c -31.1 0 -37.3 45.4 -56.1 63.1 h 43.7 c 28.7 0 38.2 7.2 56.8 25.8 l 58.7 58.7 c 17.2 17.2 33.7 20.3 63 20.3 H 512 C 512 466.2 512 448.5 486.2 405.6 z" stroke-linecap="round" transform=" translate(-256.03, -256.02)"/>
   </g>
 </svg>
