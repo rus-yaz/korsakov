@@ -1,0 +1,270 @@
+; format ELF64 executable
+; entry _start
+
+format ELF64
+public _start
+
+heap_ptr rq 1
+heap_size dq 0x1000
+heap_end rq 1
+avl_tree_ptr rq 1
+block_1 rq 1
+block_2 rq 1
+block_3 rq 1
+HEADER_SIGN dq 0xFEDCBA9876543210
+
+; Системные вызовы
+define SYS_MMAP 9
+define SYS_EXIT 60
+
+macro mem_mov dst, src {
+	push r15
+	mov r15, src
+	mov dst, r15
+	pop r15
+}
+
+macro write_header reg, val_1, val_2, val_3, val_4 {
+	mem_mov [reg + 8*0], val_1 ; Метка заголовка блока
+	mem_mov [reg + 8*1], val_2 ; Размер данного блока
+	mem_mov [reg + 8*2], val_3 ; Размер предыдущего блока
+	mem_mov [reg + 8*3], val_4 ; Состояние блока
+}
+
+macro allocate size {
+	mov rax, SYS_MMAP ; Код системного вызова для MMAP
+	mov rdi, 0        ; Адрес (если ноль, нахоходится автоматически)
+	mov rsi, size     ; Количество памяти для аллокации
+	mov edx, 7        ; Права (PROT_READ | PROT_WRITE)
+	mov r10, 34       ; Что-то (MAP_ANONYMOUS | MAP_PRIVATE)
+	xor r8d, r8d      ; Файл дескриптор (ввод)
+	xor r9d, r9d      ; Смещение относительно начала файла (с начала файла)
+	syscall
+
+	test rax, rax ; Проверка корректности выделения памяти
+	js error_exit ; Если RAX меньше нуля, то выйти с ошибкой
+}
+
+macro allocate_heap {
+	allocate [heap_size] ; Аллокация памяти для кучи
+	mov [heap_ptr], rax  ; Сохранение указателя на начало кучи в переменную HEAP_PTR
+
+	mov rbx, [heap_size]                       ; Запись размера кучи в RBX
+	sub rbx, 8*4                               ; Учёт размера заголовка блока
+	write_header rax, [HEADER_SIGN], rbx, 0, 0 ; Запись заголовка первого блока
+
+	mov rax, [heap_ptr]  ; Запись указателя на начало кучи RAX
+	add rax, 8*4         ; Смещение указателя RAX на размер заголовка блока
+	add rax, [heap_size] ; Смещение указателя RAX на размер кучи
+	mov [heap_end], rax  ; Запись указателя на конец кучи в переменную HEAP_END
+}
+
+macro create_block memory_to_allocate {
+	; Нормализация размера записываемого блока
+	if memory_to_allocate mod (8*4)
+		size = memory_to_allocate + 8*4 - memory_to_allocate mod (8*4)
+	else
+		size = memory_to_allocate
+	end if
+
+	mov rax, size
+	call f_create_block
+}
+
+macro delete_block address_of_block_to_be_deleted {
+	mov rax, address_of_block_to_be_deleted
+	call f_delete_block
+}
+
+_start:
+	allocate_heap
+
+	create_block 256
+	mov [block_1], rax
+	create_block 256
+	mov [block_2], rax
+	create_block 256
+	mov [block_3], rax
+	create_block 256
+
+	delete_block [block_1]
+	delete_block [block_3]
+	delete_block [block_2]
+
+	mov rax, 0
+	call sys_exit
+
+section ".exit" executable
+error_exit:
+	mov rax, 1              ; Status code 1 (exit with error)
+
+sys_exit:
+	; System call to exit
+	mov rdi, rax
+	mov rax, SYS_EXIT       ; syscall number for exit
+	syscall                 ; Make the system call
+	ret
+
+; INPUT
+; RAX — size
+; ----------
+; OUTPUT
+; RAX — addr
+f_create_block:
+	mov r8, rax
+
+	mov rax, [heap_ptr] ; Запись указателя на начало кучи в RAX
+
+	; Цикл для нахождения подходящего блока
+	do:
+		; Если заголовок не найден, выйти с ошибкой
+		mov rdx, [rax]
+		cmp rdx, [HEADER_SIGN]
+		jne error_exit
+
+		; Если блок используется, начать искать новый блок
+		mov rdx, [rax + 8*3]
+		test rdx, 1
+		jnz condition
+
+		; Сравнение выделенного размера и размера блока
+		mov rdx, [rax + 8*1]
+		cmp rdx, r8
+		jge continue
+
+	condition:
+		add rax, [rax + 8*1] ; Смещение адреса текущего блока на его размер
+		add rax, 8*4         ; Смещение адреса текущего указателя на размер заголовка
+
+		jmp do  ; Переход к началу цикла
+
+	; Окончание цикла
+	continue:
+		; Вычисление адреса нового блока
+		mov rbx, rax
+		add rbx, 8*4
+		add rbx, r8
+
+		; Проверка состояния блока
+		mov rcx, [rbx + 8*3]
+		test rcx, 1
+		jnz do
+
+	modify_block:
+
+	mem_mov [rax + 8*3], 1 ; Изменение состояния текущего блока на используемое
+
+	mov rcx, [rax + 8*1]    ; Сохранение размера текущего блока в RCX
+	sub rcx, r8             ; Вычисление размера текущего блока в RCX
+	sub rcx, 8*4            ; Учёт размера заголовка
+	mem_mov [rax + 8*1], r8 ; Изменение SIZE у предыдущего блока
+
+	; KEY
+	; SIZE
+	; PREV_SIZE
+	; STATE
+	write_header rbx, [HEADER_SIGN], rcx, r8, 0
+
+	add rax, 8*4
+
+	ret
+
+; INPUT
+; RAX — addr
+f_delete_block:
+	sub rax, 8*4
+
+	mov r8, rax
+
+	; Если заголовок не найден, выйти с ошибкой
+	mov rax, [r8]
+	cmp rax, [HEADER_SIGN]
+	jne error_exit
+
+	; Объединение текущего блока и следующего, если он не используется
+
+	; Нахождение следующего блока
+	mov rax, r8
+	add rax, 8*4
+	add rax, [r8 + 8*1]
+
+	; Если заголовок не найден (блока не существует), пропустить изменение блоков
+	mov rbx, [rax]
+	cmp rbx, [HEADER_SIGN]
+	jne skip_current_and_next_blocks_merging
+
+	; Если следующий блок используется, пропустить изменение блоков
+	mov rbx, [rax + 8*3]
+	test rbx, 1
+	jne skip_current_and_next_blocks_merging
+
+	; Увеличение размера текущего блока на размер удаляемого блока
+	mov rcx, [r8 + 8*1]
+	add rcx, [rax + 8*1]
+	add rcx, 8*4
+	mov [r8 + 8*1], rcx
+
+	; Удаление заголовка удаляемого блока
+	write_header rax, 0, 0, 0, 0
+
+	skip_current_and_next_blocks_merging:
+
+		; Нахождение предыдущего блока
+		mov rax, r8
+		sub rax, [r8 + 8*2]
+		sub rax, 8*4
+
+		; Проверка нахождения блока внутри кучи
+		cmp rax, [heap_ptr]
+		jl skip_previous_and_current_blocks_merging
+
+		; Если заголовок не найден (блока не существует), пропустить изменение блоков
+		mov rbx, [rax]
+		cmp rbx, [HEADER_SIGN]
+		jne skip_previous_and_current_blocks_merging
+
+		; Если следующий блок используется, пропустить изменение блоков
+		mov rbx, [rax + 8*3]
+		test rbx, 1
+		jne skip_previous_and_current_blocks_merging
+
+		; Увеличение размера предыдущего блока на размер удаляемого блока
+		mov rcx, [r8 + 8*1]
+		add rcx, [rax + 8*1]
+		add rcx, 8*4
+		mov [rax + 8*1], rcx
+
+		; Удаление заголовка удаляемого блока
+		write_header r8, 0, 0, 0, 0
+		mov r8, rax
+
+	skip_previous_and_current_blocks_merging:
+
+		; Изменение состояния текущего блока
+		mov rax, [r8 + 8*3]
+		test rax, 1
+		jz all_is_done
+		mem_mov [r8 + 8*3], 0
+
+	all_is_done:
+
+	; Нахождение дальше идущего блока
+	mov rcx, r8
+	add rcx, [r8 + 8*1]
+	add rcx, 8*4
+
+	; Проверка нахождения блока внутри кучи
+	cmp rcx, [heap_end]
+	jg skip_next_next_block_modifying
+
+	; Если заголовок не найден (блока не существует), пропустить изменение блоков
+	mov rbx, [rcx]
+	cmp rbx, [HEADER_SIGN]
+	jne skip_next_next_block_modifying
+
+	; Изменение PREV_SIZE для дальше идущего блока
+	mem_mov [rcx + 8*2], [r8 + 8*1]
+
+	skip_next_next_block_modifying:
+
+	ret
