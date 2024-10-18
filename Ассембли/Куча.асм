@@ -4,24 +4,54 @@
 format ELF64
 public _start
 
-; Системные вызовы
-define SYS_MMAP 9
-define SYS_MUNMAP 11
-define SYS_EXIT 60
+section "data" writable
+	; Системные вызовы
+	define SYS_MMAP   9
+	define SYS_MUNMAP 11
+	define SYS_EXIT   60
 
-; Куча
-HEADER_SIGN dq 0xFEDCBA9876543210 ; Обозначение начала заголовка блока, выделяемого на куче
-HEAP_SIZE dq 0x1000               ; Начальный размер кучи
-heap_start rq 1                   ; Указатель на начало кучи
-heap_end rq 1                     ; Указатель на конец кучи
+	; Куча
+	HEADER_SIGN dq 0xFEDCBA9876543210 ; Обозначение начала заголовка блока, выделяемого на куче
+	HEAP_SIZE   dq 0x1000             ; Начальный размер кучи
+	heap_start  rq 1                  ; Указатель на начало кучи
+	heap_end    rq 1                  ; Указатель на конец кучи
 
-; Переменные для тестов работы кучи
-block_1 rq 1
-block_2 rq 1
-block_3 rq 1
-block_4 rq 1
+	; Типы данных
+	NULL       dq 0
+	INTEGER    dq 1
+	FLOAT      dq 2
+	LIST       dq 3
+	STRING     dq 4
+	DICTIONARY dq 5
+	FUNCTION   dq 6
+	CLASS      dq 7
 
-; Упрощене обмена между фрагментами памяти
+	; Размер заголовка типов данных
+	NULL_HEADER       dq 0
+	INTEGER_HEADER    dq 1
+	FLOAT_HEADER      dq 0
+	LIST_HEADER       dq 3
+	STRING_HEADER     dq 0
+	DICTIONARY_HEADER dq 0
+	FUNCTION_HEADER   dq 0
+	CLASS_HEADER      dq 0
+
+	; Переменные для тестов работы кучи
+	список rq 1
+	индекс rq 1
+
+section "regs_operations" executable
+
+macro pushq val {
+	mov rax, val
+	push rax
+}
+
+; Упрощение обмена между фрагментами памяти
+;
+; Аргументы:
+;   dst — приёмник
+;   src — источник
 macro mem_mov dst, src {
 	push r15
 	mov r15, src
@@ -31,20 +61,20 @@ macro mem_mov dst, src {
 
 ; Установка заголовка блока
 ;
-; reg — указатель на заголовок блока
-; header_sign — метка заголовка блока
-; size — размер тела блока
-; prev_size — размер тела предыдущего блока
-; state — состояние использования блока
-macro write_header reg, header_sign, size, prev_size, state {
-	mem_mov [reg + 8*0], header_sign
-	mem_mov [reg + 8*1], size
-	mem_mov [reg + 8*2], prev_size
-	mem_mov [reg + 8*3], state
+; Аргументы:
+;   addr        — указатель на заголовок блока
+;   header_sign — метка заголовка блока
+;   size        — размер тела блока
+;   prev_size   — размер тела предыдущего блока
+;   state       — состояние использования блока
+macro write_header addr, header_sign, size, prev_size, state {
+	mem_mov [addr + 8*0], header_sign
+	mem_mov [addr + 8*1], size
+	mem_mov [addr + 8*2], prev_size
+	mem_mov [addr + 8*3], state
 }
 
-section "regs_operations" executable
-
+; Сохранение всех регистров на стеке
 macro save_all_regs {
 	push rax
 	push rbx
@@ -62,6 +92,7 @@ macro save_all_regs {
 	push r15
 }
 
+; Взятие всех регистров со стека
 macro restore_all_regs {
 	pop r15
 	pop r14
@@ -81,6 +112,15 @@ macro restore_all_regs {
 
 section "allocate_heap" executable
 
+; Алллокация кучи с сохранением указателей на начало и конец кучи
+;
+; Аргументы:
+;   HEAP_SIZE — размер выделяемой кучи
+;
+; Результат:
+;   heap_start — указатель на начало кучи
+;   heap_end   — указатель на начало кучи
+
 macro allocate_heap {
 	save_all_regs
 
@@ -89,7 +129,6 @@ macro allocate_heap {
 	restore_all_regs
 }
 
-; Алллокация кучи с сохранением указателей на начало и конец кучи
 f_allocate_heap:
 	mov rsi, [HEAP_SIZE]     ; Количество памяти для аллокации
 	mov rax, SYS_MMAP ; Код системного вызова для MMAP
@@ -119,7 +158,13 @@ section "expand_heap" executable
 
 ; Расширение кучи
 ;
-; size — количество памяти, на которое необходимо расширить кучу
+; Аргументы:
+;   size — количество памяти, на которое необходимо расширить кучу
+;
+; Результат:
+;   heap_start — указатель на начало кучи
+;   heap_end   — указатель на начало кучи
+
 macro expand_heap size {
 	save_all_regs
 
@@ -129,49 +174,64 @@ macro expand_heap size {
 	restore_all_regs
 }
 
-; Расширение кучи
-;
-; rax — количество памяти, на которое необходимо расширить кучу
 f_expand_heap:
+	; Сохранение количества памяти для расширения
 	mov rcx, rax
 
+	; Получение итогового размера кучи
 	add rax, [HEAP_SIZE]
 	mov [HEAP_SIZE], rax
 
+	; Взятие указателя на начало кучи
 	mov rax, [heap_start]
 
+	; Аллокация новой кучи
 	allocate_heap
 
+	; RDI — указатель на новую кучу
+	; RSI — указатель на старую кучу
 	mov rdi, [heap_start]
 	mov rsi, rax
+
+	; Сохранение указателя на старую кучу
 	mov r8, rsi
 
+	; Получение размера старой кучи
 	mov rax, [HEAP_SIZE]
 	sub rax, rcx
-	mov rcx, 8
-	div rcx
-	mov rcx, rax
 
-	mov rbx, 8
-	mul rbx
+	; Сохранение размера старой кучи
 	mov r9, rax
 
+	; Расчёт количества операций для копирования
+	push rax
+	mov rcx, 8
+	idiv rcx
+	mov rcx, rax
+	pop rax
+
+	; Копирование данных со старой кучи в новую
 	rep movsq
 
+	; Укзатель на начало новой кучи
 	mov rbx, [heap_start]
-expand_heap_while:
-	mov rcx, rbx
-	add rbx, [rbx + 8*1]
-	add rbx, 8*4
 
-	mov rdx, [rbx]
-	cmp rdx, [HEADER_SIGN]
-	je expand_heap_while
+	; Поиск последнего блока кучи
+	expand_heap_while:
+		mov rcx, rbx
+		add rbx, [rbx + 8*1]
+		add rbx, 8*4
 
+		mov rdx, [rbx]
+		cmp rdx, [HEADER_SIGN]
+		je expand_heap_while
+
+	; Расширение последнего блока до конца кучи
 	mov rbx, [rcx + 8*1]
 	add rbx, rax
 	mov [rcx + 8*1], rbx
 
+	; Деаллокация старой кучи
 	mov rax, SYS_MUNMAP
 	mov rdi, r8
 	mov rsi, r9
@@ -181,17 +241,16 @@ expand_heap_while:
 
 section "create_block" executable
 
-; INPUT
-; memory_to_allocate — количество памяти, выделяемой на тело блока
-macro create_block memory_to_allocate {
-	save_all_regs
+; Аллоакция места на куче для блока определённого размера
+;
+; Аргументы:
+;   size — количество памяти, выделяемой на тело блока
+;
+; Результат:
+;   rax — указатель на тело блока
 
-	; Нормализация размера записываемого блока
-	if memory_to_allocate mod (8*4)
-		size = memory_to_allocate + 8*4 - memory_to_allocate mod (8*4)
-	else
-		size = memory_to_allocate
-	end if
+macro create_block size {
+	save_all_regs
 
 	mov rax, size
 	call f_create_block
@@ -203,11 +262,6 @@ macro create_block memory_to_allocate {
 	mov rax, [rsp - 8*15]
 }
 
-; INPUT
-; RAX — размер тела выделяемого блока
-; ----------
-; OUTPUT
-; RAX — адрес на тело выделенного блока
 f_create_block:
 	mov r8, rax
 
@@ -223,7 +277,7 @@ f_create_block:
 		; Если блок используется, начать искать новый блок
 		mov rdx, [rax + 8*3]
 		test rdx, 1
-		jnz create_block_condition
+		js create_block_condition
 
 		; Сравнение выделенного размера и размера блока
 		mov rdx, [rax + 8*1]
@@ -269,23 +323,19 @@ f_create_block:
 
 section "delete_block" executable
 
-; INPUT
-; address_of_block_to_be_deleted — addr
-macro delete_block address_of_block_to_be_deleted {
+; Удаление блока по указателю
+;
+; Аргументы:
+;   block_addr — указатель на блок
+macro delete_block block_addr {
 	save_all_regs
 
-	mov rax, address_of_block_to_be_deleted
+	mov rax, block_addr
 	call f_delete_block
 
-	push rax
-	add rsp, 8
-
 	restore_all_regs
-	mov rax, [rsp - 8*15]
 }
 
-; INPUT
-; RAX — addr
 f_delete_block:
 	sub rax, 8*4
 
@@ -385,31 +435,252 @@ f_delete_block:
 
 	ret
 
-section "exit" executable
+section "create_integer" executable
 
-; INPUT
-; code — exit code
-macro exit code {
-	mov rax, SYS_EXIT ; syscall number for exit
-	mov rdi, code     ; Exit Code
-	syscall           ; Make the system call
+macro create_integer value {
+	pushq value
+	pushq INTEGER
 }
 
+section "create_list" executable
+
+; Запись списка на кучу
+;
+; Аргументы:
+;   list_start — указатель на начало списка
+;
+; Результат:
+;   rax — указатель на созданный блок
+
+macro create_list list_start, length {
+	save_all_regs
+
+	mov rax, list_start
+	mov rbx, length
+	call f_create_list
+
+	push rax
+	add rsp, 8
+
+	restore_all_regs
+	mov rax, [rsp - 8*15]
+}
+
+f_create_list:
+	; Сохранение указателя на начало копируемого списка и длины списка
+	push rax
+	push rbx
+
+	mov rcx, [LIST_HEADER]
+
+	create_list_do:
+		dec rbx
+
+		mov rdx, [rax]
+		cmp rdx, INTEGER
+		jne create_list_not_integer
+
+		add rcx, 2
+		add rax, 8*2
+		jmp create_list_while
+
+	create_list_not_integer:
+		cmp rax, LIST
+		jne create_list_not_list
+
+		add rcx, LIST_HEADER
+		add rcx, [rax + 8*1]
+		add rax, [rax + 8*2]
+
+		jmp create_list_while
+
+	create_list_not_list:
+		jmp error_exit
+
+	create_list_while:
+		cmp rbx, 0
+		jne create_list_do
+
+	mov rbx, rcx
+	imul rbx, 8
+
+	; Аллокация блока на куче
+	create_block rbx
+
+	; Возвращение длины списка
+	pop rbx
+
+	write_header rax, LIST, rbx, rcx, 0
+
+	; RCX — количество блоков
+	mov rbx, [LIST_HEADER]
+	sub rcx, rbx
+	imul rbx, 8
+	mov rdi, rax ; Место назначения
+	add rdi, rbx
+	pop rsi      ; Источник копирования
+	rep movsq    ; Копирование в аллоцированный блок
+
+	ret
+
+section "list_length" executable
+
+macro list_length list_ptr {
+	save_all_regs
+
+	mov rax, list_ptr
+	call f_list_length
+
+	push rax
+	add rsp, 8
+
+	restore_all_regs
+	mov rax, [rsp - 8*15]
+}
+
+f_list_length:
+	mov rbx, [rax]
+	cmp rbx, LIST
+	jne error_exit
+
+	mov rax, [rax + 8*1]
+
+	ret
+
+section "list_get" executable
+
+; Запись списка на кучу
+;
+; Аргументы:
+;   list_ptr  — указатель на начало списка
+;   index_ptr — указатель на целое число, индекс
+;
+; Результат:
+;   rax — указатель на элемент по индексу
+
+
+macro list_get list_ptr, index_ptr {
+	save_all_regs
+
+	mov rax, list_ptr
+	mov rbx, index_ptr
+	call f_list_get
+
+	push rax
+	add rsp, 8
+
+	restore_all_regs
+	mov rax, [rsp - 8*15]
+}
+
+f_list_get:
+	; Проверка типа
+	mov rcx, [rax]
+	cmp rcx, LIST
+	jne error_exit
+
+	; Проверка типа
+	mov rcx, [rbx]
+	cmp rcx, INTEGER
+	jne error_exit
+
+	; Запись длины списка
+	mov rcx, [rax + 8*1]
+
+	; Если индекс меньше нуля, то увеличить его на длину списка
+	mov rbx, [rbx + 8*1]
+	cmp rbx, 0
+	jge list_get_positive_index
+	add rbx, rcx
+
+	list_get_positive_index:
+
+	; Проверка, входит ли индекс в список
+	cmp rbx, rcx
+	jge error_exit
+	cmp rbx, 0
+	jl error_exit
+
+	mov rcx, rax
+	mov rdx, [LIST_HEADER]
+	imul rdx, 8
+	add rcx, rdx
+
+	list_get_while:
+		dec rbx
+
+		cmp rbx, 0
+		jl list_get_while_end
+
+	list_get_do:
+		mov rax, [rcx]
+
+		cmp rax, INTEGER
+		jne list_get_not_integer
+
+		add rcx, 8*2 ; Смещение на размер заголовка и размер тела
+		jmp list_get_while
+
+	list_get_not_integer:
+		cmp rax, LIST
+		jne list_get_not_list
+
+		mov rax, [rcx + 8*2]
+		add rax, [LIST_HEADER]
+		imul rax, 8
+		add rcx, rax
+
+		jmp list_get_while
+
+	list_get_not_list:
+		jmp error_exit
+
+	list_get_while_end:
+
+		mov rax, rcx
+
+	ret
+
+section "exit" executable
+
+; Выход из программы
+;
+; Аргументы:
+;   code — код выхода
+
+macro exit code {
+	mov rdi, code     ; Код выхода
+	mov rax, SYS_EXIT ; Код сигнала выхода
+	syscall
+}
+
+; Сокращение для выхода с кодом 1
 error_exit:
-	exit 1              ; Status code 1 (exit with error)
+	exit -1
 
 _start:
+	; Аллокация кучи
 	allocate_heap
 
-	create_block 0x100
+	; Расширение кучи
+	expand_heap 0x1000
 
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
+	; список = 1 2 3 4
+	create_integer 4
+	create_integer 3
+	create_integer 2
+	create_integer 1
 
-	expand_heap [HEAP_SIZE]
+	mov rax, rsp ; Указатель на начало списка
+	create_list rax, 4 ; Количество элементов
 
-	exit 0
+	mov [список], rax
+
+	; индекс = 2
+	create_integer -1
+	mov [индекс], rsp
+
+	; список.индекс
+	list_get [список], [индекс]
+
+	exit [rax + 8*1] ; Показать значение взятогого элемента
