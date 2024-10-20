@@ -6,6 +6,10 @@ public _start
 
 section "data" writable
 	; Системные вызовы
+	define SYS_READ   0
+	define SYS_OPEN   2
+	define SYS_CLOSE  3
+	define SYS_STAT   4
 	define SYS_MMAP   9
 	define SYS_MUNMAP 11
 	define SYS_EXIT   60
@@ -16,29 +20,23 @@ section "data" writable
 	heap_start  rq 1                  ; Указатель на начало кучи
 	heap_end    rq 1                  ; Указатель на конец кучи
 
+	; Файлы
+	define STAT_BUFFER_SIZE 144
+
 	; Типы данных
-	NULL       dq 0
-	INTEGER    dq 1
-	FLOAT      dq 2
-	LIST       dq 3
-	STRING     dq 4
-	DICTIONARY dq 5
-	FUNCTION   dq 6
-	CLASS      dq 7
+	define NULL            0
+	define INTEGER         1
+	define FLOAT           2
+	define LIST            3
+	define STRING          4
+	define DICTIONARY      5
+	define FUNCTION        6
+	define CLASS           7
+	define FILE_DESCRIPTOR 8
 
 	; Размер заголовка типов данных
-	NULL_HEADER       dq 0
-	INTEGER_HEADER    dq 1
-	FLOAT_HEADER      dq 0
-	LIST_HEADER       dq 3
-	STRING_HEADER     dq 0
-	DICTIONARY_HEADER dq 0
-	FUNCTION_HEADER   dq 0
-	CLASS_HEADER      dq 0
-
-	; Переменные для тестов работы кучи
-	список rq 1
-	индекс rq 1
+	define INTEGER_HEADER 1
+	define LIST_HEADER    3
 
 	; Сообщения об ошибках
 	HEAP_ALLOCATION_ERROR db "Ошибка аллокации кучи", 10, 0
@@ -47,31 +45,46 @@ section "data" writable
 	EXPECTED_INTEGER_LIST_TYPE_ERROR db "Ожидался тип Целое число или Список", 10, 0
 	EXPECTED_HEAP_BLOCK_ERROR db "Ожидался блок кучи", 10, 0
 	INDEX_OUT_OF_LIST_ERROR db "Индекс выходит за пределы списка", 10, 0
+	OPENING_FILE_ERROR db "Не удалось открыть файл", 10, 0
+
+	program_end db "$ Конец программы", 10, 0
+	filename db "file", 0
+	success db "File opened successfully!", 10, 0
+	error db "Error opening file!", 10, 0
+	file_desc rq 1
+	buffer db 1024 dup(0)
+	buffer_size dq 1024
 
 section "exit" executable
+
+macro exit message {
+	print_string message
+	exit_with_code 0
+}
+
+section "exit_with_code" executable
 
 ; Выход из программы
 ;
 ; Аргументы:
 ;   code — код выхода
 
-macro exit code {
+macro exit_with_code code {
 	mov rdi, code     ; Код выхода
 	mov rax, SYS_EXIT ; Код сигнала выхода
 	syscall
 }
 
-section "error_exit" executable
+section "check_error" executable
 
-macro error_exit operation, message {
+macro check_error operation, message {
 	push rax
 	mov rax, message
-	operation f_error_exit
+	operation f_check_error
 	pop rax
 }
 
-; Сокращение для выхода с кодом 1
-f_error_exit:
+f_check_error:
 	mov rsi, rax
 	mov rdx, 0 ; rcx будет хранить количество байт для сравнения (0)
 
@@ -90,7 +103,7 @@ f_error_exit:
 	mov rdi, 1
 	syscall
 
-	exit -1
+	exit_with_code -1
 
 
 section "regs_operations" executable
@@ -194,7 +207,7 @@ f_allocate_heap:
 
 	; Проверка корректности выделения памяти
 	test rax, rax
-	error_exit js, HEAP_ALLOCATION_ERROR
+	check_error js, HEAP_ALLOCATION_ERROR
 
 	; Сохранение указателя на начало кучи
 	mov [heap_start], rax
@@ -327,7 +340,7 @@ f_create_block:
 		; Если заголовок не найден, выйти с ошибкой
 		mov rdx, [rax]
 		cmp rdx, [HEADER_SIGN]
-		error_exit jne, EXPECTED_HEAP_BLOCK_ERROR
+		check_error jne, EXPECTED_HEAP_BLOCK_ERROR
 
 		; Если блок используется, начать искать новый блок
 		mov rdx, [rax + 8*3]
@@ -399,7 +412,7 @@ f_delete_block:
 	; Если заголовок не найден, выйти с ошибкой
 	mov rax, [r8]
 	cmp rax, [HEADER_SIGN]
-	error_exit jne, EXPECTED_HEAP_BLOCK_ERROR
+	check_error jne, EXPECTED_HEAP_BLOCK_ERROR
 
 	; Объединение текущего блока и следующего, если он не используется
 
@@ -526,7 +539,7 @@ f_create_list:
 	push rax
 	push rbx
 
-	mov rcx, [LIST_HEADER]
+	mov rcx, LIST_HEADER
 
 	.do:
 		dec rbx
@@ -550,7 +563,7 @@ f_create_list:
 		jmp .while
 
 	.not_list:
-		error_exit jmp, EXPECTED_INTEGER_LIST_TYPE_ERROR
+		check_error jmp, EXPECTED_INTEGER_LIST_TYPE_ERROR
 
 	.while:
 		cmp rbx, 0
@@ -568,7 +581,7 @@ f_create_list:
 	write_header rax, LIST, rbx, rcx, 0
 
 	; RCX — количество блоков
-	mov rbx, [LIST_HEADER]
+	mov rbx, LIST_HEADER
 	sub rcx, rbx
 	imul rbx, 8
 	mov rdi, rax ; Место назначения
@@ -596,7 +609,7 @@ macro list_length list_ptr {
 f_list_length:
 	mov rbx, [rax]
 	cmp rbx, LIST
-	error_exit jne, EXPECTED_LIST_TYPE_ERROR
+	check_error jne, EXPECTED_LIST_TYPE_ERROR
 
 	mov rax, [rax + 8*1]
 
@@ -631,12 +644,12 @@ f_list_get:
 	; Проверка типа
 	mov rcx, [rax]
 	cmp rcx, LIST
-	error_exit jne, EXPECTED_LIST_TYPE_ERROR
+	check_error jne, EXPECTED_LIST_TYPE_ERROR
 
 	; Проверка типа
 	mov rcx, [rbx]
 	cmp rcx, INTEGER
-	error_exit jne, EXPECTED_INTEGER_TYPE_ERROR
+	check_error jne, EXPECTED_INTEGER_TYPE_ERROR
 
 	; Запись длины списка
 	mov rcx, [rax + 8*1]
@@ -651,12 +664,12 @@ f_list_get:
 
 	; Проверка, входит ли индекс в список
 	cmp rbx, rcx
-	error_exit jge, INDEX_OUT_OF_LIST_ERROR
+	check_error jge, INDEX_OUT_OF_LIST_ERROR
 	cmp rbx, 0
-	error_exit jl, INDEX_OUT_OF_LIST_ERROR
+	check_error jl, INDEX_OUT_OF_LIST_ERROR
 
 	mov rcx, rax
-	mov rdx, [LIST_HEADER]
+	mov rdx, LIST_HEADER
 	imul rdx, 8
 	add rcx, rdx
 
@@ -680,14 +693,14 @@ f_list_get:
 		jne .not_list
 
 		mov rax, [rcx + 8*2]
-		add rax, [LIST_HEADER]
+		add rax, LIST_HEADER
 		imul rax, 8
 		add rcx, rax
 
 		jmp .while
 
 	.not_list:
-		error_exit jmp, EXPECTED_INTEGER_LIST_TYPE_ERROR
+		check_error jmp, EXPECTED_INTEGER_LIST_TYPE_ERROR
 
 	.while_end:
 
@@ -695,30 +708,277 @@ f_list_get:
 
 	ret
 
+;_start:
+;
+;	;; Аллокация кучи
+;	;allocate_heap
+;	;
+;	;; Расширение кучи
+;	;expand_heap 0x1000
+;	;
+;	;; список = 1 2 3 4
+;	;create_integer 4
+;	;create_integer 3
+;	;create_integer 2
+;	;create_integer 1
+;	;
+;	;mov rax, rsp ; Указатель на начало списка
+;	;create_list rax, 4 ; Количество элементов
+;	;
+;	;mov [список], rax
+;	;
+;	;; индекс = 999
+;	;create_integer 999
+;	;mov [индекс], rsp
+;	;
+;	;; список.индекс
+;	;list_get [список], [индекс]
+;
+;	exit_with_code [rax + 8*1] ; Показать значение взятогого элемента
+
+
+section "str_length" executable
+
+macro str_length str_ptr {
+	save_all_regs
+
+	mov rax, str_ptr
+	call f_str_length
+
+	push rax
+	add rsp, 8
+
+	restore_all_regs
+	mov rax, [rsp - 8*15]
+}
+
+f_str_length:
+	mov rcx, 0 ; rcx будет хранить количество байт для сравнения (0)
+
+	.loop:
+	   ; Сравниваем текущий байт с нулем
+	   mov bl, [rax + rcx]   ; Загружаем текущий байт в al
+	   cmp bl, 0             ; Проверяем, равен ли байт нулю
+	   je .done              ; Если равен нулю, выходим из цикла
+
+	   inc rcx               ; Увеличиваем счетчик
+	   jmp .loop             ; Переход к следующей итерации
+
+	.done:
+	mov rax, rcx
+
+	ret
+
+section "print_string" executable
+
+macro print_string ptr {
+	save_all_regs
+
+	mov rax, ptr
+	call f_print_string
+
+	restore_all_regs
+}
+
+f_print_string:
+	mov rsi, rax
+
+	str_length rsi
+	mov rdx, rax
+
+	mov rax, 1
+	mov rdi, 1
+
+	syscall
+	ret
+
+section "print" executable
+
+macro print ptr, size {
+	save_all_regs
+
+	mov rax, ptr
+	mov rbx, size
+	call f_print
+
+	restore_all_regs
+}
+
+f_print:
+	mov rdx, rbx
+	mov rsi, rax
+	mov rdi, 1
+	mov rax, 1
+
+	syscall
+	ret
+
+section "print_int" executable
+
+macro print_int int {
+	save_all_regs
+
+	mov rax, int
+	call f_print_int
+
+	restore_all_regs
+}
+
+f_print_int:
+	mov r8, rsp
+	mov rbx, 10
+	push 0
+	push 10
+	mov rcx, 2
+
+	.while:
+		idiv rbx
+		add rdx, 48
+		push rdx
+		mov rdx, 0
+		inc rcx
+
+		cmp rax, 0
+		jne .while
+
+	mov rax, rsp
+	imul rcx, 8
+	print rax, rcx
+
+	mov rsp, r8
+
+	ret
+
+section "get_file_size" executable
+
+macro get_file_size filename {
+	save_all_regs
+
+	mov rax, filename
+	call f_get_file_size
+
+	push rax
+	add rsp, 8
+
+	restore_all_regs
+	mov rax, [rsp - 8*15]
+}
+
+f_get_file_size:
+	mov rdi, rax ; указатель на имя файла
+
+	create_block STAT_BUFFER_SIZE
+
+	mov rbx, rax
+
+	mov rsi, rax      ; указатель на буфер для хранения данных
+	mov rax, SYS_STAT ; syscall: sys_stat
+	syscall
+
+	mov rax, [rbx + 48] ; размер файла в байтах (st_size)
+	ret
+
+section "open_file" executable
+
+macro open_file filename {
+	save_all_regs
+
+	mov rax, filename
+	call f_open_file
+
+	push rax
+	add rsp, 8
+
+	restore_all_regs
+	mov rax, [rsp - 8*15]
+}
+
+f_open_file:
+	; Открываем файл
+	mov rdi, rax      ; указатель на имя файла
+	mov rax, SYS_OPEN ; syscall: open
+	mov rsi, 0        ; флаги: O_RDONLY
+	syscall
+
+	; Проверка открытия файла
+	cmp rax, 0
+	check_error jle, OPENING_FILE_ERROR
+
+	; Сохраняем дескриптор файла
+	mov [file_desc], rax
+
+	ret
+
+section "read_file" executable
+
+macro read_file file_descriptor {
+	save_all_regs
+
+	mov rax, file_descriptor
+	call f_read_file
+
+	push rax
+	add rsp, 8
+
+	restore_all_regs
+	mov rax, [rsp - 8*15]
+}
+
+section "close_file" executable
+
+macro close_file file_descriptor {
+	save_all_regs
+
+	mov rax, file_descriptor
+	call f_read_file
+
+	push rax
+	add rsp, 8
+
+	restore_all_regs
+	mov rax, [rsp - 8*15]
+}
+
+f_close_file:
+	; Закрываем файл
+	mov rdi, [rax]               ; дескриптор файла
+	mov rax, SYS_CLOSE                 ; syscall: close
+	syscall
+	ret
+
+
+f_read_file:
+	; Читаем содержимое файла
+	mov rbx, rax
+	mov rdi, [rax]               ; дескриптор файла
+	mov rsi, buffer                    ; буфер для хранения данных
+	mov rax, SYS_READ                  ; syscall: read
+	mov rdx, [buffer_size]             ; размер буфера
+	syscall
+
+	; Проверяем, прочитано ли что-то
+	cmp rax, 0
+	jge .skip                   ; если < 0, выходим
+
+		close_file rbx
+
+	.skip:
+	ret
+
+section "start" executable
 _start:
+	allocate_heap
 
-	;; Аллокация кучи
-	;allocate_heap
-	;
-	;; Расширение кучи
-	;expand_heap 0x1000
-	;
-	;; список = 1 2 3 4
-	;create_integer 4
-	;create_integer 3
-	;create_integer 2
-	;create_integer 1
-	;
-	;mov rax, rsp ; Указатель на начало списка
-	;create_list rax, 4 ; Количество элементов
-	;
-	;mov [список], rax
-	;
-	;; индекс = 999
-	;create_integer 999
-	;mov [индекс], rsp
-	;
-	;; список.индекс
-	;list_get [список], [индекс]
+	get_file_size filename
+	print_int rax
 
-	exit [rax + 8*1] ; Показать значение взятогого элемента
+	open_file filename
+
+	read_file file_desc
+
+	; Выводим содержимое файла
+	print_string buffer
+
+	close_file file_desc
+
+	exit program_end
