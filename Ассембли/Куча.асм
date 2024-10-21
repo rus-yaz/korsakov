@@ -4,126 +4,35 @@
 format ELF64
 public _start
 
+include "utils.asm"
+
 section "data" writable
-	; Системные вызовы
-	define SYS_READ   0
-	define SYS_OPEN   2
-	define SYS_CLOSE  3
-	define SYS_STAT   4
-	define SYS_MMAP   9
-	define SYS_MUNMAP 11
-	define SYS_EXIT   60
+  include "defines.asm"
 
-	; Куча
-	HEADER_SIGN dq 0xFEDCBA9876543210 ; Обозначение начала заголовка блока, выделяемого на куче
-	HEAP_SIZE   dq 0x1000             ; Начальный размер кучи
-	heap_start  rq 1                  ; Указатель на начало кучи
-	heap_end    rq 1                  ; Указатель на конец кучи
+  ; Куча
+  HEADER_SIGN dq 0xFEDCBA9876543210 ; Обозначение начала заголовка блока, выделяемого на куче
+  HEAP_SIZE   dq 0x1000             ; Начальный размер кучи
+  heap_start  rq 1                  ; Указатель на начало кучи
+  heap_end    rq 1                  ; Указатель на конец кучи
 
-	; Файлы
-	define STAT_BUFFER_SIZE 144
+  ; Сообщения об ошибках
+  HEAP_ALLOCATION_ERROR            db "Ошибка аллокации кучи", 10, 0
+  EXPECTED_INTEGER_TYPE_ERROR      db "Ожидался тип Целое число", 10, 0
+  EXPECTED_LIST_TYPE_ERROR         db "Ожидался тип Список", 10, 0
+  EXPECTED_INTEGER_LIST_TYPE_ERROR db "Ожидался тип Целое число или Список", 10, 0
+  EXPECTED_HEAP_BLOCK_ERROR        db "Ожидался блок кучи", 10, 0
+  INDEX_OUT_OF_LIST_ERROR          db "Индекс выходит за пределы списка", 10, 0
+  OPENING_FILE_ERROR               db "Не удалось открыть файл", 10, 0
 
-	; Типы данных
-	define NULL            0
-	define INTEGER         1
-	define FLOAT           2
-	define LIST            3
-	define STRING          4
-	define DICTIONARY      5
-	define FUNCTION        6
-	define CLASS           7
-	define FILE_DESCRIPTOR 8
+  filename db "file", 0
+  file_desc rq 1
+  buffer db 1024 dup(0)
+  buffer_size dq 1024
 
-	; Размер заголовка типов данных
-	define INTEGER_HEADER 1
-	define LIST_HEADER    3
+  список rq 1
+  индекс rq 1
 
-	; Сообщения об ошибках
-	HEAP_ALLOCATION_ERROR db "Ошибка аллокации кучи", 10, 0
-	EXPECTED_INTEGER_TYPE_ERROR db "Ожидался тип Целое число", 10, 0
-	EXPECTED_LIST_TYPE_ERROR db "Ожидался тип Список", 10, 0
-	EXPECTED_INTEGER_LIST_TYPE_ERROR db "Ожидался тип Целое число или Список", 10, 0
-	EXPECTED_HEAP_BLOCK_ERROR db "Ожидался блок кучи", 10, 0
-	INDEX_OUT_OF_LIST_ERROR db "Индекс выходит за пределы списка", 10, 0
-	OPENING_FILE_ERROR db "Не удалось открыть файл", 10, 0
-
-	program_end db "$ Конец программы", 10, 0
-	filename db "file", 0
-	success db "File opened successfully!", 10, 0
-	error db "Error opening file!", 10, 0
-	file_desc rq 1
-	buffer db 1024 dup(0)
-	buffer_size dq 1024
-
-section "exit" executable
-
-macro exit message {
-	print_string message
-	exit_with_code 0
-}
-
-section "exit_with_code" executable
-
-; Выход из программы
-;
-; Аргументы:
-;   code — код выхода
-
-macro exit_with_code code {
-	mov rdi, code     ; Код выхода
-	mov rax, SYS_EXIT ; Код сигнала выхода
-	syscall
-}
-
-section "check_error" executable
-
-macro check_error operation, message {
-	push rax
-	mov rax, message
-	operation f_check_error
-	pop rax
-}
-
-f_check_error:
-	mov rsi, rax
-	mov rdx, 0 ; rcx будет хранить количество байт для сравнения (0)
-
-	.loop:
-	   ; Сравниваем текущий байт с нулем
-	   mov bl, [rax + rdx]   ; Загружаем текущий байт в al
-	   cmp bl, 0             ; Проверяем, равен ли байт нулю
-	   je .done              ; Если равен нулю, выходим из цикла
-
-	   inc rdx               ; Увеличиваем счетчик
-	   jmp .loop             ; Переход к следующей итерации
-
-	.done:
-
-	mov rax, 1
-	mov rdi, 1
-	syscall
-
-	exit_with_code -1
-
-
-section "regs_operations" executable
-
-macro pushq val {
-	mov rax, val
-	push rax
-}
-
-; Упрощение обмена между фрагментами памяти
-;
-; Аргументы:
-;   dst — приёмник
-;   src — источник
-macro mem_mov dst, src {
-	push r15
-	mov r15, src
-	mov dst, r15
-	pop r15
-}
+section "write_header" executable
 
 ; Установка заголовка блока
 ;
@@ -133,48 +42,14 @@ macro mem_mov dst, src {
 ;   size        — размер тела блока
 ;   prev_size   — размер тела предыдущего блока
 ;   state       — состояние использования блока
+
 macro write_header addr, header_sign, size, prev_size, state {
-	mem_mov [addr + 8*0], header_sign
-	mem_mov [addr + 8*1], size
-	mem_mov [addr + 8*2], prev_size
-	mem_mov [addr + 8*3], state
+  mem_mov [addr + 8*0], header_sign
+  mem_mov [addr + 8*1], size
+  mem_mov [addr + 8*2], prev_size
+  mem_mov [addr + 8*3], state
 }
 
-; Сохранение всех регистров на стеке
-macro save_all_regs {
-	push rax
-	push rbx
-	push rcx
-	push rdx
-	push rsi
-	push rdi
-	push r8
-	push r9
-	push r10
-	push r11
-	push r12
-	push r13
-	push r14
-	push r15
-}
-
-; Взятие всех регистров со стека
-macro restore_all_regs {
-	pop r15
-	pop r14
-	pop r13
-	pop r12
-	pop r11
-	pop r10
-	pop r9
-	pop r8
-	pop rdi
-	pop rsi
-	pop rdx
-	pop rcx
-	pop rbx
-	pop rax
-}
 
 section "allocate_heap" executable
 
@@ -188,39 +63,38 @@ section "allocate_heap" executable
 ;   heap_end   — указатель на начало кучи
 
 macro allocate_heap {
-	save_all_regs
+  enter
 
-	call f_allocate_heap
+  call f_allocate_heap
 
-	restore_all_regs
+  leave
 }
 
 f_allocate_heap:
-	mov rsi, [HEAP_SIZE]     ; Количество памяти для аллокации
-	mov rax, SYS_MMAP ; Код системного вызова для MMAP
-	mov rdi, 0        ; Адрес (если 0, нахоходится автоматически)
-	mov rdx, 7        ; Права (PROT_READ | PROT_WRITE)
-	mov r8, 0         ; Файл дескриптор (ввод)
-	mov r9, 0         ; Смещение относительно начала файла (с начала файла)
-	mov r10, 34       ; Что-то (MAP_ANONYMOUS | MAP_PRIVATE)
-	syscall
+  syscall_6 SYS_MMAP,\
+            0,\                                  ; Адрес (если 0, нахоходится автоматически)
+            [HEAP_SIZE],\                        ; Количество памяти для аллокации
+            PROT_READ + PROT_WRITE + PROT_EXEC,\ ; Права (PROT_READ | PROT_WRITE)
+            MAP_SHARED + MAP_ANONYMOUS,\         ; MAP_ANONYMOUS | MAP_PRIVATE
+            0,\                                  ; Файл дескриптор (ввод)
+            0                                    ; Смещение относительно начала файла (с начала файла)
 
-	; Проверка корректности выделения памяти
-	test rax, rax
-	check_error js, HEAP_ALLOCATION_ERROR
+  ; Проверка корректности выделения памяти
+  test rax, rax
+  check_error js, HEAP_ALLOCATION_ERROR
 
-	; Сохранение указателя на начало кучи
-	mov [heap_start], rax
+  ; Сохранение указателя на начало кучи
+  mov [heap_start], rax
 
-	mov rbx, [HEAP_SIZE]                       ; Запись размера кучи
-	sub rbx, 8*4                               ; Учёт размера заголовка блока
-	write_header rax, [HEADER_SIGN], rbx, 0, 0 ; Запись заголовка начального блока
+  mov rbx, [HEAP_SIZE]                       ; Запись размера кучи
+  sub rbx, 8*4                               ; Учёт размера заголовка блока
+  write_header rax, [HEADER_SIGN], rbx, 0, 0 ; Запись заголовка начального блока
 
-	mov rax, [heap_start] ; Запись указателя на начало кучи
-	add rax, [HEAP_SIZE]  ; Смещение на размер кучи
-	mov [heap_end], rax   ; Сохранение указателя на конец кучи
+  mov rax, [heap_start] ; Запись указателя на начало кучи
+  add rax, [HEAP_SIZE]  ; Смещение на размер кучи
+  mov [heap_end], rax   ; Сохранение указателя на конец кучи
 
-	ret
+  ret
 
 section "expand_heap" executable
 
@@ -234,78 +108,76 @@ section "expand_heap" executable
 ;   heap_end   — указатель на начало кучи
 
 macro expand_heap size {
-	save_all_regs
+  enter_1 size
 
-	mov rax, size
-	call f_expand_heap
+  call f_expand_heap
 
-	restore_all_regs
+  leave
 }
 
 f_expand_heap:
-	; Сохранение количества памяти для расширения
-	mov rcx, rax
+  ; Сохранение количества памяти для расширения
+  mov rcx, rax
 
-	; Получение итогового размера кучи
-	add rax, [HEAP_SIZE]
-	mov [HEAP_SIZE], rax
+  ; Получение итогового размера кучи
+  add rax, [HEAP_SIZE]
+  mov [HEAP_SIZE], rax
 
-	; Взятие указателя на начало кучи
-	mov rax, [heap_start]
+  ; Взятие указателя на начало кучи
+  mov rax, [heap_start]
 
-	; Аллокация новой кучи
-	allocate_heap
+  ; Аллокация новой кучи
+  allocate_heap
 
-	; RDI — указатель на новую кучу
-	; RSI — указатель на старую кучу
-	mov rdi, [heap_start]
-	mov rsi, rax
+  ; RDI — указатель на новую кучу
+  ; RSI — указатель на старую кучу
+  mov rdi, [heap_start]
+  mov rsi, rax
 
-	; Сохранение указателя на старую кучу
-	mov r8, rsi
+  ; Сохранение указателя на старую кучу
+  mov r8, rsi
 
-	; Получение размера старой кучи
-	mov rax, [HEAP_SIZE]
-	sub rax, rcx
+  ; Получение размера старой кучи
+  mov rax, [HEAP_SIZE]
+  sub rax, rcx
 
-	; Сохранение размера старой кучи
-	mov r9, rax
+  ; Сохранение размера старой кучи
+  mov r9, rax
 
-	; Расчёт количества операций для копирования
-	push rax
-	mov rcx, 8
-	idiv rcx
-	mov rcx, rax
-	pop rax
+  ; Расчёт количества операций для копирования
+  push rax
+  mov rcx, 8
+  idiv rcx
+  mov rcx, rax
+  pop rax
 
-	; Копирование данных со старой кучи в новую
-	rep movsq
+  ; Копирование данных со старой кучи в новую
+  rep movsq
 
-	; Укзатель на начало новой кучи
-	mov rbx, [heap_start]
+  ; Укзатель на начало новой кучи
+  mov rbx, [heap_start]
 
-	; Поиск последнего блока кучи
-	.while:
-		mov rcx, rbx
-		add rbx, [rbx + 8*1]
-		add rbx, 8*4
+  ; Поиск последнего блока кучи
+  .while:
+    mov rcx, rbx
+    add rbx, [rbx + 8*1]
+    add rbx, 8*4
 
-		mov rdx, [rbx]
-		cmp rdx, [HEADER_SIGN]
-		je .while
+    mov rdx, [rbx]
+    cmp rdx, [HEADER_SIGN]
+    je .while
 
-	; Расширение последнего блока до конца кучи
-	mov rbx, [rcx + 8*1]
-	add rbx, rax
-	mov [rcx + 8*1], rbx
+  ; Расширение последнего блока до конца кучи
+  mov rbx, [rcx + 8*1]
+  add rbx, rax
+  mov [rcx + 8*1], rbx
 
-	; Деаллокация старой кучи
-	mov rax, SYS_MUNMAP
-	mov rdi, r8
-	mov rsi, r9
-	syscall
+  ; Деаллокация старой кучи
+  syscall_2 SYS_MUNMAP,\
+            r8,\
+            r9
 
-	ret
+  ret
 
 section "create_block" executable
 
@@ -318,76 +190,71 @@ section "create_block" executable
 ;   rax — указатель на тело блока
 
 macro create_block size {
-	save_all_regs
+  enter_1 size
 
-	mov rax, size
-	call f_create_block
+  call f_create_block
 
-	push rax
-	add rsp, 8
-
-	restore_all_regs
-	mov rax, [rsp - 8*15]
+  leave_with_return
 }
 
 f_create_block:
-	mov r8, rax
+  mov r8, rax
 
-	mov rax, [heap_start] ; Запись указателя на начало кучи в RAX
+  mov rax, [heap_start] ; Запись указателя на начало кучи в RAX
 
-	; Цикл для нахождения подходящего блока
-	.do:
-		; Если заголовок не найден, выйти с ошибкой
-		mov rdx, [rax]
-		cmp rdx, [HEADER_SIGN]
-		check_error jne, EXPECTED_HEAP_BLOCK_ERROR
+  ; Цикл для нахождения подходящего блока
+  .do:
+    ; Если заголовок не найден, выйти с ошибкой
+    mov rdx, [rax]
+    cmp rdx, [HEADER_SIGN]
+    check_error jne, EXPECTED_HEAP_BLOCK_ERROR
 
-		; Если блок используется, начать искать новый блок
-		mov rdx, [rax + 8*3]
-		test rdx, 1
-		js .condition
+    ; Если блок используется, начать искать новый блок
+    mov rdx, [rax + 8*3]
+    test rdx, 1
+    js .condition
 
-		; Сравнение выделенного размера и размера блока
-		mov rdx, [rax + 8*1]
-		cmp rdx, r8
-		jge .continue
+    ; Сравнение выделенного размера и размера блока
+    mov rdx, [rax + 8*1]
+    cmp rdx, r8
+    jge .continue
 
-	.condition:
-		add rax, [rax + 8*1] ; Смещение адреса текущего блока на его размер
-		add rax, 8*4         ; Смещение адреса текущего указателя на размер заголовка
+  .condition:
+    add rax, [rax + 8*1] ; Смещение адреса текущего блока на его размер
+    add rax, 8*4         ; Смещение адреса текущего указателя на размер заголовка
 
-		jmp .do  ; Переход к началу цикла
+    jmp .do  ; Переход к началу цикла
 
-	; Окончание цикла
-	.continue:
-		; Вычисление адреса нового блока
-		mov rbx, rax
-		add rbx, 8*4
-		add rbx, r8
+  ; Окончание цикла
+  .continue:
+    ; Вычисление адреса нового блока
+    mov rbx, rax
+    add rbx, 8*4
+    add rbx, r8
 
-		; Проверка состояния блока
-		mov rcx, [rbx + 8*3]
-		test rcx, 1
-		jnz .do
+    ; Проверка состояния блока
+    mov rcx, [rbx + 8*3]
+    test rcx, 1
+    jnz .do
 
-	.modify_block:
+  .modify_block:
 
-	mem_mov [rax + 8*3], 1 ; Изменение состояния текущего блока на используемое
+  mem_mov [rax + 8*3], 1 ; Изменение состояния текущего блока на используемое
 
-	mov rcx, [rax + 8*1]    ; Сохранение размера текущего блока в RCX
-	sub rcx, r8             ; Вычисление размера текущего блока в RCX
-	sub rcx, 8*4            ; Учёт размера заголовка
-	mem_mov [rax + 8*1], r8 ; Изменение SIZE у предыдущего блока
+  mov rcx, [rax + 8*1]    ; Сохранение размера текущего блока в RCX
+  sub rcx, r8             ; Вычисление размера текущего блока в RCX
+  sub rcx, 8*4            ; Учёт размера заголовка
+  mem_mov [rax + 8*1], r8 ; Изменение SIZE у предыдущего блока
 
-	; KEY
-	; SIZE
-	; PREV_SIZE
-	; STATE
-	write_header rbx, [HEADER_SIGN], rcx, r8, 0
+  ; KEY
+  ; SIZE
+  ; PREV_SIZE
+  ; STATE
+  write_header rbx, [HEADER_SIGN], rcx, r8, 0
 
-	add rax, 8*4
+  add rax, 8*4
 
-	ret
+  ret
 
 section "delete_block" executable
 
@@ -396,118 +263,117 @@ section "delete_block" executable
 ; Аргументы:
 ;   block_addr — указатель на блок
 macro delete_block block_addr {
-	save_all_regs
+  enter block_addr
 
-	mov rax, block_addr
-	call f_delete_block
+  call f_delete_block
 
-	restore_all_regs
+  leave
 }
 
 f_delete_block:
-	sub rax, 8*4
+  sub rax, 8*4
 
-	mov r8, rax
+  mov r8, rax
 
-	; Если заголовок не найден, выйти с ошибкой
-	mov rax, [r8]
-	cmp rax, [HEADER_SIGN]
-	check_error jne, EXPECTED_HEAP_BLOCK_ERROR
+  ; Если заголовок не найден, выйти с ошибкой
+  mov rax, [r8]
+  cmp rax, [HEADER_SIGN]
+  check_error jne, EXPECTED_HEAP_BLOCK_ERROR
 
-	; Объединение текущего блока и следующего, если он не используется
+  ; Объединение текущего блока и следующего, если он не используется
 
-	; Нахождение следующего блока
-	mov rax, r8
-	add rax, 8*4
-	add rax, [r8 + 8*1]
+  ; Нахождение следующего блока
+  mov rax, r8
+  add rax, 8*4
+  add rax, [r8 + 8*1]
 
-	; Если заголовок не найден (блока не существует), пропустить изменение блоков
-	mov rbx, [rax]
-	cmp rbx, [HEADER_SIGN]
-	jne .skip_current_and_next_blocks_merging
+  ; Если заголовок не найден (блока не существует), пропустить изменение блоков
+  mov rbx, [rax]
+  cmp rbx, [HEADER_SIGN]
+  jne .skip_current_and_next_blocks_merging
 
-	; Если следующий блок используется, пропустить изменение блоков
-	mov rbx, [rax + 8*3]
-	test rbx, 1
-	jne .skip_current_and_next_blocks_merging
+  ; Если следующий блок используется, пропустить изменение блоков
+  mov rbx, [rax + 8*3]
+  test rbx, 1
+  jne .skip_current_and_next_blocks_merging
 
-	; Увеличение размера текущего блока на размер удаляемого блока
-	mov rcx, [r8 + 8*1]
-	add rcx, [rax + 8*1]
-	add rcx, 8*4
-	mov [r8 + 8*1], rcx
+  ; Увеличение размера текущего блока на размер удаляемого блока
+  mov rcx, [r8 + 8*1]
+  add rcx, [rax + 8*1]
+  add rcx, 8*4
+  mov [r8 + 8*1], rcx
 
-	; Удаление заголовка удаляемого блока
-	write_header rax, 0, 0, 0, 0
+  ; Удаление заголовка удаляемого блока
+  write_header rax, 0, 0, 0, 0
 
-	.skip_current_and_next_blocks_merging:
+  .skip_current_and_next_blocks_merging:
 
-		; Нахождение предыдущего блока
-		mov rax, r8
-		sub rax, [r8 + 8*2]
-		sub rax, 8*4
+    ; Нахождение предыдущего блока
+    mov rax, r8
+    sub rax, [r8 + 8*2]
+    sub rax, 8*4
 
-		; Проверка нахождения блока внутри кучи
-		cmp rax, [heap_start]
-		jl .skip_previous_and_current_blocks_merging
+    ; Проверка нахождения блока внутри кучи
+    cmp rax, [heap_start]
+    jl .skip_previous_and_current_blocks_merging
 
-		; Если заголовок не найден (блока не существует), пропустить изменение блоков
-		mov rbx, [rax]
-		cmp rbx, [HEADER_SIGN]
-		jne .skip_previous_and_current_blocks_merging
+    ; Если заголовок не найден (блока не существует), пропустить изменение блоков
+    mov rbx, [rax]
+    cmp rbx, [HEADER_SIGN]
+    jne .skip_previous_and_current_blocks_merging
 
-		; Если следующий блок используется, пропустить изменение блоков
-		mov rbx, [rax + 8*3]
-		test rbx, 1
-		jne .skip_previous_and_current_blocks_merging
+    ; Если следующий блок используется, пропустить изменение блоков
+    mov rbx, [rax + 8*3]
+    test rbx, 1
+    jne .skip_previous_and_current_blocks_merging
 
-		; Увеличение размера предыдущего блока на размер удаляемого блока
-		mov rcx, [r8 + 8*1]
-		add rcx, [rax + 8*1]
-		add rcx, 8*4
-		mov [rax + 8*1], rcx
+    ; Увеличение размера предыдущего блока на размер удаляемого блока
+    mov rcx, [r8 + 8*1]
+    add rcx, [rax + 8*1]
+    add rcx, 8*4
+    mov [rax + 8*1], rcx
 
-		; Удаление заголовка удаляемого блока
-		write_header r8, 0, 0, 0, 0
-		mov r8, rax
+    ; Удаление заголовка удаляемого блока
+    write_header r8, 0, 0, 0, 0
+    mov r8, rax
 
-	.skip_previous_and_current_blocks_merging:
+  .skip_previous_and_current_blocks_merging:
 
-		; Изменение состояния текущего блока
-		mov rax, [r8 + 8*3]
-		test rax, 1
-		jz .all_is_done
-		mem_mov [r8 + 8*3], 0
+    ; Изменение состояния текущего блока
+    mov rax, [r8 + 8*3]
+    test rax, 1
+    jz .all_is_done
+    mem_mov [r8 + 8*3], 0
 
-	.all_is_done:
+  .all_is_done:
 
-	; Нахождение дальше идущего блока
-	mov rcx, r8
-	add rcx, [r8 + 8*1]
-	add rcx, 8*4
+  ; Нахождение дальше идущего блока
+  mov rcx, r8
+  add rcx, [r8 + 8*1]
+  add rcx, 8*4
 
-	; Проверка нахождения блока внутри кучи
-	mov rax, [heap_end]
-	cmp rcx, [heap_end]
-	jge .skip_next_next_block_modifying
+  ; Проверка нахождения блока внутри кучи
+  mov rax, [heap_end]
+  cmp rcx, [heap_end]
+  jge .skip_next_next_block_modifying
 
-	; Если заголовок не найден (блока не существует), пропустить изменение блоков
-	mov rbx, [rcx]
-	cmp rbx, [HEADER_SIGN]
-	jne .skip_next_next_block_modifying
+  ; Если заголовок не найден (блока не существует), пропустить изменение блоков
+  mov rbx, [rcx]
+  cmp rbx, [HEADER_SIGN]
+  jne .skip_next_next_block_modifying
 
-	; Изменение PREV_SIZE для дальше идущего блока
-	mem_mov [rcx + 8*2], [r8 + 8*1]
+  ; Изменение PREV_SIZE для дальше идущего блока
+  mem_mov [rcx + 8*2], [r8 + 8*1]
 
-	.skip_next_next_block_modifying:
+  .skip_next_next_block_modifying:
 
-	ret
+  ret
 
 section "create_integer" executable
 
 macro create_integer value {
-	pushq value
-	pushq INTEGER
+  pushq value
+  pushq INTEGER
 }
 
 section "create_list" executable
@@ -521,99 +387,88 @@ section "create_list" executable
 ;   rax — указатель на созданный блок
 
 macro create_list list_start, length {
-	save_all_regs
+  enter_2 list_start, length
 
-	mov rax, list_start
-	mov rbx, length
-	call f_create_list
+  call f_create_list
 
-	push rax
-	add rsp, 8
-
-	restore_all_regs
-	mov rax, [rsp - 8*15]
+  leave_with_return
 }
 
 f_create_list:
-	; Сохранение указателя на начало копируемого списка и длины списка
-	push rax
-	push rbx
+  ; Сохранение указателя на начало копируемого списка и длины списка
+  push rax
+  push rbx
 
-	mov rcx, LIST_HEADER
+  mov rcx, LIST_HEADER
 
-	.do:
-		dec rbx
+  .do:
+    dec rbx
 
-		mov rdx, [rax]
-		cmp rdx, INTEGER
-		jne .not_integer
+    mov rdx, [rax]
+    cmp rdx, INTEGER
+    jne .not_integer
 
-		add rcx, 2
-		add rax, 8*2
-		jmp .while
+    add rcx, 2
+    add rax, 8*2
+    jmp .while
 
-	.not_integer:
-		cmp rax, LIST
-		jne .not_list
+  .not_integer:
+    cmp rax, LIST
+    jne .not_list
 
-		add rcx, LIST_HEADER
-		add rcx, [rax + 8*1]
-		add rax, [rax + 8*2]
+    add rcx, LIST_HEADER
+    add rcx, [rax + 8*1]
+    add rax, [rax + 8*2]
 
-		jmp .while
+    jmp .while
 
-	.not_list:
-		check_error jmp, EXPECTED_INTEGER_LIST_TYPE_ERROR
+  .not_list:
+    check_error jmp, EXPECTED_INTEGER_LIST_TYPE_ERROR
 
-	.while:
-		cmp rbx, 0
-		jne .do
+  .while:
+    cmp rbx, 0
+    jne .do
 
-	mov rbx, rcx
-	imul rbx, 8
+  mov rbx, rcx
+  imul rbx, 8
 
-	; Аллокация блока на куче
-	create_block rbx
+  ; Аллокация блока на куче
+  create_block rbx
 
-	; Возвращение длины списка
-	pop rbx
+  ; Возвращение длины списка
+  pop rbx
 
-	write_header rax, LIST, rbx, rcx, 0
+  write_header rax, LIST, rbx, rcx, 0
 
-	; RCX — количество блоков
-	mov rbx, LIST_HEADER
-	sub rcx, rbx
-	imul rbx, 8
-	mov rdi, rax ; Место назначения
-	add rdi, rbx
-	pop rsi      ; Источник копирования
-	rep movsq    ; Копирование в аллоцированный блок
+  ; RCX — количество блоков
+  mov rbx, LIST_HEADER
+  sub rcx, rbx
+  imul rbx, 8
+  mov rdi, rax ; Место назначения
+  add rdi, rbx
+  pop rsi      ; Источник копирования
+  rep movsq    ; Копирование в аллоцированный блок
 
-	ret
+  ret
 
 section "list_length" executable
 
 macro list_length list_ptr {
-	save_all_regs
+  enter_1 list_ptr
 
-	mov rax, list_ptr
-	call f_list_length
+  call f_list_length
 
-	push rax
-	add rsp, 8
-
-	restore_all_regs
-	mov rax, [rsp - 8*15]
+  leave_with_return
 }
 
 f_list_length:
-	mov rbx, [rax]
-	cmp rbx, LIST
-	check_error jne, EXPECTED_LIST_TYPE_ERROR
+  mov rbx, [rax]
+  cmp rbx, LIST
+  check_error jne, EXPECTED_LIST_TYPE_ERROR
 
-	mov rax, [rax + 8*1]
+  mov rax, [rax + 8*1]
 
-	ret
+  ret
 
 section "list_get" executable
 
@@ -627,358 +482,215 @@ section "list_get" executable
 ;   rax — указатель на элемент по индексу
 
 macro list_get list_ptr, index_ptr {
-	save_all_regs
+  enter_2 list_ptr, index_ptr
 
-	mov rax, list_ptr
-	mov rbx, index_ptr
-	call f_list_get
+  call f_list_get
 
-	push rax
-	add rsp, 8
-
-	restore_all_regs
-	mov rax, [rsp - 8*15]
+  leave_with_return
 }
 
 f_list_get:
-	; Проверка типа
-	mov rcx, [rax]
-	cmp rcx, LIST
-	check_error jne, EXPECTED_LIST_TYPE_ERROR
+  ; Проверка типа
+  mov rcx, [rax]
+  cmp rcx, LIST
+  check_error jne, EXPECTED_LIST_TYPE_ERROR
 
-	; Проверка типа
-	mov rcx, [rbx]
-	cmp rcx, INTEGER
-	check_error jne, EXPECTED_INTEGER_TYPE_ERROR
+  ; Проверка типа
+  mov rcx, [rbx]
+  cmp rcx, INTEGER
+  check_error jne, EXPECTED_INTEGER_TYPE_ERROR
 
-	; Запись длины списка
-	mov rcx, [rax + 8*1]
+  ; Запись длины списка
+  mov rcx, [rax + 8*1]
 
-	; Если индекс меньше нуля, то увеличить его на длину списка
-	mov rbx, [rbx + 8*1]
-	cmp rbx, 0
-	jge .positive_index
-	add rbx, rcx
+  ; Если индекс меньше нуля, то увеличить его на длину списка
+  mov rbx, [rbx + 8*1]
+  cmp rbx, 0
+  jge .positive_index
+  add rbx, rcx
 
-	.positive_index:
+  .positive_index:
 
-	; Проверка, входит ли индекс в список
-	cmp rbx, rcx
-	check_error jge, INDEX_OUT_OF_LIST_ERROR
-	cmp rbx, 0
-	check_error jl, INDEX_OUT_OF_LIST_ERROR
+  ; Проверка, входит ли индекс в список
+  cmp rbx, rcx
+  check_error jge, INDEX_OUT_OF_LIST_ERROR
+  cmp rbx, 0
+  check_error jl, INDEX_OUT_OF_LIST_ERROR
 
-	mov rcx, rax
-	mov rdx, LIST_HEADER
-	imul rdx, 8
-	add rcx, rdx
+  mov rcx, rax
+  mov rdx, LIST_HEADER
+  imul rdx, 8
+  add rcx, rdx
 
-	.while:
-		dec rbx
+  .while:
+    dec rbx
 
-		cmp rbx, 0
-		jl .while_end
+    cmp rbx, 0
+    jl .while_end
 
-	.do:
-		mov rax, [rcx]
+  .do:
+    mov rax, [rcx]
 
-		cmp rax, INTEGER
-		jne .not_integer
+    cmp rax, INTEGER
+    jne .not_integer
 
-		add rcx, 8*2 ; Смещение на размер заголовка и размер тела
-		jmp .while
+    add rcx, 8*2 ; Смещение на размер заголовка и размер тела
+    jmp .while
 
-	.not_integer:
-		cmp rax, LIST
-		jne .not_list
+  .not_integer:
+    cmp rax, LIST
+    jne .not_list
 
-		mov rax, [rcx + 8*2]
-		add rax, LIST_HEADER
-		imul rax, 8
-		add rcx, rax
+    mov rax, [rcx + 8*2]
+    add rax, LIST_HEADER
+    imul rax, 8
+    add rcx, rax
 
-		jmp .while
+    jmp .while
 
-	.not_list:
-		check_error jmp, EXPECTED_INTEGER_LIST_TYPE_ERROR
+  .not_list:
+    check_error jmp, EXPECTED_INTEGER_LIST_TYPE_ERROR
 
-	.while_end:
+  .while_end:
 
-		mov rax, rcx
+    mov rax, rcx
 
-	ret
-
-;_start:
-;
-;	;; Аллокация кучи
-;	;allocate_heap
-;	;
-;	;; Расширение кучи
-;	;expand_heap 0x1000
-;	;
-;	;; список = 1 2 3 4
-;	;create_integer 4
-;	;create_integer 3
-;	;create_integer 2
-;	;create_integer 1
-;	;
-;	;mov rax, rsp ; Указатель на начало списка
-;	;create_list rax, 4 ; Количество элементов
-;	;
-;	;mov [список], rax
-;	;
-;	;; индекс = 999
-;	;create_integer 999
-;	;mov [индекс], rsp
-;	;
-;	;; список.индекс
-;	;list_get [список], [индекс]
-;
-;	exit_with_code [rax + 8*1] ; Показать значение взятогого элемента
-
-
-section "str_length" executable
-
-macro str_length str_ptr {
-	save_all_regs
-
-	mov rax, str_ptr
-	call f_str_length
-
-	push rax
-	add rsp, 8
-
-	restore_all_regs
-	mov rax, [rsp - 8*15]
-}
-
-f_str_length:
-	mov rcx, 0 ; rcx будет хранить количество байт для сравнения (0)
-
-	.loop:
-	   ; Сравниваем текущий байт с нулем
-	   mov bl, [rax + rcx]   ; Загружаем текущий байт в al
-	   cmp bl, 0             ; Проверяем, равен ли байт нулю
-	   je .done              ; Если равен нулю, выходим из цикла
-
-	   inc rcx               ; Увеличиваем счетчик
-	   jmp .loop             ; Переход к следующей итерации
-
-	.done:
-	mov rax, rcx
-
-	ret
-
-section "print_string" executable
-
-macro print_string ptr {
-	save_all_regs
-
-	mov rax, ptr
-	call f_print_string
-
-	restore_all_regs
-}
-
-f_print_string:
-	mov rsi, rax
-
-	str_length rsi
-	mov rdx, rax
-
-	mov rax, 1
-	mov rdi, 1
-
-	syscall
-	ret
-
-section "print" executable
-
-macro print ptr, size {
-	save_all_regs
-
-	mov rax, ptr
-	mov rbx, size
-	call f_print
-
-	restore_all_regs
-}
-
-f_print:
-	mov rdx, rbx
-	mov rsi, rax
-	mov rdi, 1
-	mov rax, 1
-
-	syscall
-	ret
-
-section "print_int" executable
-
-macro print_int int {
-	save_all_regs
-
-	mov rax, int
-	call f_print_int
-
-	restore_all_regs
-}
-
-f_print_int:
-	mov r8, rsp
-	mov rbx, 10
-	push 0
-	push 10
-	mov rcx, 2
-
-	.while:
-		idiv rbx
-		add rdx, 48
-		push rdx
-		mov rdx, 0
-		inc rcx
-
-		cmp rax, 0
-		jne .while
-
-	mov rax, rsp
-	imul rcx, 8
-	print rax, rcx
-
-	mov rsp, r8
-
-	ret
+  ret
 
 section "get_file_size" executable
 
 macro get_file_size filename {
-	save_all_regs
+  enter_1 filename
 
-	mov rax, filename
-	call f_get_file_size
+  call f_get_file_size
 
-	push rax
-	add rsp, 8
-
-	restore_all_regs
-	mov rax, [rsp - 8*15]
+  leave_with_return
 }
 
 f_get_file_size:
-	mov rdi, rax ; указатель на имя файла
+  mov rdi, rax ; Указатель на имя файла
 
-	create_block STAT_BUFFER_SIZE
+  create_block STAT_BUFFER_SIZE
 
-	mov rbx, rax
+  mov rbx, rax
 
-	mov rsi, rax      ; указатель на буфер для хранения данных
-	mov rax, SYS_STAT ; syscall: sys_stat
-	syscall
+  syscall_2 SYS_STAT,\
+            rdi,\      ; Указатель на имя файла
+            rax        ; Указатель на место хранения данных
 
-	mov rax, [rbx + 48] ; размер файла в байтах (st_size)
-	ret
+  mov rax, [rbx + 48] ; Размер файла в байтах
+
+  ret
 
 section "open_file" executable
 
 macro open_file filename {
-	save_all_regs
+  enter_1 filename
 
-	mov rax, filename
-	call f_open_file
+  call f_open_file
 
-	push rax
-	add rsp, 8
-
-	restore_all_regs
-	mov rax, [rsp - 8*15]
+  leave_with_return
 }
 
 f_open_file:
-	; Открываем файл
-	mov rdi, rax      ; указатель на имя файла
-	mov rax, SYS_OPEN ; syscall: open
-	mov rsi, 0        ; флаги: O_RDONLY
-	syscall
+  ; Открытие файла
+  syscall_2 SYS_OPEN,\
+            rax,\      ; Указатель на имя файла
+            O_RDONLY   ; Параметры открытия файла
 
-	; Проверка открытия файла
-	cmp rax, 0
-	check_error jle, OPENING_FILE_ERROR
+  ; Проверка открытия файла
+  cmp rax, 0
+  check_error jle, OPENING_FILE_ERROR
 
-	; Сохраняем дескриптор файла
-	mov [file_desc], rax
+  ; Сохраняем дескриптор файла
+  mov [file_desc], rax
 
-	ret
+  ret
 
 section "read_file" executable
 
 macro read_file file_descriptor {
-	save_all_regs
+  enter_1 file_descriptor
 
-	mov rax, file_descriptor
-	call f_read_file
+  call f_read_file
 
-	push rax
-	add rsp, 8
-
-	restore_all_regs
-	mov rax, [rsp - 8*15]
+  leave_with_return
 }
 
 section "close_file" executable
 
 macro close_file file_descriptor {
-	save_all_regs
+  enter_1 file_descriptor
 
-	mov rax, file_descriptor
-	call f_read_file
+  call f_read_file
 
-	push rax
-	add rsp, 8
-
-	restore_all_regs
-	mov rax, [rsp - 8*15]
+  leave_with_return
 }
 
 f_close_file:
-	; Закрываем файл
-	mov rdi, [rax]               ; дескриптор файла
-	mov rax, SYS_CLOSE                 ; syscall: close
-	syscall
-	ret
+  ; Закрываем файл
+  syscall_1 SYS_CLOSE,\
+            [rax]      ; Дескриптор файла
+  ret
 
 
 f_read_file:
-	; Читаем содержимое файла
-	mov rbx, rax
-	mov rdi, [rax]               ; дескриптор файла
-	mov rsi, buffer                    ; буфер для хранения данных
-	mov rax, SYS_READ                  ; syscall: read
-	mov rdx, [buffer_size]             ; размер буфера
-	syscall
+  mov rbx, rax
 
-	; Проверяем, прочитано ли что-то
-	cmp rax, 0
-	jge .skip                   ; если < 0, выходим
+  ; Читаем содержимое файла
+  syscall_3 SYS_READ,\
+            [rax],\       ; Дескриптор файла
+            buffer,\      ; Буфер для хранения данных
+            [buffer_size] ; Размер буфера
 
-		close_file rbx
+  ; Проверяем, прочитано ли что-то
+  cmp rax, 0
+  jge .skip                   ; если < 0, выходим
 
-	.skip:
-	ret
+    close_file rbx
+
+  .skip:
+  ret
 
 section "start" executable
 _start:
-	allocate_heap
+  allocate_heap
 
-	get_file_size filename
-	print_int rax
+  get_file_size filename
+  print_int rax
 
-	open_file filename
+  open_file filename
 
-	read_file file_desc
+  read_file file_desc
 
-	; Выводим содержимое файла
-	print_string buffer
+  ; Выводим содержимое файла
+  print buffer, [buffer_size]
 
-	close_file file_desc
+  close_file file_desc
 
-	exit program_end
+  ; Аллокация кучи
+  allocate_heap
+
+  ; Расширение кучи
+  expand_heap 0x1000
+
+  ; список = 1 2 3 4
+  create_integer 4
+  create_integer 3
+  create_integer 2
+  create_integer 1
+
+  mov rax, rsp ; Указатель на начало списка
+  create_list rax, 4 ; Количество элементов
+
+  mov [список], rax
+
+  ; индекс = 999
+  create_integer -1
+  mov [индекс], rsp
+
+  ; список.индекс
+  list_get [список], [индекс]
+  exit [rax + 8*1] ; Показать значение взятогого элемента
+
+  exit 0
