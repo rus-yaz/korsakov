@@ -15,7 +15,7 @@ _start:
   ; Печать символа
   mov rax, 48
   call print_char
-  mov rax, '!'
+  mov rax, "!"
   call print_char
   mov rax, 10
   call print_char
@@ -55,7 +55,7 @@ number_to_string:
     xor rdx, rdx
     div rbx
     pop rbx
-    add rdx, '0'
+    add rdx, "0"
     push rdx
     inc rcx
 

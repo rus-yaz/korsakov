@@ -209,6 +209,7 @@ f_print_int:
   push 0
   push 10
   mov rcx, 2
+	mov rdx, 0
 
   .while:
     idiv rbx
