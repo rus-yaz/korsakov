@@ -1,4 +1,6 @@
 include "syscalls.asm"
+include "types.asm"
+
 section "syscall" executable
 
 ; Системный вызов. Количество передаваемых аргументов зависит от указанной в макросе цифры
@@ -104,7 +106,6 @@ macro leave_with_return {
   mov rax, [rsp - 8*15]
 }
 
-
 section "regs_operations" executable
 
 macro pushq val {
@@ -124,18 +125,17 @@ macro mem_mov dst, src {
   pop r15
 }
 
+section "buffer_length" executable
 
-section "str_length" executable
-
-macro str_length str_ptr {
+macro buffer_length str_ptr {
 	enter_1 str_ptr
 
-  call f_str_length
+  call f_buffer_length
 
 	leave_with_return
 }
 
-f_str_length:
+f_buffer_length:
   mov rcx, 0 ; Счётчик
 
   .loop:
@@ -151,7 +151,6 @@ f_str_length:
   mov rax, rcx
 
   ret
-
 
 section "print" executable
 
@@ -171,27 +170,62 @@ f_print:
 
   ret
 
+section "print_buffer" executable
 
-section "print_string" executable
-
-macro print_string ptr {
+macro print_buffer ptr {
 	enter_1 ptr
 
-  call f_print_string
+  call f_print_buffer
 
 	leave
 }
 
-f_print_string:
+f_print_buffer:
   mov rsi, rax
-  str_length rsi
+  buffer_length rsi
 	mov rbx, rax
 
-  print rsi,\      ; Указатель на строку
-        rbx        ; Длина строки
+  print rsi,\      ; Указатель на буфер
+        rbx        ; Размер буфера
 
   ret
 
+section "exit" executable
+
+; Выход из программы
+;
+; Аргументы:
+;   code — код выхода
+
+macro exit code {
+  syscall_1 SYS_EXIT,\
+            code
+}
+
+section "exit_with_message" executable
+
+; Выход с кодом 0 и сообщением
+;
+; Аргументы:
+;   message — указатель на текст сообщения
+
+macro exit_with_message message, code {
+  print_buffer message
+  exit code
+}
+
+section "check_error" executable
+
+macro check_error operation, message {
+  push rax
+  mov rax, message
+  operation f_check_error
+  pop rax
+}
+
+f_check_error:
+  print_buffer rax
+  exit -1
 
 section "print_int" executable
 
@@ -229,42 +263,74 @@ f_print_int:
 
   ret
 
+section "print_string" executable
 
-section "exit" executable
+macro print_string string {
+	enter_1 string
 
-; Выход из программы
-;
-; Аргументы:
-;   code — код выхода
+  call f_print_string
 
-macro exit code {
-  syscall_1 SYS_EXIT,\
-            code
+	leave
 }
 
+f_print_string:
+	; Проверка типа
+	mov rbx, [rax]
+	cmp rbx, STRING
+	je .string
+	mov rbx, [rax]
+	cmp rbx, CHAR
+	je .char
 
-section "exit_with_message" executable
+  print_buffer EXPECTED_STRING_CHAR_TYPE_ERROR
 
-; Выход с кодом 0 и сообщением
-;
-; Аргументы:
-;   message — указатель на текст сообщения
+	.string:
 
-macro exit_with_message message, code {
-  print_string message
-  exit code
-}
+	mov rcx, [rax + 8*1]     ; Длина строки
+	add rax, 8*STRING_HEADER ; Указатель на содержимое строки
 
+	.while:
+		cmp rcx, 0
+		jle .end
 
-section "check_error" executable
+		dec rcx
 
-macro check_error operation, message {
-  push rax
-  mov rax, message
-  operation f_check_error
-  pop rax
-}
+		; Проверка типа
+		mov rbx, [rax]
+		cmp rbx, CHAR
+		check_error jne, EXPECTED_CHAR_TYPE_ERROR
 
-f_check_error:
-  print_string rax
-  exit -1
+		mov rdx, [rax+8*2] ; Символ
+		bswap rdx
+		push rdx
+		mov rdx, rsp
+
+		print rdx,\ ; Указатель на строку
+					8   ; Длина строки
+
+		add rsp, 8
+		add rax, 8*3
+
+		jmp .while
+
+	.char:
+		mov rdx, [rax+8*2] ; Символ
+		bswap rdx
+		push rdx
+		mov rdx, rsp
+
+		print rdx,\ ; Указатель на строку
+					8   ; Длина строки
+
+		add rsp, 8
+
+		push 10
+		mov rax, rsp
+		print rax,\
+					1
+
+		add rsp, 8
+
+	.end:
+
+  ret

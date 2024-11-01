@@ -16,9 +16,9 @@ define STDERR 2
 ; OPEN
 define FILE_DESCRIPTOR_SIZE 0x400
 
-define O_RDONLY     0x0000
-define O_WRONLY     0x0001
-define O_RDWR       0x0002
+define O_RDONLY     0x0000 ; Только чтение
+define O_WRONLY     0x0001 ; Только запись
+define O_RDWR       0x0002 ; Чтение и запись
 define O_APPEND     0x0008 ; Операции записи добавляются в конец файла
 define O_SYNC       0x0040 ; Запись завершается после записи данных и метаданных
 define O_NONBLOCK   0x0080 ; Открывается в неблокирующем режиме

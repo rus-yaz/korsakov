@@ -19,17 +19,29 @@ section "data" writable
   HEAP_ALLOCATION_ERROR               db "Ошибка аллокации кучи", 10, 0
   EXPECTED_INTEGER_TYPE_ERROR         db "Ожидался тип Целое число", 10, 0
   EXPECTED_LIST_TYPE_ERROR            db "Ожидался тип Список", 10, 0
+  EXPECTED_STRING_TYPE_ERROR          db "Ожидался тип Строка", 10, 0
+  EXPECTED_CHAR_TYPE_ERROR            db "Ожидался тип Символ", 10, 0
+  EXPECTED_STRING_CHAR_TYPE_ERROR     db "Ожидался тип Строка или Символ", 10, 0
   EXPECTED_INTEGER_LIST_TYPE_ERROR    db "Ожидался тип Целое число или Список", 10, 0
   EXPECTED_FILE_DESCRIPTOR_TYPE_ERROR db "Ожидался тип Файловый дескриптор", 10, 0
   EXPECTED_HEAP_BLOCK_ERROR           db "Ожидался блок кучи", 10, 0
   INDEX_OUT_OF_LIST_ERROR             db "Индекс выходит за пределы списка", 10, 0
   OPENING_FILE_ERROR                  db "Не удалось открыть файл", 10, 0
   FILE_WAS_NOT_READ_ERROR             db "Файл не был прочитан", 10, 0
+	UNEXPECTED_BIT_SEQUENCE_ERROR       db "Неизвестная битовая последовательность", 10, 0
+
+	FILE_SIZE       db "Размер файла: ", 0
+	STRING_SIZE     db "Размер строки (учитывается переноса): ", 0
+	STRING_CONTENT  db 10, "Содержимое строки:", 10, 0
+	CHAR_BY_INDEX   db "Символ по индексу: ", 0
 
   filename db "привет.корс", 0
 
   список rq 1
   индекс rq 1
+  файловый_дескриптор rq 1
+	содержимое_файла rq 1
+	символ rq 1
 
 section "write_header" executable
 
@@ -409,11 +421,9 @@ macro create_list list_start, length {
 }
 
 f_create_list:
-  ; Сохранение указателя на начало копируемого списка и длины списка
-  push rax
-  push rbx
-
-  mov rcx, LIST_HEADER
+  push rax             ; Сохранение указателя на начало копируемого списка
+  push rbx             ; Сохранение длины списка
+  mov rcx, LIST_HEADER ; Начальная длина списка
 
   .do:
     dec rbx
@@ -531,6 +541,7 @@ f_list_get:
   cmp rbx, 0
   check_error jl, INDEX_OUT_OF_LIST_ERROR
 
+	; Получение указателя на тело списка
   mov rcx, rax
   mov rdx, LIST_HEADER
   imul rdx, 8
@@ -571,6 +582,66 @@ f_list_get:
 
   ret
 
+section "string_get" executable
+
+; Запись списка на кучу
+;
+; Аргументы:
+;   string_ptr  — указатель на начало списка
+;   index_ptr — указатель на целое число, индекс
+;
+; Результат:
+;   rax — указатель на элемент по индексу
+
+macro string_get string_ptr, index_ptr {
+  enter_2 string_ptr, index_ptr
+
+  call f_string_get
+
+  leave_with_return
+}
+
+f_string_get:
+  ; Проверка типа
+  mov rcx, [rax]
+  cmp rcx, STRING
+  check_error jne, EXPECTED_STRING_TYPE_ERROR
+
+  ; Проверка типа
+  mov rcx, [rbx]
+  cmp rcx, INTEGER
+  check_error jne, EXPECTED_INTEGER_TYPE_ERROR
+
+  ; Запись длины строки
+  mov rcx, [rax + 8*1]
+
+  ; Если индекс меньше нуля, то увеличить его на длину строки
+  mov rbx, [rbx + 8*1]
+  cmp rbx, 0
+  jge .positive_index
+  add rbx, rcx
+
+  .positive_index:
+
+  ; Проверка, входит ли индекс в строки
+  cmp rbx, rcx
+  check_error jge, INDEX_OUT_OF_LIST_ERROR
+  cmp rbx, 0
+  check_error jl, INDEX_OUT_OF_LIST_ERROR
+
+	; Получение указателя на тело строки
+  mov rcx, rax
+  mov rdx, STRING_HEADER
+  imul rdx, 8
+  add rcx, rdx
+
+	; Получение элемента по индексу
+	add rcx, rbx
+
+	mov rax, rcx
+
+  ret
+
 section "get_file_size" executable
 
 macro get_file_size filename {
@@ -604,7 +675,7 @@ macro open_file filename {
 }
 
 f_open_file:
-	; Сохранение имени файла
+	; Сохранение указателя на имя файла
 	mov rbx, rax
 
   ; Открытие файла
@@ -616,9 +687,13 @@ f_open_file:
   cmp rax, 0
   check_error jle, OPENING_FILE_ERROR
 
+	; Сохранение файлового дескриптора
 	mov rcx, rax
 
+	; Получене размера файла
 	get_file_size rbx
+
+	; Сохранение размера файла
 	mov rdx, rax
 
   create_block 8*4
@@ -666,7 +741,6 @@ macro read_file file_descriptor {
   leave_with_return
 }
 
-
 f_read_file:
 	; Проверка типа
 	mov rbx, [rax]
@@ -676,11 +750,22 @@ f_read_file:
 	; Сохранение указателя на файловый дескриптор
 	mov rbx, rax
 
-	mov rax, [rax + 8*3] ; Получение размера файла
-	add rax, 1           ; Ноль-терминатор
+	; Получение размера файла
+	mov rax, [rax + 8*3]
+
+	; Сохранение длины строки
+	mov rcx, rax
+
+	add rax, 8*2 ; Учёт заголовка бинарной последовательности
 	create_block rax
 
+	; Сохранение указателя на блок
 	push rax
+
+	mem_mov [rax + 8*0], BINARY
+	mem_mov [rax + 8*1], rcx
+
+	add rax, 8*2 ; Сдвиг указателя до тела строки
 
 	; RAX — указатель на созданный блок
 	; RBX — указатель на блок файлового дескриптора
@@ -691,58 +776,250 @@ f_read_file:
             rax,\         ; Блок для хранения данных
             [rbx + 8*3]   ; Размер читаемого файла
 
-	pop rcx
-
-	; Проверка, что всё прочиталось
+	; Проверка, что файл успешно прочитан
   cmp rax, 0
-  jge .skip
+  jge .read
     close_file rbx
 		exit_with_message FILE_WAS_NOT_READ_ERROR, -1
+  .read:
 
-  .skip:
+	mov rbx, rax ; Количество байт в строке
 
-	mov rax, rcx
+	mov rcx, 0   ; Счётчик
+	mov rdi, 0   ; Количество символов
+
+	; Взятие и сохранение указателя на блок
+	pop rax
+	push rax
+	add rax, 8*2 ; Сдвиг указателя до тела строки
+
+	.while_string_length:
+		cmp rcx, rbx
+		jge .end_string_length
+
+		;	Буфер
+		mov rdx, [rax + rcx]
+		movzx rdx, dl
+
+		cmp rdx, 248
+		check_error jge, UNEXPECTED_BIT_SEQUENCE_ERROR
+
+		cmp rdx, 128
+		jl .continue_string_length
+		cmp rdx, 192
+		jge .continue_string_length
+
+		jmp .do_string_length
+
+	.continue_string_length:
+		inc rdi
+
+	.do_string_length:
+		inc rcx
+		jmp .while_string_length
+
+	.end_string_length:
+
+	pop rsi
+	add rsi, 8*2 ; Сдвиг указателя до тела байтовой последовательности
+
+	; RDI — количество символов в строке
+	; RSI — Указатель на тело байтовой последовательности
+
+	; Выделение памяти под строку
+	mov rax, rdi                    ; Количество символов в строке
+	imul rax, 8 * (CHAR_HEADER + 1) ; Нахождение необходимой для всех символов памяти
+	add rax, STRING_HEADER*8        ; Учёт заголовка строки
+
+	create_block rax
+	push rax ; Сохранение указателя на строку
+
+	mem_mov [rax + 8*0], STRING ; Тип строки
+	mem_mov [rax + 8*1], rdi    ; Длина строки
+
+	add rax, 8*2 ; Сдвиг указателя до тела строки
+
+	.while_chars:
+		cmp rdi, 0
+		je .end_chars
+
+		mov r8, 0 ; Размер символа
+
+		;	Буфер
+		mov rdx, [rsi]
+		movzx rdx, dl
+
+		; Нахождение символов
+
+		; Символ, занимающий 1 байт (ASCII)
+		inc r8
+		cmp rdx, 128
+		jl .continue_chars
+
+		; Часть другого символа, которого не должно быть в этом месте
+		cmp rdx, 192
+		check_error jl, UNEXPECTED_BIT_SEQUENCE_ERROR
+
+		; Начало символа, занимающего 2 байта
+		inc r8
+		cmp rdx, 224
+		jl .continue_chars
+
+		; Начало символа, занимающего 3 байта
+		inc r8
+		cmp rdx, 240
+		jl .continue_chars
+
+		; Начало символа, занимающего 4 байта
+		inc r8
+
+	  ; Маска первого байта 4-х байтового символа — 1110xxxx₂ (248₁₀)
+		cmp rdx, 248
+		check_error jge, UNEXPECTED_BIT_SEQUENCE_ERROR
+
+	.continue_chars:
+		; Запись символов
+		mem_mov [rax + 8*0], CHAR ; Тип
+		mem_mov [rax + 8*1], r8   ; Размер символа
+
+		; Сдвиг последовательности до состояния символа
+		.while:
+			dec r8
+
+			cmp r8, 0
+			je .end
+
+			shl rdx, 8
+			inc rsi
+			mov rbx, [rsi]
+			mov dl, bl
+			jmp .while
+
+		.end:
+
+		mem_mov [rax + 8*2], rdx
+		add rax, 8*3
+		inc rsi
+
+		dec rdi
+		jmp .while_chars
+
+	.end_chars:
+
+	; Взятие указателя на блок
+	pop rax
+
   ret
+
+section "get_string_length" executable
+
+macro get_string_length string_addr {
+  enter_1 string_addr
+
+  call f_get_string_length
+
+  leave_with_return
+}
+
+f_get_string_length:
+	; Проверка типа
+	mov rbx, [rax]
+	cmp rbx, STRING
+  check_error jne, EXPECTED_STRING_TYPE_ERROR
+
+	mov rax, [rax + 8*1]
+	ret
+
+section "get_string" executable
+
+macro get_string string_addr, index {
+  enter_2 string_addr, index
+
+  call f_get_string
+
+  leave_with_return
+}
+
+f_get_string:
+	; Проверка типа
+	mov rcx, [rax]
+	cmp rcx, STRING
+  check_error jne, EXPECTED_STRING_TYPE_ERROR
+
+	add rax, STRING_HEADER*8
+
+	; Проверка типа
+	mov rcx, [rbx]
+	cmp rcx, INTEGER
+  check_error jne, EXPECTED_INTEGER_TYPE_ERROR
+
+	mov rbx, [rbx+8]
+
+	imul rbx, 3*8
+	add rax, rbx
+
+	ret
 
 section "start" executable
 _start:
 	allocate_heap
 
+	; Получение размера файла
+	print_buffer FILE_SIZE
 	get_file_size filename
 	print_int rax
 
+	;	Открытие файла
 	open_file filename
+	mov [файловый_дескриптор], rax
 
-	mov rbx, rax
+	; Чтение файла
+	read_file [файловый_дескриптор]
+	mov [содержимое_файла], rax
 
-	read_file rax
+	; Закрытие файла, дальше он не нужен
+	close_file [файловый_дескриптор]
 
-	; Выводим содержимое файла
-	print_string rax
+	; Получение длины строки
+	print_buffer STRING_SIZE
+	get_string_length [содержимое_файла]
+	print_int rax
 
-	close_file rbx
+	; Вывод содержимого файла
+	print_buffer STRING_CONTENT
+	print_string [содержимое_файла]
 
-  ; Расширение кучи
-  expand_heap 0x1000
+	; Взятие символа по индексу
+	create_integer 27
+	mov [индекс], rsp
+	get_string [содержимое_файла], [индекс]
 
-  ; список = 1 2 3 4
-  create_integer 4
-  create_integer 3
-  create_integer 2
-  create_integer 1
-  mov rax, rsp       ; Указатель на начало списка
-  create_list rax, 4 ; Количество элементов
-  mov [список], rax
+	print_buffer CHAR_BY_INDEX
+	mov [символ], rax
+	print_string [символ]
 
-  ; индекс = 999
-  create_integer -1
-  mov [индекс], rsp
+	; Расширение кучи
+	expand_heap 0x1000
 
-  ; список.индекс
-  list_get [список], [индекс]
-  mov rax, [rax + 8*1]
+	; список = 1 2 3 4
+	create_integer 4
+	create_integer 3
+	create_integer 2
+	create_integer 1
+
+	mov rax, rsp       ; Указатель на начало списка
+	create_list rax, 4 ; Количество элементов
+	mov [список], rax
+
+	; индекс = 999
+	create_integer -1
+	mov [индекс], rsp
+
+	; список.индекс
+	list_get [список], [индекс]
+	mov rax, [rax + 8*1]
 
 	; показать(список.индекс)
-  print_int rax
+	print_int rax
 
   exit 0
