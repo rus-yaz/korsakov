@@ -45,13 +45,12 @@ macro allocate_heap {
 }
 
 f_allocate_heap:
-  syscall SYS_MMAP,\
-            0,\                                  ; Адрес (если 0, находится автоматически)
-            [HEAP_SIZE],\                        ; Количество памяти для аллокации
-            PROT_READ + PROT_WRITE + PROT_EXEC,\ ; Права (PROT_READ | PROT_WRITE)
-            MAP_SHARED + MAP_ANONYMOUS,\         ; MAP_ANONYMOUS | MAP_PRIVATE
-            0,\                                  ; Файл дескриптор (ввод)
-            0                                    ; Смещение относительно начала файла (с начала файла)
+  sys_mmap 0,\                                  ; Адрес (если 0, находится автоматически)
+           [HEAP_SIZE],\                        ; Количество памяти для аллокации
+           PROT_READ + PROT_WRITE + PROT_EXEC,\ ; Права (PROT_READ | PROT_WRITE)
+           MAP_SHARED + MAP_ANONYMOUS,\         ; MAP_ANONYMOUS | MAP_PRIVATE
+           0,\                                  ; Файл дескриптор (ввод)
+           0                                    ; Смещение относительно начала файла (с начала файла)
 
   ; Проверка корректности выделения памяти
   test rax, rax
@@ -120,7 +119,7 @@ f_expand_heap:
 
   ; Расчёт количества операций для копирования
   push rax
-	mov rdx, 0
+  mov rdx, 0
   mov rcx, 8
   idiv rcx
   mov rcx, rax
@@ -148,9 +147,8 @@ f_expand_heap:
   mov [rcx + 8*1], rbx
 
   ; Деаллокация старой кучи
-  syscall SYS_MUNMAP,\
-            r8,\         ; Указатель на старую кучу
-            r9           ; Размер старой кучи
+  sys_munmap r8,\         ; Указатель на старую кучу
+             r9           ; Размер старой кучи
 
   ret
 
@@ -173,20 +171,20 @@ macro create_block size {
 }
 
 f_create_block:
-	; Приведение размера к числу, кратному 8
-	mov rbx, 8
-	mov rdx, 0
-	idiv rbx
+  ; Приведение размера к числу, кратному 8
+  mov rbx, 8
+  mov rdx, 0
+  idiv rbx
 
-	mov rcx, rdx
-	mov rdx, 0
-	imul rbx
+  mov rcx, rdx
+  mov rdx, 0
+  imul rbx
 
-	cmp rcx, 0
-	je .skip
-		mov rdx, 8
-		add rax, rdx
-	.skip:
+  cmp rcx, 0
+  je .skip
+    mov rdx, 8
+    add rax, rdx
+  .skip:
 
   mov r8, rax ; Сохранение размера создаваемого блока
   mov rax, [heap_start] ; Запись указателя на начало кучи в RAX
@@ -296,7 +294,6 @@ f_delete_block:
   write_header rax, 0, 0, 0, 0
 
   .skip_current_and_next_blocks_merging:
-
     ; Нахождение предыдущего блока
     mov rax, r8
     sub rax, [r8 + 8*2]
@@ -327,7 +324,6 @@ f_delete_block:
     mov r8, rax
 
   .skip_previous_and_current_blocks_merging:
-
     ; Изменение состояния текущего блока
     mov rax, [r8 + 8*3]
     test rax, 1

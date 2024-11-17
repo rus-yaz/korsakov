@@ -137,7 +137,7 @@ f_list_get:
   cmp rbx, 0
   check_error jl, INDEX_OUT_OF_LIST_ERROR
 
-	; Получение указателя на тело списка
+  ; Получение указателя на тело списка
   mov rcx, rax
   mov rdx, LIST_HEADER
   imul rdx, 8

@@ -9,13 +9,13 @@ macro get_string_length string_addr {
 }
 
 f_get_string_length:
-	; Проверка типа
-	mov rbx, [rax]
-	cmp rbx, STRING
+  ; Проверка типа
+  mov rbx, [rax]
+  cmp rbx, STRING
   check_error jne, EXPECTED_STRING_TYPE_ERROR
 
-	mov rax, [rax + 8*1]
-	ret
+  mov rax, [rax + 8*1]
+  ret
 
 section "get_string" executable
 
@@ -54,20 +54,20 @@ f_get_string:
   cmp rbx, 0
   check_error jl, INDEX_OUT_OF_LIST_ERROR
 
-	; Получение указателя на тело строки
+  ; Получение указателя на тело строки
   mov rcx, rax
   add rcx, STRING_HEADER*8
 
-	; Получение элемента по индексу
-	imul rbx, (INTEGER_HEADER + 1) * 8
-	add rbx, INTEGER_HEADER*8
-	mov rcx, [rcx + rbx]
+  ; Получение элемента по индексу
+  imul rbx, (INTEGER_HEADER + 1) * 8
+  add rbx, INTEGER_HEADER*8
+  mov rcx, [rcx + rbx]
 
-	create_block (1 + INTEGER_HEADER + STRING_HEADER) * 8
+  create_block (1 + INTEGER_HEADER + STRING_HEADER) * 8
 
-	mem_mov [rax + 8*0], STRING
-	mem_mov [rax + 8*1], 1
-	mem_mov [rax + 8*2], INTEGER
-	mem_mov [rax + 8*3], rcx
+  mem_mov [rax + 8*0], STRING
+  mem_mov [rax + 8*1], 1
+  mem_mov [rax + 8*2], INTEGER
+  mem_mov [rax + 8*3], rcx
 
   ret

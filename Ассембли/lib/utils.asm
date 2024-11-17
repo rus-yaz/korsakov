@@ -1,26 +1,3 @@
-section "syscall" executable
-
-; Системный вызов. Количество передаваемых аргументов зависит от указанной в макросе цифры
-;
-; Аргументы:
-;   number — номер системного вызова
-;   arg_1...arg_6 — аргументы системного вызова (rdi, rsi, rdx, r10, r8, r9)
-
-macro syscall number, arg_1 = 0, arg_2 = 0, arg_3 = 0, arg_4 = 0, arg_5 = 0, arg_6 = 0 {
-	push r9, r8, r10, rdx, rsi, rdi
-
-  mov r9,  arg_6
-  mov r8,  arg_5
-  mov r10, arg_4
-  mov rdx, arg_3
-  mov rsi, arg_2
-  mov rdi, arg_1
-  mov rax, number
-  syscall
-
-	pop r9, r8, r10, rdx, rsi, rdi
-}
-
 section "push" executable
 
 ; Множественная версия операции push
@@ -29,7 +6,7 @@ section "push" executable
 ;   arg — значение, которое будет отправлено на стек
 
 macro push [arg] {
-	push arg
+  push arg
 }
 
 section "pushq" executable
@@ -47,7 +24,7 @@ section "pop" executable
 ;   arg — регистр, куда будет помещено значение со стека
 
 macro pop [arg] {
-	pop arg
+  pop arg
 }
 
 section "enter" executable
@@ -55,18 +32,18 @@ section "enter" executable
 macro enter arg_1 = 0, arg_2 = 0, arg_3 = 0, arg_4 = 0, arg_5 = 0, arg_6 = 0, arg_7 = 0, arg_8 = 0, arg_9 = 0, arg_10 = 0, arg_11 = 0, arg_12 = 0 {
   push rax, rbx, rcx, rdx, rsi, rdi, r8, r9, r10, r11, r12, r13, r14, r15
 
-	mov rax, arg_1
-	mov rbx, arg_2
-	mov rcx, arg_3
-	mov rdx, arg_4
-	mov r8,  arg_5
-	mov r9,  arg_6
-	mov r10, arg_7
-	mov r11, arg_8
-	mov r12, arg_9
-	mov r13, arg_10
-	mov r14, arg_11
-	mov r15, arg_12
+  mov rax, arg_1
+  mov rbx, arg_2
+  mov rcx, arg_3
+  mov rdx, arg_4
+  mov r8,  arg_5
+  mov r9,  arg_6
+  mov r10, arg_7
+  mov r11, arg_8
+  mov r12, arg_9
+  mov r13, arg_10
+  mov r14, arg_11
+  mov r15, arg_12
 }
 
 section "leave" executable
@@ -103,24 +80,24 @@ macro mem_mov dst, src {
 section "buffer_length" executable
 
 macro buffer_length str_ptr {
-	enter str_ptr
+  enter str_ptr
 
   call f_buffer_length
 
-	return
+  return
 }
 
 f_buffer_length:
   mov rcx, 0 ; Счётчик
 
   .loop:
-     ; Сравниваем текущий байт с нулём
-     mov bl, [rax + rcx]
-     cmp bl, 0
-     je .done
+    ; Сравниваем текущий байт с нулём
+    mov bl, [rax + rcx]
+    cmp bl, 0
+    je .done
 
-     inc rcx
-     jmp .loop
+    inc rcx
+    jmp .loop
 
   .done:
   mov rax, rcx
@@ -130,16 +107,15 @@ f_buffer_length:
 section "print" executable
 
 macro print ptr, size {
-	enter ptr, size
+  enter ptr, size
 
   call f_print
 
-	leave
+  leave
 }
 
 f_print:
-  syscall SYS_WRITE,\
-            STDOUT,\
+  sys_write STDOUT,\
             rax,\       ; Указатель на данные для вывода
             rbx         ; Длина данных для вывода
 
@@ -148,17 +124,17 @@ f_print:
 section "print_buffer" executable
 
 macro print_buffer ptr {
-	enter ptr
+  enter ptr
 
   call f_print_buffer
 
-	leave
+  leave
 }
 
 f_print_buffer:
   mov rsi, rax
   buffer_length rsi
-	mov rbx, rax
+  mov rbx, rax
 
   print rsi,\      ; Указатель на буфер
         rbx        ; Размер буфера
@@ -173,21 +149,22 @@ section "exit" executable
 ;   code — код выхода
 
 macro exit code, message = 0 {
-	if message eqtype 0
-	else
-		print_buffer message
-	end if
+  if message eqtype 0
+  else
+    print_buffer message
+  end if
 
-  syscall SYS_EXIT,\
-            code
+  sys_exit code
 }
 
 section "check_error" executable
 
 macro check_error operation, message {
   push rax
+
   mov rax, message
   operation f_check_error
+
   pop rax
 }
 
@@ -197,11 +174,11 @@ f_check_error:
 section "print_int" executable
 
 macro print_int int {
-	enter int
+  enter int
 
   call f_print_int
 
-	leave
+  leave
 }
 
 f_print_int:
@@ -210,7 +187,7 @@ f_print_int:
   push 0
   push 10
   mov rcx, 2
-	mov rdx, 0
+  mov rdx, 0
 
   .while:
     idiv rbx
@@ -233,50 +210,46 @@ f_print_int:
 section "print_string" executable
 
 macro print_string string {
-	enter string
+  enter string
 
   call f_print_string
 
-	leave
+  leave
 }
 
 f_print_string:
-	; Проверка типа
-	mov rbx, [rax]
-	cmp rbx, STRING
-	je .string
+  ; Проверка типа
+  mov rbx, [rax]
+  cmp rbx, STRING
+  check_error jne, EXPECTED_STRING_CHAR_TYPE_ERROR
 
-  print_buffer EXPECTED_STRING_CHAR_TYPE_ERROR
+	mov rcx, [rax + 8*1]       ; Длина строки
+	add rax, STRING_HEADER * 8 ; Указатель на содержимое строки
 
-	.string:
+	.while:
+		cmp rcx, 0
+		jle .end
 
-		mov rcx, [rax + 8*1]       ; Длина строки
-		add rax, STRING_HEADER * 8 ; Указатель на содержимое строки
+		dec rcx
 
-		.while:
-			cmp rcx, 0
-			jle .end
+		; Проверка типа
+		mov rbx, [rax]
+		cmp rbx, INTEGER_HEADER
+		check_error jne, EXPECTED_CHAR_TYPE_ERROR
 
-			dec rcx
+		mov rdx, [rax + INTEGER_HEADER*8] ; Символ
+		bswap rdx
+		push rdx
+		mov rdx, rsp
 
-			; Проверка типа
-			mov rbx, [rax]
-			cmp rbx, INTEGER_HEADER
-			check_error jne, EXPECTED_CHAR_TYPE_ERROR
+		print rdx,\ ; Указатель на строку
+					8     ; Длина строки
 
-			mov rdx, [rax + INTEGER_HEADER*8] ; Символ
-			bswap rdx
-			push rdx
-			mov rdx, rsp
+		add rsp, 8
+		add rax, (INTEGER_HEADER + 1) * 8
 
-			print rdx,\ ; Указатель на строку
-						8     ; Длина строки
+		jmp .while
 
-			add rsp, 8
-			add rax, (INTEGER_HEADER + 1) * 8
-
-			jmp .while
-
-		.end:
+	.end:
 
   ret
