@@ -21,33 +21,33 @@ f_list:
   push rbx             ; Сохранение длины списка
   mov rcx, LIST_HEADER ; Начальная длина списка
 
-  .do:
-    dec rbx
+  .loop_start:
+    dec rbx                ; Decrement loop counter
+    mov rdx, [rax]        ; Load the current element from the list
 
-    mov rdx, [rax]
-    cmp rdx, INTEGER
-    jne .not_integer
+    cmp rdx, INTEGER      ; Check if it is an integer
+    je .handle_integer     ; If yes, handle integer case
 
-    add rcx, 2
-    add rax, 8*2
-    jmp .while
+    cmp rdx, LIST         ; Check if it is a list
+    je .handle_list        ; If yes, handle list case
 
-  .not_integer:
-    cmp rax, LIST
-    jne .not_list
-
-    add rcx, LIST_HEADER
-    add rcx, [rax + 8*1]
-    add rax, [rax + 8*2]
-
-    jmp .while
-
-  .not_list:
+    ; If neither, handle error
     check_error jmp, EXPECTED_INTEGER_LIST_TYPE_ERROR
 
-  .while:
-    cmp rbx, 0
-    jne .do
+  .handle_integer:
+    add rcx, 2            ; Increment count for integer
+    add rax, 8 * 2        ; Move to the next element (assuming 2 elements per integer)
+    jmp .check_loop       ; Check loop condition
+
+  .handle_list:
+    add rcx, LIST_HEADER   ; Add list header size
+    add rcx, [rax + 8 * 1] ; Add size of the list
+    add rax, [rax + 8 * 2] ; Move to the next element in the list
+    jmp .check_loop       ; Check loop condition
+
+  .check_loop:
+    cmp rbx, 0            ; Check if loop counter is zero
+    jne .loop_start       ; If not, repeat the loop
 
   mov rbx, rcx
   imul rbx, 8
@@ -64,9 +64,11 @@ f_list:
   mov rbx, LIST_HEADER
   sub rcx, rbx
   imul rbx, 8
+
   mov rdi, rax ; Место назначения
   add rdi, rbx
   pop rsi      ; Источник копирования
+
   rep movsq    ; Копирование в аллоцированный блок
 
   ret
@@ -82,9 +84,7 @@ macro list_length list_ptr {
 }
 
 f_list_length:
-  mov rbx, [rax]
-  cmp rbx, LIST
-  check_error jne, EXPECTED_LIST_TYPE_ERROR
+  check_type rax, LIST, EXPECTED_LIST_TYPE_ERROR
 
   mov rax, [rax + 8*1]
 
@@ -111,14 +111,10 @@ macro list_get list_ptr, index_ptr {
 
 f_list_get:
   ; Проверка типа
-  mov rcx, [rax]
-  cmp rcx, LIST
-  check_error jne, EXPECTED_LIST_TYPE_ERROR
+  check_type rax, LIST, EXPECTED_LIST_TYPE_ERROR
 
   ; Проверка типа
-  mov rcx, [rbx]
-  cmp rcx, INTEGER
-  check_error jne, EXPECTED_INTEGER_TYPE_ERROR
+  check_type rbx, INTEGER, EXPECTED_INTEGER_TYPE_ERROR
 
   ; Запись длины списка
   mov rcx, [rax + 8*1]
@@ -127,8 +123,7 @@ f_list_get:
   mov rbx, [rbx + 8*1]
   cmp rbx, 0
   jge .positive_index
-  add rbx, rcx
-
+    add rbx, rcx
   .positive_index:
 
   ; Проверка, входит ли индекс в список
@@ -149,31 +144,31 @@ f_list_get:
     cmp rbx, 0
     jl .while_end
 
-  .do:
-    mov rax, [rcx]
+    .do:
+      mov rax, [rcx]
 
-    cmp rax, INTEGER
-    jne .not_integer
+      cmp rax, INTEGER
+      jne .not_integer
 
-    add rcx, 8*2 ; Смещение на размер заголовка и размер тела
-    jmp .while
+      add rcx, 8*2 ; Смещение на размер заголовка и размер тела
+      jmp .while
 
-  .not_integer:
-    cmp rax, LIST
-    jne .not_list
+    .not_integer:
+      cmp rax, LIST
+      jne .not_list
 
-    mov rax, [rcx + 8*2]
-    add rax, LIST_HEADER
-    imul rax, 8
-    add rcx, rax
+      mov rax, [rcx + 8*2]
+      add rax, LIST_HEADER
+      imul rax, 8
+      add rcx, rax
 
-    jmp .while
+      jmp .while
 
-  .not_list:
-    check_error jmp, EXPECTED_INTEGER_LIST_TYPE_ERROR
+    .not_list:
+      check_error jmp, EXPECTED_INTEGER_LIST_TYPE_ERROR
 
   .while_end:
 
-    mov rax, rcx
+  mov rax, rcx
 
   ret

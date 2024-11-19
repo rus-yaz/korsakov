@@ -21,7 +21,7 @@ f_get_file_size:
 
 section "open_file" executable
 
-macro open_file filename, flags = O_RDONLY, mode = 644 {
+macro open_file filename, flags = O_RDONLY, mode = 444o {
   enter filename, flags, mode
 
   call f_open_file
@@ -74,9 +74,7 @@ macro close_file file_descriptor {
 
 f_close_file:
   ; Проверка типа
-  mov rbx, [rax]
-  cmp rbx, FILE_DESCRIPTOR
-  check_error jne, EXPECTED_FILE_DESCRIPTOR_TYPE_ERROR
+  check_type rax, FILE_DESCRIPTOR, EXPECTED_FILE_DESCRIPTOR_TYPE_ERROR
 
   mov rbx, rax
 
@@ -99,9 +97,7 @@ macro read_file file_descriptor {
 
 f_read_file:
   ; Проверка типа
-  mov rbx, [rax]
-  cmp rbx, FILE_DESCRIPTOR
-  check_error jne, EXPECTED_FILE_DESCRIPTOR_TYPE_ERROR
+  check_type rax, FILE_DESCRIPTOR, EXPECTED_FILE_DESCRIPTOR_TYPE_ERROR
 
   ; Сохранение указателя на файловый дескриптор
   mov rbx, rax
@@ -175,8 +171,6 @@ f_read_file:
     jmp .while_string_length
 
   .end_string_length:
-
-	;dec rdi
 
   pop rsi
   add rsi, BINARY_HEADER*8 ; Сдвиг указателя до тела байтовой последовательности
@@ -256,9 +250,10 @@ f_read_file:
 
     mem_mov [rax + 8*1], rdx
     add rax, (INTEGER_HEADER + 1) * 8
-    inc rsi
 
+    inc rsi
     dec rdi
+
     jmp .while_chars
 
   .end_chars:
@@ -279,15 +274,11 @@ macro write_file file_descriptor, string_addr {
 }
 
 f_write_file:
-	mov rcx, [rax]
-	cmp rcx, FILE_DESCRIPTOR
-	check_error jne, EXPECTED_FILE_DESCRIPTOR_TYPE_ERROR
+  check_type rax, FILE_DESCRIPTOR, EXPECTED_FILE_DESCRIPTOR_TYPE_ERROR
 
 	mov rax, [rax + 8*2]
 
-	mov rcx, [rbx]
-	cmp rcx, STRING
-	check_error jne, EXPECTED_STRING_TYPE_ERROR
+  check_type rbx, STRING, EXPECTED_STRING_TYPE_ERROR
 
 	mov rsi, rbx
 	mov rdi, [rsi + 8*1] ; Длина
@@ -298,13 +289,10 @@ f_write_file:
 
 	mov rdx, 0 ; Общее количество записанных символов
 	.while1:
-
 		cmp rdi, 0
 		je .end1
 
-		mov rbx, [rsi]
-		cmp rbx, INTEGER
-		check_error jne, EXPECTED_INTEGER_TYPE_ERROR
+    check_type rsi, INTEGER, EXPECTED_INTEGER_TYPE_ERROR
 
 		add rsi, 8
 		mov rbx, [rsi]

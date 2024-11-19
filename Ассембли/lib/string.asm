@@ -10,9 +10,7 @@ macro get_string_length string_addr {
 
 f_get_string_length:
   ; Проверка типа
-  mov rbx, [rax]
-  cmp rbx, STRING
-  check_error jne, EXPECTED_STRING_TYPE_ERROR
+  check_type rax, STRING, EXPECTED_STRING_TYPE_ERROR
 
   mov rax, [rax + 8*1]
   ret
@@ -29,14 +27,10 @@ macro get_string string_addr, index {
 
 f_get_string:
   ; Проверка типа
-  mov rcx, [rax]
-  cmp rcx, STRING
-  check_error jne, EXPECTED_STRING_TYPE_ERROR
+  check_type rax, STRING, EXPECTED_STRING_TYPE_ERROR
 
   ; Проверка типа
-  mov rcx, [rbx]
-  cmp rcx, INTEGER
-  check_error jne, EXPECTED_INTEGER_TYPE_ERROR
+  check_type rbx, INTEGER, EXPECTED_INTEGER_TYPE_ERROR
 
   mov rcx, [rax + 8*1] ; Запись длины строки
   mov rbx, [rbx + 8*1] ; Запись индекса
@@ -44,8 +38,7 @@ f_get_string:
   ; Если индекс меньше нуля, то увеличить его на длину строки
   cmp rbx, 0
   jge .positive_index
-  add rbx, rcx
-
+    add rbx, rcx
   .positive_index:
 
   ; Проверка, входит ли индекс в строку

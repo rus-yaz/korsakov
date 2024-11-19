@@ -70,6 +70,7 @@ section "mem_mov" executable
 ; Аргументы:
 ;   dst — приёмник
 ;   src — источник
+
 macro mem_mov dst, src {
   push r15
   mov r15, src
@@ -171,6 +172,30 @@ macro check_error operation, message {
 f_check_error:
   exit -1, rax
 
+section "check_type" executable
+
+; Проверка типа. При несхождении — выход с ошибкой
+;
+; Аргументы:
+;   variable_ptr — указатель на переменную
+;   type — тип для проверки
+;   error_message — сообщение для выхода при несхождении
+
+macro check_type variable_ptr, type, error_message {
+  enter variable_ptr, type, error_message
+
+  call f_check_type
+
+  leave
+}
+
+f_check_type:
+  mov rdx, [rax]
+  cmp rdx, rbx
+  check_error jne, rcx
+
+  ret
+
 section "print_int" executable
 
 macro print_int int {
@@ -182,19 +207,21 @@ macro print_int int {
 }
 
 f_print_int:
-  mov r8, rsp
-  mov rbx, 10
-  push 0
-  push 10
-  mov rcx, 2
-  mov rdx, 0
+  mov r8, rsp ; Сохранение указателя на конец стека
+
+  mov rbx, 10 ; Мощность системы счисления
+  mov rcx, 0  ; Счётчик пройденных разрядов
+
+  mov rdx, 0  ; Обнуление регистра, хранящего остаток от деления
 
   .while:
-    idiv rbx
-    add rdx, 48
-    push rdx
-    mov rdx, 0
-    inc rcx
+    idiv rbx    ; Деление на мощность системы счисления
+    add rdx, 48 ; Приведение числа к значению по ASCII
+
+    push rdx   ; Сохранение числа на стеке
+    mov rdx, 0 ; Обнуление регистра, хранящего остаток от деления
+
+    inc rcx ; Инкрементация счётчика пройденных разрядов
 
     cmp rax, 0
     jne .while
@@ -203,7 +230,12 @@ f_print_int:
   imul rcx, 8
   print rax, rcx
 
-  mov rsp, r8
+  push 10
+  mov rax, rsp
+  print rax, 1
+  pop rax
+
+  mov rsp, r8 ; Восстановление конца стека
 
   ret
 
@@ -219,37 +251,38 @@ macro print_string string {
 
 f_print_string:
   ; Проверка типа
-  mov rbx, [rax]
-  cmp rbx, STRING
-  check_error jne, EXPECTED_STRING_CHAR_TYPE_ERROR
+  check_type rax, STRING, EXPECTED_STRING_TYPE_ERROR
 
-	mov rcx, [rax + 8*1]       ; Длина строки
-	add rax, STRING_HEADER * 8 ; Указатель на содержимое строки
+  mov rcx, [rax + 8*1]       ; Длина строки
+  add rax, STRING_HEADER * 8 ; Указатель на содержимое строки
 
-	.while:
-		cmp rcx, 0
-		jle .end
+  .while:
+    cmp rcx, 0
+    jle .end
 
-		dec rcx
+    dec rcx
 
-		; Проверка типа
-		mov rbx, [rax]
-		cmp rbx, INTEGER_HEADER
-		check_error jne, EXPECTED_CHAR_TYPE_ERROR
+    ; Проверка типа
+    check_type rax, INTEGER, EXPECTED_INTEGER_TYPE_ERROR
 
-		mov rdx, [rax + INTEGER_HEADER*8] ; Символ
-		bswap rdx
-		push rdx
-		mov rdx, rsp
+    mov rdx, [rax + INTEGER_HEADER*8] ; Символ
+    bswap rdx
+    push rdx
+    mov rdx, rsp
 
-		print rdx,\ ; Указатель на строку
-					8     ; Длина строки
+    print rdx,\ ; Указатель на строку
+          8     ; Длина строки
 
-		add rsp, 8
-		add rax, (INTEGER_HEADER + 1) * 8
+    add rsp, 8
+    add rax, (INTEGER_HEADER + 1) * 8
 
-		jmp .while
+    jmp .while
 
-	.end:
+  .end:
+
+  push 10
+  mov rax, rsp
+  print rax, 1
+  pop rax
 
   ret

@@ -1,11 +1,9 @@
 section "data" writable
-  HEADER_SIGN dq 0xFEDCBA9876543210 ; Обозначение начала заголовка блока, выделяемого на куче
   HEAP_SIZE   dq 0x1000             ; Начальный размер кучи
-  heap_start  rq 1                  ; Указатель на начало кучи
-  heap_end    rq 1                  ; Указатель на конец кучи
+  HEAP_START  rq 1                  ; Указатель на начало кучи
+  HEAP_END    rq 1                  ; Указатель на конец кучи
 
   HEAP_ALLOCATION_ERROR               db "Ошибка аллокации кучи", 10, 0
-
 
 section "write_header" executable
 
@@ -33,8 +31,8 @@ section "allocate_heap" executable
 ;   HEAP_SIZE — размер выделяемой кучи
 ;
 ; Результат:
-;   heap_start — указатель на начало кучи
-;   heap_end   — указатель на начало кучи
+;   HEAP_START — указатель на начало кучи
+;   HEAP_END   — указатель на начало кучи
 
 macro allocate_heap {
   enter
@@ -57,15 +55,15 @@ f_allocate_heap:
   check_error js, HEAP_ALLOCATION_ERROR
 
   ; Сохранение указателя на начало кучи
-  mov [heap_start], rax
+  mov [HEAP_START], rax
 
   mov rbx, [HEAP_SIZE]                       ; Запись размера кучи
   sub rbx, 8*4                               ; Учёт размера заголовка блока
-  write_header rax, [HEADER_SIGN], rbx, 0, 0 ; Запись заголовка начального блока
+  write_header rax, HEADER_SIGN, rbx, 0, 0 ; Запись заголовка начального блока
 
-  mov rax, [heap_start] ; Запись указателя на начало кучи
+  mov rax, [HEAP_START] ; Запись указателя на начало кучи
   add rax, [HEAP_SIZE]  ; Смещение на размер кучи
-  mov [heap_end], rax   ; Сохранение указателя на конец кучи
+  mov [HEAP_END], rax   ; Сохранение указателя на конец кучи
 
   ret
 
@@ -77,8 +75,8 @@ section "expand_heap" executable
 ;   size — количество памяти, на которое необходимо расширить кучу
 ;
 ; Результат:
-;   heap_start — указатель на начало кучи
-;   heap_end   — указатель на начало кучи
+;   HEAP_START — указатель на начало кучи
+;   HEAP_END   — указатель на начало кучи
 
 macro expand_heap size {
   enter size
@@ -97,14 +95,14 @@ f_expand_heap:
   mov [HEAP_SIZE], rax
 
   ; Взятие указателя на начало кучи
-  mov rax, [heap_start]
+  mov rax, [HEAP_START]
 
   ; Аллокация новой кучи
   allocate_heap
 
   ; RDI — указатель на новую кучу
   ; RSI — указатель на старую кучу
-  mov rdi, [heap_start]
+  mov rdi, [HEAP_START]
   mov rsi, rax
 
   ; Сохранение указателя на старую кучу
@@ -121,6 +119,7 @@ f_expand_heap:
   push rax
   mov rdx, 0
   mov rcx, 8
+
   idiv rcx
   mov rcx, rax
   pop rax
@@ -129,7 +128,7 @@ f_expand_heap:
   rep movsq
 
   ; Укзатель на начало новой кучи
-  mov rbx, [heap_start]
+  mov rbx, [HEAP_START]
 
   ; Поиск последнего блока кучи
   .while:
@@ -138,7 +137,8 @@ f_expand_heap:
     add rbx, 8*4
 
     mov rdx, [rbx]
-    cmp rdx, [HEADER_SIGN]
+    mov rbx, HEADER_SIGN
+    cmp rdx, rbx
     je .while
 
   ; Расширение последнего блока до конца кучи
@@ -182,49 +182,43 @@ f_create_block:
 
   cmp rcx, 0
   je .skip
-    mov rdx, 8
-    add rax, rdx
+    add rax, 8
   .skip:
 
   mov r8, rax ; Сохранение размера создаваемого блока
-  mov rax, [heap_start] ; Запись указателя на начало кучи в RAX
+  mov rax, [HEAP_START] ; Запись указателя на начало кучи в RAX
 
   ; Цикл для нахождения подходящего блока
   .do:
-    ; Если заголовок не найден, выйти с ошибкой
-    mov rdx, [rax]
-    cmp rdx, [HEADER_SIGN]
-    check_error jne, EXPECTED_HEAP_BLOCK_ERROR
+    ; Проверка типа заголовка
+    check_type rax, HEADER_SIGN, EXPECTED_HEAP_BLOCK_ERROR
 
-    ; Если блок используется, начать искать новый блок
-    mov rdx, [rax + 8*3]
+    ; Получение информации о блоке
+    mov rdx, [rax + 8*3]          ; Получение статуса использования блока
     cmp rdx, 0
-    jne .while
+    jne .find_new_block           ; Если блок используется, искать новый блок
 
     ; Сравнение выделенного размера и размера блока
-    mov rdx, [rax + 8*1]
-    cmp rdx, r8
-    jge .continue
+    mov rdx, [rax + 8*1]          ; Получение размера блока
+    cmp rdx, r8                   ; Сравнение с требуемым размером
+    jge .found_block              ; Если блок достаточно большой, перейти к .found_block
 
-  .while:
-    add rax, [rax + 8*1]           ; Смещение адреса на размер блока
-    add rax, HEAP_BLOCK_HEADER * 8 ; Смещение адреса на размер заголовка
+    .find_new_block:
+      ; Смещение адреса на размер блока и заголовка
+      add rax, [rax + 8*1]          ; Смещение на размер блока
+      add rax, HEAP_BLOCK_HEADER * 8 ; Смещение на размер заголовка
+      jmp .do                       ; Переход к началу цикла
 
-    jmp .do  ; Переход к началу цикла
+    .found_block:
+      ; Вычисление адреса нового блока
+      mov rbx, rax
+      add rbx, HEAP_BLOCK_HEADER * 8 ; Смещение на заголовок
+      add rbx, r8                   ; Смещение на размер нового блока
 
-  ; Окончание цикла
-  .continue:
-    ; Вычисление адреса нового блока
-    mov rbx, rax
-    add rbx, HEAP_BLOCK_HEADER * 8
-    add rbx, r8
-
-    ; Проверка состояния блока
-    mov rcx, [rbx + 8*3]
-    test rcx, 1
-    jnz .while
-
-  .modify_block:
+      ; Проверка состояния блока
+      mov rcx, [rbx + 8*3]          ; Получение статуса нового блока
+      test rcx, 1                    ; Проверка, используется ли блок
+      jnz .find_new_block           ; Если блок используется, искать новый блок
 
   mem_mov [rax + 8*3], 1 ; Изменение состояния текущего блока на используемое
 
@@ -237,7 +231,7 @@ f_create_block:
   ; SIZE
   ; PREV_SIZE
   ; STATE
-  write_header rbx, [HEADER_SIGN], rcx, r8, 0
+  write_header rbx, HEADER_SIGN, rcx, r8, 0
 
   add rax, 8*4
 
@@ -260,23 +254,20 @@ macro delete_block block_addr {
 f_delete_block:
   sub rax, 8*4
 
-  mov r8, rax
-
   ; Если заголовок не найден, выйти с ошибкой
-  mov rax, [r8]
-  cmp rax, [HEADER_SIGN]
-  check_error jne, EXPECTED_HEAP_BLOCK_ERROR
+  check_type rax, HEADER_SIGN, EXPECTED_HEAP_BLOCK_ERROR
 
   ; Объединение текущего блока и следующего, если он не используется
 
   ; Нахождение следующего блока
-  mov rax, r8
+  mov r8, rax
   add rax, 8*4
   add rax, [r8 + 8*1]
 
   ; Если заголовок не найден (блока не существует), пропустить изменение блоков
   mov rbx, [rax]
-  cmp rbx, [HEADER_SIGN]
+  mov rcx, HEADER_SIGN
+  cmp rbx, rcx
   jne .skip_current_and_next_blocks_merging
 
   ; Если следующий блок используется, пропустить изменение блоков
@@ -284,34 +275,36 @@ f_delete_block:
   test rbx, 1
   jne .skip_current_and_next_blocks_merging
 
-  ; Увеличение размера текущего блока на размер удаляемого блока
-  mov rcx, [r8 + 8*1]
-  add rcx, [rax + 8*1]
-  add rcx, 8*4
-  mov [r8 + 8*1], rcx
+    ; Увеличение размера текущего блока на размер удаляемого блока
+    mov rcx, [r8 + 8*1]
+    add rcx, [rax + 8*1]
+    add rcx, 8*4
+    mov [r8 + 8*1], rcx
 
-  ; Удаление заголовка удаляемого блока
-  write_header rax, 0, 0, 0, 0
+    ; Удаление заголовка удаляемого блока
+    write_header rax, 0, 0, 0, 0
 
   .skip_current_and_next_blocks_merging:
-    ; Нахождение предыдущего блока
-    mov rax, r8
-    sub rax, [r8 + 8*2]
-    sub rax, 8*4
 
-    ; Проверка нахождения блока внутри кучи
-    cmp rax, [heap_start]
-    jl .skip_previous_and_current_blocks_merging
+  ; Нахождение предыдущего блока
+  mov rax, r8
+  sub rax, [r8 + 8*2]
+  sub rax, 8*4
 
-    ; Если заголовок не найден (блока не существует), пропустить изменение блоков
-    mov rbx, [rax]
-    cmp rbx, [HEADER_SIGN]
-    jne .skip_previous_and_current_blocks_merging
+  ; Проверка нахождения блока внутри кучи
+  cmp rax, [HEAP_START]
+  jl .skip_previous_and_current_blocks_merging
 
-    ; Если следующий блок используется, пропустить изменение блоков
-    mov rbx, [rax + 8*3]
-    test rbx, 1
-    jne .skip_previous_and_current_blocks_merging
+  ; Если заголовок не найден (блока не существует), пропустить изменение блоков
+  mov rbx, [rax]
+  mov rcx, HEADER_SIGN
+  cmp rbx, rcx
+  jne .skip_previous_and_current_blocks_merging
+
+  ; Если следующий блок используется, пропустить изменение блоков
+  mov rbx, [rax + 8*3]
+  test rbx, 1
+  jne .skip_previous_and_current_blocks_merging
 
     ; Увеличение размера предыдущего блока на размер удаляемого блока
     mov rcx, [r8 + 8*1]
@@ -324,12 +317,12 @@ f_delete_block:
     mov r8, rax
 
   .skip_previous_and_current_blocks_merging:
-    ; Изменение состояния текущего блока
-    mov rax, [r8 + 8*3]
-    test rax, 1
-    jz .all_is_done
-    mem_mov [r8 + 8*3], 0
 
+  ; Изменение состояния текущего блока
+  mov rax, [r8 + 8*3]
+  test rax, 1
+  jz .all_is_done
+    mem_mov [r8 + 8*3], 0
   .all_is_done:
 
   ; Нахождение дальше идущего блока
@@ -338,17 +331,17 @@ f_delete_block:
   add rcx, 8*4
 
   ; Проверка нахождения блока внутри кучи
-  mov rax, [heap_end]
-  cmp rcx, [heap_end]
+  cmp rcx, [HEAP_END]
   jge .skip_next_next_block_modifying
 
   ; Если заголовок не найден (блока не существует), пропустить изменение блоков
-  mov rbx, [rcx]
-  cmp rbx, [HEADER_SIGN]
+  mov rax, [rcx]
+  mov rbx, HEADER_SIGN
+  cmp rax, rbx
   jne .skip_next_next_block_modifying
 
-  ; Изменение PREV_SIZE для дальше идущего блока
-  mem_mov [rcx + 8*2], [r8 + 8*1]
+    ; Изменение PREV_SIZE для дальше идущего блока
+    mem_mov [rcx + 8*2], [r8 + 8*1]
 
   .skip_next_next_block_modifying:
 
