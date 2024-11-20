@@ -107,15 +107,15 @@ f_buffer_length:
 
 section "print" executable
 
-macro print ptr, size {
+macro sys_print ptr, size {
   enter ptr, size
 
-  call f_print
+  call f_sys_print
 
   leave
 }
 
-f_print:
+f_sys_print:
   sys_write STDOUT,\
             rax,\       ; Указатель на данные для вывода
             rbx         ; Длина данных для вывода
@@ -137,7 +137,7 @@ f_print_buffer:
   buffer_length rsi
   mov rbx, rax
 
-  print rsi,\      ; Указатель на буфер
+  sys_print rsi,\      ; Указатель на буфер
         rbx        ; Размер буфера
 
   ret
@@ -207,6 +207,9 @@ macro print_int int {
 }
 
 f_print_int:
+  check_type rax, INTEGER, EXPECTED_INTEGER_TYPE_ERROR
+  mov rax, [rax + 8]
+
   mov r8, rsp ; Сохранение указателя на конец стека
 
   mov rbx, 10 ; Мощность системы счисления
@@ -228,12 +231,7 @@ f_print_int:
 
   mov rax, rsp
   imul rcx, 8
-  print rax, rcx
-
-  push 10
-  mov rax, rsp
-  print rax, 1
-  pop rax
+  sys_print rax, rcx
 
   mov rsp, r8 ; Восстановление конца стека
 
@@ -270,7 +268,7 @@ f_print_string:
     push rdx
     mov rdx, rsp
 
-    print rdx,\ ; Указатель на строку
+    sys_print rdx,\ ; Указатель на строку
           8     ; Длина строки
 
     add rsp, 8
@@ -280,9 +278,51 @@ f_print_string:
 
   .end:
 
-  push 10
+  ret
+
+macro print arguments, separator = 32, end_of_string = 10 {
+  push rax
+
+  macro print_argument [argument] \{
+    enter argument
+
+    call f_print
+
+    push separator
+    mov rax, rsp
+    sys_print rax, 8
+    pop rax
+
+    leave
+  \}
+
+  print_argument arguments
+
+  push 0, end_of_string
   mov rax, rsp
-  print rax, 1
+  sys_print rax, 8*2
+  pop rax, rax
+
   pop rax
+}
+
+f_print:
+  mov rbx, [rax]
+  cmp rbx, INTEGER
+  jne .check_string
+    print_int rax
+    jmp .end
+
+  .check_string:
+  mov rbx, [rax]
+  cmp rbx, STRING
+  jne .print_buffer
+    print_string rax
+    jmp .end
+
+  .print_buffer:
+    print_buffer rax
+
+  .end:
 
   ret
