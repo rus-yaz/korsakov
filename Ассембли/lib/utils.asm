@@ -138,7 +138,7 @@ f_print_buffer:
   mov rbx, rax
 
   sys_print rsi,\      ; Указатель на буфер
-        rbx        ; Размер буфера
+            rbx        ; Размер буфера
 
   ret
 

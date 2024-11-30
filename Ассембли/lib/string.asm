@@ -64,3 +64,140 @@ f_get_string:
   mem_mov [rax + 8*3], rcx
 
   ret
+
+section "binary_to_string" executable
+
+macro binary_to_string binary_addr {
+  enter binary_addr
+
+  call f_binary_to_string
+
+  return
+}
+
+f_binary_to_string:
+  check_type rax, BINARY, EXPECTED_BINARY_TYPE_ERROR
+
+  ; Взятие и сохранение указателя на блок
+  add rax, BINARY_HEADER*8 ; Сдвиг указателя до тела строки
+  push rax
+
+  mov rcx, 0   ; Счётчик пройденных бит
+  mov rdi, 0   ; Количество символов
+
+  .while_string_length:
+    ; Буфер
+    mov rdx, [rax + rcx]
+    movzx rdx, dl
+
+    cmp rdx, 0
+    je .end_string_length
+
+    cmp rdx, 248
+    check_error jge, UNEXPECTED_BIT_SEQUENCE_ERROR
+
+    cmp rdx, 128
+    jl .continue_string_length
+    cmp rdx, 192
+    jge .continue_string_length
+
+    jmp .do_string_length
+
+  .continue_string_length:
+    inc rdi
+
+  .do_string_length:
+    inc rcx
+    jmp .while_string_length
+
+  .end_string_length:
+
+  pop rsi
+
+  ; RDI — количество символов в строке
+  ; RSI — Указатель на тело байтовой последовательности
+
+  ; Выделение памяти под строку
+  mov rax, rdi                       ; Количество символов в строке
+  imul rax, 8 * (INTEGER_HEADER + 1) ; Нахождение необходимой для всех символов памяти
+  add rax, STRING_HEADER*8           ; Учёт заголовка строки
+
+  create_block rax
+  push rax ; Сохранение указателя на строку
+
+  mem_mov [rax + 8*0], STRING ; Тип строки
+  mem_mov [rax + 8*1], rdi    ; Длина строки
+
+  add rax, STRING_HEADER*8 ; Сдвиг указателя до тела строки
+
+  .while_chars:
+    cmp rdi, 0
+    je .end_chars
+
+    mov r8, 0 ; Размер символа
+
+    ; Буфер
+    mov rdx, [rsi]
+    movzx rdx, dl
+
+    ; Нахождение символов
+
+    ; Символ, занимающий 1 байт (ASCII)
+    inc r8
+    cmp rdx, 128
+    jl .continue_chars
+
+    ; Часть другого символа, которого не должно быть в этом месте
+    cmp rdx, 192
+    check_error jl, UNEXPECTED_BIT_SEQUENCE_ERROR
+
+    ; Начало символа, занимающего 2 байта
+    inc r8
+    cmp rdx, 224
+    jl .continue_chars
+
+    ; Начало символа, занимающего 3 байта
+    inc r8
+    cmp rdx, 240
+    jl .continue_chars
+
+    ; Начало символа, занимающего 4 байта
+    inc r8
+
+    ; Маска первого байта 4-х байтового символа — 1110xxxx₂ (248₁₀)
+    cmp rdx, 248
+    check_error jge, UNEXPECTED_BIT_SEQUENCE_ERROR
+
+  .continue_chars:
+    ; Запись символов
+    mem_mov [rax + 8*0], INTEGER ; Тип
+
+    ; Сдвиг последовательности до состояния символа
+    .while:
+      dec r8
+
+      cmp r8, 0
+      je .end
+
+      shl rdx, 8
+      inc rsi
+      mov rbx, [rsi]
+      mov dl, bl
+      jmp .while
+
+    .end:
+
+    mem_mov [rax + 8*1], rdx
+    add rax, (INTEGER_HEADER + 1) * 8
+
+    inc rsi
+    dec rdi
+
+    jmp .while_chars
+
+  .end_chars:
+
+  ; Взятие указателя на блок
+  pop rax
+
+  ret

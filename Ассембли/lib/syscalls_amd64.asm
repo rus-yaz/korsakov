@@ -6,7 +6,11 @@ define SYS_CLOSE  3
 define SYS_STAT   4
 define SYS_MMAP   9
 define SYS_MUNMAP 11
+define SYS_FORK   57
+define SYS_EXECVE 59
 define SYS_EXIT   60
+define SYS_WAIT4  61
+
 
 ; Стандартные файловые дескрипторы
 define STDIN  0
@@ -80,11 +84,28 @@ macro sys_mmap addr, length, rights, flags, file_descriptor, offset {
 
 macro sys_munmap addr, length {
   syscall SYS_MUNMAP,\
-          addr,\            ; Адрес
-          length            ; Количество памяти для очистки
+          addr,\ ; Адрес
+          length ; Количество памяти для очистки
 }
 
 macro sys_exit error_code {
   syscall SYS_EXIT,\
           error_code ; Код выхода
+}
+
+macro sys_fork {
+  syscall SYS_FORK
+}
+
+macro sys_execve command, args, env {
+  syscall SYS_EXECVE,\
+          command,\ ; Команда
+          args,\    ; Аргументы
+          env       ; Переменные среды
+}
+
+; TODO: Другие аргументы
+macro sys_wait4 pid {
+  syscall SYS_WAIT4,\
+          pid  ; Идентификатор процесса
 }
