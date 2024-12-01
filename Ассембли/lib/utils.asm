@@ -9,13 +9,6 @@ macro push [arg] {
   push arg
 }
 
-section "pushq" executable
-
-macro pushq val {
-  mov rax, val
-  push rax
-}
-
 section "pop" executable
 
 ; Множественная версия операции pop
@@ -80,8 +73,8 @@ macro mem_mov dst, src {
 
 section "buffer_length" executable
 
-macro buffer_length str_ptr {
-  enter str_ptr
+macro buffer_length buffer_ptr {
+  enter buffer_ptr
 
   call f_buffer_length
 

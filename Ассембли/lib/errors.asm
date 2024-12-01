@@ -6,7 +6,9 @@ section "data" writable
   EXPECTED_INTEGER_LIST_TYPE_ERROR    db "Ожидался тип Целое число или Список", 10, 0
   EXPECTED_BINARY_TYPE_ERROR          db "Ожидался тип Бинарная последовательность", 10, 0
   EXPECTED_FILE_DESCRIPTOR_TYPE_ERROR db "Ожидался тип Файловый дескриптор", 10, 0
+  EXPECTED_LIST_INTEGER_STRING_ERROR  db "Ожидался тип Список, Целое число или Строка", 10, 0
   EXPECTED_HEAP_BLOCK_ERROR           db "Ожидался блок кучи", 10, 0
+
   INDEX_OUT_OF_LIST_ERROR             db "Индекс выходит за пределы списка", 10, 0
   OPENING_FILE_ERROR                  db "Не удалось открыть файл", 10, 0
   FILE_WAS_NOT_READ_ERROR             db "Файл не был прочитан", 10, 0

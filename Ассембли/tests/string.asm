@@ -2,7 +2,8 @@
 
 ; Взятие символа по индексу
 integer -2
-mov [индекс], rsp
+mov rax, rsp
+mov [индекс], rax
 
 get_string [содержимое_файла], [индекс]
 mov [символ], rax

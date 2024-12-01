@@ -20,8 +20,8 @@ print <rax, STRING_CONTENT, [содержимое_файла]>
 
 integer 1024
 mov rax, rsp
-mov rbx, rsp
-mov rcx, rsp
+mov rbx, rax
+mov rcx, rax
 
 print <rax, rbx, rcx>, 63
 

@@ -114,8 +114,8 @@ f_read_file:
   ; Сохранение указателя на блок
   push rax
 
-  mem_mov [rax + 8*0], BINARY
-  mem_mov [rax + 8*1], rcx
+  mem_mov [rax + 8*0], BINARY ; Тип
+  mem_mov [rax + 8*1], rcx    ; Длина
 
   add rax, BINARY_HEADER*8 ; Сдвиг указателя до тела строки
 

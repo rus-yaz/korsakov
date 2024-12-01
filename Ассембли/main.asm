@@ -11,6 +11,7 @@ include "lib/string.asm"
 include "lib/file.asm"
 include "lib/exec.asm"
 include "lib/errors.asm"
+include "lib/functions.asm"
 
 include "tests/const_buffers.asm"
 
@@ -25,5 +26,7 @@ _start:
   include "tests/list.asm"
   include "tests/print.asm"
   include "tests/exec.asm"
+  include "tests/functions.asm"
+
 
   exit 0

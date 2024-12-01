@@ -12,7 +12,8 @@ mov [список], rax
 
 ; индекс = -1
 integer -1
-mov [индекс], rsp
+mov rax, rsp
+mov [индекс], rax
 
 ; список.индекс
 list_get [список], [индекс]

@@ -19,7 +19,7 @@ f_run:
   cmp rax, 0
   jne .main_process
     sys_execve r15, rbx, rcx
-    exit EXECVE_WAS_NOT_EXECUTED
+    exit -1, EXECVE_WAS_NOT_EXECUTED
 
   .main_process:
 

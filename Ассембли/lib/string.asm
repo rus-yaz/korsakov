@@ -159,17 +159,15 @@ f_binary_to_string:
     ; Начало символа, занимающего 3 байта
     inc r8
     cmp rdx, 240
-    jl .continue_chars
 
-    ; Начало символа, занимающего 4 байта
-    inc r8
+    jl .continue_chars
+    inc r8 ; Начало символа, занимающего 4 байта
 
     ; Маска первого байта 4-х байтового символа — 1110xxxx₂ (248₁₀)
     cmp rdx, 248
     check_error jge, UNEXPECTED_BIT_SEQUENCE_ERROR
 
   .continue_chars:
-    ; Запись символов
     mem_mov [rax + 8*0], INTEGER ; Тип
 
     ; Сдвиг последовательности до состояния символа
@@ -181,10 +179,11 @@ f_binary_to_string:
 
       shl rdx, 8
       inc rsi
+
       mov rbx, [rsi]
       mov dl, bl
-      jmp .while
 
+      jmp .while
     .end:
 
     mem_mov [rax + 8*1], rdx
@@ -194,10 +193,82 @@ f_binary_to_string:
     dec rdi
 
     jmp .while_chars
-
   .end_chars:
 
   ; Взятие указателя на блок
   pop rax
+  ret
+
+section "buffer_to_binary" executable
+
+macro buffer_to_binary buffer_addr {
+  enter buffer_addr
+
+  call f_buffer_to_binary
+
+  return
+}
+
+f_buffer_to_binary:
+  push rax ; Сохранение указателя на буфер
+  buffer_length rax
+
+  push rax          ; Сохранение длины буфера
+  add rax, STRING_HEADER * 8
+
+  create_block rax
+  pop rcx          ; Количество блоков копирования
+
+  mem_mov [rax + 8*0], BINARY
+  mem_mov [rax + 8*1], rcx
+
+  ; Приведение размера к числу, кратному 8
+  push rax
+  mov rax, rcx
+
+  mov rbx, 8
+  mov rdx, 0
+
+  idiv rbx
+  mov rcx, rdx
+
+  cmp rcx, 0
+  je .skip
+
+    inc rax
+  .skip:
+
+  mov rcx, rax
+  pop rax
+
+  pop rsi      ; Источник копирования
+  push rax
+
+  add rax, BINARY_HEADER * 8
+  mov rdi, rax ; Место назначения
+
+  rep movsq    ; Копирование в аллоцированный блок
+  pop rax
+
+  ret
+
+section "buffer_to_string" executable
+
+macro buffer_to_string buffer_addr {
+  enter buffer_addr
+
+  call f_buffer_to_string
+
+  return
+}
+
+f_buffer_to_string:
+  buffer_to_binary rax
+  push rax
+
+  binary_to_string rax
+
+  pop rbx
+  delete_block rbx
 
   ret

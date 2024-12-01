@@ -1,10 +1,10 @@
 ; Тест чтения файла
 
-;; Получение размера файла
-;get_file_size имя_файла_для_чтения
-;integer rax
-;mov rax, rsp
-;print <FILE_SIZE, rax>
+; Получение размера файла
+get_file_size имя_файла_для_чтения
+integer rax
+mov rax, rsp
+print <FILE_SIZE, rax>
 
 ; Открытие файла
 open_file имя_файла_для_чтения
@@ -17,15 +17,15 @@ mov [содержимое_файла], rax
 ; Закрытие файла, дальше он не нужен
 close_file [файл_для_чтения]
 
-;; Получение длины строки
-;get_string_length [содержимое_файла]
-;integer rax
-;mov rax, rsp
-;mov [размер_файла], rax
-;print <STRING_SIZE, [размер_файла]>
+; Получение длины строки
+get_string_length [содержимое_файла]
+integer rax
+mov rax, rsp
+mov [размер_файла], rax
+print <STRING_SIZE, [размер_файла]>
 
-;; Вывод содержимого файла
-;print <STRING_CONTENT, [содержимое_файла]>
+; Вывод содержимого файла
+print <STRING_CONTENT, [содержимое_файла]>
 
 ; ---------
 ; Тест записи файла
@@ -52,4 +52,4 @@ mov [содержимое_файла], rax
 close_file [файл_для_записи]
 
 ; Вывод содержимого файла
-;print <STRING_CONTENT, [содержимое_файла]>
+print <STRING_CONTENT, [содержимое_файла]>
