@@ -8,15 +8,15 @@ integer 1
 
 mov rax, rsp      ; Указатель на начало списка
 list rax, 4       ; Количество элементов
-mov [список], rax
+mov [list.список], rax
 
 ; индекс = -1
 integer -1
 mov rax, rsp
-mov [индекс], rax
+mov [list.индекс], rax
 
 ; список.индекс
-list_get [список], [индекс]
+list_get [list.список], [list.индекс]
 
 ; показать(список.индекс)
-print <ITEM_BY_INDEX, rax>
+print <ITEM_BY_INDEX_TEXT, rax>

@@ -1,11 +1,14 @@
 ; Тест работы со строками
 
+buffer_to_string string.буфер
+mov [string.строка], rax
+
 ; Взятие символа по индексу
 integer -2
 mov rax, rsp
-mov [индекс], rax
+mov [string.индекс], rax
 
-get_string [содержимое_файла], [индекс]
-mov [символ], rax
+string_get [string.строка], [string.индекс]
+mov [string.символ], rax
 
-print <CHAR_BY_INDEX, [символ]>
+print <CHAR_BY_INDEX_TEXT, [string.символ]>

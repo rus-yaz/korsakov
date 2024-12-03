@@ -55,26 +55,26 @@ f_open_file:
 
   create_block 8*4
 
-  mem_mov [rax + 8*0], FILE_DESCRIPTOR ; Тип
-  mem_mov [rax + 8*1], rbx             ; Имя файла
-  mem_mov [rax + 8*2], rcx             ; Дескриптор
-  mem_mov [rax + 8*3], rdx             ; Размер файла
+  mem_mov [rax + 8*0], FILE ; Тип
+  mem_mov [rax + 8*1], rbx  ; Имя файла
+  mem_mov [rax + 8*2], rcx  ; Дескриптор
+  mem_mov [rax + 8*3], rdx  ; Размер файла
 
   ret
 
 section "close_file" executable
 
-macro close_file file_descriptor {
-  enter file_descriptor
+macro close_file file {
+  enter file
 
   call f_close_file
 
-  return
+  leave
 }
 
 f_close_file:
   ; Проверка типа
-  check_type rax, FILE_DESCRIPTOR, EXPECTED_FILE_DESCRIPTOR_TYPE_ERROR
+  check_type rax, FILE, EXPECTED_FILE_TYPE_ERROR
 
   mov rbx, rax
 
@@ -87,8 +87,8 @@ f_close_file:
 
 section "read_file" executable
 
-macro read_file file_descriptor {
-  enter file_descriptor
+macro read_file file {
+  enter file
 
   call f_read_file
 
@@ -97,7 +97,7 @@ macro read_file file_descriptor {
 
 f_read_file:
   ; Проверка типа
-  check_type rax, FILE_DESCRIPTOR, EXPECTED_FILE_DESCRIPTOR_TYPE_ERROR
+  check_type rax, FILE, EXPECTED_FILE_TYPE_ERROR
 
   ; Сохранение указателя на файловый дескриптор
   mov rbx, rax
@@ -142,8 +142,8 @@ f_read_file:
 
 section "write_file" executable
 
-macro write_file file_descriptor, string_addr {
-  enter file_descriptor, string_addr
+macro write_file file, string {
+  enter file, string
 
   call f_write_file
 
@@ -151,7 +151,7 @@ macro write_file file_descriptor, string_addr {
 }
 
 f_write_file:
-  check_type rax, FILE_DESCRIPTOR, EXPECTED_FILE_DESCRIPTOR_TYPE_ERROR
+  check_type rax, FILE, EXPECTED_FILE_TYPE_ERROR
 
 	mov rax, [rax + 8*2]
 

@@ -1,14 +1,6 @@
 section "list" executable
 
-; Запись списка на кучу
-;
-; Аргументы:
-;   list_start — указатель на начало списка
-;
-; Результат:
-;   rax — указатель на созданный блок
-
-macro list list_start, length {
+macro list list_start = 0, length = 0 {
   enter list_start, length
 
   call f_list
@@ -17,6 +9,20 @@ macro list list_start, length {
 }
 
 f_list:
+  cmp rax, 0
+  jne .continue
+  cmp rax, 0
+  jne .continue
+
+  create_block LIST_HEADER*8
+  mem_mov [rax + 8*0], LIST
+  mem_mov [rax + 8*1], 0
+  mem_mov [rax + 8*2], LIST_HEADER
+
+  jmp .end
+
+  .continue:
+
   push rax             ; Сохранение указателя на начало копируемого списка
   push rbx             ; Сохранение длины списка
   mov rcx, LIST_HEADER ; Начальная длина списка
@@ -71,12 +77,14 @@ f_list:
 
   rep movsq    ; Копирование в аллоцированный блок
 
+  .end:
+
   ret
 
 section "list_length" executable
 
-macro list_length list_ptr {
-  enter list_ptr
+macro list_length list {
+  enter list
 
   call f_list_length
 
@@ -92,17 +100,8 @@ f_list_length:
 
 section "list_get" executable
 
-; Запись списка на кучу
-;
-; Аргументы:
-;   list_ptr  — указатель на начало списка
-;   index_ptr — указатель на целое число, индекс
-;
-; Результат:
-;   rax — указатель на элемент по индексу
-
-macro list_get list_ptr, index_ptr {
-  enter list_ptr, index_ptr
+macro list_get list, index {
+  enter list, index
 
   call f_list_get
 
@@ -170,5 +169,55 @@ f_list_get:
   .while_end:
 
   mov rax, rcx
+
+  ret
+
+section "list_append" executable
+
+macro list_append list, item {
+  enter list, item
+
+  call f_list_append
+
+  return
+}
+
+f_list_append:
+  check_type rax, LIST, EXPECTED_LIST_TYPE_ERROR
+
+  mov rdx, [rax - HEAP_BLOCK_HEADER*8 + 8*1]
+
+  mov rcx, [rax + 8*2]
+  add rcx, [rbx - HEAP_BLOCK_HEADER*8 + 8*1]
+
+  cmp rdx, rcx
+  jge .copy_item
+
+    push rax
+    create_block rcx
+
+    mov rdi, rax
+    pop rsi
+
+    push rax
+    mov rdx, 8
+
+    mov rax, rcx
+    idiv rdx
+
+    mov rcx, rax
+    pop rax
+
+    rep movsq
+
+  .copy_item:
+
+  mov rdi, rax
+  add rdi, [rax + 8*2]
+
+  mov rsi, rbx
+  mov rcx, [rbx - HEAP_BLOCK_HEADER*8 + 8*1]
+
+  rep movsq
 
   ret

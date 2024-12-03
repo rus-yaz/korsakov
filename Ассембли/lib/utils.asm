@@ -1,20 +1,13 @@
-section "push" executable
+section "buffer" writable
+  buffer rq 0
 
-; Множественная версия операции push
-;
-; Аргументы:
-;   arg — значение, которое будет отправлено на стек
+section "push" executable
 
 macro push [arg] {
   push arg
 }
 
 section "pop" executable
-
-; Множественная версия операции pop
-;
-; Аргументы:
-;   arg — регистр, куда будет помещено значение со стека
 
 macro pop [arg] {
   pop arg
@@ -58,12 +51,6 @@ macro return {
 
 section "mem_mov" executable
 
-; Обмен между двумя различными фрагментами памяти
-;
-; Аргументы:
-;   dst — приёмник
-;   src — источник
-
 macro mem_mov dst, src {
   push r15
   mov r15, src
@@ -87,6 +74,7 @@ f_buffer_length:
   .loop:
     ; Сравниваем текущий байт с нулём
     mov bl, [rax + rcx]
+
     cmp bl, 0
     je .done
 
@@ -98,7 +86,7 @@ f_buffer_length:
 
   ret
 
-section "print" executable
+section "sys_print" executable
 
 macro sys_print ptr, size {
   enter ptr, size
@@ -115,37 +103,20 @@ f_sys_print:
 
   ret
 
-section "print_buffer" executable
-
-macro print_buffer ptr {
-  enter ptr
-
-  call f_print_buffer
-
-  leave
-}
-
-f_print_buffer:
-  mov rsi, rax
-  buffer_length rsi
-  mov rbx, rax
-
-  sys_print rsi,\      ; Указатель на буфер
-            rbx        ; Размер буфера
-
-  ret
-
 section "exit" executable
 
-; Выход из программы
-;
-; Аргументы:
-;   code — код выхода
-
 macro exit code, message = 0 {
-  if message eqtype 0
+  if message eq 0
   else
-    print_buffer message
+    push rax
+
+    mov rbx, message
+    buffer_length rbx
+    mov rsi, rax
+
+    sys_print rbx, rsi
+
+    pop rax
   end if
 
   sys_exit code
@@ -167,13 +138,6 @@ f_check_error:
 
 section "check_type" executable
 
-; Проверка типа. При несхождении — выход с ошибкой
-;
-; Аргументы:
-;   variable_ptr — указатель на переменную
-;   type — тип для проверки
-;   error_message — сообщение для выхода при несхождении
-
 macro check_type variable_ptr, type, error_message {
   enter variable_ptr, type, error_message
 
@@ -186,136 +150,5 @@ f_check_type:
   mov rdx, [rax]
   cmp rdx, rbx
   check_error jne, rcx
-
-  ret
-
-section "print_int" executable
-
-macro print_int int {
-  enter int
-
-  call f_print_int
-
-  leave
-}
-
-f_print_int:
-  check_type rax, INTEGER, EXPECTED_INTEGER_TYPE_ERROR
-  mov rax, [rax + 8]
-
-  mov r8, rsp ; Сохранение указателя на конец стека
-
-  mov rbx, 10 ; Мощность системы счисления
-  mov rcx, 0  ; Счётчик пройденных разрядов
-
-  mov rdx, 0  ; Обнуление регистра, хранящего остаток от деления
-
-  .while:
-    idiv rbx    ; Деление на мощность системы счисления
-    add rdx, 48 ; Приведение числа к значению по ASCII
-
-    push rdx   ; Сохранение числа на стеке
-    mov rdx, 0 ; Обнуление регистра, хранящего остаток от деления
-
-    inc rcx ; Инкрементация счётчика пройденных разрядов
-
-    cmp rax, 0
-    jne .while
-
-  mov rax, rsp
-  imul rcx, 8
-  sys_print rax, rcx
-
-  mov rsp, r8 ; Восстановление конца стека
-
-  ret
-
-section "print_string" executable
-
-macro print_string string {
-  enter string
-
-  call f_print_string
-
-  leave
-}
-
-f_print_string:
-  ; Проверка типа
-  check_type rax, STRING, EXPECTED_STRING_TYPE_ERROR
-
-  mov rcx, [rax + 8*1]       ; Длина строки
-  add rax, STRING_HEADER * 8 ; Указатель на содержимое строки
-
-  .while:
-    cmp rcx, 0
-    jle .end
-
-    dec rcx
-
-    ; Проверка типа
-    check_type rax, INTEGER, EXPECTED_INTEGER_TYPE_ERROR
-
-    mov rdx, [rax + INTEGER_HEADER*8] ; Символ
-    bswap rdx
-    push rdx
-    mov rdx, rsp
-
-    sys_print rdx,\ ; Указатель на строку
-          8     ; Длина строки
-
-    add rsp, 8
-    add rax, (INTEGER_HEADER + 1) * 8
-
-    jmp .while
-
-  .end:
-
-  ret
-
-macro print arguments, separator = 32, end_of_string = 10 {
-  push rax
-
-  macro print_argument [argument] \{
-    enter argument
-
-    call f_print
-
-    push separator
-    mov rax, rsp
-    sys_print rax, 8
-    pop rax
-
-    leave
-  \}
-
-  print_argument arguments
-
-  push 0, end_of_string
-  mov rax, rsp
-  sys_print rax, 8*2
-  pop rax, rax
-
-  pop rax
-}
-
-f_print:
-  mov rbx, [rax]
-  cmp rbx, INTEGER
-  jne .check_string
-    print_int rax
-    jmp .end
-
-  .check_string:
-  mov rbx, [rax]
-  cmp rbx, STRING
-  jne .print_buffer
-    print_string rax
-    jmp .end
-
-  .print_buffer:
-    print_buffer rax
-
-  .end:
 
   ret

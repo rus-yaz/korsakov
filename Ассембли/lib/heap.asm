@@ -1,20 +1,9 @@
-section "data" writable
+section "heap" writable
   HEAP_SIZE   dq 0x1000             ; Начальный размер кучи
   HEAP_START  rq 1                  ; Указатель на начало кучи
   HEAP_END    rq 1                  ; Указатель на конец кучи
 
-  HEAP_ALLOCATION_ERROR               db "Ошибка аллокации кучи", 10, 0
-
 section "write_header" executable
-
-; Установка заголовка блока
-;
-; Аргументы:
-;   addr        — указатель на заголовок блока
-;   header_sign — метка заголовка блока
-;   size        — размер тела блока
-;   prev_size   — размер тела предыдущего блока
-;   state       — состояние использования блока
 
 macro write_header addr, header_sign, size, prev_size, state {
   mem_mov [addr + 8*0], header_sign
@@ -24,15 +13,6 @@ macro write_header addr, header_sign, size, prev_size, state {
 }
 
 section "allocate_heap" executable
-
-; Алллокация кучи с сохранением указателей на начало и конец кучи
-;
-; Аргументы:
-;   HEAP_SIZE — размер выделяемой кучи
-;
-; Результат:
-;   HEAP_START — указатель на начало кучи
-;   HEAP_END   — указатель на начало кучи
 
 macro allocate_heap {
   enter
@@ -68,15 +48,6 @@ f_allocate_heap:
   ret
 
 section "expand_heap" executable
-
-; Расширение кучи
-;
-; Аргументы:
-;   size — количество памяти, на которое необходимо расширить кучу
-;
-; Результат:
-;   HEAP_START — указатель на начало кучи
-;   HEAP_END   — указатель на начало кучи
 
 macro expand_heap size {
   enter size
@@ -138,6 +109,7 @@ f_expand_heap:
 
     mov rdx, [rbx]
     mov rbx, HEADER_SIGN
+
     cmp rdx, rbx
     je .while
 
@@ -153,14 +125,6 @@ f_expand_heap:
   ret
 
 section "create_block" executable
-
-; Аллоакция места на куче для блока определённого размера
-;
-; Аргументы:
-;   size — количество памяти, выделяемой на тело блока
-;
-; Результат:
-;   rax — указатель на тело блока
 
 macro create_block size {
   enter size
@@ -185,7 +149,7 @@ f_create_block:
     add rax, 8
   .skip:
 
-  mov r8, rax ; Сохранение размера создаваемого блока
+  mov r8, rax           ; Сохранение размера создаваемого блока
   mov rax, [HEAP_START] ; Запись указателя на начало кучи в RAX
 
   ; Цикл для нахождения подходящего блока
@@ -199,31 +163,34 @@ f_create_block:
     jne .find_new_block           ; Если блок используется, искать новый блок
 
     ; Сравнение выделенного размера и размера блока
-    mov rdx, [rax + 8*1]          ; Получение размера блока
-    cmp rdx, r8                   ; Сравнение с требуемым размером
-    jge .found_block              ; Если блок достаточно большой, перейти к .found_block
+    mov rdx, [rax + 8*1]           ; Получение размера блока
+    sub rdx, HEAP_BLOCK_HEADER * 8 ; Учёт следующего блока, который будет создан
+
+    cmp rdx, r8                    ; Сравнение с требуемым размером
+    jg .found_block                ; Если блок достаточно большой, перейти к .found_block
 
     .find_new_block:
       ; Смещение адреса на размер блока и заголовка
-      add rax, [rax + 8*1]          ; Смещение на размер блока
+      add rax, [rax + 8*1]           ; Смещение на размер блока
       add rax, HEAP_BLOCK_HEADER * 8 ; Смещение на размер заголовка
-      jmp .do                       ; Переход к началу цикла
+      jmp .do                        ; Переход к началу цикла
 
     .found_block:
       ; Вычисление адреса нового блока
       mov rbx, rax
       add rbx, HEAP_BLOCK_HEADER * 8 ; Смещение на заголовок
-      add rbx, r8                   ; Смещение на размер нового блока
+      add rbx, r8                    ; Смещение на размер нового блока
 
       ; Проверка состояния блока
       mov rcx, [rbx + 8*3]          ; Получение статуса нового блока
-      test rcx, 1                    ; Проверка, используется ли блок
+      test rcx, 1                   ; Проверка, используется ли блок
       jnz .find_new_block           ; Если блок используется, искать новый блок
 
   mem_mov [rax + 8*3], 1 ; Изменение состояния текущего блока на используемое
 
   mov rcx, [rax + 8*1]    ; Сохранение размера текущего блока в RCX
   sub rcx, r8             ; Вычисление размера текущего блока в RCX
+
   sub rcx, 8*4            ; Учёт размера заголовка
   mem_mov [rax + 8*1], r8 ; Изменение SIZE у предыдущего блока
 
@@ -239,12 +206,8 @@ f_create_block:
 
 section "delete_block" executable
 
-; Удаление блока по указателю
-;
-; Аргументы:
-;   block_addr — указатель на блок
-macro delete_block block_addr {
-  enter block_addr
+macro delete_block block {
+  enter block
 
   call f_delete_block
 

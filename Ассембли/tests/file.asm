@@ -1,55 +1,55 @@
 ; Тест чтения файла
 
 ; Получение размера файла
-get_file_size имя_файла_для_чтения
+get_file_size file.имя_файла_для_чтения
 integer rax
 mov rax, rsp
-print <FILE_SIZE, rax>
+print <FILE_SIZE_TEXT, rax>
 
 ; Открытие файла
-open_file имя_файла_для_чтения
-mov [файл_для_чтения], rax
+open_file file.имя_файла_для_чтения
+mov [file.файл_для_чтения], rax
 
 ; Чтение файла
-read_file [файл_для_чтения]
-mov [содержимое_файла], rax
+read_file [file.файл_для_чтения]
+mov [file.содержимое_файла], rax
 
 ; Закрытие файла, дальше он не нужен
-close_file [файл_для_чтения]
+close_file [file.файл_для_чтения]
 
 ; Получение длины строки
-get_string_length [содержимое_файла]
+get_string_length [file.содержимое_файла]
 integer rax
 mov rax, rsp
-mov [размер_файла], rax
-print <STRING_SIZE, [размер_файла]>
+mov [file.размер_файла], rax
+print <STRING_SIZE_TEXT, [file.размер_файла]>
 
 ; Вывод содержимого файла
-print <STRING_CONTENT, [содержимое_файла]>
+print <STRING_CONTENT_TEXT, [file.содержимое_файла]>
 
 ; ---------
 ; Тест записи файла
 
 ; Открытие файла в режиме записи
-open_file имя_файла_для_записи, O_WRONLY + O_CREAT + O_TRUNC, 644o
-mov [файл_для_записи], rax
+open_file file.имя_файла_для_записи, O_WRONLY + O_CREAT + O_TRUNC, 644o
+mov [file.файл_для_записи], rax
 
 ; Запись в файл из строки
-write_file [файл_для_записи], [содержимое_файла]
+write_file [file.файл_для_записи], [file.содержимое_файла]
 
 ; Закрытие файла
-close_file [файл_для_записи]
+close_file [file.файл_для_записи]
 
 ; Открытие файла
-open_file имя_файла_для_записи
-mov [файл_для_записи], rax
+open_file file.имя_файла_для_записи
+mov [file.файл_для_записи], rax
 
 ; Чтение файла
-read_file [файл_для_записи]
-mov [содержимое_файла], rax
+read_file [file.файл_для_записи]
+mov [file.содержимое_файла], rax
 
 ; Закрытие файла, дальше он не нужен
-close_file [файл_для_записи]
+close_file [file.файл_для_записи]
 
 ; Вывод содержимого файла
-print <STRING_CONTENT, [содержимое_файла]>
+print <STRING_CONTENT_TEXT, [file.содержимое_файла]>

@@ -1,10 +1,13 @@
 ; Тест отображения
 
+buffer_to_string print.буфер
+mov [print.строка], rax
+
 ; Проверка строк (строки, помещённые в кучу)
-print <[содержимое_файла]>
+print <[print.строка]>
 
 ; Проверка буфера (строки, захардкоженные в FASM)
-print <STRING_CONTENT>
+print <STRING_CONTENT_TEXT>
 
 ; Проверка чисел
 integer 1024
@@ -12,9 +15,9 @@ mov rax, rsp
 print <rax>
 
 ; Проверка множественного отображения
-integer 1024
-mov rax, rsp
-print <rax, STRING_CONTENT, [содержимое_файла]>
+;integer 1024
+;mov rax, rsp
+;print <rax, STRING_CONTENT_TEXT, [print.строка]>
 
 ; Проверка замены разделителя и конца стрки
 

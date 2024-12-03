@@ -1,3 +1,3 @@
-run ls, ls_args, envp
+run exec.команда_1, exec.аргументы_1, exec.переменные_среды
 
-run echo, echo_args, envp
+run exec.команда_2, exec.аргументы_2, exec.переменные_среды

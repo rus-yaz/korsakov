@@ -1,7 +1,7 @@
 section "get_string_length" executable
 
-macro get_string_length string_addr {
-  enter string_addr
+macro get_string_length string {
+  enter string
 
   call f_get_string_length
 
@@ -15,17 +15,17 @@ f_get_string_length:
   mov rax, [rax + 8*1]
   ret
 
-section "get_string" executable
+section "string_get" executable
 
-macro get_string string_addr, index {
+macro string_get string_addr, index {
   enter string_addr, index
 
-  call f_get_string
+  call f_string_get
 
   return
 }
 
-f_get_string:
+f_string_get:
   ; Проверка типа
   check_type rax, STRING, EXPECTED_STRING_TYPE_ERROR
 
