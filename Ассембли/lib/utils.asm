@@ -18,18 +18,16 @@ section "enter" executable
 macro enter arg_1 = 0, arg_2 = 0, arg_3 = 0, arg_4 = 0, arg_5 = 0, arg_6 = 0, arg_7 = 0, arg_8 = 0, arg_9 = 0, arg_10 = 0, arg_11 = 0, arg_12 = 0 {
   push rax, rbx, rcx, rdx, rsi, rdi, r8, r9, r10, r11, r12, r13, r14, r15
 
-  mov rax, arg_1
-  mov rbx, arg_2
-  mov rcx, arg_3
-  mov rdx, arg_4
-  mov r8,  arg_5
-  mov r9,  arg_6
-  mov r10, arg_7
-  mov r11, arg_8
-  mov r12, arg_9
-  mov r13, arg_10
-  mov r14, arg_11
-  mov r15, arg_12
+  macro pushq [arg] \{
+    mov [rsp - 8*2], rax
+    mov rax, arg
+    mov [rsp - 8*1], rax
+    mov rax, [rsp - 8*2]
+    sub rsp, 8
+  \}
+
+  pushq arg_12, arg_11, arg_10, arg_9, arg_8, arg_7, arg_6, arg_5, arg_4, arg_3, arg_2, arg_1
+  pop   rax,    rbx,    rcx,    rdx,   r8,    r9,    r10,   r11,   r12,   r13,   r14,   r15
 }
 
 section "leave" executable
