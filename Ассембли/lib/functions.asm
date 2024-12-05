@@ -27,7 +27,7 @@ f_is_equal:
   je .is_list
 
   ; Выход с ошибкой при неизвестном типе
-  exit -1, EXPECTED_LIST_INTEGER_STRING_ERROR
+  exit -1, EXPECTED_LIST_INTEGER_STRING_TYPE_ERROR
 
   .is_integer:
     mov rcx, [rax + INTEGER_HEADER*8]
@@ -68,7 +68,6 @@ f_is_equal:
 
       dec rdi
       jmp .string_check
-
 
   .is_list:
     ; Сохранение длин строк

@@ -145,8 +145,27 @@ macro check_type variable_ptr, type, error_message {
 }
 
 f_check_type:
-  mov rdx, [rax]
-  cmp rdx, rbx
+  mov r8, [rax]
+  mov r9, rbx
+
+  cmp r8, r9
   check_error jne, rcx
+
+  ret
+
+macro mem_copy source, destination, size {
+  enter source, destination, size
+
+  call f_mem_copy
+
+  leave
+}
+
+f_mem_copy:
+  mov rsi, rax ; Источник
+  mov rdi, rbx ; Место назначения
+  ; RCX — количество блоков
+
+  rep movsq
 
   ret

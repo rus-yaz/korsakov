@@ -3,7 +3,6 @@
 ; Получение размера файла
 get_file_size file.имя_файла_для_чтения
 integer rax
-mov rax, rsp
 print <FILE_SIZE_TEXT, rax>
 
 ; Открытие файла
@@ -20,7 +19,6 @@ close_file [file.файл_для_чтения]
 ; Получение длины строки
 get_string_length [file.содержимое_файла]
 integer rax
-mov rax, rsp
 mov [file.размер_файла], rax
 print <STRING_SIZE_TEXT, [file.размер_файла]>
 

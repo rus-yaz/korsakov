@@ -9,75 +9,86 @@ macro list list_start = 0, length = 0 {
 }
 
 f_list:
-  cmp rax, 0
-  jne .continue
-  cmp rax, 0
-  jne .continue
-
+  mov rcx, rax
   create_block LIST_HEADER*8
+
   mem_mov [rax + 8*0], LIST
   mem_mov [rax + 8*1], 0
-  mem_mov [rax + 8*2], LIST_HEADER
 
-  jmp .end
+  ; Создание пустого списка
+  cmp rbx, 0
+  jne .not_empty
 
-  .continue:
+    mem_mov [rax + 8*2], 0
+    ret
 
-  push rax             ; Сохранение указателя на начало копируемого списка
-  push rbx             ; Сохранение длины списка
-  mov rcx, LIST_HEADER ; Начальная длина списка
+  .not_empty:
+
+  mem_mov [rax + 8*2], rbx  ; Длина
+  push rax                  ; Сохранение указателя на заголовок списка
+
+  xchg rax, rcx
+
+  ; RAX — указатель на копируемый элемент
+  ; RBX — итератор
+  ; RCX — указатель на предыдущий элемент
+  ; RDX — размер копируемого элемента
 
   .loop_start:
-    dec rbx                ; Decrement loop counter
-    mov rdx, [rax]        ; Load the current element from the list
+    mov rdi, [rax]
+    mov rdi, [rdi]
 
-    cmp rdx, INTEGER      ; Check if it is an integer
-    je .handle_integer     ; If yes, handle integer case
+    cmp rdi, INTEGER
+    je .integer
 
-    cmp rdx, LIST         ; Check if it is a list
-    je .handle_list        ; If yes, handle list case
+    cmp rdi, LIST
+    je .list
 
-    ; If neither, handle error
+    ; Неизвестный тип
     check_error jmp, EXPECTED_INTEGER_LIST_TYPE_ERROR
 
-  .handle_integer:
-    add rcx, 2            ; Increment count for integer
-    add rax, 8 * 2        ; Move to the next element (assuming 2 elements per integer)
-    jmp .check_loop       ; Check loop condition
+    .integer:
+      mov rdx, INTEGER_SIZE
+      jmp .continue       ; Check loop condition
 
-  .handle_list:
-    add rcx, LIST_HEADER   ; Add list header size
-    add rcx, [rax + 8 * 1] ; Add size of the list
-    add rax, [rax + 8 * 2] ; Move to the next element in the list
-    jmp .check_loop       ; Check loop condition
+    .list:
+      mov rdx, LIST_HEADER
+      jmp .continue       ; Check loop condition
 
-  .check_loop:
-    cmp rbx, 0            ; Check if loop counter is zero
-    jne .loop_start       ; If not, repeat the loop
+    .continue:
+      push rax
+      push rdx
 
-  mov rbx, rcx
-  imul rbx, 8
+      add rdx, 2        ; Учёт ссылок на предыдущий и следующий блоки
+      imul rdx, 8       ; Расчёт размера блока
 
-  ; Аллокация блока на куче
-  create_block rbx
+      create_block rdx
 
-  ; Возвращение длины списка
-  pop rbx
+      mem_mov [rax + 8*0], rcx ; Указатель на предыдущий блок
+      mem_mov [rax + 8*1], 0   ; Указатель на следующий блок, инициализационное значение
 
-  write_header rax, LIST, rbx, rcx, 0
+      mem_mov [rcx + 8*1], rax ; Установка указателя на текущий блок для предыдущего (относительно предыдущего блока — указатель на следующий блок)
+      mov rcx, rax
 
-  ; RCX — количество блоков
-  mov rbx, LIST_HEADER
-  sub rcx, rbx
-  imul rbx, 8
+      pop rdx
+      pop rax
 
-  mov rdi, rax ; Место назначения
-  add rdi, rbx
-  pop rsi      ; Источник копирования
+      push rcx
+      add rcx, 2*8 ; Учёт ссылок
 
-  rep movsq    ; Копирование в аллоцированный блок
+      ; RAX — источник
+      ; RCX — место назначения
+      ; RDX — количество блоков копирования
+      mem_copy [rax], rcx, rdx
+      pop rcx
 
-  .end:
+      dec rbx
+      add rax, 8
+
+      cmp rbx, 0            ; Check if loop counter is zero
+      jne .loop_start       ; If not, repeat the loop
+
+  pop rax
 
   ret
 
@@ -94,7 +105,7 @@ macro list_length list {
 f_list_length:
   check_type rax, LIST, EXPECTED_LIST_TYPE_ERROR
 
-  mov rax, [rax + 8*1]
+  mov rax, [rax + 8*2]
 
   ret
 
@@ -112,11 +123,10 @@ f_list_get:
   ; Проверка типа
   check_type rax, LIST, EXPECTED_LIST_TYPE_ERROR
 
-  ; Проверка типа
-  check_type rbx, INTEGER, EXPECTED_INTEGER_TYPE_ERROR
-
   ; Запись длины списка
-  mov rcx, [rax + 8*1]
+  mov rcx, rax
+  list_length rax
+  xchg rax, rcx
 
   ; Если индекс меньше нуля, то увеличить его на длину списка
   mov rbx, [rbx + 8*1]
@@ -131,44 +141,15 @@ f_list_get:
   cmp rbx, 0
   check_error jl, INDEX_OUT_OF_LIST_ERROR
 
-  ; Получение указателя на тело списка
-  mov rcx, rax
-  mov rdx, LIST_HEADER
-  imul rdx, 8
-  add rcx, rdx
-
+  inc rbx
   .while:
+    mov rax, [rax + 8*1]
     dec rbx
 
     cmp rbx, 0
-    jl .while_end
+    jne .while
 
-    .do:
-      mov rax, [rcx]
-
-      cmp rax, INTEGER
-      jne .not_integer
-
-      add rcx, 8*2 ; Смещение на размер заголовка и размер тела
-      jmp .while
-
-    .not_integer:
-      cmp rax, LIST
-      jne .not_list
-
-      mov rax, [rcx + 8*2]
-      add rax, LIST_HEADER
-      imul rax, 8
-      add rcx, rax
-
-      jmp .while
-
-    .not_list:
-      check_error jmp, EXPECTED_INTEGER_LIST_TYPE_ERROR
-
-  .while_end:
-
-  mov rax, rcx
+  add rax, 8*2
 
   ret
 
@@ -185,39 +166,60 @@ macro list_append list, item {
 f_list_append:
   check_type rax, LIST, EXPECTED_LIST_TYPE_ERROR
 
-  mov rdx, [rax - HEAP_BLOCK_HEADER*8 + 8*1]
+  push rax
+  mov rcx, rax
 
-  mov rcx, [rax + 8*2]
-  add rcx, [rbx - HEAP_BLOCK_HEADER*8 + 8*1]
+  list_length rax
+  xchg rcx, rax
 
-  cmp rdx, rcx
-  jge .copy_item
+  .while:
+    mov rax, [rax + 8*1]
+    dec rcx
 
-    push rax
-    create_block rcx
+    cmp rcx, 0
+    jne .while
 
-    mov rdi, rax
-    pop rsi
+  mov rdx, rax
+  mov rcx, [rbx + 8*0]
 
-    push rax
-    mov rdx, 8
+  cmp rcx, INTEGER
+  je .integer
 
-    mov rax, rcx
-    idiv rdx
+  cmp rcx, LIST
+  je .list
 
-    mov rcx, rax
-    pop rax
+  check_error jmp, EXPECTED_INTEGER_LIST_TYPE_ERROR
 
-    rep movsq
+  .integer:
+    mov rcx, INTEGER_SIZE
+    jmp .continue
 
-  .copy_item:
+  .list:
+    mov rcx, LIST_HEADER
+    jmp .continue
 
-  mov rdi, rax
-  add rdi, [rax + 8*2]
+  .continue:
 
-  mov rsi, rbx
-  mov rcx, [rbx - HEAP_BLOCK_HEADER*8 + 8*1]
+  push rcx
 
-  rep movsq
+  add rcx, 2  ; Учёт места для ссылок
+  imul rcx, 8
+
+  create_block rcx
+  pop rcx
+
+  mem_mov [rax + 8*0], rdx
+  mem_mov [rdx + 8*1], rax
+
+  mem_mov [rax + 8*1], 0
+  add rax, 8*2
+
+  mem_copy rbx, rax, rcx
+
+  pop rax
+  mem_mov rbx, [rax + 8*2]
+
+  inc rbx
+  mem_mov [rax + 8*2], rbx
 
   ret

@@ -10,7 +10,7 @@ include "lib/errors.asm"
 
 section "data" writable
   fasm      db "/bin/fasm", 0
-  fasm_arg1 dq "main.asm", 0
+  fasm_arg1 db "main.asm", 0
   fasm_args dq fasm, fasm_arg1, 0
 
   ld      db "/bin/ld", 0
@@ -24,8 +24,6 @@ section "data" writable
 
 section "_start" executable
 _start:
-  allocate_heap
-
   run fasm, fasm_args, envp
 
   run ld, ld_args, envp

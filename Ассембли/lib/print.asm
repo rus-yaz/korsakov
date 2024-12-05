@@ -33,28 +33,27 @@ f_print_int:
   mov rax, [rax + 8]
 
   mov r8, rsp ; Сохранение указателя на конец стека
-
   mov rbx, 10 ; Мощность системы счисления
-  mov rcx, 0  ; Счётчик пройденных разрядов
 
+  mov rcx, 0  ; Счётчик пройденных разрядов
   mov rdx, 0  ; Обнуление регистра, хранящего остаток от деления
 
   .while:
+    inc rcx ; Инкрементация счётчика пройденных разрядов
+
     idiv rbx    ; Деление на мощность системы счисления
     add rdx, 48 ; Приведение числа к значению по ASCII
 
     push rdx   ; Сохранение числа на стеке
     mov rdx, 0 ; Обнуление регистра, хранящего остаток от деления
 
-    inc rcx ; Инкрементация счётчика пройденных разрядов
-
     cmp rax, 0
     jne .while
 
   mov rax, rsp
   imul rcx, 8
-  sys_print rax, rcx
 
+  sys_print rax, rcx
   mov rsp, r8 ; Восстановление конца стека
 
   ret
@@ -73,15 +72,25 @@ f_print_string:
   ; Проверка типа
   check_type rax, STRING, EXPECTED_STRING_TYPE_ERROR
 
-  mov rcx, [rax + 8*1]       ; Длина строки
-  add rax, STRING_HEADER * 8 ; Указатель на содержимое строки
+  mov rcx, [rax + 8*2]       ; Длина строки
+  cmp rcx, 0
+  jne .not_empty
+    ret
+
+  .not_empty:
 
   .while:
     dec rcx
-    check_type rax, INTEGER, EXPECTED_INTEGER_TYPE_ERROR
+    mov rax, [rax + 8*1]
 
+    push rax
+    add rax, 8*2
+
+    check_type rax, INTEGER, EXPECTED_INTEGER_TYPE_ERROR
     mov rdx, [rax + INTEGER_HEADER*8] ; Символ
+
     bswap rdx
+    pop rax
 
     push rdx
     mov rdx, rsp
@@ -90,12 +99,9 @@ f_print_string:
               8     ; Длина строки
 
     add rsp, 8
-    add rax, (INTEGER_HEADER + 1) * 8
 
     cmp rcx, 0
     jg .while
-
-  .end:
 
   ret
 

@@ -5,10 +5,12 @@ mov [string.строка], rax
 
 ; Взятие символа по индексу
 integer -2
-mov rax, rsp
 mov [string.индекс], rax
 
 string_get [string.строка], [string.индекс]
 mov [string.символ], rax
 
 print <CHAR_BY_INDEX_TEXT, [string.символ]>
+
+string_add [string.строка], [string.символ]
+print rax
