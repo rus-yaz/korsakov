@@ -58,17 +58,17 @@ f_parser:
 
     delete_block [токен]
     mov [токен], rax
-    print [токен]
 
     ; индекс++
     integer_inc [индекс]
-    print [индекс]
 
-    string_length [токен]
-    mov rbx, rax
+    list_length [символы]
+    integer rax
+    is_equal rax, [индекс]
 
-    string_length [код]
-    cmp rax, rbx
+    cmp rax, 1
     jne .while
+
+  print [токен]
 
   exit 0

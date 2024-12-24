@@ -157,6 +157,109 @@ f_list_get:
 
   ret
 
+section "list_copy" executable
+
+macro list_copy list {
+  enter list
+
+  call f_list_copy
+
+  return
+}
+
+f_list_copy:
+  check_type rax, LIST
+
+  mov rbx, rax
+  integer 0
+  xchg rbx, rax
+
+  mov rcx, rax
+  list_length rax
+  xchg rcx, rax
+
+  .while:
+    cmp rcx, 0
+    je .end_while
+
+    mov rcx, rax
+    list_get rax, rbx
+    xchg rcx, rax
+
+    ; RAX — указатель на список
+    ; RBX — указатель на последний элемент
+    ; RCX — указатель на добавляемый элемент
+
+    mov rdx, [rcx]
+    cmp rcx, INTEGER
+    je .integer
+
+    cmp rdx, LIST
+    je .list
+
+    cmp rdx, STRING
+    je .string
+
+    ; Выход с ошибкой при неизвестном типе
+    print EXPECTED_TYPE_ERROR, "", ""
+    print INTEGER_TYPE, ",", " "
+    print STRING_TYPE, ",", " "
+    print LIST_TYPE, ""
+    exit -1
+
+    .integer:
+      integer_copy rcx
+      mov rdx, INTEGER_SIZE
+      jmp .continue
+
+    .list:
+      list_copy rcx
+      mov rdx, LIST_HEADER
+      jmp .continue
+
+    .string:
+      string_copy rcx
+      mov rdx, STRING_HEADER
+      jmp .continue
+
+    .continue:
+
+    mov rdi, [rax + 8*2]
+    inc rdi
+
+    mov [rax + 8*2], rdi
+    push rax
+
+    imul rdx, 8
+    create_block rdx
+
+    push rax
+    push rbx
+
+    mov rax, rdx
+    mov rbx, 8
+
+    mov rdx, 0
+    idiv rbx
+
+    mov rdx, rax
+    pop rbx
+    pop rax
+
+    mem_mov [rax + 8*0], rbx
+    mem_mov [rbx + 8*1], rax
+
+    mem_mov [rax + 8*1], 0
+    mov rbx, rax
+
+    add rax, 8*2
+    mem_copy rcx, rax, rdx
+
+    dec rcx
+    jmp .while
+  .end_while:
+
+
 section "list_append" executable
 
 macro list_append list, item {
@@ -171,63 +274,128 @@ f_list_append:
   check_type rax, LIST
 
   push rax
-  mov rcx, rax
-
+  mov rcx, rbx
+  mov rbx, rax
   list_length rax
-  xchg rcx, rax
 
   .while:
-    mov rax, [rax + 8*1]
-    dec rcx
+    cmp rax, 0
+    je .end_while
 
-    cmp rcx, 0
-    jne .while
+    mov rbx, [rbx + 8*1]
+    dec rax
 
-  mov rdx, rax
-  mov rcx, [rbx + 8*0]
+    jmp .while
+  .end_while:
 
-  cmp rcx, INTEGER
+  ; RAX — указатель на список
+  ; RBX — указатель на последний элемент
+  ; RCX — указатель на добавляемый элемент
+
+  mov rdx, [rcx]
+  cmp rdx, INTEGER
   je .integer
 
-  cmp rcx, LIST
+  cmp rdx, LIST
   je .list
 
+  cmp rdx, STRING
+  je .string
+
   ; Выход с ошибкой при неизвестном типе
-  print EXPECTED_TYPE_ERROR, 0, 0
-  print INTEGER_TYPE, 44, 32
-  print LIST_TYPE, 0
+  print EXPECTED_TYPE_ERROR, "", ""
+  print INTEGER_TYPE, ",", " "
+  print STRING_TYPE, ",", " "
+  print LIST_TYPE, ""
   exit -1
 
   .integer:
-    mov rcx, INTEGER_SIZE
+    integer_copy rcx
+    mov rdx, INTEGER_SIZE
     jmp .continue
 
   .list:
-    mov rcx, LIST_HEADER
+    list_copy rcx
+    mov rdx, LIST_HEADER
+    jmp .continue
+
+  .string:
+    string_copy rcx
+    mov rdx, STRING_HEADER
     jmp .continue
 
   .continue:
 
-  push rcx
+  mov rcx, rax
+  pop rax
 
-  add rcx, 2  ; Учёт места для ссылок
-  imul rcx, 8
+  mov rdi, [rax + 8*2]
+  inc rdi
 
-  create_block rcx
-  pop rcx
+  mov [rax + 8*2], rdi
+  push rax
 
-  mem_mov [rax + 8*0], rdx
-  mem_mov [rdx + 8*1], rax
+  mov rsi, rdx
+  add rsi, 2
+
+  imul rsi, 8
+  create_block rsi
+
+  mem_mov [rax + 8*0], rbx
+  mem_mov [rbx + 8*1], rax
 
   mem_mov [rax + 8*1], 0
   add rax, 8*2
 
-  mem_copy rbx, rax, rcx
-
+  mem_copy rcx, rax, rdx
   pop rax
-  mem_mov rbx, [rax + 8*2]
 
-  inc rbx
-  mem_mov [rax + 8*2], rbx
+  ret
 
+section "string_to_list" executable
+
+macro string_to_list string {
+  enter string
+
+  call f_string_to_list
+
+  return
+}
+
+f_string_to_list:
+  check_type rax, STRING
+
+  mov rbx, rax
+  integer 0
+  xchg rbx, rax
+
+  mov rcx, rax
+  string_length rax
+  xchg rcx, rax
+
+  mov rdx, rax
+  list 0, 0
+  xchg rdx, rax
+
+  ; RAX — строка (Целое число)
+  ; RBX — индекс (Целое число)
+  ; RCX — длина  (число)
+  ; RDX — список (Список)
+  .while:
+    cmp rcx, 0
+    je .end_while
+
+    dec rcx
+    push rax
+
+    string_get rax, rbx
+    list_append rdx, rax
+
+    integer_inc rbx
+    pop rax
+
+    jmp .while
+  .end_while:
+
+  mov rax, rdx
   ret

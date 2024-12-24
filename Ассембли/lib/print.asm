@@ -89,7 +89,7 @@ f_print_string:
 
 section "print" executable
 
-macro print arguments, separator = 32, end_of_string = 10 {
+  macro print arguments, separator = " ", end_of_string = 10 {
   push rax
 
   macro print_argument [argument] \{

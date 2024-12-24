@@ -266,6 +266,9 @@ f_string_copy:
   ; RBX — копируемая строка
 
   .while:
+    cmp rdx, 0
+    je .end_while
+
     dec rdx
     mov rcx, rax
 
@@ -279,8 +282,8 @@ f_string_copy:
     mem_mov [rax + 8*2], INTEGER
     mem_mov [rax + 8*3], [rbx + 8*3]
 
-    cmp rdx, 0
-    jne .while
+    jmp .while
+  .end_while:
 
   pop rax
 
@@ -311,11 +314,15 @@ f_string_add:
 
   push rax
   .while:
+    cmp rcx, 0
+    je .end_while
+
     mov rax, [rax + 8*1]
     dec rcx
 
-    cmp rcx, 0
-    jne .while
+    jmp .while
+  .end_while:
+
 
   mov rcx, [rbx + 8*1] ; Сохранение указателя на первый элемент добавляемой строки
 
