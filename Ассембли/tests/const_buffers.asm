@@ -47,7 +47,7 @@ section "const_buffers" writable
 
   ; tests/functions
   functions.буфер_1 db "Проверка 123", 0
-  functions.буфер_2 db "Проверка 321", 0
+  functions.буфер_2 db "321 акреворП", 0
 
   functions.число_1 rq 1
   functions.число_2 rq 1

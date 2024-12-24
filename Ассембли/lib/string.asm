@@ -13,7 +13,7 @@ f_buffer_to_binary:
   buffer_length rax
 
   push rax          ; Сохранение длины буфера
-  add rax, STRING_HEADER * 8
+  add rax, BINARY_HEADER*8
 
   create_block rax
   pop rcx          ; Количество блоков копирования
@@ -62,7 +62,7 @@ macro binary_to_string binary_addr {
 }
 
 f_binary_to_string:
-  check_type rax, BINARY, EXPECTED_BINARY_TYPE_ERROR
+  check_type rax, BINARY
 
   mov rbx, [rax + 8*1]
   cmp rbx, 0
@@ -118,11 +118,7 @@ f_binary_to_string:
   ; RSI — Указатель на тело байтовой последовательности
 
   ; Выделение памяти под строку
-  mov rax, rdi                       ; Количество символов в строке
-  imul rax, 8 * (INTEGER_HEADER + 1) ; Нахождение необходимой для всех символов памяти
-  add rax, STRING_HEADER*8           ; Учёт заголовка строки
-
-  create_block rax
+  create_block STRING_HEADER*8
   push rax ; Сохранение указателя на строку
 
   mem_mov [rax + 8*0], STRING ; Тип строки
@@ -170,8 +166,8 @@ f_binary_to_string:
     mov rbx, rax
     create_block (2 + INTEGER_SIZE) * 8
 
-    mem_mov [rax + 8*0], rbx
-    mem_mov [rbx + 8*1], rax
+    mem_mov [rax + 8*0], rbx ; Указатель на предыдущий элемент в текущем блоке
+    mem_mov [rbx + 8*1], rax ; Указатель на текущий элемент в следующем блоке
 
     mem_mov [rax + 8*1], 0
     mem_mov [rax + 8*2], INTEGER
@@ -225,53 +221,6 @@ f_buffer_to_string:
 
   ret
 
-section "string_add" executable
-
-macro string_add string_1, string_2 {
-  enter string_1, string_2
-
-  call f_string_add
-
-  return
-}
-
-f_string_add:
-  check_type rax, STRING, EXPECTED_STRING_TYPE_ERROR
-  check_type rbx, STRING, EXPECTED_STRING_TYPE_ERROR
-
-  ; Сохранение в обратном порядке, потому что первым будет взят последний
-  push rbx, rax
-
-  ; Вычисление длины новой строки
-  mov rcx, [rax + 8*1]
-  add rcx, [rbx + 8*1]
-
-  push rcx
-
-  imul rcx, INTEGER_SIZE * 8
-  add rcx, STRING_HEADER * 8
-
-  create_block rcx
-  pop rcx
-
-  mem_mov [rax + 8*0], STRING
-  mem_mov [rax + 8*1], rcx
-
-  mov rdi, rax               ; Источник копирования
-  add rdi, STRING_HEADER * 8
-
-  repeat 2
-    pop rsi              ; Место назначения
-    mov rcx, [rsi + 8*1] ; Количество блоков для копирования
-
-    imul rcx, 2
-    add rsi, STRING_HEADER * 8
-
-    rep movsq
-  end repeat
-
-  ret
-
 section "string_length" executable
 
 macro string_length string {
@@ -283,9 +232,110 @@ macro string_length string {
 }
 
 f_string_length:
-  check_type rax, STRING, EXPECTED_STRING_TYPE_ERROR
+  check_type rax, STRING
 
   mov rax, [rax + 8*2]
+
+  ret
+
+section "string_copy" executable
+
+macro string_copy string {
+  enter string
+
+  call f_string_copy
+
+  return
+}
+
+f_string_copy:
+  check_type rax, STRING
+
+  mov rbx, rax
+  string_length rax
+  mov rdx, rax
+
+  create_block STRING_HEADER*8
+  push rax
+
+  mem_mov [rax + 8*0], STRING
+  mem_mov [rax + 8*1], 0
+  mem_mov [rax + 8*2], [rbx + 8*2]
+
+  ; RAX — создаваемая строка
+  ; RBX — копируемая строка
+
+  .while:
+    dec rdx
+    mov rcx, rax
+
+    create_block (2 + INTEGER_SIZE) * 8
+    mem_mov rbx, [rbx + 8*1]
+
+    mem_mov [rcx + 8*1], rax
+    mem_mov [rax + 8*0], rcx
+
+    mem_mov [rax + 8*1], 0
+    mem_mov [rax + 8*2], INTEGER
+    mem_mov [rax + 8*3], [rbx + 8*3]
+
+    cmp rdx, 0
+    jne .while
+
+  pop rax
+
+  ret
+
+section "string_add" executable
+
+macro string_add string_1, string_2 {
+  enter string_1, string_2
+
+  call f_string_add
+
+  return
+}
+
+f_string_add:
+  check_type rax, STRING
+  check_type rbx, STRING
+
+  string_copy rax
+  mov rcx, rax
+
+  string_copy rbx
+  mov rbx, rax
+
+  string_length rcx
+  xchg rcx, rax
+
+  push rax
+  .while:
+    mov rax, [rax + 8*1]
+    dec rcx
+
+    cmp rcx, 0
+    jne .while
+
+  mov rcx, [rbx + 8*1] ; Сохранение указателя на первый элемент добавляемой строки
+
+  mov rdx, rax
+  string_length rbx
+
+  xchg rax, rdx ; RDX — длина второй строки, RAX — указатель на конец первой
+  delete_block rbx ; Удаление заголовка строки
+
+  mem_mov [rcx + 8*0], rax ; Запись указателя на текущий блок в предыдущий
+  mem_mov [rax + 8*1], rcx ; Запись указателя на предыдущий блок в текущий
+
+  pop rax
+  mov rcx, rax
+
+  string_length rax
+  xchg rcx, rax
+
+  add rcx, rdx
+  mem_mov [rax + 8*2], rcx
 
   ret
 
@@ -300,8 +350,8 @@ macro string_get string, index {
 }
 
 f_string_get:
-  ; Проверка типа
-  check_type rax, STRING, EXPECTED_LIST_TYPE_ERROR
+  check_type rax, STRING
+  check_type rbx, INTEGER
 
   ; Запись длины списка
   mov rcx, rax
@@ -317,9 +367,9 @@ f_string_get:
 
   ; Проверка, входит ли индекс в список
   cmp rbx, rcx
-  check_error jge, INDEX_OUT_OF_LIST_ERROR
+  check_error jge, INDEX_OUT_OF_STRING_ERROR
   cmp rbx, 0
-  check_error jl, INDEX_OUT_OF_LIST_ERROR
+  check_error jl, INDEX_OUT_OF_STRING_ERROR
 
   inc rbx
   .while:
@@ -338,7 +388,8 @@ f_string_get:
   mem_mov [rax + 8*2], 1
   mov rbx, rax
 
-  create_block INTEGER_SIZE*8
+  ; Размер блока — места под ссылки на предыдущий и предыдущий элементы + размер типа Целове число
+  create_block (2 + INTEGER_SIZE) * 8
   mem_mov [rax + 8*0], rbx
 
   mem_mov [rbx + 8*1], rax
@@ -349,64 +400,4 @@ f_string_get:
 
   mov rax, rbx
 
-  ret
-
-section "string_append" executable
-
-macro string_append string, int {
-  enter string, int
-
-  call f_string_append
-
-  return
-}
-
-f_string_append:
-  check_type rax, STRING, EXPECTED_STRING_TYPE_ERROR
-
-  push rax
-  mov rcx, rax
-
-  list_length rax
-  xchg rcx, rax
-
-  .while:
-    mov rax, [rax + 8*1]
-    dec rcx
-
-    cmp rcx, 0
-    jne .while
-
-  mov rdx, rax
-  check_type rcx, rbx, EXPECTED_INTEGER_TYPE_ERROR
-
-  create_block (2 + INTEGER_SIZE) * 8
-
-  mem_mov [rax + 8*0], rdx
-  mem_mov [rdx + 8*1], rax
-
-  mem_mov [rax + 8*1], 0
-  add rax, 8*2
-
-  mem_copy rbx, rax, INTEGER_SIZE
-
-  pop rax
-  mem_mov rbx, [rax + 8*2]
-
-  inc rbx
-  mem_mov [rax + 8*2], rbx
-
-  ret
-
-section "string_to_list" executable
-
-macro string_to_list string {
-  enter string
-
-  call f_string_to_list
-
-  return
-}
-
-f_string_to_list:
   ret

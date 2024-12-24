@@ -12,11 +12,11 @@ section "defines" writable
   define FILE        9
 
   ; Размер заголовка
-  define HEAP_BLOCK_HEADER 2
+  define HEAP_BLOCK_HEADER 4
   define NULL_HEADER       1
   define INTEGER_HEADER    1
-  define STRING_HEADER     2
   define BINARY_HEADER     2
+  define STRING_HEADER     3
   define LIST_HEADER       3
 
   ; Полные размеры типа (для неизменяемых по длине)

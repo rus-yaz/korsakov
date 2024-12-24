@@ -44,8 +44,11 @@ f_list:
     cmp rdi, LIST
     je .list
 
-    ; Неизвестный тип
-    check_error jmp, EXPECTED_INTEGER_LIST_TYPE_ERROR
+    ; Выход с ошибкой при неизвестном типе
+    print EXPECTED_TYPE_ERROR, 0, 0
+    print INTEGER_TYPE, 44, 32
+    print LIST_TYPE, 0
+    exit -1
 
     .integer:
       mov rdx, INTEGER_SIZE
@@ -103,7 +106,7 @@ macro list_length list {
 }
 
 f_list_length:
-  check_type rax, LIST, EXPECTED_LIST_TYPE_ERROR
+  check_type rax, LIST
 
   mov rax, [rax + 8*2]
 
@@ -121,7 +124,8 @@ macro list_get list, index {
 
 f_list_get:
   ; Проверка типа
-  check_type rax, LIST, EXPECTED_LIST_TYPE_ERROR
+  check_type rax, LIST
+  check_type rbx, INTEGER
 
   ; Запись длины списка
   mov rcx, rax
@@ -164,7 +168,7 @@ macro list_append list, item {
 }
 
 f_list_append:
-  check_type rax, LIST, EXPECTED_LIST_TYPE_ERROR
+  check_type rax, LIST
 
   push rax
   mov rcx, rax
@@ -188,7 +192,11 @@ f_list_append:
   cmp rcx, LIST
   je .list
 
-  check_error jmp, EXPECTED_INTEGER_LIST_TYPE_ERROR
+  ; Выход с ошибкой при неизвестном типе
+  print EXPECTED_TYPE_ERROR, 0, 0
+  print INTEGER_TYPE, 44, 32
+  print LIST_TYPE, 0
+  exit -1
 
   .integer:
     mov rcx, INTEGER_SIZE

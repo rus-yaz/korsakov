@@ -101,6 +101,27 @@ f_sys_print:
 
   ret
 
+section "print_buffer" executable
+
+macro print_buffer [buffer] {
+  enter buffer
+
+  call f_print_buffer
+
+  leave
+}
+
+f_print_buffer:
+  mov rsi, rax
+  buffer_length rsi
+  mov rbx, rax
+
+  sys_print rsi,\      ; Указатель на буфер
+            rbx        ; Размер буфера
+
+  ret
+
+
 section "exit" executable
 
 macro exit code, message = 0 {
@@ -136,8 +157,8 @@ f_check_error:
 
 section "check_type" executable
 
-macro check_type variable_ptr, type, error_message {
-  enter variable_ptr, type, error_message
+macro check_type variable_ptr, type {
+  enter variable_ptr, type
 
   call f_check_type
 
@@ -149,9 +170,54 @@ f_check_type:
   mov r9, rbx
 
   cmp r8, r9
-  check_error jne, rcx
+  jne .continue
+    ret
 
-  ret
+  .continue:
+
+  print_buffer EXPECTED_TYPE_ERROR
+
+  cmp r9, INTEGER
+  jne .not_integer
+    print_buffer INTEGER_TYPE
+    jmp .exit
+  .not_integer:
+
+  cmp r9, STRING
+  jne .not_string
+    print_buffer STRING_TYPE
+    jmp .exit
+  .not_string:
+
+  cmp r9, LIST
+  jne .not_list
+    print_buffer LIST_TYPE
+    jmp .exit
+  .not_list:
+
+  cmp r9, FILE
+  jne .not_file
+    print_buffer FILE_TYPE
+    jmp .exit
+  .not_file:
+
+  cmp r9, BINARY
+  jne .not_binary
+    print_buffer BINARY_TYPE
+    jmp .exit
+  .not_binary:
+
+  mov r8, HEAP_BLOCK
+  cmp r9, r8
+  jne .not_heap_block
+    print_buffer HEAP_BLOCK_TYPE
+    jmp .exit
+  .not_heap_block:
+
+  check_error jmp, UNEXPECTED_TYPE_ERROR
+
+  .exit:
+    exit -1
 
 macro mem_copy source, destination, size {
   enter source, destination, size

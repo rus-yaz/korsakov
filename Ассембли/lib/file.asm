@@ -74,7 +74,7 @@ macro close_file file {
 
 f_close_file:
   ; Проверка типа
-  check_type rax, FILE, EXPECTED_FILE_TYPE_ERROR
+  check_type rax, FILE
 
   mov rbx, rax
 
@@ -97,7 +97,7 @@ macro read_file file {
 
 f_read_file:
   ; Проверка типа
-  check_type rax, FILE, EXPECTED_FILE_TYPE_ERROR
+  check_type rax, FILE
 
   ; Сохранение указателя на файловый дескриптор
   mov rbx, rax
@@ -147,64 +147,68 @@ macro write_file file, string {
 
   call f_write_file
 
-	leave
+  leave
 }
 
 f_write_file:
-  check_type rax, FILE, EXPECTED_FILE_TYPE_ERROR
+  check_type rax, FILE
 
-	mov rax, [rax + 8*2]
+  ; Сохранение файлового дескриптора
+  mov rax, [rax + 8*2]
+  mov r15, rax
 
-  check_type rbx, STRING, EXPECTED_STRING_TYPE_ERROR
+  check_type rbx, STRING
+  mov rsi, rbx
 
-	mov rsi, rbx
-	mov rdi, [rsi + 8*1] ; Длина
+  ; Нахождение длины строки (RDI)
+  mov rdi, rax
+  string_length rbx
 
-	mov rdx, rdi
-	imul rdx, 2*8
-	add rsi, rdx
+  xchg rdi, rax
+  dec rdi
 
-	mov rdx, 0 ; Общее количество записанных символов
-	.while1:
-		cmp rdi, 0
-		je .end1
+  mov rdx, 0 ; Счётчик считанных байт
+  .while1:
 
-    check_type rsi, INTEGER, EXPECTED_INTEGER_TYPE_ERROR
+    cmp rdi, 0
+    jl .end1
 
-		add rsi, 8
-		mov rbx, [rsi]
+    integer rdi
+    string_get rsi, rax
 
-		mov rcx, 0
-		.while2:
+    mov rax, [rax + 8*1]
+    mov rbx, [rax + (2 + INTEGER_HEADER) * 8]
+    mov rcx, 0
 
-			cmp rcx, 4
-			je .end2
+    .while2:
 
-			cmp rbx, 0
-			je .end2
+      cmp rcx, 4
+      je .end2
 
-			dec rsp
-			mov [rsp], bl
-			shr rbx, 8
+      cmp rbx, 0
+      je .end2
 
-			inc rcx
-			jmp .while2
+      dec rsp
+      mov [rsp], bl
+      shr rbx, 8
 
-		.end2:
+      inc rcx
+      jmp .while2
 
-		sub rsi, 8*3
-		add rdx, rcx
+    .end2:
 
-		dec rdi
-		jmp .while1
+    add rdx, rcx
 
-	.end1:
+    dec rdi
+    jmp .while1
 
-	mov rcx, rsp
-	mov rbx, rdx
+  .end1:
 
-	sys_write rax, rcx, rbx
+  mov rcx, rsp
+  mov rbx, rdx
 
-	add rsp, rbx
+  sys_write r15, rcx, rbx
 
-	ret
+  add rsp, rbx
+
+  ret

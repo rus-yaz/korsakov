@@ -17,7 +17,7 @@ mov [file.содержимое_файла], rax
 close_file [file.файл_для_чтения]
 
 ; Получение длины строки
-get_string_length [file.содержимое_файла]
+string_length [file.содержимое_файла]
 integer rax
 mov [file.размер_файла], rax
 print <STRING_SIZE_TEXT, [file.размер_файла]>

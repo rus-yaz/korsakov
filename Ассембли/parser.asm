@@ -64,10 +64,10 @@ f_parser:
     integer_inc [индекс]
     print [индекс]
 
-    get_string_length [токен]
+    string_length [токен]
     mov rbx, rax
 
-    get_string_length [код]
+    string_length [код]
     cmp rax, rbx
     jne .while
 

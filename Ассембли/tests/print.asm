@@ -14,8 +14,8 @@ integer 1024
 print <rax>
 
 ; Проверка множественного отображения
-;integer 1024
-;print <rax, STRING_CONTENT_TEXT, [print.строка]>
+integer 1024
+print <rax, STRING_CONTENT_TEXT, [print.строка]>
 
 ; Проверка замены разделителя и конца стрки
 

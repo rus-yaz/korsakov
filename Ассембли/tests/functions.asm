@@ -15,7 +15,7 @@ print rax
 buffer_to_string functions.буфер_1
 mov [functions.тестовый_текст_1], rax
 
-buffer_to_string functions.буфер_1
+buffer_to_string functions.буфер_2
 mov [functions.тестовый_текст_2], rax
 
 is_equal [functions.тестовый_текст_1], [functions.тестовый_текст_1]
@@ -26,19 +26,27 @@ is_equal [functions.тестовый_текст_1], [functions.тестовый_
 integer rax
 print rax
 
-push 4, INTEGER,\
-     3, INTEGER,\
-     2, INTEGER,\
-     1, INTEGER
+integer 4
+push rax
+integer 3
+push rax
+integer 2
+push rax
+integer 1
+push rax
 
 mov rax, rsp
 list rax, 4
 mov [functions.список_1], rax
 
-push 1, INTEGER,\
-     2, INTEGER,\
-     3, INTEGER,\
-     4, INTEGER
+integer 1
+push rax
+integer 2
+push rax
+integer 3
+push rax
+integer 4
+push rax
 
 mov rax, rsp
 list rax, 4

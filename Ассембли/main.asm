@@ -16,22 +16,22 @@ include "lib/functions.asm"
 
 include "tests/const_buffers.asm"
 
-;include "tokenizer.asm"
+include "parser.asm"
 
 section "data" writable
   файл db "привет, мир.корс", 0
 
 section "_start" executable
 _start:
-  ;include "tests/heap.asm"
-  ;include "tests/file.asm"
-  ;include "tests/list.asm"
-  ;include "tests/print.asm"
-  ;include "tests/exec.asm"
-  ;include "tests/functions.asm"
-  ;include "tests/integer.asm"
+  include "tests/heap.asm"
+  include "tests/file.asm"
+  include "tests/list.asm"
+  include "tests/print.asm"
+  include "tests/exec.asm"
   include "tests/string.asm"
+  include "tests/integer.asm"
+  include "tests/functions.asm"
 
-  ;parser файл
+  parser файл
 
   exit 0

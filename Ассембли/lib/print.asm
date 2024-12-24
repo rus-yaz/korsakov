@@ -1,23 +1,3 @@
-section "print_buffer" executable
-
-macro print_buffer ptr {
-  enter ptr
-
-  call f_print_buffer
-
-  leave
-}
-
-f_print_buffer:
-  mov rsi, rax
-  buffer_length rsi
-  mov rbx, rax
-
-  sys_print rsi,\      ; Указатель на буфер
-            rbx        ; Размер буфера
-
-  ret
-
 section "print_int" executable
 
 macro print_int int {
@@ -29,7 +9,7 @@ macro print_int int {
 }
 
 f_print_int:
-  check_type rax, INTEGER, EXPECTED_INTEGER_TYPE_ERROR
+  check_type rax, INTEGER
   mov rax, [rax + 8]
 
   mov r8, rsp ; Сохранение указателя на конец стека
@@ -70,7 +50,7 @@ macro print_string string {
 
 f_print_string:
   ; Проверка типа
-  check_type rax, STRING, EXPECTED_STRING_TYPE_ERROR
+  check_type rax, STRING
 
   mov rcx, [rax + 8*2]       ; Длина строки
   cmp rcx, 0
@@ -86,7 +66,7 @@ f_print_string:
     push rax
     add rax, 8*2
 
-    check_type rax, INTEGER, EXPECTED_INTEGER_TYPE_ERROR
+    check_type rax, INTEGER
     mov rdx, [rax + INTEGER_HEADER*8] ; Символ
 
     bswap rdx
