@@ -14,3 +14,13 @@ print <CHAR_BY_INDEX_TEXT, [string.символ]>
 
 string_add [string.строка], [string.символ]
 print rax
+
+string_append [string.строка], [string.символ]
+print [string.строка]
+
+push [string.строка], [string.символ]
+mov rax, rsp
+list rax, 2
+
+join rax
+print rax

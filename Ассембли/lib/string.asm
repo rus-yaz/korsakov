@@ -289,21 +289,20 @@ f_string_copy:
 
   ret
 
-section "string_add" executable
+section "string_append" executable
 
-macro string_add string_1, string_2 {
+macro string_append string_1, string_2 {
   enter string_1, string_2
 
-  call f_string_add
+  call f_string_append
 
   return
 }
 
-f_string_add:
+f_string_append:
   check_type rax, STRING
   check_type rbx, STRING
 
-  string_copy rax
   mov rcx, rax
 
   string_copy rbx
@@ -322,7 +321,6 @@ f_string_add:
 
     jmp .while
   .end_while:
-
 
   mov rcx, [rbx + 8*1] ; Сохранение указателя на первый элемент добавляемой строки
 
@@ -343,6 +341,25 @@ f_string_add:
 
   add rcx, rdx
   mem_mov [rax + 8*2], rcx
+
+  ret
+
+section "string_add" executable
+
+macro string_add string_1, string_2 {
+  enter string_1, string_2
+
+  call f_string_add
+
+  return
+}
+
+f_string_add:
+  check_type rax, STRING
+  check_type rbx, STRING
+
+  string_copy rax
+  string_append rax, rbx
 
   ret
 

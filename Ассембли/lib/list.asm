@@ -44,6 +44,9 @@ f_list:
     cmp rdi, LIST
     je .list
 
+    cmp rdi, STRING
+    je .string
+
     ; Выход с ошибкой при неизвестном типе
     print EXPECTED_TYPE_ERROR, 0, 0
     print INTEGER_TYPE, 44, 32
@@ -56,6 +59,10 @@ f_list:
 
     .list:
       mov rdx, LIST_HEADER
+      jmp .continue       ; Check loop condition
+
+    .string:
+      mov rdx, STRING_HEADER
       jmp .continue       ; Check loop condition
 
     .continue:
@@ -374,7 +381,7 @@ f_string_to_list:
   xchg rcx, rax
 
   mov rdx, rax
-  list 0, 0
+  list 0
   xchg rdx, rax
 
   ; RAX — строка (Целое число)
@@ -398,4 +405,74 @@ f_string_to_list:
   .end_while:
 
   mov rax, rdx
+  ret
+
+section "join" executable
+
+macro join list, separator = " " {
+  enter list, separator
+
+  call f_join
+
+  return
+}
+
+f_join:
+  check_type rax, LIST
+
+  mov r15, rsp
+
+  mov rcx, rax
+  push 0, rbx
+  mov rax, rsp
+  buffer_to_string rax
+  mov rbx, rax
+  mov rax, rcx
+
+  mov rcx, rax
+  push 0, ""
+  mov rax, rsp
+  buffer_to_string rax
+  xchg rcx, rax
+
+  mov rdx, rax
+  list_length rax
+  xchg rdx, rax
+
+  mov rsi, rdx
+  inc rsi
+  .while:
+    push rax
+    push rbx
+
+    mov rbx, rax
+    mov rax, rsi
+    sub rax, rdx
+
+    integer rax
+    integer_dec rax
+
+    list_get rbx, rax
+    check_type rax, STRING
+
+    string_append rcx, rax
+
+    pop rbx
+    pop rax
+
+    dec rdx
+
+    cmp rdx, 0
+    je .end_while
+
+    push rax
+    string_append rcx, rbx
+    pop rax
+
+    jmp .while
+  .end_while:
+
+  mov rsp, r15
+  mov rax, rcx
+
   ret

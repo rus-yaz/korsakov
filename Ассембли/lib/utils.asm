@@ -124,16 +124,17 @@ f_print_buffer:
 
 section "exit" executable
 
-macro exit code, message = 0 {
-  if message eq 0
+macro exit code, buffer = 0 {
+  if buffer eq 0
   else
     push rax
 
-    mov rbx, message
-    buffer_length rbx
-    mov rsi, rax
+    print_buffer buffer
 
-    sys_print rbx, rsi
+    push 10
+    mov rax, rsp
+    sys_print rax, 8
+    pop rax
 
     pop rax
   end if
@@ -217,6 +218,10 @@ f_check_type:
   check_error jmp, UNEXPECTED_TYPE_ERROR
 
   .exit:
+    push 10
+    mov rax, rsp
+    sys_print rax, 8
+
     exit -1
 
 macro mem_copy source, destination, size {

@@ -52,13 +52,14 @@ f_is_equal:
     string_length rbx
     mov rdx, rax
 
+    pop rax
+
     cmp rcx, rdx
     jne .return_false
 
-    integer 0
     mov rsi, rax
-
-    pop rax
+    integer 0
+    xchg rsi, rax
 
     mov rdi, rcx
     .string_check:

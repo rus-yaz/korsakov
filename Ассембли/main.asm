@@ -9,14 +9,15 @@ include "lib/print.asm"
 include "lib/integer.asm"
 include "lib/string.asm"
 include "lib/list.asm"
+include "lib/functions.asm"
+include "lib/dictionary.asm"
 include "lib/file.asm"
 include "lib/exec.asm"
 include "lib/errors.asm"
-include "lib/functions.asm"
 
 include "tests/const_buffers.asm"
 
-include "parser.asm"
+include "tokenizer.asm"
 
 section "data" writable
   файл db "привет, мир.корс", 0
@@ -31,7 +32,8 @@ _start:
   include "tests/string.asm"
   include "tests/integer.asm"
   include "tests/functions.asm"
+  include "tests/dictionary.asm"
 
-  parser файл
+  tokenizer файл
 
   exit 0

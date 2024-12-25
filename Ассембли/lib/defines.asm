@@ -18,6 +18,7 @@ section "defines" writable
   define BINARY_HEADER     2
   define STRING_HEADER     3
   define LIST_HEADER       3
+  define DICTIONARY_HEADER       3
 
   ; Полные размеры типа (для неизменяемых по длине)
   define NULL_SIZE    1
