@@ -1,13 +1,3 @@
-section "is_equal" executable
-
-macro is_equal val_1, val_2 {
-  enter val_1, val_2
-
-  call f_is_equal
-
-  return
-}
-
 f_is_equal:
   ; Сохранение типов
   mov rcx, [rax]

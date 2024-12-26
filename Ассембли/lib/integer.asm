@@ -1,13 +1,3 @@
-section "integer" executable
-
-macro integer value {
-  enter value
-
-  call f_integer
-
-  return
-}
-
 f_integer:
   mov rbx, rax
 
@@ -17,14 +7,6 @@ f_integer:
   mem_mov [rax + 8*1], rbx
 
   ret
-
-macro integer_copy int {
-  enter int
-
-  call f_integer_copy
-
-  return
-}
 
 f_integer_copy:
   check_type rax, INTEGER
@@ -36,14 +18,6 @@ f_integer_copy:
 
   ret
 
-macro integer_inc int {
-  enter int
-
-  call f_integer_inc
-
-  return
-}
-
 f_integer_inc:
   check_type rax, INTEGER
 
@@ -53,14 +27,6 @@ f_integer_inc:
 
   ret
 
-macro integer_dec int {
-  enter int
-
-  call f_integer_dec
-
-  return
-}
-
 f_integer_dec:
   check_type rax, INTEGER
 
@@ -69,22 +35,6 @@ f_integer_dec:
   mov [rax + INTEGER * 8], rbx
 
   ret
-
-macro integer_add int_1, int_2 {
-  enter int_1, int_2
-
-  call f_integer_add
-
-  return
-}
-
-macro integer_add int_1, int_2 {
-  enter int_1, int_2
-
-  call f_integer_add
-
-  return
-}
 
 f_integer_add:
   check_type rax, INTEGER

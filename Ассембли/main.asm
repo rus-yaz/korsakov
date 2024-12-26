@@ -13,7 +13,6 @@ include "lib/functions.asm"
 include "lib/dictionary.asm"
 include "lib/file.asm"
 include "lib/exec.asm"
-include "lib/errors.asm"
 
 include "tests/const_buffers.asm"
 

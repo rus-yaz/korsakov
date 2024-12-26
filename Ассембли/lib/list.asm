@@ -1,13 +1,3 @@
-section "list" executable
-
-macro list list_start = 0, length = 0 {
-  enter list_start, length
-
-  call f_list
-
-  return
-}
-
 f_list:
   mov rcx, rax
   create_block LIST_HEADER*8
@@ -102,32 +92,12 @@ f_list:
 
   ret
 
-section "list_length" executable
-
-macro list_length list {
-  enter list
-
-  call f_list_length
-
-  return
-}
-
 f_list_length:
   check_type rax, LIST
 
   mov rax, [rax + 8*2]
 
   ret
-
-section "list_get" executable
-
-macro list_get list, index {
-  enter list, index
-
-  call f_list_get
-
-  return
-}
 
 f_list_get:
   ; Проверка типа
@@ -163,16 +133,6 @@ f_list_get:
   add rax, 8*2
 
   ret
-
-section "list_copy" executable
-
-macro list_copy list {
-  enter list
-
-  call f_list_copy
-
-  return
-}
 
 f_list_copy:
   check_type rax, LIST
@@ -267,16 +227,6 @@ f_list_copy:
   .end_while:
 
 
-section "list_append" executable
-
-macro list_append list, item {
-  enter list, item
-
-  call f_list_append
-
-  return
-}
-
 f_list_append:
   check_type rax, LIST
 
@@ -359,16 +309,6 @@ f_list_append:
 
   ret
 
-section "string_to_list" executable
-
-macro string_to_list string {
-  enter string
-
-  call f_string_to_list
-
-  return
-}
-
 f_string_to_list:
   check_type rax, STRING
 
@@ -406,16 +346,6 @@ f_string_to_list:
 
   mov rax, rdx
   ret
-
-section "join" executable
-
-macro join list, separator = " " {
-  enter list, separator
-
-  call f_join
-
-  return
-}
 
 f_join:
   check_type rax, LIST

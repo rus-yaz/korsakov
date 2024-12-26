@@ -1,13 +1,3 @@
-section "dictionary" executable
-
-macro dictionary keys = 0, values = 0 {
-  enter keys, values
-
-  call f_dictionary
-
-  return
-}
-
 f_dictionary:
   mov rcx, rax
   create_block DICTIONARY_HEADER*8
@@ -119,31 +109,11 @@ f_dictionary:
 
   ret
 
-section "dictionary_length" executable
-
-macro dictionary_length dictionary, key {
-  enter dictionary, key
-
-  call f_dictionary_length
-
-  return
-}
-
 f_dictionary_length:
   check_type rax, DICTIONARY
 
   mov rax, [rax + 8*2]
   ret
-
-section "dictionary_keys" executable
-
-macro dictionary_keys dictionary {
-  enter dictionary
-
-  call f_dictionary_keys
-
-  return
-}
 
 f_dictionary_keys:
   check_type rax, DICTIONARY
@@ -169,17 +139,6 @@ f_dictionary_keys:
   mov rax, rdx
   ret
 
-section "dictionary_values" executable
-
-macro dictionary_values dictionary {
-  enter dictionary
-
-  call f_dictionary_values
-
-  return
-}
-
-
 f_dictionary_values:
   check_type rax, DICTIONARY
 
@@ -203,16 +162,6 @@ f_dictionary_values:
 
   mov rax, rdx
   ret
-
-section "dictionary_get" executable
-
-macro dictionary_get dictionary, key {
-  enter dictionary, key
-
-  call f_dictionary_get
-
-  return
-}
 
 f_dictionary_get:
   check_type rax, DICTIONARY

@@ -1,13 +1,3 @@
-section "buffer_to_binary" executable
-
-macro buffer_to_binary buffer_addr {
-  enter buffer_addr
-
-  call f_buffer_to_binary
-
-  return
-}
-
 f_buffer_to_binary:
   push rax ; Сохранение указателя на буфер
   buffer_length rax
@@ -50,16 +40,6 @@ f_buffer_to_binary:
   pop rax
 
   ret
-
-section "binary_to_string" executable
-
-macro binary_to_string binary_addr {
-  enter binary_addr
-
-  call f_binary_to_string
-
-  return
-}
 
 f_binary_to_string:
   check_type rax, BINARY
@@ -200,16 +180,6 @@ f_binary_to_string:
   pop rax
   ret
 
-section "buffer_to_string" executable
-
-macro buffer_to_string buffer_addr {
-  enter buffer_addr
-
-  call f_buffer_to_string
-
-  return
-}
-
 f_buffer_to_string:
   buffer_to_binary rax
   push rax
@@ -221,32 +191,12 @@ f_buffer_to_string:
 
   ret
 
-section "string_length" executable
-
-macro string_length string {
-  enter string
-
-  call f_string_length
-
-  return
-}
-
 f_string_length:
   check_type rax, STRING
 
   mov rax, [rax + 8*2]
 
   ret
-
-section "string_copy" executable
-
-macro string_copy string {
-  enter string
-
-  call f_string_copy
-
-  return
-}
 
 f_string_copy:
   check_type rax, STRING
@@ -288,16 +238,6 @@ f_string_copy:
   pop rax
 
   ret
-
-section "string_append" executable
-
-macro string_append string_1, string_2 {
-  enter string_1, string_2
-
-  call f_string_append
-
-  return
-}
 
 f_string_append:
   check_type rax, STRING
@@ -344,16 +284,6 @@ f_string_append:
 
   ret
 
-section "string_add" executable
-
-macro string_add string_1, string_2 {
-  enter string_1, string_2
-
-  call f_string_add
-
-  return
-}
-
 f_string_add:
   check_type rax, STRING
   check_type rbx, STRING
@@ -362,16 +292,6 @@ f_string_add:
   string_append rax, rbx
 
   ret
-
-section "string_get" executable
-
-macro string_get string, index {
-  enter string, index
-
-  call f_string_get
-
-  return
-}
 
 f_string_get:
   check_type rax, STRING

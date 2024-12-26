@@ -1,13 +1,3 @@
-section "run" executable
-
-macro run command, args, env, wait = 1 {
-  enter command, args, env, wait
-
-  call f_run
-
-  leave
-}
-
 f_run:
   push rdx
   push rax

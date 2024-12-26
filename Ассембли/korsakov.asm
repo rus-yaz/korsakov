@@ -6,7 +6,6 @@ include "lib/defines.asm"
 include "lib/utils.asm"
 include "lib/heap.asm"
 include "lib/exec.asm"
-include "lib/errors.asm"
 
 section "data" writable
   fasm      db "/bin/fasm", 0

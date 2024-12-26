@@ -1,13 +1,3 @@
-section "print_int" executable
-
-macro print_int int {
-  enter int
-
-  call f_print_int
-
-  leave
-}
-
 f_print_int:
   check_type rax, INTEGER
   mov rax, [rax + 8]
@@ -37,16 +27,6 @@ f_print_int:
   mov rsp, r8 ; Восстановление конца стека
 
   ret
-
-section "print_string" executable
-
-macro print_string string {
-  enter string
-
-  call f_print_string
-
-  leave
-}
 
 f_print_string:
   ; Проверка типа

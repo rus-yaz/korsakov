@@ -1,13 +1,3 @@
-section "get_file_size" executable
-
-macro get_file_size filename {
-  enter filename
-
-  call f_get_file_size
-
-  return
-}
-
 f_get_file_size:
   mov rbx, rsp
   add rbx, STAT_BUFFER_SIZE
@@ -18,16 +8,6 @@ f_get_file_size:
   mov rax, [rbx + 8*6] ; Размер файла в байтах
 
   ret
-
-section "open_file" executable
-
-macro open_file filename, flags = O_RDONLY, mode = 444o {
-  enter filename, flags, mode
-
-  call f_open_file
-
-  return
-}
 
 f_open_file:
   ; Сохранение указателя на имя файла
@@ -62,16 +42,6 @@ f_open_file:
 
   ret
 
-section "close_file" executable
-
-macro close_file file {
-  enter file
-
-  call f_close_file
-
-  leave
-}
-
 f_close_file:
   ; Проверка типа
   check_type rax, FILE
@@ -84,16 +54,6 @@ f_close_file:
   delete_block rbx
 
   ret
-
-section "read_file" executable
-
-macro read_file file {
-  enter file
-
-  call f_read_file
-
-  return
-}
 
 f_read_file:
   ; Проверка типа
@@ -139,16 +99,6 @@ f_read_file:
   binary_to_string rax
 
   ret
-
-section "write_file" executable
-
-macro write_file file, string {
-  enter file, string
-
-  call f_write_file
-
-  leave
-}
 
 f_write_file:
   check_type rax, FILE

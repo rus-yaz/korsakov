@@ -1,8 +1,3 @@
-section "heap" writable
-  PAGE_SIZE   dq 0x1000             ; Начальный размер кучи
-  HEAP_START  rq 1                  ; Указатель на начало кучи
-  HEAP_END    rq 1                  ; Указатель на конец кучи
-
 section "write_header" executable
 
 macro write_header addr, header_sign, size, prev_size, state {
@@ -10,16 +5,6 @@ macro write_header addr, header_sign, size, prev_size, state {
   mem_mov [addr + 8*1], size
   mem_mov [addr + 8*2], prev_size
   mem_mov [addr + 8*3], state
-}
-
-section "allocate_heap" executable
-
-macro allocate_heap {
-  enter
-
-  call f_allocate_heap
-
-  leave
 }
 
 f_allocate_heap:
@@ -53,16 +38,6 @@ f_allocate_heap:
   mov [HEAP_START], rax
 
   ret
-
-section "delete_block" executable
-
-macro delete_block block {
-  enter block
-
-  call f_delete_block
-
-  leave
-}
 
 f_delete_block:
   sub rax, HEAP_BLOCK_HEADER*8
@@ -161,16 +136,6 @@ f_delete_block:
   .skip_next_next_block_modifying:
 
   ret
-
-section "create_block" executable
-
-macro create_block size {
-  enter size
-
-  call f_create_block
-
-  return
-}
 
 f_create_block:
   cmp [HEAP_START], 0
