@@ -18,7 +18,7 @@ section "defines" writable
   define BINARY_HEADER     2
   define STRING_HEADER     3
   define LIST_HEADER       3
-  define DICTIONARY_HEADER       3
+  define DICTIONARY_HEADER 3
 
   ; Полные размеры типа (для неизменяемых по длине)
   define NULL_SIZE    1
@@ -89,6 +89,22 @@ macro dictionary_get dictionary, key {
   enter dictionary, key
 
   call f_dictionary_get
+
+  return
+}
+
+macro dictionary_items dictionary {
+  enter dictionary
+
+  call f_dictionary_items
+
+  return
+}
+
+macro dictionary_copy dictionary {
+  enter dictionary
+
+  call f_dictionary
 
   return
 }
@@ -281,15 +297,17 @@ macro string_to_list string {
   return
 }
 
-section "print" executable
 
-macro print_int int {
-  enter int
+macro list_to_string list {
+  enter list
 
-  call f_print_int
+  call f_list_to_string
 
-  leave
+  return
 }
+
+
+section "print" executable
 
 macro print_string string {
   enter string
@@ -363,4 +381,24 @@ macro string_get string, index {
   call f_string_get
 
   return
+}
+
+section "to_string" executable
+
+macro to_string value {
+  enter value
+
+  call f_to_string
+
+  return
+}
+
+section "delete" executable
+
+macro delete variable {
+  enter variable
+
+  call f_delete
+
+  leave
 }

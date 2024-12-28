@@ -1,33 +1,3 @@
-f_print_int:
-  check_type rax, INTEGER
-  mov rax, [rax + 8]
-
-  mov r8, rsp ; Сохранение указателя на конец стека
-  mov rbx, 10 ; Мощность системы счисления
-
-  mov rcx, 0  ; Счётчик пройденных разрядов
-  mov rdx, 0  ; Обнуление регистра, хранящего остаток от деления
-
-  .while:
-    inc rcx ; Инкрементация счётчика пройденных разрядов
-
-    idiv rbx    ; Деление на мощность системы счисления
-    add rdx, 48 ; Приведение числа к значению по ASCII
-
-    push rdx   ; Сохранение числа на стеке
-    mov rdx, 0 ; Обнуление регистра, хранящего остаток от деления
-
-    cmp rax, 0
-    jne .while
-
-  mov rax, rsp
-  imul rcx, 8
-
-  sys_print rax, rcx
-  mov rsp, r8 ; Восстановление конца стека
-
-  ret
-
 f_print_string:
   ; Проверка типа
   check_type rax, STRING
@@ -100,22 +70,29 @@ f_print:
   mov rbx, [rax]
 
   cmp rbx, INTEGER
-  je .print_int
+  je .not_string
+
+  cmp rbx, LIST
+  je .not_string
+
+  cmp rbx, DICTIONARY
+  je .not_string
 
   cmp rbx, STRING
-  je .print_string
+  je .string
 
-  jmp .print_buffer
+  jmp .buffer
 
-  .print_int:
-    print_int rax
-    jmp .end
-
-  .print_string:
+  .string:
     print_string rax
     jmp .end
 
-  .print_buffer:
+  .not_string:
+    to_string rax
+    print_string rax
+    jmp .end
+
+  .buffer:
     print_buffer rax
     jmp .end
 

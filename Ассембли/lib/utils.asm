@@ -208,6 +208,12 @@ f_check_type:
     jmp .exit
   .not_binary:
 
+  cmp r9, DICTIONARY
+  jne .not_dictionary
+    print_buffer DICTIONARY_TYPE
+    jmp .exit
+  .not_dictionary:
+
   mov r8, HEAP_BLOCK
   cmp r9, r8
   jne .not_heap_block

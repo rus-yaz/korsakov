@@ -13,16 +13,56 @@ print <STRING_CONTENT_TEXT>
 integer 1024
 print <rax>
 
-; Проверка множественного отображения
-integer 1024
-print <rax, STRING_CONTENT_TEXT, [print.строка]>
-
-; Проверка замены разделителя и конца стрки
-
-integer 1024
+list 0
 mov rbx, rax
+
+integer 0
+list_append rbx, rax
+integer 1
+list_append rbx, rax
+integer 2
+list_append rbx, rax
+
+print rax
+
+list 0
+mov rbx, rax
+
+integer 0
+list_append rbx, rax
+list_append rbx, [print.строка]
+
+list 0
 mov rcx, rax
 
-print <rax, rbx, rcx>, 63
+integer 99
+list_append rcx, rax
 
-print <rax, rbx, rcx>, 38, 95
+list 0
+mov rdx, rax
+
+integer 0
+list_append rdx, rax
+integer 1
+list_append rdx, rax
+integer 2
+list_append rdx, rax
+
+list_append rcx, rdx
+
+dictionary rbx, rcx
+print rax
+
+;; Проверка множественного отображения
+;integer 1024
+;print <rax, STRING_CONTENT_TEXT, [print.строка]>
+;
+;; Проверка замены разделителя и конца стрки
+;
+;integer 1024
+;mov rbx, rax
+;mov rcx, rax
+;
+;print <rax, rbx, rcx>, "?"
+;
+;print <rax, rbx, rcx>, "_", "*"

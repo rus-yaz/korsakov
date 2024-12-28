@@ -57,3 +57,6 @@ section "const_buffers" writable
 
   functions.список_1 rq 1
   functions.список_2 rq 1
+
+  ; tests/delete
+  delete.буфер db "Привет", 0

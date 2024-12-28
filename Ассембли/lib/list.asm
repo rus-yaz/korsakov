@@ -1,94 +1,30 @@
 f_list:
-  mov rcx, rax
+  push rax
   create_block LIST_HEADER*8
 
-  mem_mov [rax + 8*0], LIST
-  mem_mov [rax + 8*1], 0
+  mem_mov [rax + 8*0], LIST ; Тип
+  mem_mov [rax + 8*1], 0    ; Место для ссылки на первый элемент
+  mem_mov [rax + 8*2], 0    ; Начальная длина
 
-  ; Создание пустого списка
-  cmp rbx, 0
-  jne .not_empty
+  pop rcx
+  mov rdx, 0
 
-    mem_mov [rax + 8*2], 0
-    ret
+  ; RAX — указатель на новый список
+  ; RBX — длина
+  ; RCX — указатель на последовательность указателей на добавляемые элементы
+  ; RDX — итератор
 
-  .not_empty:
+  .while:
+    cmp rbx, rdx
+    je .end_while
 
-  mem_mov [rax + 8*2], rbx  ; Длина
-  push rax                  ; Сохранение указателя на заголовок списка
+    list_append rax, [rcx]
+    add rcx, 8
 
-  xchg rax, rcx
+    inc rdx
+    jmp .while
 
-  ; RAX — указатель на копируемый элемент
-  ; RBX — итератор
-  ; RCX — указатель на предыдущий элемент
-  ; RDX — размер копируемого элемента
-
-  .loop_start:
-    mov rdi, [rax]
-    mov rdi, [rdi]
-
-    cmp rdi, INTEGER
-    je .integer
-
-    cmp rdi, LIST
-    je .list
-
-    cmp rdi, STRING
-    je .string
-
-    ; Выход с ошибкой при неизвестном типе
-    print EXPECTED_TYPE_ERROR, 0, 0
-    print INTEGER_TYPE, 44, 32
-    print LIST_TYPE, 0
-    exit -1
-
-    .integer:
-      mov rdx, INTEGER_SIZE
-      jmp .continue       ; Check loop condition
-
-    .list:
-      mov rdx, LIST_HEADER
-      jmp .continue       ; Check loop condition
-
-    .string:
-      mov rdx, STRING_HEADER
-      jmp .continue       ; Check loop condition
-
-    .continue:
-      push rax
-      push rdx
-
-      add rdx, 2        ; Учёт ссылок на предыдущий и следующий блоки
-      imul rdx, 8       ; Расчёт размера блока
-
-      create_block rdx
-
-      mem_mov [rax + 8*0], rcx ; Указатель на предыдущий блок
-      mem_mov [rax + 8*1], 0   ; Указатель на следующий блок, инициализационное значение
-
-      mem_mov [rcx + 8*1], rax ; Установка указателя на текущий блок для предыдущего (относительно предыдущего блока — указатель на следующий блок)
-      mov rcx, rax
-
-      pop rdx
-      pop rax
-
-      push rcx
-      add rcx, 2*8 ; Учёт ссылок
-
-      ; RAX — источник
-      ; RCX — место назначения
-      ; RDX — количество блоков копирования
-      mem_copy [rax], rcx, rdx
-      pop rcx
-
-      dec rbx
-      add rax, 8
-
-      cmp rbx, 0            ; Check if loop counter is zero
-      jne .loop_start       ; If not, repeat the loop
-
-  pop rax
+  .end_while:
 
   ret
 
@@ -137,94 +73,36 @@ f_list_get:
 f_list_copy:
   check_type rax, LIST
 
-  mov rbx, rax
-  integer 0
-  xchg rbx, rax
+  push rax
 
-  mov rcx, rax
   list_length rax
-  xchg rcx, rax
+  mov rbx, rax
+
+  integer 0
+  mov rcx, rax
+
+  list 0
+  mov rdx, rax
+
+  pop rax
 
   .while:
-    cmp rcx, 0
+    cmp rbx, 0
     je .end_while
 
-    mov rcx, rax
-    list_get rax, rbx
-    xchg rcx, rax
-
-    ; RAX — указатель на список
-    ; RBX — указатель на последний элемент
-    ; RCX — указатель на добавляемый элемент
-
-    mov rdx, [rcx]
-    cmp rcx, INTEGER
-    je .integer
-
-    cmp rdx, LIST
-    je .list
-
-    cmp rdx, STRING
-    je .string
-
-    ; Выход с ошибкой при неизвестном типе
-    print EXPECTED_TYPE_ERROR, "", ""
-    print INTEGER_TYPE, ",", " "
-    print STRING_TYPE, ",", " "
-    print LIST_TYPE, ""
-    exit -1
-
-    .integer:
-      integer_copy rcx
-      mov rdx, INTEGER_SIZE
-      jmp .continue
-
-    .list:
-      list_copy rcx
-      mov rdx, LIST_HEADER
-      jmp .continue
-
-    .string:
-      string_copy rcx
-      mov rdx, STRING_HEADER
-      jmp .continue
-
-    .continue:
-
-    mov rdi, [rax + 8*2]
-    inc rdi
-
-    mov [rax + 8*2], rdi
     push rax
+    list_get rax, rcx
+    list_append rdx, rax
 
-    imul rdx, 8
-    create_block rdx
-
-    push rax
-    push rbx
-
-    mov rax, rdx
-    mov rbx, 8
-
-    mov rdx, 0
-    idiv rbx
-
-    mov rdx, rax
-    pop rbx
+    dec rbx
+    integer_inc rcx
     pop rax
 
-    mem_mov [rax + 8*0], rbx
-    mem_mov [rbx + 8*1], rax
-
-    mem_mov [rax + 8*1], 0
-    mov rbx, rax
-
-    add rax, 8*2
-    mem_copy rcx, rax, rdx
-
-    dec rcx
     jmp .while
+
   .end_while:
+
+  ret
 
 
 f_list_append:
@@ -250,6 +128,7 @@ f_list_append:
   ; RCX — указатель на добавляемый элемент
 
   mov rdx, [rcx]
+
   cmp rdx, INTEGER
   je .integer
 
@@ -259,11 +138,12 @@ f_list_append:
   cmp rdx, STRING
   je .string
 
+  cmp rdx, DICTIONARY
+  je .dictionary
+
   ; Выход с ошибкой при неизвестном типе
   print EXPECTED_TYPE_ERROR, "", ""
-  print INTEGER_TYPE, ",", " "
-  print STRING_TYPE, ",", " "
-  print LIST_TYPE, ""
+  print <INTEGER_TYPE, STRING_TYPE, LIST_TYPE, DICTIONARY_TYPE>, ","
   exit -1
 
   .integer:
@@ -279,6 +159,11 @@ f_list_append:
   .string:
     string_copy rcx
     mov rdx, STRING_HEADER
+    jmp .continue
+
+  .dictionary:
+    dictionary_copy rcx
+    mov rdx, DICTIONARY_HEADER
     jmp .continue
 
   .continue:
@@ -368,6 +253,9 @@ f_join:
   mov rdx, rax
   list_length rax
   xchg rdx, rax
+
+  cmp rdx, 0
+  je .end_while
 
   mov rsi, rdx
   inc rsi

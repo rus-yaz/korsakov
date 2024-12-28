@@ -13,6 +13,8 @@ include "lib/functions.asm"
 include "lib/dictionary.asm"
 include "lib/file.asm"
 include "lib/exec.asm"
+include "lib/to_string.asm"
+include "lib/delete.asm"
 
 include "tests/const_buffers.asm"
 
@@ -32,7 +34,8 @@ _start:
   include "tests/integer.asm"
   include "tests/functions.asm"
   include "tests/dictionary.asm"
+  include "tests/delete.asm"
 
-  tokenizer файл
+  ;tokenizer файл
 
   exit 0

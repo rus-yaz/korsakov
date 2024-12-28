@@ -10,7 +10,6 @@ f_dictionary:
   jne .not_empty
   cmp rbx, 0
   jne .not_empty
-
     mem_mov [rcx + 8*2], 0
     mov rax, rcx
     ret
@@ -45,11 +44,9 @@ f_dictionary:
 
   .correct_length:
 
-  pop rax
+  pop rdi
+  xchg rdi, rax
   push rax
-
-  list_length rax
-  mov rdi, rax
 
   mem_mov [rcx + 8*2], rdi
 
@@ -106,6 +103,9 @@ f_dictionary:
 
   .end_while:
   pop rax
+  repeat 100
+  nop
+  end repeat
 
   ret
 
@@ -118,17 +118,19 @@ f_dictionary_length:
 f_dictionary_keys:
   check_type rax, DICTIONARY
 
+  mov rbx, [rax + 8*1]
+
   list 0
   mov rdx, rax
 
-  mov rbx, [rax + 8*1]
   .while:
     cmp rbx, 0
     je .end_while
 
     integer 0
-    list_get rbx, rax
-
+    mov rcx, rbx
+    add rcx, 8*2
+    list_get rcx, rax
     list_append rdx, rax
 
     mov rbx, [rbx + 8*1]
@@ -142,17 +144,19 @@ f_dictionary_keys:
 f_dictionary_values:
   check_type rax, DICTIONARY
 
+  mov rbx, [rax + 8*1]
+
   list 0
   mov rdx, rax
 
-  mov rbx, [rax + 8*1]
   .while:
     cmp rbx, 0
     je .end_while
 
     integer 1
-    list_get rbx, rax
-
+    mov rcx, rbx
+    add rcx, 8*2
+    list_get rcx, rax
     list_append rdx, rax
 
     mov rbx, [rbx + 8*1]
@@ -195,5 +199,68 @@ f_dictionary_get:
 
   integer 1
   list_get rbx, rax
+
+  ret
+
+f_dictionary_copy:
+  check_type rax, DICTIONARY
+
+  push rax
+  dictionary_values rax
+  mov rbx, rax
+
+  pop rax
+  dictionary_keys rax
+
+  dictionary rax, rbx
+
+  ret
+
+f_dictionary_items:
+  check_type rax, DICTIONARY
+
+  push rax
+  dictionary_keys rax
+  mov rbx, rax
+
+  pop rax
+  dictionary_values rax
+  mov rcx, rax
+
+  list_length rcx
+  mov rdx, rax
+
+  integer 0
+  mov r8, rax
+
+  list 0
+
+  .while:
+    cmp rdx, 0
+    je .end_while
+
+    push rdx, rax
+
+    list 0
+    mov rdx, rax
+
+    list_get rbx, r8
+    list_append rdx, rax
+    list_get rcx, r8
+    list_append rdx, rax
+
+    pop rdx
+    list_append rdx, rax
+
+    pop rdx
+
+    push rax
+    integer_inc r8
+    dec rdx
+    pop rax
+
+    jmp .while
+
+  .end_while:
 
   ret

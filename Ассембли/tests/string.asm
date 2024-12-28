@@ -22,5 +22,4 @@ push [string.строка], [string.символ]
 mov rax, rsp
 list rax, 2
 
-join rax
 print rax

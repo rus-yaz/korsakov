@@ -28,3 +28,12 @@ mov rbx, rax
 integer 0
 dictionary_get rbx, rax
 print rax
+
+dictionary_keys rbx
+print rax
+
+dictionary_values rbx
+print rax
+
+dictionary_items rbx
+print rax
