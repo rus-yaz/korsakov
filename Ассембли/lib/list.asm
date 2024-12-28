@@ -143,7 +143,22 @@ f_list_append:
 
   ; Выход с ошибкой при неизвестном типе
   print EXPECTED_TYPE_ERROR, "", ""
-  print <INTEGER_TYPE, STRING_TYPE, LIST_TYPE, DICTIONARY_TYPE>, ","
+
+  list 0
+  mov rbx, rax
+
+  buffer_to_string INTEGER_TYPE
+  list_append rbx, rax
+  buffer_to_string STRING_TYPE
+  list_append rbx, rax
+  buffer_to_string LIST_TYPE
+  list_append rbx, rax
+  buffer_to_string DICTIONARY_TYPE
+  list_append rbx, rax
+
+  join rbx, ", "
+  print rax
+
   exit -1
 
   .integer:
@@ -238,17 +253,19 @@ f_join:
   mov r15, rsp
 
   mov rcx, rax
-  push 0, rbx
+  push rbx, 8, BINARY
   mov rax, rsp
-  buffer_to_string rax
-  mov rbx, rax
-  mov rax, rcx
+  binary_to_string rax
+  xchg rcx, rax
+  mov rbx, rcx
 
   mov rcx, rax
-  push 0, ""
+  push "", 8, BINARY
   mov rax, rsp
-  buffer_to_string rax
+  binary_to_string rax
   xchg rcx, rax
+
+  mov rsp, r15
 
   mov rdx, rax
   list_length rax
@@ -290,7 +307,6 @@ f_join:
     jmp .while
   .end_while:
 
-  mov rsp, r15
   mov rax, rcx
 
   ret

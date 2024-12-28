@@ -1,21 +1,36 @@
-section "keywords" writable
-  ПУСТАЯ_СТРОКА      db "", 0
+section "data" writable
+  ПУСТАЯ_СТРОКА db "", 0
+  пустая_строка rq 1
 
-  КОД                db 'показать("привет, мир!")', 10, 0
   ПОКАЗАТЬ           db "показать", 0
-  ОТКРЫВАЮЩАЯ_СКОБКА db "(", 0
-  ЗАКРЫВАЮЩАЯ_СКОБКА db ")", 0
-  ДВОЙНАЯ_КАВЫЧКА    db '"', 0
-  код                rq 1
   показать           rq 1
-  открывающая_скобка rq 1
-  закрывающая_скобка rq 1
+  ДВОЙНАЯ_КАВЫЧКА    db '"', 0
   двойная_кавычка    rq 1
+  ПЕРЕНОС_СТРОКИ     db 10, 0
+  перенос_строки     rq 1
+  ОТКРЫВАЮЩАЯ_СКОБКА db "(", 0
+  открывающая_скобка rq 1
+  ЗАКРЫВАЮЩАЯ_СКОБКА db ")", 0
+  закрывающая_скобка rq 1
 
-  символы            rq 1
+  ТИП      db "тип", 0
+  тип      rq 1
+  ЗНАЧЕНИЕ db "значение", 0
+  значение rq 1
+
+  ТОКЕН_КОНЕЦ_ФАЙЛА        dq 0
+  ТОКЕН_ФУНКЦИЯ            dq 1
+  ТОКЕН_ОТКРЫВАЮЩАЯ_СКОБКА dq 2
+  ТОКЕН_ЗАКРЫВАЮЩАЯ_СКОБКА dq 3
+  ТОКЕН_СТРОКА             dq 4
+  ТОКЕН_ПЕРЕНОС_СТРОКИ     dq 5
+
+  код                rq 1
   токен              rq 1
-  токены             rq 1
   индекс             rq 1
+  токены             rq 1
+  символы            rq 1
+  тип_токена         rq 1
 
 section "tokenizer" executable
 
@@ -24,22 +39,20 @@ macro tokenizer filename {
 
   call f_tokenizer
 
-  leave
+  return
 }
 
 f_tokenizer:
   open_file rax
-  push rax
+  mov rbx, rax
 
   read_file rax
   mov [код], rax
 
-  pop rax
-  close_file rax
+  close_file rbx
 
-  ;; код = "показать(\"привет, мир!\")"
-  ;buffer_to_string КОД
-  ;mov [код], rax
+  buffer_to_string ПУСТАЯ_СТРОКА
+  mov [пустая_строка], rax
 
   buffer_to_string ПОКАЗАТЬ
   mov [показать], rax
@@ -49,14 +62,21 @@ f_tokenizer:
   mov [закрывающая_скобка], rax
   buffer_to_string ДВОЙНАЯ_КАВЫЧКА
   mov [двойная_кавычка], rax
+  buffer_to_string ПЕРЕНОС_СТРОКИ
+  mov [перенос_строки], rax
+
+  buffer_to_string ТИП
+  mov [тип], rax
+  buffer_to_string ЗНАЧЕНИЕ
+  mov [значение], rax
 
   ; символы = Список(код)
   string_to_list [код]
   mov [символы], rax
 
   ; токен = ""
-  buffer_to_string ПУСТАЯ_СТРОКА
-  mov [токен], rax
+  string_copy [пустая_строка]
+  mem_mov [токен], rax
 
   ; токены = ()
   list 0
@@ -77,6 +97,7 @@ f_tokenizer:
       .while_string:
         integer_inc [индекс]
         list_get [символы], [индекс]
+
         push rax
         string_append [токен], rax
         pop rax
@@ -85,28 +106,50 @@ f_tokenizer:
         cmp rax, 1
         jne .while_string
 
+      mov [тип_токена], ТОКЕН_СТРОКА
       jmp .add_token
 
     .skip_string:
 
     is_equal [токен], [показать]
+    mov [тип_токена], ТОКЕН_ФУНКЦИЯ
     cmp rax, 1
     je .add_token
 
     is_equal [токен], [открывающая_скобка]
+    mov [тип_токена], ТОКЕН_ОТКРЫВАЮЩАЯ_СКОБКА
     cmp rax, 1
     je .add_token
 
     is_equal [токен], [закрывающая_скобка]
+    mov [тип_токена], ТОКЕН_ЗАКРЫВАЮЩАЯ_СКОБКА
+    cmp rax, 1
+    je .add_token
+
+    is_equal [токен], [перенос_строки]
+    mov [тип_токена], ТОКЕН_ПЕРЕНОС_СТРОКИ
     cmp rax, 1
     je .add_token
 
     jmp .continue
 
     .add_token:
-      list_append [токены], [токен]
+      list 0
+      list_append rax, [тип]
+      list_append rax, [значение]
+      mov rbx, rax
 
-      buffer_to_string ПУСТАЯ_СТРОКА
+      list 0
+      mov rcx, rax
+      mov rax, [тип_токена]
+      integer [rax]
+      list_append rcx, rax
+      list_append rax, [токен]
+
+      dictionary rbx, rax
+      list_append [токены], rax
+
+      string_copy [пустая_строка]
       mov [токен], rax
 
     .continue:
@@ -121,7 +164,18 @@ f_tokenizer:
     cmp rax, 1
     jne .while
 
-  join [токены]
-  print rax
+  list 0
+  list_append rax, [тип]
+  list_append rax, [значение]
+  mov rbx, rax
 
-  exit 0
+  list 0
+  mov rcx, rax
+  integer [ТОКЕН_КОНЕЦ_ФАЙЛА]
+  list_append rcx, rax
+  list_append rax, [пустая_строка]
+
+  dictionary rbx, rax
+  list_append [токены], rax
+
+  ret

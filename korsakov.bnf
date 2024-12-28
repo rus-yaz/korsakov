@@ -1,0 +1,136 @@
+/* Лексемы */
+
+<digit> ::= [0-9]
+
+<lowercase>       ::= [a-z] | [а-я] | ё
+<uppercase>       ::= [A-Z] | [А-Я] | Ё
+<char>            ::= <lowercase> | <uppercase> | "_"
+<special_char>    ::= " " | "!" | "#" | "$" | "%" | "&" | "'" | "(" | ")" | "*" | "+" | "," | "-" | "." | "/" | ":" | ";" | "<" | "=" | ">" | "?" | "@" | "[" | "]" | "^" | "_" | "`" | "{" | "|" | "}" | "~"
+<escape_sequence> ::= "\\" ("n" | "\"" | "t" | "\\")
+<any_char>        ::= <char> | <special_char> | <escape_sequence>
+
+/* Ключевые слова */
+
+<keyword_if>       ::= "if"       | "если"
+<keyword_of>       ::= "of"       | "из"
+<keyword_on>       ::= "on"       | "при"
+<keyword_or>       ::= "or"       | "или"
+<keyword_to>       ::= "to"       | "до"
+<keyword_and>      ::= "and"      | "и"
+<keyword_for>      ::= "for"      | "для"
+<keyword_not>      ::= "not"      | "не"
+<keyword_else>     ::= "else"     | "иначе"
+<keyword_from>     ::= "from"     | "от"
+<keyword_skip>     ::= "skip"     | "пропустить"
+<keyword_then>     ::= "then"     | "то"
+<keyword_true>     ::= "true"     | "истина"
+<keyword_after>    ::= "after"    | "через"
+<keyword_break>    ::= "break"    | "прервать"
+<keyword_check>    ::= "check"    | "проверить"
+<keyword_class>    ::= "class"    | "класс"
+<keyword_false>    ::= "false"    | "ложь"
+<keyword_while>    ::= "while"    | "пока"
+<keyword_delete>   ::= "delete"   | "удалить"
+<keyword_return>   ::= "return"   | "вернуть"
+<keyword_include>  ::= "include"  | "включить"
+<keyword_function> ::= "function" | "функция"
+
+<return>    ::= <keyword_return> " " <expression>
+<signal>    ::= <keyword_skip> | <keyword_break> | <return>
+
+<block_end> ::= "---" "-"* | "===" "="*
+<block_body> ::= ":" <expression> | ("\n" <expression>)* ("\n" <signal>)*
+<block_defintion> ::= <block_body>? <block_end>
+
+<else_branch> ::= (<keyword_else> <block_body>)? "\n" <block_end>
+
+/* Выражения */
+
+<identifier> ::= <char> (<char> | <digit>)*
+<value>      ::= <primitive> | <collection>
+<operand>    ::= <identifier> | <call> | <value>
+
+<primitive> ::= <float> | <integer>
+<float>     ::= <integer> "," <integer>
+<integer>   ::= <digit>+
+
+<collection>   := <list> | <string> | <dictionary>
+<list>         ::= "(" (<expression> (" " <expression>)*)* ")"
+<string>       ::= "\"" <any_char>* "\""
+<dictionary>   ::= "(" (<primitive> ":" <expression> (" " <primitive> : <expression>)*)+ ")"
+
+<arithmetical_binary_operator>   ::= "+" | "-" | "*" | "**" | "/" | "//" | "///"
+<arithmetical_binary_expression> ::= <operand> (<arithmetical_binary_operator> <operand>)+
+
+<arithmetical_pre_unary_operator>            ::= "///" | <arithmetical_universal_unary_operator>
+<arithmetical_post_unary_operator>           ::= "**" | <arithmetical_universal_unary_operator>
+<arithmetical_universal_unary_operator>      ::= "++" | "--"
+<arithmetical_unary_expression> ::= <arithmetical_pre_unary_operator> (<identifier> | <primitive>)
+                                | (<identifier> | <primitive>) <arithmetical_post_unary_operator>
+
+<equal>                    ::= "=="
+<not_equal>                ::= "!="
+<less>                     ::= "\\/"
+<more>                     ::= "/\\"
+<less_or_equal>            ::= "\\/="
+<more_or_equal>            ::= "/\\="
+<logical_binary_operator>  ::= <equal> | <not_equal> | <less> | <more> | <less_or_equal> | <more_or_equal>
+<logical_binary_operation> ::= <operand> <logical_binary_operator> <operand>
+
+<logical_unary_operator>  ::= <keyword_not>
+<logical_unary_operation> ::= <logical_unary_operator> <operand>
+
+<arithmetical_expression> ::= <arithmetical_unary_expression> | <arithmetical_binary_expression>
+<logical_expression>      ::= <logical_unary_expression> | <logical_binary_expression>
+<expression>              ::= <arithmetical_expression> | <logical_binary_expression> | <operand>
+
+<assign> ::= <identifier> "=" <assign>
+           | <identifier> "=" <expression>
+
+/* Включение модулей */
+
+<include> ::= <keyword_include> <string>
+
+/* Удаление переменных */
+
+<delete> ::= <keyword_delete> <identifier>
+
+/* Условные конструкции */
+
+<if_definition_start> ::= <keyword_if> " " <logical_expression> (<keyword_and> | <keyword_or> <logical_expression>)*
+<if_defintion>        ::= <if_definition_start> <block_body> ("\n" <keyword_else> " " <if_definition> <block_body>)* <else_branch>
+
+<check_branch_defintion> ::= <keyword_on> (" " <logical_binary_operator>)? " " <operand> (" " <keyword_and> | <keyword_or> (" " <logical_binary_operator>)? " " <operand>)*
+<check_defintion>        ::= <keyword_check> ("\n" <check_branch_definition> <block_body>)+ <else_branch>
+
+/* Циклы */
+
+<for_from_to_part>     ::= <identifier> | <call> | <arithmetical_expression>
+<for_definition_start> ::= <keyword_for> " " <identifier> (<keyword_of> " " (<identifier> | <call> | <collection>) | (<keyword_from> " " <for_from_to_part>)? <keyword_to> " " <for_from_to_part> (<keyword> " " <for_from_to_part>))
+<for_definition>       ::= <for_definition_start> <block_body> <else_branch>
+
+<while_definition_start> ::= <keyword_while> " " <logical_expression>
+<while_definition>       ::= <while_definition_start> <block_body> <else_branch>
+
+/* Функции и классы */
+
+<call>                 ::= <identifier> "(" <call_arguments>? <call_named_arguments>? ")"
+<call_argument>        ::= <expression>
+<call_arguments>       ::= <call_argument> (" " <call_argument>)*
+<call_named_argument>  ::= <identifier> "=" <expression>
+<call_named_arguments> ::= <call_named_arguments> (" " <call_named_arguments>)*
+
+<definition_argument>       ::= <identifier> (":" <identifier>)?
+<definition_named_argument> ::= <definition_argument> "=" <expression>
+
+<definition_accumulator_argument>       ::= "*" <identifier>
+<definition_accumulator_named_argument> ::= "**" <identifier>
+
+<definition_arguments>       ::= <definition_argument> (" " <definition_argument>) (" " <definition_accumulator_argument>)?
+<definition_named_arguments> ::= <definition_named_argument> (" " <definition_named_argument>) (" " <definition_accumulator_named_argument>)?
+
+<function_definition_start> ::= <keyword_function> <identifier> "(" <defintion_arguments>? (" " <definition_named_arguments>)? ")"
+<function_definition>       ::= <function_definition_start> <block_definition>
+
+<class_definition_start> ::= <keyword_class> <identifier> ("(" <identifier>+ ")")?
+<class_definition>       ::= <class_definition_start> <block_definition>

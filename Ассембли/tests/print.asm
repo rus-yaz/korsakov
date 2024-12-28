@@ -14,6 +14,9 @@ integer 1024
 print <rax>
 
 list 0
+print rax
+
+list 0
 mov rbx, rax
 
 integer 0

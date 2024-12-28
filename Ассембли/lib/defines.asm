@@ -13,6 +13,7 @@ section "defines" writable
 
   ; Размер заголовка
   define HEAP_BLOCK_HEADER 4
+  define FILE_HEADER       4
   define NULL_HEADER       1
   define INTEGER_HEADER    1
   define BINARY_HEADER     2
@@ -104,7 +105,7 @@ macro dictionary_items dictionary {
 macro dictionary_copy dictionary {
   enter dictionary
 
-  call f_dictionary
+  call f_dictionary_copy
 
   return
 }
@@ -297,7 +298,6 @@ macro string_to_list string {
   return
 }
 
-
 macro list_to_string list {
   enter list
 
@@ -305,7 +305,6 @@ macro list_to_string list {
 
   return
 }
-
 
 section "print" executable
 

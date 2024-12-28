@@ -245,6 +245,14 @@ f_string_append:
 
   mov rcx, rax
 
+  string_length rbx
+  cmp rax, 0
+  jne .not_empty
+    mov rax, rcx
+    ret
+
+  .not_empty:
+
   string_copy rbx
   mov rbx, rax
 

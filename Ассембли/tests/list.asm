@@ -29,3 +29,16 @@ list_append [list.список], rax
 ; показать(список.индекс)
 list_get [list.список], [list.индекс]
 print <ITEM_BY_INDEX_TEXT, rax>
+
+list 0
+mov rbx, rax
+
+mov rcx, rsp
+push 0, BINARY
+mov rax, rsp
+binary_to_string rax
+mov rdx, rax
+mov rsp, rcx
+list_append rbx, rax
+
+print rax

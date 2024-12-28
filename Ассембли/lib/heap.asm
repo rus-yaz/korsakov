@@ -1,12 +1,3 @@
-section "write_header" executable
-
-macro write_header addr, header_sign, size, prev_size, state {
-  mem_mov [addr + 8*0], header_sign
-  mem_mov [addr + 8*1], size
-  mem_mov [addr + 8*2], prev_size
-  mem_mov [addr + 8*3], state
-}
-
 f_allocate_heap:
   sys_mmap 0,\                                  ; Адрес (если 0, находится автоматически)
            [PAGE_SIZE],\                        ; Количество памяти для аллокации
@@ -21,7 +12,11 @@ f_allocate_heap:
 
   mov rbx, [PAGE_SIZE]                    ; Запись размера кучи
   sub rbx, HEAP_BLOCK_HEADER*8            ; Учёт размера заголовка блока
-  write_header rax, HEAP_BLOCK, rbx, 0, 0 ; Запись заголовка начального блока
+
+  mem_mov [rax + 8*0], HEAP_BLOCK
+  mem_mov [rax + 8*1], rbx
+  mem_mov [rax + 8*2], 0
+  mem_mov [rax + 8*3], 0
 
   cmp [HEAP_START], 0
   jne .allocated
@@ -71,7 +66,10 @@ f_delete_block:
     mov [r8 + 8*1], rcx
 
     ; Удаление заголовка удаляемого блока
-    write_header rax, 0, 0, 0, 0
+    mem_mov [rax + 8*0], 0
+    mem_mov [rax + 8*1], 0
+    mem_mov [rax + 8*2], 0
+    mem_mov [rax + 8*3], 0
 
   .skip_current_and_next_blocks_merging:
 
@@ -103,7 +101,11 @@ f_delete_block:
     mov [rax + 8*1], rcx
 
     ; Удаление заголовка удаляемого блока
-    write_header r8, 0, 0, 0, 0
+    mem_mov [r8 + 8*0], 0
+    mem_mov [r8 + 8*1], 0
+    mem_mov [r8 + 8*2], 0
+    mem_mov [r8 + 8*3], 0
+
     mov r8, rax
 
   .skip_previous_and_current_blocks_merging:
@@ -214,14 +216,14 @@ f_create_block:
   sub rcx, HEAP_BLOCK_HEADER*8            ; Учёт размера заголовка
   mem_mov [rax + 8*1], r8 ; Изменение SIZE у предыдущего блока
 
-  ; KEY
-  ; SIZE
-  ; PREV_SIZE
-  ; STATE
-  write_header rbx, HEAP_BLOCK, rcx, r8, 0
+  mem_mov [rbx + 8*0], HEAP_BLOCK ; KEY
+  mem_mov [rbx + 8*1], rcx        ; SIZE
+  mem_mov [rbx + 8*2], r8         ; PREV_SIZE
+  mem_mov [rbx + 8*3], 0          ; STATE
 
   add rbx, rcx
   add rbx, HEAP_BLOCK_HEADER*8
+
   mov r8, HEAP_BLOCK
   cmp [rbx], r8
   jne .end

@@ -14,8 +14,10 @@ f_to_string:
   je .dictionary
 
   print EXPECTED_TYPE_ERROR, "", ""
+
   list 0
   mov rbx, rax
+
   buffer_to_string INTEGER_TYPE
   list_append rbx, rax
   buffer_to_string LIST_TYPE
@@ -95,27 +97,29 @@ f_to_string:
       jmp .list_while
 
     .list_end_while:
+
     join rax
+
     mov rbx, rax
     mov r8, rsp
 
     mov rdx, rsp
-    push 0, '('
+    push 0, "("
     mov rax, rsp
 
     buffer_to_string rax
     mov rcx, rax
 
-    push 0, ')'
+    push 0, ")"
     mov rax, rsp
 
     buffer_to_string rax
     mov rdx, rax
 
+    mov rsp, r8
+
     string_add rcx, rbx
     string_add rax, rdx
-
-    mov rsp, r8
 
     ret
 

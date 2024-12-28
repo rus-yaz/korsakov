@@ -1,11 +1,19 @@
 f_get_file_size:
-  mov rbx, rsp
-  add rbx, STAT_BUFFER_SIZE
+  push rax
+
+  create_block STAT_BUFFER_SIZE
+  mov rbx, rax
+
+  pop rax
+  push rbx
 
   sys_stat rax,\      ; Указатель на имя файла
            rbx        ; Указатель на место хранения данных
 
   mov rax, [rbx + 8*6] ; Размер файла в байтах
+
+  pop rbx
+  delete rbx
 
   ret
 
@@ -33,7 +41,7 @@ f_open_file:
   ; Сохранение размера файла
   mov rdx, rax
 
-  create_block 8*4
+  create_block FILE_HEADER*8
 
   mem_mov [rax + 8*0], FILE ; Тип
   mem_mov [rax + 8*1], rbx  ; Имя файла

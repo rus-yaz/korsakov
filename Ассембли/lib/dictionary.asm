@@ -103,9 +103,6 @@ f_dictionary:
 
   .end_while:
   pop rax
-  repeat 100
-  nop
-  end repeat
 
   ret
 

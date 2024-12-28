@@ -1,6 +1,7 @@
 dictionary 0
-dictionary_length rax
+print rax
 
+dictionary_length rax
 integer rax
 print rax
 
@@ -24,6 +25,7 @@ list_append rcx, rax
 
 dictionary rbx, rcx
 mov rbx, rax
+print rbx
 
 integer 0
 dictionary_get rbx, rax
@@ -36,4 +38,7 @@ dictionary_values rbx
 print rax
 
 dictionary_items rbx
+print rax
+
+dictionary_copy rbx
 print rax
