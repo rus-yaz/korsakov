@@ -35,7 +35,7 @@ def search_for_macro_usage(macros, root_dir):
 
 # Основной блок программы
 if __name__ == "__main__":
-    root_directory = 'Ассембли'  # Текущая директория
+    root_directory = '.'  # Текущая директория
     defines_file_path = root_directory + '/lib/macro.asm'
 
     macros = find_macros_in_defines(defines_file_path)
