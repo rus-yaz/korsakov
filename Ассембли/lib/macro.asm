@@ -1,56 +1,117 @@
-section "defines" writable
-  ; Типы данных
-  define HEAP_BLOCK  0xFEDCBA9876543210
-  define NULL        0
-  define INTEGER     1
-  define FLOAT       2
-  define LIST        3
-  define STRING      4
-  define BINARY      5
-  define DICTIONARY  6
-  define CLASS       8
-  define FILE        9
+section "macro" executable
 
-  ; Размер заголовка
-  define HEAP_BLOCK_HEADER 4
-  define FILE_HEADER       4
-  define NULL_HEADER       1
-  define INTEGER_HEADER    1
-  define BINARY_HEADER     2
-  define STRING_HEADER     3
-  define LIST_HEADER       3
-  define DICTIONARY_HEADER 3
+macro push [arg] {
+  push arg
+}
 
-  ; Полные размеры типа (для неизменяемых по длине)
-  define NULL_SIZE    1
-  define INTEGER_SIZE 2
-  define FILE_SIZE    4
+macro pop [arg] {
+  pop arg
+}
 
-section "errors" writable
-  EXPECTED_TYPE_ERROR db "Ожидался тип: ", 0
-  INTEGER_TYPE        db "Целое число", 0
-  LIST_TYPE           db "Список", 0
-  STRING_TYPE         db "Строка", 0
-  BINARY_TYPE         db "Бинарная последовательность", 0
-  FILE_TYPE           db "Файл", 0
-  DICTIONARY_TYPE     db "Словарь", 0
-  HEAP_BLOCK_TYPE     db "Блок кучи", 0
+macro enter arg_1 = 0, arg_2 = 0, arg_3 = 0, arg_4 = 0, arg_5 = 0, arg_6 = 0, arg_7 = 0, arg_8 = 0, arg_9 = 0, arg_10 = 0, arg_11 = 0, arg_12 = 0 {
+  push rax, rbx, rcx, rdx, rsi, rdi, r8, r9, r10, r11, r12, r13, r14, r15
 
-  INDEX_OUT_OF_LIST_ERROR       db "Индекс выходит за пределы списка", 0
-  INDEX_OUT_OF_STRING_ERROR     db "Индекс выходит за пределы строки", 0
-  OPENING_FILE_ERROR            db "Не удалось открыть файл", 0
-  FILE_WAS_NOT_READ_ERROR       db "Файл не был прочитан", 0
-  UNEXPECTED_TYPE_ERROR         db "Неизвестный тип", 0
-  UNEXPECTED_BIT_SEQUENCE_ERROR db "Неизвестная битовая последовательность", 0
-  EXECVE_WAS_NOT_EXECUTED       db "Не удалось выполнить системный вызов `execve`", 0
-  HEAP_ALLOCATION_ERROR         db "Ошибка аллокации кучи", 0
-  DIFFERENT_LISTS_LENGTH_ERROR  db "Списки имеют разную длину", 0
-  KEY_DOESNT_EXISTS             db "Ключа не существует", 0
+  macro pushq [arg] \{
+    mov [rsp - 8*2], rax
+    mov rax, arg
+    mov [rsp - 8*1], rax
+    mov rax, [rsp - 8*2]
+    sub rsp, 8
+  \}
 
-section "heap" writable
-  PAGE_SIZE   dq 0x1000             ; Начальный размер кучи
-  HEAP_START  rq 1                  ; Указатель на начало кучи
-  HEAP_END    rq 1                  ; Указатель на конец кучи
+  pushq arg_12, arg_11, arg_10, arg_9, arg_8, arg_7, arg_6, arg_5, arg_4, arg_3, arg_2, arg_1
+  pop   rax,    rbx,    rcx,    rdx,   r8,    r9,    r10,   r11,   r12,   r13,   r14,   r15
+}
+
+macro leave {
+  pop r15, r14, r13, r12, r11, r10, r9, r8, rdi, rsi, rdx, rcx, rbx, rax
+}
+
+macro return {
+  push rax
+  add rsp, 8
+
+  leave
+
+  mov rax, [rsp - 8*15]
+}
+
+macro mem_mov dst, src {
+  push r15
+  mov r15, src
+  mov dst, r15
+  pop r15
+}
+
+macro exit code, buffer = 0 {
+  if buffer eq 0
+  else
+    push rax
+
+    print_buffer buffer
+
+    push 10
+    mov rax, rsp
+    sys_print rax, 8
+    pop rax
+
+    pop rax
+  end if
+
+  sys_exit code
+}
+
+section "utils" executable
+
+macro buffer_length buffer_ptr {
+  enter buffer_ptr
+
+  call f_buffer_length
+
+  return
+}
+
+macro sys_print ptr, size {
+  enter ptr, size
+
+  call f_sys_print
+
+  leave
+}
+
+macro print_buffer [buffer] {
+  enter buffer
+
+  call f_print_buffer
+
+  leave
+}
+
+macro check_type variable_ptr, type {
+  enter variable_ptr, type
+
+  call f_check_type
+
+  leave
+}
+
+macro mem_copy source, destination, size {
+  enter source, destination, size
+
+  call f_mem_copy
+
+  leave
+}
+
+macro check_error operation, message {
+  push rax
+
+  mov rax, message
+  operation f_check_error
+
+  pop rax
+}
+
 
 section "dictionary" executable
 
@@ -378,6 +439,14 @@ macro string_get string, index {
   enter string, index
 
   call f_string_get
+
+  return
+}
+
+macro split string, separator = " " {
+  enter string, separator
+
+  call f_split
 
   return
 }

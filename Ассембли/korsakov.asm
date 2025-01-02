@@ -1,11 +1,4 @@
-format ELF64
-public _start
-
-include "lib/syscalls_amd64.asm"
-include "lib/defines.asm"
-include "lib/utils.asm"
-include "lib/heap.asm"
-include "lib/exec.asm"
+include "lib/korsakov.asm"
 
 section "data" writable
   fasm      db "/bin/fasm", 0
@@ -21,8 +14,8 @@ section "data" writable
   lang db "LANG=en_US.UTF-8", 0
   envp dq lang, 0
 
-section "_start" executable
-_start:
+section "start" executable
+start:
   run fasm, fasm_args, envp
 
   run ld, ld_args, envp

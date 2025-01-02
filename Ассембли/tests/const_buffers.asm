@@ -28,7 +28,7 @@ section "const_buffers" writable
   file.содержимое_файла rq 1
 
   ; tests/string
-  string.буфер  db "Строка", 0
+  string.буфер  db "Строка 123", 0
 
   string.строка rq 1
   string.индекс rq 1

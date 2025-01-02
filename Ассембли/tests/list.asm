@@ -34,9 +34,9 @@ list 0
 mov rbx, rax
 
 mov rcx, rsp
-push 0, BINARY
+push 0
 mov rax, rsp
-binary_to_string rax
+buffer_to_string rax
 mov rdx, rax
 mov rsp, rcx
 list_append rbx, rax

@@ -127,9 +127,9 @@ f_to_string:
     mov rbx, rax
 
     mov rdx, rsp
-    push '"', 8, BINARY
+    push 0, '"'
     mov rax, rsp
-    binary_to_string rax
+    buffer_to_string rax
     mov rcx, rax
 
     string_add rcx, rbx

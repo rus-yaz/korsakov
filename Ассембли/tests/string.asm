@@ -23,3 +23,9 @@ mov rax, rsp
 list rax, 2
 
 print rax
+
+split [string.строка], " "
+print rax
+
+join rax, " "
+print rax

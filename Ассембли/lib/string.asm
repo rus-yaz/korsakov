@@ -353,3 +353,138 @@ f_string_get:
   mov rax, rbx
 
   ret
+
+f_split:
+  check_type rax, STRING
+
+  push rax
+
+  mov rcx, rsp
+  push 0, rbx
+  mov rax, rsp
+  buffer_to_string rax
+  mov rsp, rcx
+  mov rbx, rax
+
+  pop rcx
+  push rcx
+
+  string_length rcx
+  mov rcx, rax
+
+  integer 0
+  mov rdx, rax
+
+  mov r8, rsp
+  push 0
+  mov rax, rsp
+  buffer_to_string rax
+  mov rsp, r8
+  mov r8, rax
+
+  list 0
+  mov r9, rax
+
+  pop rax
+
+  .while:
+    cmp rcx, 0
+    je .end_while
+
+    push rax
+    string_get rax, rdx
+    mov r10, rax
+
+    is_equal rbx, rax
+    cmp rax, 1
+    jne .not_separator
+      list_append r9, r8
+
+      mov r8, rsp
+      push 0
+      mov rax, rsp
+      buffer_to_string rax
+      mov rsp, r8
+      mov r8, rax
+
+      jmp .continue
+
+    .not_separator:
+      string_append r8, r10
+
+    .continue:
+
+    integer_inc rdx
+    dec rcx
+    pop rax
+    jmp .while
+
+  .end_while:
+
+  list_append r9, r8
+
+  ret
+
+f_join:
+  check_type rax, LIST
+
+  mov r15, rsp
+
+  mov rcx, rax
+  push 0, rbx
+  mov rax, rsp
+  buffer_to_string rax
+  xchg rcx, rax
+  mov rbx, rcx
+
+  mov rcx, rax
+  push 0
+  mov rax, rsp
+  buffer_to_string rax
+  xchg rcx, rax
+
+  mov rsp, r15
+
+  mov rdx, rax
+  list_length rax
+  xchg rdx, rax
+
+  cmp rdx, 0
+  je .end_while
+
+  mov rsi, rdx
+  inc rsi
+  .while:
+    push rax
+    push rbx
+
+    mov rbx, rax
+    mov rax, rsi
+    sub rax, rdx
+
+    integer rax
+    integer_dec rax
+
+    list_get rbx, rax
+    check_type rax, STRING
+
+    string_append rcx, rax
+
+    pop rbx
+    pop rax
+
+    dec rdx
+
+    cmp rdx, 0
+    je .end_while
+
+    push rax
+    string_append rcx, rbx
+    pop rax
+
+    jmp .while
+  .end_while:
+
+  mov rax, rcx
+
+  ret

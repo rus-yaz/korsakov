@@ -5,3 +5,5 @@ main
 main.o
 korsakov
 korsakov.o
+test
+test.o
