@@ -488,3 +488,98 @@ f_join:
   mov rax, rcx
 
   ret
+
+f_is_alpha:
+  check_type rax, STRING
+  mov rbx, rax
+
+  string_length rax
+  integer rax
+  mov rcx, rax
+
+  integer 0
+  mov rdx, rax
+
+  .while:
+    is_equal rcx, rdx
+    cmp rax, 1
+    je .end_while
+
+    string_get rbx, rdx
+
+    mov rax, [rbx + 8*1]
+    mov rax, [rax + (2 + INTEGER_HEADER) * 8]
+
+    cmp rax, 65
+    jl .check_lowercase
+    cmp rax, 90
+    jle .continue
+
+    .check_lowercase:
+
+    cmp rax, 97
+    jl .check_cyrillic
+    cmp rax, 122
+    jle .continue
+
+    .check_cyrillic:
+
+    cmp rax, 53392
+    jl .return_false
+    cmp rax, 53647
+    jg .return_false
+
+    .continue:
+
+    integer_inc rdx
+    jmp .while
+
+  .end_while:
+
+  mov rax, 1
+  ret
+
+  .return_false:
+
+  mov rax, 0
+  ret
+
+f_is_digit:
+  check_type rax, STRING
+  mov rbx, rax
+
+  string_length rax
+  integer rax
+  mov rcx, rax
+
+  integer 0
+  mov rdx, rax
+
+  .while:
+    is_equal rcx, rdx
+    cmp rax, 1
+    je .end_while
+
+    string_get rbx, rdx
+    mov rax, [rbx + 8*1]
+    mov rax, [rax + (2 + INTEGER_HEADER) * 8]
+
+    cmp rax, 48
+    jl .return_false
+    cmp rax, 57
+    jg .return_false
+
+    .continue:
+
+    integer_inc rdx
+    jmp .while
+
+  .end_while:
+
+  mov rax, 1
+  ret
+
+  .return_false:
+
+  mov rax, 0
+  ret

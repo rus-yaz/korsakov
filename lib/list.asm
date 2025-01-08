@@ -246,3 +246,39 @@ f_string_to_list:
 
   mov rax, rdx
   ret
+
+f_list_include:
+  check_type rax, LIST
+
+  mov rcx, rax
+
+  list_length rax
+  integer rax
+  mov rdx, rax
+
+  integer 0
+  mov r8, rax
+
+  .while:
+    is_equal rdx, r8
+    cmp rax, 1
+    je .end_while
+
+    list_get rcx, r8
+    is_equal rax, rbx
+
+    cmp rax, 1
+    je .return_true
+
+    integer_inc r8
+    jmp .while
+
+  .end_while:
+
+  mov rax, 0
+  ret
+
+  .return_true:
+
+  mov rax, 1
+  ret

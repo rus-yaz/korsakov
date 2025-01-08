@@ -56,7 +56,7 @@ section "syscalls_amd64" writable
 
 section "syscall" executable
 
-macro syscall number, arg_1 = 0, arg_2 = 0, arg_3 = 0, arg_4 = 0, arg_5 = 0, arg_6 = 0 {
+macro syscall number*, arg_1 = 0, arg_2 = 0, arg_3 = 0, arg_4 = 0, arg_5 = 0, arg_6 = 0 {
   push r9, r8, r10, rdx, rsi, rdi
 
   mov r9,  arg_6
@@ -73,7 +73,7 @@ macro syscall number, arg_1 = 0, arg_2 = 0, arg_3 = 0, arg_4 = 0, arg_5 = 0, arg
 
 section "sys_read" executable
 
-macro sys_read file_descriptor, buffer_ptr, size {
+macro sys_read file_descriptor*, buffer_ptr*, size* {
   syscall SYS_READ,\
           file_descriptor,\ ; Файловый дескриптор, место чтение
           buffer_ptr,\      ; Указатель на сегмент памяти, место записи
@@ -82,7 +82,7 @@ macro sys_read file_descriptor, buffer_ptr, size {
 
 section "sys_write" executable
 
-macro sys_write file_descriptor, buffer_ptr, size {
+macro sys_write file_descriptor*, buffer_ptr*, size* {
   syscall SYS_WRITE,\
           file_descriptor,\ ; Файловый дескриптор, место записи
           buffer_ptr,\      ; Указатель на сегмент памяти, место чтение
@@ -91,7 +91,7 @@ macro sys_write file_descriptor, buffer_ptr, size {
 
 section "sys_open" executable
 
-macro sys_open filename, flags, mode {
+macro sys_open filename*, flags*, mode* {
   syscall SYS_OPEN,\
           filename,\ ; Указатель на имя файла
           flags,\    ; Тип доступа файла
@@ -100,14 +100,14 @@ macro sys_open filename, flags, mode {
 
 section "sys_close" executable
 
-macro sys_close file_descriptor {
+macro sys_close file_descriptor* {
   syscall SYS_CLOSE,\
           file_descriptor ; Файловый дескриптор для закрытия
 }
 
 section "sys_stat" executable
 
-macro sys_stat filename, buffer_ptr {
+macro sys_stat filename*, buffer_ptr* {
   syscall SYS_STAT,\
           filename,\ ; Указатель на имя файла
           buffer_ptr ; Указатель на сегмент памяти, место записи
@@ -115,7 +115,7 @@ macro sys_stat filename, buffer_ptr {
 
 section "sys_mmap" executable
 
-macro sys_mmap addr, length, rights, flags, file_descriptor, offset {
+macro sys_mmap addr*, length*, rights*, flags*, file_descriptor*, offset* {
   syscall SYS_MMAP,\
           addr,\            ; Адрес (если 0, находится автоматически)
           length,\          ; Количество памяти для аллокации
@@ -127,7 +127,7 @@ macro sys_mmap addr, length, rights, flags, file_descriptor, offset {
 
 section "sys_munmap" executable
 
-macro sys_munmap addr, length {
+macro sys_munmap addr*, length* {
   syscall SYS_MUNMAP,\
           addr,\ ; Адрес
           length ; Количество памяти для очистки
@@ -135,7 +135,7 @@ macro sys_munmap addr, length {
 
 section "sys_exit" executable
 
-macro sys_exit error_code {
+macro sys_exit error_code* {
   syscall SYS_EXIT,\
           error_code ; Код выхода
 }
@@ -148,7 +148,7 @@ macro sys_fork {
 
 section "sys_execve" executable
 
-macro sys_execve command, args, env {
+macro sys_execve command*, args*, env* {
   syscall SYS_EXECVE,\
           command,\ ; Команда
           args,\    ; Аргументы
@@ -159,7 +159,7 @@ macro sys_execve command, args, env {
 
 section "sys_wait4" executable
 
-macro sys_wait4 pid {
+macro sys_wait4 pid* {
   syscall SYS_WAIT4,\
           pid  ; Идентификатор процесса
 }

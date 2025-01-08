@@ -1,17 +1,14 @@
 f_dictionary:
-  mov rcx, rax
-  create_block DICTIONARY_HEADER*8
-  xchg rcx, rax
-
-  mem_mov [rcx + 8*0], DICTIONARY
-  mem_mov [rcx + 8*1], 0
-
   cmp rax, 0
   jne .not_empty
   cmp rbx, 0
   jne .not_empty
-    mem_mov [rcx + 8*2], 0
-    mov rax, rcx
+    create_block DICTIONARY_HEADER*8
+
+    mem_mov [rax + 8*0], DICTIONARY
+    mem_mov [rax + 8*1], 0
+    mem_mov [rax + 8*2], 0
+
     ret
 
   .not_empty:
@@ -31,12 +28,19 @@ f_dictionary:
     exit -1
 
   .correct_arguments:
+  mov rcx, rbx
+  mov rbx, rax
 
+  create_block DICTIONARY_HEADER*8
+
+  mem_mov [rax + 8*0], DICTIONARY
+  mem_mov [rax + 8*1], 0
   push rax
-  list_length rax
 
-  mov rdx, rax
   list_length rbx
+  mov rdx, rax
+
+  list_length rcx
 
   cmp rdx, rax
   je .correct_length
@@ -44,65 +48,34 @@ f_dictionary:
 
   .correct_length:
 
-  pop rdi
-  xchg rdi, rax
-  push rax
+  pop rdx
+  mem_mov [rdx + 8*2], 0
+  mov r8, rdx
 
-  mem_mov [rcx + 8*2], rdi
+  integer rax
+  mov rdx, rax
 
   integer 0
-  mov rsi, rax
-  pop rax
-
-  ; RAX — список ключей
-  ; RBX — список значений
-  ; RCX — текущий ключ
-  ; RDX — текущее значение
-  ; RDI — длина словаря
-  ; RSI — индекс
-  ; R8  — указатель на предыдущий элемент
-
-  push rcx
-  mov r8, rcx
+  mov r10, rax
 
   .while:
-    cmp rdi, 0
+    is_equal rdx, r10
+    cmp rax, 1
     je .end_while
 
-    mov rcx, rax
-    list_get rax, rsi
-    xchg rcx, rax
+    list_get rbx, r10
+    mov r9, rax
+    list_get rcx, r10
 
-    mov rdx, rax
-    list_get rbx, rsi
-    xchg rdx, rax
+    dictionary_set r8, r9, rax
 
-    push rax, rbx
-    list 0
-
-    list_append rax, rcx
-    list_append rax, rdx
-    mov rbx, rax
-
-    create_block (2 + LIST_HEADER) * 8
-    mem_mov [r8  + 8*1], rax
-
-    mem_mov [rax + 8*0], r8
-    mem_mov [rax + 8*1], 0
-
-    mov r8, rax
-    add rax, 8*2
-
-    mem_copy rbx, rax, LIST_HEADER
-    integer_inc rsi
-
-    pop rbx, rax
-
-    dec rdi
+    integer_inc r10
     jmp .while
 
   .end_while:
-  pop rax
+
+
+  mov rax, r8
 
   ret
 
@@ -166,7 +139,7 @@ f_dictionary_values:
 
 f_dictionary_get:
   check_type rax, DICTIONARY
-  mov rcx, rbx
+  mov rdx, rbx
 
   ; Получение адреса на перый элемент
   mov rbx, [rax + 8*1]
@@ -181,7 +154,7 @@ f_dictionary_get:
     list_get rbx, rax
 
     ; Сравнение текущего и искомого ключа
-    is_equal rax, rcx
+    is_equal rax, rdx
     cmp rax, 1
     je .return
 
@@ -190,10 +163,10 @@ f_dictionary_get:
     jmp .while
 
   .end_while:
-  exit -1, KEY_DOESNT_EXISTS
+  mov rax, rcx
+  ret
 
   .return:
-
   integer 1
   list_get rbx, rax
 
@@ -260,4 +233,47 @@ f_dictionary_items:
 
   .end_while:
 
+  ret
+
+f_dictionary_set:
+  check_type rax, DICTIONARY
+  push rax, rax
+
+  mov rdx, rax
+  dictionary_length rax
+  xchg rdx, rax
+
+  inc rdx
+  mem_mov [rax + 8*2], rdx
+  pop rdx
+
+  .while:
+    cmp rdx, 0
+    je .end_while
+
+    mov rax, rdx
+    mov rdx, [rax + 8*1]
+
+    jmp .while
+
+  .end_while:
+  mov rdx, rax
+
+  create_block (2 + LIST_HEADER) * 8
+
+  mem_mov [rdx + 8*1], rax
+  mem_mov [rax + 8*0], rdx
+
+  mem_mov [rax + 8*1], 0
+  mov rdx, rax
+
+  list 0
+  list_append rax, rbx
+  list_append rax, rcx
+
+  add rdx, 8*2
+  mem_copy rax, rdx, LIST_HEADER
+  delete_block rax
+
+  pop rax
   ret

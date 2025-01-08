@@ -1,6 +1,6 @@
 section "tokenizer" executable
 
-macro tokenizer filename {
+macro tokenizer filename* {
   enter filename
 
   call f_tokenizer
@@ -38,9 +38,96 @@ f_tokenizer:
     list_get [символы], [индекс]
     string_append [токен], rax
 
-    is_equal [токен], [двойная_кавычка]
+    is_digit [токен]
     cmp rax, 1
-    jne .skip_string
+    jne .not_digit
+
+      .while_digit:
+        integer 1
+        integer_add [индекс], rax
+
+        list_get [символы], rax
+        mov rbx, rax
+
+        is_digit rbx
+        cmp rax, 1
+        jne .end_while_digit
+
+        string_append [токен], rbx
+        integer_inc [индекс]
+        jmp .while_digit
+
+      .end_while_digit:
+
+      integer_copy [ТИП_ЦЕЛОЕ_ЧИСЛО]
+      mov [тип_токена], rax
+
+      jmp .add_token
+
+    .not_digit:
+
+    is_alpha [токен]
+    cmp rax, 1
+    je .while_identifier
+
+    mov rbx, rsp
+    push 0, "_"
+    mov rax, rsp
+    buffer_to_string rax
+    mov rsp, rbx
+
+    is_equal [токен], rax
+    cmp rax, 1
+    jne .not_identifier
+
+      .while_identifier:
+        integer 1
+        integer_add [индекс], rax
+
+        list_get [символы], rax
+        mov rbx, rax
+
+        is_alpha rbx
+        cmp rax, 1
+        je .continue_identifier
+
+        mov rbx, rsp
+        push 0, "_"
+        mov rax, rsp
+        buffer_to_string rax
+        mov rsp, rbx
+
+        is_equal [токен], rax
+        cmp rax, 1
+        jne .end_while_identifier
+
+        .continue_identifier:
+
+        string_append [токен], rbx
+        integer_inc [индекс]
+        jmp .while_identifier
+
+      .end_while_identifier:
+
+      list_include [ключевые_слова], [токен]
+      cmp rax, 1
+      je .keyword
+        integer_copy [ТИП_ИДЕНТИФИКАТОР]
+        mov [тип_токена], rax
+
+        jmp .add_token
+      .keyword:
+
+      integer_copy [ТИП_КЛЮЧЕВОЕ_СЛОВО]
+      mov [тип_токена], rax
+
+      jmp .add_token
+
+    .not_identifier:
+
+    is_equal [токен], [ДВОЙНАЯ_КАВЫЧКА]
+    cmp rax, 1
+    jne .not_string
       .while_string:
         integer_inc [индекс]
         list_get [символы], [индекс]
@@ -49,52 +136,91 @@ f_tokenizer:
         string_append [токен], rax
         pop rax
 
-        is_equal rax, [двойная_кавычка]
+        is_equal rax, [ДВОЙНАЯ_КАВЫЧКА]
         cmp rax, 1
         jne .while_string
 
-      mov [тип_токена], ТИП_СТРОКА
+      integer_copy [ТИП_СТРОКА]
+      mov [тип_токена], rax
+
       jmp .add_token
 
-    .skip_string:
+    .not_string:
 
-    is_equal [токен], [имя]
-    mov [тип_токена], ТИП_ФУНКЦИЯ
+    integer -1
+    dictionary_get [типы], [токен], rax
+    mov [тип_токена], rax
+
+    integer -1
+    is_equal rax, [тип_токена]
     cmp rax, 1
-    je .add_token
+    jne .add_token
 
-    is_equal [токен], [открывающая_скобка]
-    mov [тип_токена], ТИП_ОТКРЫВАЮЩАЯ_СКОБКА
-    cmp rax, 1
-    je .add_token
-
-    is_equal [токен], [закрывающая_скобка]
-    mov [тип_токена], ТИП_ЗАКРЫВАЮЩАЯ_СКОБКА
-    cmp rax, 1
-    je .add_token
-
-    jmp .continue
+    print <UNEXPECTED_TOKEN_ERROR, [токен]>
+    exit -1
 
     .add_token:
-      list 0
-      list_append rax, [тип]
-      list_append rax, [значение]
-      mov rbx, rax
+      .space_while:
+        is_equal [токен], [ПРОБЕЛ]
+        cmp rax, 1
+        jne .space_end_while
 
-      list 0
-      mov rcx, rax
-      mov rax, [тип_токена]
-      integer [rax]
-      list_append rcx, rax
-      list_append rax, [токен]
+        integer 1
+        integer_add [индекс], rax
+        mov rbx, rax
 
-      dictionary rbx, rax
+        list_length [символы]
+        integer rax
+        is_equal rbx, rax
+        cmp rax, 1
+        je .write_token
+
+        list_get [символы], rbx
+        is_equal rax, [ПРОБЕЛ]
+        cmp rax, 1
+        jne .continue
+
+        integer_inc [индекс]
+        jmp .space_while
+
+      .space_end_while:
+
+      .newline_while:
+        is_equal [токен], [ПЕРЕНОС_СТРОКИ]
+        cmp rax, 1
+        jne .newline_end_while
+
+        integer 1
+        integer_add [индекс], rax
+        mov rbx, rax
+
+        list_length [символы]
+        integer rax
+        is_equal rbx, rax
+        cmp rax, 1
+        je .write_token
+
+        list_get [символы], rbx
+        is_equal rax, [ПЕРЕНОС_СТРОКИ]
+        cmp rax, 1
+        jne .newline_end_while
+
+        integer_inc [индекс]
+        jmp .newline_while
+
+      .newline_end_while:
+
+      .write_token:
+
+      dictionary 0
+      dictionary_set rax, [тип], [тип_токена]
+      dictionary_set rax, [значение], [токен]
       list_append [токены], rax
 
-      string_copy [пустая_строка]
-      mov [токен], rax
-
     .continue:
+
+    string_copy [пустая_строка]
+    mov [токен], rax
 
     ; индекс++
     integer_inc [индекс]
@@ -106,18 +232,11 @@ f_tokenizer:
     cmp rax, 1
     jne .while
 
-  list 0
-  list_append rax, [тип]
-  list_append rax, [значение]
+  dictionary 0
   mov rbx, rax
-
-  list 0
-  mov rcx, rax
-  integer [ТИП_КОНЕЦ_ФАЙЛА]
-  list_append rcx, rax
-  list_append rax, [пустая_строка]
-
-  dictionary rbx, rax
+  integer_copy [ТИП_КОНЕЦ_ФАЙЛА]
+  dictionary_set rbx, [тип], rax
+  dictionary_set rbx, [значение], [пустая_строка]
   list_append [токены], rax
 
   ret

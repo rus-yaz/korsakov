@@ -49,3 +49,17 @@ f_integer_add:
   mem_mov [rax + 8*1], rcx
 
   ret
+
+f_integer_sub:
+  check_type rax, INTEGER
+  check_type rbx, INTEGER
+
+  mov rcx, [rax + INTEGER_HEADER*8]
+  sub rcx, [rbx + INTEGER_HEADER*8]
+
+  create_block INTEGER_SIZE*8
+
+  mem_mov [rax + 8*0], INTEGER
+  mem_mov [rax + 8*1], rcx
+
+  ret

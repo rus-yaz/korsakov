@@ -1,8 +1,15 @@
 dictionary 0
+mov rcx, rax
 print rax
 
 dictionary_length rax
 integer rax
+print rax
+
+integer 0
+mov rbx, rax
+integer 1
+dictionary_set rcx, rax, rbx
 print rax
 
 list 0
@@ -27,8 +34,12 @@ dictionary rbx, rcx
 mov rbx, rax
 print rbx
 
-integer 0
+integer 1
 dictionary_get rbx, rax
+print rax
+
+integer 99
+dictionary_get rbx, rax, rax
 print rax
 
 dictionary_keys rbx

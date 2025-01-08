@@ -39,14 +39,14 @@ f_print_string:
 
 section "print" executable
 
-macro показать arguments, separator = " ", end_of_string = 10 {
+macro показать arguments*, separator = " ", end_of_string = 10 {
   print arguments, separator, end_of_string
 }
 
-macro print arguments, separator = " ", end_of_string = 10 {
+macro print arguments*, separator = " ", end_of_string = 10 {
   push rax
 
-  macro print_argument [argument] \{
+  macro print_argument [argument*] \{
     enter argument
 
     call f_print
