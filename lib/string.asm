@@ -83,10 +83,12 @@ f_binary_to_string:
 
     jmp .do_string_length
 
-  .continue_string_length:
+    .continue_string_length:
+
     inc rdi
 
-  .do_string_length:
+    .do_string_length:
+
     inc rcx
     jmp .while_string_length
 

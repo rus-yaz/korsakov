@@ -383,10 +383,26 @@ macro list_to_string list {
   return
 }
 
+macro list_index list*, item* {
+  enter list, item
+
+  call f_list_index
+
+  return
+}
+
 macro list_include list*, item* {
   enter list, item
 
   call f_list_include
+
+  return
+}
+
+macro list_set list*, index*, item* {
+  enter list, index, item
+
+  call f_list_set
 
   return
 }
@@ -402,6 +418,16 @@ macro print_string string* {
 }
 
 section "string" executable
+
+macro string str {
+  a = $
+  jmp @f
+    db str, 0
+  @@:
+  buffer_to_string a + 2
+  ; `+ 2` — что-то из разряда магии
+  ; Потому что без него захватываются лишние 2 бита
+}
 
 macro buffer_to_binary buffer_addr* {
   enter buffer_addr
@@ -509,4 +535,32 @@ macro delete variable* {
   call f_delete
 
   leave
+}
+
+section "variables" executable
+
+macro assign variable*, keys*, value*, context = [GLOBAL_CONTEXT] {
+  enter variable, keys, value, context
+
+  call f_assign
+
+  return
+}
+
+macro access variable*, keys*, context = [GLOBAL_CONTEXT] {
+  enter variable, keys, context
+
+  call f_access
+
+  return
+}
+
+section "arithmetical" executable
+
+macro addition first*, second* {
+  enter first, second
+
+  call f_addition
+
+  return
 }

@@ -41,4 +41,21 @@ mov rdx, rax
 mov rsp, rcx
 list_append rbx, rax
 
+list 0
+mov rbx, rax
+integer 1
+list_append rbx, rax
+list_append rax, rax
+
+print rax
+
+integer 0
+list_set rbx, rax, rax
+integer 1
+list_set rbx, rax, rax
+
+print rax
+
+integer 0
+list_index rbx, rax
 print rax

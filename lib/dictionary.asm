@@ -74,7 +74,6 @@ f_dictionary:
 
   .end_while:
 
-
   mov rax, r8
 
   ret
@@ -237,10 +236,37 @@ f_dictionary_items:
 
 f_dictionary_set:
   check_type rax, DICTIONARY
-  push rax, rax
-
   mov rdx, rax
-  dictionary_length rax
+
+  dictionary_keys rdx
+  list_index rax, rbx
+  mov rax, [rax + INTEGER_HEADER*8]
+  cmp rax, -1
+  je .new_key
+
+    inc rax
+    mov r8, rdx
+    .key_while:
+      mov r8, [r8 + 8*1]
+      dec rax
+
+      cmp rax, 0
+      jne .key_while
+
+    mov r9, r8
+    add r8, 8*2
+    integer 1
+    list_set r8, rax, rcx
+
+    mov rax, rdx
+    ret
+
+  .new_key:
+
+  mov rax, rdx
+  push rdx, rdx
+
+  dictionary_length rdx
   xchg rdx, rax
 
   inc rdx

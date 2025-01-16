@@ -102,43 +102,44 @@ f_list_copy:
 
   .end_while:
 
+  mov rax, rdx
+
   ret
 
 
 f_list_append:
   check_type rax, LIST
 
-  push rax
-  mov rcx, rbx
-  mov rbx, rax
-  list_length rax
+  mov rcx, rax
 
+  ; RBX — item
+  ; RCX — list
+
+  mov rdx, rcx
   .while:
-    cmp rax, 0
-    je .end_while
+    mov r8, rdx
+    mov rdx, [rdx + 8*1]
 
-    mov rbx, [rbx + 8*1]
-    dec rax
+    cmp rdx, 0
+    jne .while
 
-    jmp .while
-  .end_while:
+  ; RBX — item
+  ; RCX — list
+  ; RDX — last_item_link
+  mov rdx, r8
 
-  ; RAX — указатель на список
-  ; RBX — указатель на последний элемент
-  ; RCX — указатель на добавляемый элемент
+  mov rax, [rbx]
 
-  mov rdx, [rcx]
-
-  cmp rdx, INTEGER
+  cmp rax, INTEGER
   je .integer
 
-  cmp rdx, LIST
+  cmp rax, LIST
   je .list
 
-  cmp rdx, STRING
+  cmp rax, STRING
   je .string
 
-  cmp rdx, DICTIONARY
+  cmp rax, DICTIONARY
   je .dictionary
 
   ; Выход с ошибкой при неизвестном типе
@@ -162,50 +163,53 @@ f_list_append:
   exit -1
 
   .integer:
-    integer_copy rcx
-    mov rdx, INTEGER_SIZE
+    integer_copy rbx
+    mov r8, INTEGER_SIZE
     jmp .continue
 
   .list:
-    list_copy rcx
-    mov rdx, LIST_HEADER
+    list_copy rbx
+    mov r8, LIST_HEADER
     jmp .continue
 
   .string:
-    string_copy rcx
-    mov rdx, STRING_HEADER
+    string_copy rbx
+    mov r8, STRING_HEADER
     jmp .continue
 
   .dictionary:
-    dictionary_copy rcx
-    mov rdx, DICTIONARY_HEADER
+    dictionary_copy rbx
+    mov r8, DICTIONARY_HEADER
     jmp .continue
 
   .continue:
 
-  mov rcx, rax
-  pop rax
+  mov rbx, rax
 
-  mov rdi, [rax + 8*2]
-  inc rdi
+  ; RBX — item
+  ; RCX — list
+  ; RDX — last_item_link
+  ; R8  — item_size
 
-  mov [rax + 8*2], rdi
-  push rax
+  mem_mov rax, [rcx + 2*8]
+  inc rax
+  mem_mov [rcx + 2*8], rax
 
-  mov rsi, rdx
-  add rsi, 2
+  mov r9, r8
 
-  imul rsi, 8
-  create_block rsi
+  add r8, 2
+  imul r8, 8
+  create_block r8
 
-  mem_mov [rax + 8*0], rbx
-  mem_mov [rbx + 8*1], rax
+  mem_mov [rax + 8*0], rdx
+  mem_mov [rdx + 8*1], rax
 
   mem_mov [rax + 8*1], 0
-  add rax, 8*2
 
-  mem_copy rcx, rax, rdx
-  pop rax
+  add rax, 8*2
+  mem_copy rbx, rax, r9
+
+  mov rax, rcx
 
   ret
 
@@ -247,38 +251,172 @@ f_string_to_list:
   mov rax, rdx
   ret
 
-f_list_include:
+f_list_index:
   check_type rax, LIST
 
   mov rcx, rax
 
-  list_length rax
-  integer rax
+  integer 0
   mov rdx, rax
 
-  integer 0
-  mov r8, rax
-
   .while:
-    is_equal rdx, r8
+    list_length rcx
+    integer rax
+    is_equal rdx, rax
     cmp rax, 1
     je .end_while
 
-    list_get rcx, r8
+    list_get rcx, rdx
     is_equal rax, rbx
-
     cmp rax, 1
-    je .return_true
+    je .return_index
 
-    integer_inc r8
+    integer_inc rdx
     jmp .while
 
   .end_while:
 
-  mov rax, 0
+  integer -1
   ret
 
-  .return_true:
+  .return_index:
+  mov rax, rdx
 
-  mov rax, 1
+  ret
+
+f_list_include:
+  check_type rax, LIST
+
+  list_index rax, rbx
+  mov rbx, rax
+
+  integer -1
+  is_equal rbx, rax
+  cmp rax, 1
+  je .does_not_include
+    mov rax, 1
+    ret
+
+  .does_not_include:
+  mov rax, -1
+  ret
+
+f_list_set:
+  check_type rax, LIST
+  check_type rbx, INTEGER
+
+  mov rdx, rax
+
+  ; RCX — item
+  ; RBX — index
+  ; RDX — list
+
+  mov r8, rdx
+  mov rbx, [rbx + INTEGER_HEADER*8]
+  inc rbx
+  .while:
+    mov r8, [r8 + 8*1]
+    dec rbx
+
+    cmp rbx, 0
+    jne .while
+
+  mov rbx, rcx
+  mov rcx, rdx
+  mov rdx, r8
+
+  ; RBX — item
+  ; RCX — list
+  ; RDX — index_item_link
+
+  mov rax, [rbx]
+
+  cmp rax, INTEGER
+  je .integer
+
+  cmp rax, LIST
+  je .list
+
+  cmp rax, STRING
+  je .string
+
+  cmp rax, DICTIONARY
+  je .dictionary
+
+  ; Выход с ошибкой при неизвестном типе
+  print EXPECTED_TYPE_ERROR, "", ""
+
+  list 0
+  mov rbx, rax
+
+  buffer_to_string INTEGER_TYPE
+  list_append rbx, rax
+  buffer_to_string STRING_TYPE
+  list_append rbx, rax
+  buffer_to_string LIST_TYPE
+  list_append rbx, rax
+  buffer_to_string DICTIONARY_TYPE
+  list_append rbx, rax
+
+  join rbx, ", "
+  print rax
+
+  exit -1
+
+  .integer:
+    integer_copy rbx
+    mov r8, INTEGER_SIZE
+    jmp .continue
+
+  .list:
+    list_copy rbx
+    mov r8, LIST_HEADER
+    jmp .continue
+
+  .string:
+    string_copy rbx
+    mov r8, STRING_HEADER
+    jmp .continue
+
+  .dictionary:
+    dictionary_copy rbx
+    mov r8, DICTIONARY_HEADER
+    jmp .continue
+
+  .continue:
+
+  mov rbx, rax
+
+  ; RBX — item
+  ; RCX — list
+  ; RDX — index_item_link
+  ; R8  — item_size
+
+  mov r9, r8
+
+  add r8, 2
+  imul r8, 8
+  create_block r8
+
+  mem_mov [rax + 8*0], [rdx + 8*0]
+  mem_mov [rax + 8*1], [rdx + 8*1]
+
+  add rdx, 8*2
+  delete rdx
+
+  mov r10, [rax + 8*0]
+  mov [r10 + 8*1], rax
+
+  mov r10, [rax + 8*1]
+  cmp r10, 0
+  je .not_last
+    mov [r10 + 8*0], rax
+
+  .not_last:
+
+  add rax, 8*2
+  mem_copy rbx, rax, r9
+
+  mov rax, rcx
+
   ret

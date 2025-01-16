@@ -1,10 +1,23 @@
 include "lib/korsakov.asm"
 
 section 'data' writable
-string_1 db "привет, мир!", 0
 
 
 section 'start' executable
 start:
-показать string_1
+integer 1
+mov rbx, rax
+integer 2
+addition rbx, rax
+mov rdx, rax
+list 0
+push rbx
+mov rbx, rax
+mov rax, rbx
+pop rbx
+mov rcx, rax
+string "а"
+mov rbx, rax
+assign rbx, rcx, rdx
+
 exit 0

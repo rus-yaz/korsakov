@@ -485,6 +485,9 @@ f_expression:
 
     .identifier_end_while:
 
+    list_node rdx
+    mov rdx, rax
+
     mov r8, 0
 
     token_check_type [токен], [ТИП_СЛОЖЕНИЕ]
@@ -689,6 +692,7 @@ f_binary_operation:
     mov r10, rax
 
     binary_operation_node r8, r9, r10
+    mov r8, rax
 
     cmp rdx, [СРАВНЕНИЯ]
     jne .skip_comparison

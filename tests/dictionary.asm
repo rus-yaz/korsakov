@@ -53,3 +53,17 @@ print rax
 
 dictionary_copy rbx
 print rax
+
+dictionary 0
+mov rbx, rax
+
+integer 0
+mov rcx, rax
+dictionary_set rbx, rcx, rcx
+
+print rax
+
+buffer_to_string delete.буфер
+dictionary_set rbx, rcx, rax
+
+print rax

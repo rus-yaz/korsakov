@@ -14,5 +14,7 @@ start:
   include "tests/dictionary.asm"
   include "tests/exec.asm"
   include "tests/print.asm"
+  include "tests/variables.asm"
+  include "tests/arithmetical.asm"
 
   exit 0

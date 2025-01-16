@@ -214,7 +214,7 @@ f_number_node:
 
   dictionary 0
   dictionary_set rax, [узел], [УЗЕЛ_ЧИСЛА]
-  dictionary_set rax, [токен], rbx
+  dictionary_set rax, [значение], rbx
 
   ret
 
@@ -223,7 +223,7 @@ f_string_node:
 
   dictionary 0
   dictionary_set rax, [узел], [УЗЕЛ_СТРОКИ]
-  dictionary_set rax, [токен], rbx
+  dictionary_set rax, [значение], rbx
 
   ret
 

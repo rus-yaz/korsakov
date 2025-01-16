@@ -1,17 +1,17 @@
 f_buffer_length:
   mov rcx, 0 ; Счётчик
 
-  .loop:
+  .while:
     ; Сравниваем текущий байт с нулём
     mov bl, [rax + rcx]
 
     cmp bl, 0
-    je .done
+    je .end_while
 
     inc rcx
-    jmp .loop
+    jmp .while
 
-  .done:
+  .end_while:
   mov rax, rcx
 
   ret

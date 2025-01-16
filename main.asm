@@ -3,18 +3,34 @@ include "lib/korsakov.asm"
 include "nodes.asm"
 include "tokenizer.asm"
 include "parser.asm"
+include "compiler.asm"
 
 section "data" writable
-  заголовок db 'include "lib/korsakov.asm"', 10, 0
-
-  сегмент_данных db "section 'data' writable", 0
-
-  сегмент_кода db 10, "section 'start' executable", 10, "start:", 0
-
-  конец_кода db "exit 0", 0
+  заголовок      db 'include "lib/korsakov.asm"', 10,           0
+  сегмент_данных db "section 'data' writable",    10,           0
+  сегмент_кода   db "section 'start' executable", 10, "start:", 0
+  конец_кода     db "exit 0",                     10,           0
 
   файл_для_чтения db "привет, мир.корс", 0
   файл_для_записи db "привет, мир.asm", 0
+
+  СЧЁТЧИК_КОНТЕКСТОВ rq 1
+  СРАВНЕНИЯ          rq 1
+  АСД                rq 1
+  КОЛИЧЕСТВО_СТРОК   rq 1
+
+  префикс_строки      db "string", 0
+  суффикс_строки      db " db ", 0
+  постфикс_строки     db ", 0", 0
+  постфикс_переменных db "rq 1", 0
+  префикс_контекста   db "!контекст", 0
+
+  INCORRECT_TOKEN_TYPE_ERROR db "Неверный токен:", 0
+  INCORRECT_NODE             db "Неверный узел:", 0
+  INVALID_NODE_TYPE          db "Неизвестный тип узла:", 0
+
+  ПУСТАЯ_СТРОКА db "", 0
+  пустая_строка rq 1
 
   двойная_кавычка           db '"', 0
   ДВОЙНАЯ_КАВЫЧКА           rq 1
@@ -270,22 +286,6 @@ section "data" writable
   УЗЕЛ_ВОЗВРАЩЕНИЯ             rq 1
   УЗЕЛ_ПРОПУСКА                rq 1
   УЗЕЛ_ПРЕРЫВАНИЯ              rq 1
-
-  СРАВНЕНИЯ        rq 1
-  АСД              rq 1
-  КОЛИЧЕСТВО_СТРОК rq 1
-
-  префикс_строки      db "string_", 0
-  суффикс_строки      db " db ", 0
-  постфикс_строки     db ", 0", 0
-  постфикс_переменных db "rq 1", 0
-
-  ПУСТАЯ_СТРОКА db "", 0
-  пустая_строка rq 1
-
-  INCORRECT_TOKEN_TYPE_ERROR db "Неверный токен:", 0
-  INCORRECT_NODE             db "Неверный узел:", 0
-  INVALID_NODE_TYPE          db "Неизвестный тип узла:", 0
 
 section "start" executable
 start:
@@ -594,65 +594,45 @@ start:
 
   tokenizer файл_для_чтения
   mov [токены], rax
-  print [токены]
+  ;print [токены]
 
-  print [пустая_строка]
+  ;print [пустая_строка]
 
   parser [токены]
   mov [АСД], rax
-  print [АСД]
+  ;print [АСД]
 
-  ;integer 0
-  ;mov rbx, rax
-  ;
-  ;print [пустая_строка]
-  ;
-  ;.while:
-  ;  list_length [АСД]
-  ;  integer rax
-  ;  is_equal rax, rbx
-  ;  cmp rax, 1
-  ;  je .end_while
-  ;
-  ;  list_get [АСД], rbx
-  ;  print rax
-  ;
-  ;  integer_inc rbx
-  ;  jmp .while
-  ;
-  ;.end_while:
-  ;
   ;print [пустая_строка]
 
-  ;compiler [АСД]
+  compiler [АСД], [GLOBAL_CONTEXT]
   ;print rax
 
-  ;mov rbx, rax
-  ;
-  ;list 0
-  ;mov rcx, rax
-  ;
-  ;buffer_to_string заголовок
-  ;list_append rcx, rax
-  ;
-  ;buffer_to_string сегмент_данных
-  ;list_append rcx, rax
-  ;
-  ;list_append rcx, [данные]
-  ;
-  ;buffer_to_string сегмент_кода
-  ;list_append rcx, rax
-  ;
-  ;list_append rcx, rbx
-  ;
-  ;buffer_to_string конец_кода
-  ;list_append rcx, rax
-  ;
-  ;join rcx, 10
-  ;mov [код], rax
-  ;
-  ;open_file файл_для_записи, O_WRONLY + O_CREAT + O_TRUNC, 644o
-  ;write_file rax, [код]
-  ;close_file rax
+  mov rbx, rax
+
+  list 0
+  mov rcx, rax
+
+  buffer_to_string заголовок
+  list_append rcx, rax
+
+  buffer_to_string сегмент_данных
+  list_append rcx, rax
+
+  list_append rcx, [данные]
+
+  buffer_to_string сегмент_кода
+  list_append rcx, rax
+
+  list_append rcx, rbx
+
+  buffer_to_string конец_кода
+  list_append rcx, rax
+
+  join rcx, 10
+  mov [код], rax
+
+  open_file файл_для_записи, O_WRONLY + O_CREAT + O_TRUNC, 644o
+  write_file rax, [код]
+  close_file rax
 
   exit 0
