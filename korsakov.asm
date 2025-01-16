@@ -1,4 +1,4 @@
-include "lib/korsakov.asm"
+include "./core/korsakov.asm"
 
 section "data" writable
   fasm      db "/bin/fasm", 0

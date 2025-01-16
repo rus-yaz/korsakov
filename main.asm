@@ -1,9 +1,9 @@
-include "lib/korsakov.asm"
+include "./core/korsakov.asm"
 
-include "nodes.asm"
-include "tokenizer.asm"
-include "parser.asm"
-include "compiler.asm"
+include "./nodes.asm"
+include "./tokenizer.asm"
+include "./parser.asm"
+include "./compiler.asm"
 
 section "data" writable
   заголовок      db 'include "lib/korsakov.asm"', 10,           0

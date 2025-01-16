@@ -417,6 +417,35 @@ macro print_string string* {
   leave
 }
 
+; TODO: Реализовать через `join`
+
+macro print arguments*, separator = " ", end_of_string = 10 {
+  push rax
+
+  macro print_argument [argument*] \{
+    enter argument
+
+    call f_print
+
+    push separator
+    mov rax, rsp
+    sys_print rax, 8
+    pop rax
+
+    leave
+  \}
+
+  print_argument arguments
+
+  push 0, end_of_string
+  mov rax, rsp
+
+  sys_print rax, 8*2
+  pop rax, rax
+
+  pop rax
+}
+
 section "string" executable
 
 macro string str {

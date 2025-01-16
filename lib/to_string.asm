@@ -148,6 +148,14 @@ f_to_string:
     dictionary_length rax
     mov rcx, rax
 
+    cmp rcx, 0
+    jne .not_empty
+
+      string "(:)"
+      ret
+
+    .not_empty:
+
     integer 0
     mov rdx, rax
 

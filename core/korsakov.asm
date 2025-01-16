@@ -1,7 +1,7 @@
 format ELF64
 public _start
 
-section "defines" writable
+section "data" writable
   ; Типы данных
   define HEAP_BLOCK  0xFEDCBA9876543210
   define NULL        0
@@ -29,7 +29,6 @@ section "defines" writable
   define INTEGER_SIZE 2
   define FILE_SIZE    4
 
-section "errors" writable
   EXPECTED_TYPE_ERROR db "Ожидался тип: ",              0
   INTEGER_TYPE        db "Целое число",                 0
   LIST_TYPE           db "Список",                      0
@@ -52,30 +51,29 @@ section "errors" writable
   KEY_DOESNT_EXISTS             db "Ключа не существует",                           0
   INVALID_INDENTIFIER           db "Неизвестный идентификатор",                     0
 
-section "heap" writable
   PAGE_SIZE   dq 0x1000             ; Начальный размер кучи
   HEAP_START  rq 1                  ; Указатель на начало кучи
   HEAP_END    rq 1                  ; Указатель на конец кучи
 
-section "context" writable
   GLOBAL_CONTEXT rq 1
 
-include "lib/macro.asm"
-include "lib/syscalls_amd64.asm"
-include "lib/utils.asm"
-include "lib/heap.asm"
-include "lib/print.asm"
-include "lib/integer.asm"
-include "lib/string.asm"
-include "lib/list.asm"
-include "lib/functions.asm"
-include "lib/dictionary.asm"
-include "lib/file.asm"
-include "lib/exec.asm"
-include "lib/to_string.asm"
-include "lib/delete.asm"
-include "lib/variables.asm"
-include "lib/arithmetical.asm"
+include "macro.asm"
+include "syscalls_amd64.asm"
+include "utils.asm"
+
+include "../lib/arithmetical.asm"
+include "../lib/delete.asm"
+include "../lib/dictionary.asm"
+include "../lib/exec.asm"
+include "../lib/file.asm"
+include "../lib/functions.asm"
+include "../lib/heap.asm"
+include "../lib/integer.asm"
+include "../lib/list.asm"
+include "../lib/print.asm"
+include "../lib/string.asm"
+include "../lib/to_string.asm"
+include "../lib/variables.asm"
 
 section "_start" executable
 _start:
