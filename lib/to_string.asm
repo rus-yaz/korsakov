@@ -15,7 +15,7 @@ f_to_string:
 
   print EXPECTED_TYPE_ERROR, "", ""
 
-  list 0
+  list
   mov rbx, rax
 
   buffer_to_string INTEGER_TYPE
@@ -33,12 +33,21 @@ f_to_string:
   exit -1
 
   .integer:
-    mov rax, [rax + 8]
+    mov rax, [rax + INTEGER_HEADER*8]
 
     mov r8, rsp ; Сохранение указателя на конец стека
-    mov rbx, 10 ; Мощность системы счисления
-
     mov rcx, 0
+
+    mov r9, 0
+
+    cmp rax, 0
+    jge .integer_continue
+      mov r9, 1
+      neg rax
+
+    .integer_continue:
+
+    mov rbx, 10 ; Мощность системы счисления
     mov rdx, 0  ; Обнуление регистра, хранящего остаток от деления
 
     .integet_while:
@@ -51,6 +60,14 @@ f_to_string:
       inc rcx
       cmp rax, 0
       jne .integet_while
+
+    cmp r9, 1
+    jne .not_negate
+
+      push "-"
+      inc rcx
+
+    .not_negate:
 
     imul rcx, 8
     push rcx, BINARY
@@ -72,7 +89,7 @@ f_to_string:
     list_length rax
     xchg rdx, rax
 
-    list 0
+    list
 
     .list_while:
       cmp rdx, 0
@@ -159,7 +176,7 @@ f_to_string:
     integer 0
     mov rdx, rax
 
-    list 0
+    list
 
     .dictionary_while:
       cmp rcx, 0
@@ -170,7 +187,7 @@ f_to_string:
       list_get rbx, rdx
       mov rbx, rax
 
-      list 0
+      list
       mov r8, rax
       integer 0
       list_get rbx, rax

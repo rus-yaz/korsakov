@@ -1,30 +1,9 @@
 f_list:
-  push rax
   create_block LIST_HEADER*8
 
   mem_mov [rax + 8*0], LIST ; Тип
   mem_mov [rax + 8*1], 0    ; Место для ссылки на первый элемент
   mem_mov [rax + 8*2], 0    ; Начальная длина
-
-  pop rcx
-  mov rdx, 0
-
-  ; RAX — указатель на новый список
-  ; RBX — длина
-  ; RCX — указатель на последовательность указателей на добавляемые элементы
-  ; RDX — итератор
-
-  .while:
-    cmp rbx, rdx
-    je .end_while
-
-    list_append rax, [rcx]
-    add rcx, 8
-
-    inc rdx
-    jmp .while
-
-  .end_while:
 
   ret
 
@@ -81,7 +60,7 @@ f_list_copy:
   integer 0
   mov rcx, rax
 
-  list 0
+  list
   mov rdx, rax
 
   pop rax
@@ -145,7 +124,7 @@ f_list_append:
   ; Выход с ошибкой при неизвестном типе
   print EXPECTED_TYPE_ERROR, "", ""
 
-  list 0
+  list
   mov rbx, rax
 
   buffer_to_string INTEGER_TYPE
@@ -225,7 +204,7 @@ f_string_to_list:
   xchg rcx, rax
 
   mov rdx, rax
-  list 0
+  list
   xchg rdx, rax
 
   ; RAX — строка (Целое число)
@@ -346,7 +325,7 @@ f_list_set:
   ; Выход с ошибкой при неизвестном типе
   print EXPECTED_TYPE_ERROR, "", ""
 
-  list 0
+  list
   mov rbx, rax
 
   buffer_to_string INTEGER_TYPE

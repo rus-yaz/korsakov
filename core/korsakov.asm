@@ -77,7 +77,7 @@ include "../lib/variables.asm"
 
 section "_start" executable
 _start:
-  dictionary 0
+  dictionary
   mov [GLOBAL_CONTEXT], rax
 
   call start

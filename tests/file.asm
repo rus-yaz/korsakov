@@ -1,4 +1,5 @@
-; Тест чтения файла
+string "Работа с файлами"
+print rax
 
 ; Получение размера файла
 get_file_size file.имя_файла_для_чтения
@@ -7,47 +8,46 @@ print <FILE_SIZE_TEXT, rax>
 
 ; Открытие файла
 open_file file.имя_файла_для_чтения
-mov [file.файл_для_чтения], rax
+mov rbx, rax
 
 ; Чтение файла
-read_file [file.файл_для_чтения]
-mov [file.содержимое_файла], rax
+read_file rbx
+mov rcx, rax
 
 ; Закрытие файла, дальше он не нужен
-close_file [file.файл_для_чтения]
+close_file rbx
 
 ; Получение длины строки
-string_length [file.содержимое_файла]
+string_length rcx
 integer rax
-mov [file.размер_файла], rax
-print <STRING_SIZE_TEXT, [file.размер_файла]>
+print <STRING_SIZE_TEXT, rax>
 
 ; Вывод содержимого файла
-print <STRING_CONTENT_TEXT, [file.содержимое_файла]>
+print <STRING_CONTENT_TEXT, rcx>
 
 ; ---------
 ; Тест записи файла
 
 ; Открытие файла в режиме записи
 open_file file.имя_файла_для_записи, O_WRONLY + O_CREAT + O_TRUNC, 644o
-mov [file.файл_для_записи], rax
+mov r8, rax
 
 ; Запись в файл из строки
-write_file [file.файл_для_записи], [file.содержимое_файла]
+write_file r8, rcx
 
 ; Закрытие файла
-close_file [file.файл_для_записи]
+close_file r8
 
 ; Открытие файла
 open_file file.имя_файла_для_записи
-mov [file.файл_для_записи], rax
+mov r8, rax
 
 ; Чтение файла
-read_file [file.файл_для_записи]
-mov [file.содержимое_файла], rax
+read_file r8
+mov rcx, rax
 
 ; Закрытие файла, дальше он не нужен
-close_file [file.файл_для_записи]
+close_file r8
 
 ; Вывод содержимого файла
-print <STRING_CONTENT_TEXT, [file.содержимое_файла]>
+print <STRING_CONTENT_TEXT, rcx>

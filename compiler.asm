@@ -63,6 +63,8 @@ f_compiler:
     list_get [АСД], [индекс]
     compile rax, rbx
     string_append [код], rax
+    string 10
+    string_append [код], rax
 
     integer_inc [индекс]
     jmp .while
@@ -81,13 +83,18 @@ f_compile:
   check_node_type rcx, [УЗЕЛ_ПРИСВАИВАНИЯ_ПЕРЕМЕННОЙ]
   cmp rax, 1
   jne .not_assign
-    dictionary_get rcx, [значение]
+    string <"push rdx, rcx, rbx", 10>
+    string_append rdx, rax
+
+    string "значение"
+    dictionary_get rcx, rax
     compile rax, rbx
     string_append rdx, rax
     string <"mov rdx, rax", 10>
     string_append rdx, rax
 
-    dictionary_get rcx, [ключи]
+    string "ключи"
+    dictionary_get rcx, rax
     compile rax, rbx
     string_append rdx, rax
     string <"mov rcx, rax", 10>
@@ -111,13 +118,58 @@ f_compile:
     string <"assign rbx, rcx, rdx", 10>
     string_append rdx, rax
 
+    string <"pop rbx, rcx, rdx", 10>
+    string_append rdx, rax
+
     jmp .continue
 
   .not_assign:
 
+  check_node_type rcx, [УЗЕЛ_ДОСТУПА_К_ПЕРЕМЕННОЙ]
+  cmp rax, 1
+  jne .not_access
+
+    string <"push rcx, rbx", 10>
+    string_append rdx, rax
+
+    string "ключи"
+    dictionary_get rcx, rax
+    compile rax, rbx
+    string_append rdx, rax
+    string <"mov rcx, rax", 10>
+    string_append rdx, rax
+
+    string "string "
+    string_append rdx, rax
+    string "переменная"
+    dictionary_get rcx, rax
+    mov rcx, rax
+    string "значение"
+    dictionary_get rcx, rax
+    to_string rax
+    string_append rdx, rax
+    string 10
+    string_append rdx, rax
+    string <"mov rbx, rax", 10>
+    string_append rdx, rax
+
+    string <"access rbx, rcx", 10>
+    string_append rdx, rax
+
+    string <"pop rbx, rcx", 10>
+    string_append rdx, rax
+
+    jmp .continue
+
+  .not_access:
+
   check_node_type rcx, [УЗЕЛ_БИНАРНОЙ_ОПЕРАЦИИ]
   cmp rax, 1
   jne .not_binary_operation
+
+    string <"push rbx", 10>
+    string_append rdx, rax
+
     string "левый_узел"
     dictionary_get rcx, rax
     compile rax, rbx
@@ -189,6 +241,9 @@ f_compile:
 
     .binary_operation_continue:
 
+    string <"pop rbx", 10>
+    string_append rdx, rax
+
     jmp .continue
 
   .not_binary_operation:
@@ -196,6 +251,7 @@ f_compile:
   check_node_type rcx, [УЗЕЛ_ЧИСЛА]
   cmp rax, 1
   jne .not_number
+
     string "значение"
     dictionary_get rcx, rax
     mov rcx, rax
@@ -229,16 +285,21 @@ f_compile:
   cmp rax, 1
   jne .not_list
 
-    string <"list 0", 10>
+    string "элементы"
+    dictionary_get rcx, rax
+    mov rcx, rax
+
+    string <"list", 10>
     string_append rdx, rax
+
+    list_length rcx
+    cmp rax, 0
+    je .continue
+
     string <"push rbx", 10>
     string_append rdx, rax
     string <"mov rbx, rax", 10>
     string_append rdx, rax
-
-    string "элементы"
-    dictionary_get rcx, rax
-    mov rcx, rax
 
     integer 0
     mov r8, rax

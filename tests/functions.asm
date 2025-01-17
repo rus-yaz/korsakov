@@ -1,61 +1,60 @@
+string "Подготовленные функции"
+print rax
+
 integer 1
-mov [functions.число_1], rax
+mov rbx, rax
 
 integer 2
-mov [functions.число_2], rax
+mov rcx, rax
 
-is_equal [functions.число_1], [functions.число_1]
+is_equal rbx, rbx
 integer rax
 print rax
 
-is_equal [functions.число_1], [functions.число_2]
+is_equal rbx, rcx
 integer rax
 print rax
 
-buffer_to_string functions.буфер_1
-mov [functions.тестовый_текст_1], rax
+string "Проверка 123"
+mov rbx, rax
 
-buffer_to_string functions.буфер_2
-mov [functions.тестовый_текст_2], rax
+string "321 акреворП"
+mov rcx, rax
 
-is_equal [functions.тестовый_текст_1], [functions.тестовый_текст_1]
+is_equal rbx, rbx
 integer rax
 print rax
 
-is_equal [functions.тестовый_текст_1], [functions.тестовый_текст_2]
+is_equal rbx, rcx
 integer rax
 print rax
 
-integer 4
-push rax
+list
+mov rbx, rax
+integer 1
+list_append rbx, rax
+integer 2
+list_append rbx, rax
 integer 3
-push rax
-integer 2
-push rax
-integer 1
-push rax
-
-mov rax, rsp
-list rax, 4
-mov [functions.список_1], rax
-
-integer 1
-push rax
-integer 2
-push rax
-integer 3
-push rax
+list_append rbx, rax
 integer 4
-push rax
+list_append rbx, rax
 
-mov rax, rsp
-list rax, 4
-mov [functions.список_2], rax
+list
+mov rcx, rax
+integer 4
+list_append rcx, rax
+integer 3
+list_append rcx, rax
+integer 2
+list_append rcx, rax
+integer 1
+list_append rcx, rax
 
-is_equal [functions.список_1], [functions.список_1]
+is_equal rbx, rbx
 integer rax
 print rax
 
-is_equal [functions.список_1], [functions.список_2]
+is_equal rbx, rcx
 integer rax
 print rax

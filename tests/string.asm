@@ -1,4 +1,5 @@
-; Тест работы со строками
+string "Работа со строками"
+print rax
 
 buffer_to_string string.буфер
 mov [string.строка], rax
@@ -18,9 +19,9 @@ print rax
 string_append [string.строка], [string.символ]
 print [string.строка]
 
-push [string.строка], [string.символ]
-mov rax, rsp
-list rax, 2
+list
+list_append rax, [string.строка]
+list_append rax, [string.символ]
 
 print rax
 

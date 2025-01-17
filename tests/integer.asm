@@ -1,3 +1,6 @@
+string "Работа с целыми числами"
+print rax
+
 integer 1
 mov rbx, rax
 print rbx

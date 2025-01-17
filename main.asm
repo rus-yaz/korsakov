@@ -6,31 +6,20 @@ include "./parser.asm"
 include "./compiler.asm"
 
 section "data" writable
-  заголовок      db 'include "lib/korsakov.asm"', 10,           0
-  сегмент_данных db "section 'data' writable",    10,           0
+  заголовок      db 'include "core/korsakov.asm"', 10,           0
   сегмент_кода   db "section 'start' executable", 10, "start:", 0
   конец_кода     db "exit 0",                     10,           0
 
   файл_для_чтения db "привет, мир.корс", 0
   файл_для_записи db "привет, мир.asm", 0
 
-  СЧЁТЧИК_КОНТЕКСТОВ rq 1
   СРАВНЕНИЯ          rq 1
   АСД                rq 1
   КОЛИЧЕСТВО_СТРОК   rq 1
 
-  префикс_строки      db "string", 0
-  суффикс_строки      db " db ", 0
-  постфикс_строки     db ", 0", 0
-  постфикс_переменных db "rq 1", 0
-  префикс_контекста   db "!контекст", 0
-
   INCORRECT_TOKEN_TYPE_ERROR db "Неверный токен:", 0
   INCORRECT_NODE             db "Неверный узел:", 0
   INVALID_NODE_TYPE          db "Неизвестный тип узла:", 0
-
-  ПУСТАЯ_СТРОКА db "", 0
-  пустая_строка rq 1
 
   двойная_кавычка           db '"', 0
   ДВОЙНАЯ_КАВЫЧКА           rq 1
@@ -292,9 +281,6 @@ start:
   integer 0
   mov [КОЛИЧЕСТВО_СТРОК], rax
 
-  buffer_to_string ПУСТАЯ_СТРОКА
-  mov [пустая_строка], rax
-
   buffer_to_string двойная_кавычка
   mov [ДВОЙНАЯ_КАВЫЧКА], rax
   buffer_to_string открывающая_скобка
@@ -332,7 +318,7 @@ start:
   buffer_to_string закрывающая_скобка_списка
   mov [ЗАКРЫВАЮЩАЯ_СКОБКА_СПИСКА], rax
 
-  dictionary 0
+  dictionary
   mov rbx, rax
 
   integer [тип_конец_файла]
@@ -402,7 +388,7 @@ start:
 
   mov [типы], rbx
 
-  list 0
+  list
   list_append rax, [ТИП_РАВНО]
   list_append rax, [ТИП_НЕ_РАВНО]
   list_append rax, [ТИП_БОЛЬШЕ]
@@ -427,7 +413,7 @@ start:
   dictionary_set rbx, [ТАБУЛЯЦИЯ], [ТИП_ТАБУЛЯЦИЯ]
   dictionary_set rbx, [ПРОБЕЛ], [ТИП_ПРОБЕЛ]
 
-  list 0
+  list
   mov rbx, rax
 
   buffer_to_string и
@@ -609,16 +595,11 @@ start:
 
   mov rbx, rax
 
-  list 0
+  list
   mov rcx, rax
 
   buffer_to_string заголовок
   list_append rcx, rax
-
-  buffer_to_string сегмент_данных
-  list_append rcx, rax
-
-  list_append rcx, [данные]
 
   buffer_to_string сегмент_кода
   list_append rcx, rax

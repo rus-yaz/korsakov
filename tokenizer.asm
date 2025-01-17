@@ -22,11 +22,11 @@ f_tokenizer:
   mov [символы], rax
 
   ; токен = ""
-  string_copy [пустая_строка]
+  string ""
   mem_mov [токен], rax
 
   ; токены = ()
-  list 0
+  list
   mov [токены], rax
 
   ; индекс = 0
@@ -212,14 +212,14 @@ f_tokenizer:
 
       .write_token:
 
-      dictionary 0
+      dictionary
       dictionary_set rax, [тип], [тип_токена]
       dictionary_set rax, [значение], [токен]
       list_append [токены], rax
 
     .continue:
 
-    string_copy [пустая_строка]
+    string ""
     mov [токен], rax
 
     ; индекс++
@@ -232,11 +232,12 @@ f_tokenizer:
     cmp rax, 1
     jne .while
 
-  dictionary 0
+  dictionary
   mov rbx, rax
   integer_copy [ТИП_КОНЕЦ_ФАЙЛА]
   dictionary_set rbx, [тип], rax
-  dictionary_set rbx, [значение], [пустая_строка]
+  string ""
+  dictionary_set rbx, [значение], rax
   list_append [токены], rax
 
   ret

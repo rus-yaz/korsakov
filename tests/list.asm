@@ -1,36 +1,36 @@
-; Тест работы со списками
+string "Работа со списками"
+print rax
 
 ; Создание значений с типом Целое чисо на стеке
-integer 4
-push rax
-integer 3
-push rax
-integer 2
-push rax
-integer 1
-push rax
 
-mov rax, rsp
-list rax, 4       ; Количество элементов
-mov [list.список], rax
+list
+mov rbx, rax
+integer 1
+list_append rbx, rax
+integer 2
+list_append rbx, rax
+integer 3
+list_append rbx, rax
+integer 4
+list_append rbx, rax
 
 ; индекс = -1
 integer -1
-mov [list.индекс], rax
+mov rcx, rax
 
 ; показать(список.индекс)
-list_get [list.список], [list.индекс]
+list_get rbx, rcx
 print <ITEM_BY_INDEX_TEXT, rax>
 
 ; список.добавить(5)
 integer 5
-list_append [list.список], rax
+list_append rbx, rax
 
 ; показать(список.индекс)
-list_get [list.список], [list.индекс]
+list_get rbx, rcx
 print <ITEM_BY_INDEX_TEXT, rax>
 
-list 0
+list
 mov rbx, rax
 
 mov rcx, rsp
@@ -41,7 +41,7 @@ mov rdx, rax
 mov rsp, rcx
 list_append rbx, rax
 
-list 0
+list
 mov rbx, rax
 integer 1
 list_append rbx, rax

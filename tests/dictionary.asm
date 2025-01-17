@@ -1,4 +1,7 @@
-dictionary 0
+string "Работа со словорями"
+print rax
+
+dictionary
 mov rcx, rax
 print rax
 
@@ -12,7 +15,7 @@ integer 1
 dictionary_set rcx, rax, rbx
 print rax
 
-list 0
+list
 mov rbx, rax
 integer 0
 list_append rbx, rax
@@ -21,7 +24,7 @@ list_append rbx, rax
 integer 2
 list_append rbx, rax
 
-list 0
+list
 mov rcx, rax
 integer 3
 list_append rcx, rax
@@ -54,7 +57,7 @@ print rax
 dictionary_copy rbx
 print rax
 
-dictionary 0
+dictionary
 mov rbx, rax
 
 integer 0
@@ -63,7 +66,7 @@ dictionary_set rbx, rcx, rcx
 
 print rax
 
-buffer_to_string delete.буфер
+string "Привет"
 dictionary_set rbx, rcx, rax
 
 print rax

@@ -384,7 +384,7 @@ f_split:
   mov rsp, r8
   mov r8, rax
 
-  list 0
+  list
   mov r9, rax
 
   pop rax

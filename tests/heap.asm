@@ -1,15 +1,16 @@
-; Тест работы с кучей
+string "Работа с кучей"
+print rax
 
 ; Расширение кучи
 create_block 0x1000
-mov [heap.тестовый_блок_1], rax
+mov rbx, rax
 
 create_block 0x1000
-mov [heap.тестовый_блок_2], rax
+mov rcx, rax
 
 create_block 0x1000
-mov [heap.тестовый_блок_3], rax
+mov rdx, rax
 
-delete_block [heap.тестовый_блок_1]
-delete_block [heap.тестовый_блок_3]
-delete_block [heap.тестовый_блок_2]
+delete_block rbx
+delete_block rdx
+delete_block rcx

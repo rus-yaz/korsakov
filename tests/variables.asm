@@ -1,18 +1,20 @@
-buffer_to_string delete.буфер
+string "Работа с переменными"
+print rax
+
+string "а"
 mov rcx, rax
 
-list 0
+list
 mov rbx, rax
 
 assign rcx, rbx, rcx
 access rcx, rbx
 print rax
 
-dictionary 0
+dictionary
 assign rcx, rbx, rax
 access rcx, rbx
 print rax
-
 
 integer 0
 assign rcx, rbx, rax

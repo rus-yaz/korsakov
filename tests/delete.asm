@@ -1,12 +1,15 @@
+string "Тест удаления различных типов данных"
+print rax
+
 integer 0
 
 delete rax
 
-buffer_to_string delete.буфер
+string "Привет"
 
 delete rax
 
-list 0
+list
 mov rbx, rax
 integer 0
 list_append rbx, rax
@@ -15,22 +18,22 @@ list_append rbx, rax
 
 delete rax
 
-list 0
+list
 mov rbx, rax
 
-buffer_to_string delete.буфер
+string "Привет"
 list_append rbx, rax
 
 delete rax
 
-list 0
+list
 mov rbx, rax
 integer 0
 list_append rbx, rax
 integer 1
 list_append rbx, rax
 
-list 0
+list
 mov rcx, rax
 integer 2
 list_append rcx, rax
@@ -41,7 +44,7 @@ list_append rbx, rcx
 
 delete rax
 
-list 0
+list
 mov rbx, rax
 
 integer 0
@@ -49,7 +52,7 @@ list_append rbx, rax
 integer 2
 list_append rbx, rax
 
-list 0
+list
 mov rcx, rax
 
 integer 1

@@ -286,7 +286,7 @@ f_parser:
   next
 
   ; self.parse
-  list 0
+  list
   mov [результат], rax
 
   .while:
@@ -374,7 +374,7 @@ f_token_check_type:
   cmp rdx, LIST
   je .list
 
-    list 0
+    list
     list_append rax, rbx
     mov rbx, rax
 
@@ -418,7 +418,7 @@ f_token_check_keyword:
   mov rdx, [rbx]
   cmp rdx, LIST
   je .list
-    list 0
+    list
     list_append rax, rbx
 
     mov rbx, rax
@@ -466,7 +466,7 @@ f_expression:
     dictionary_copy [токен]
     mov rcx, rax
 
-    list 0
+    list
     mov rdx, rax
 
     next
@@ -585,7 +585,7 @@ f_expression:
 
       .skip_length_error:
 
-      list 0
+      list
       mov r8, rax
 
       integer 0
@@ -639,7 +639,7 @@ f_expression:
   integer_sub [индекс], rbx
   reverse rax
 
-  list 0
+  list
   list_append rax, [И]
   list_append rax, [ИЛИ]
 
@@ -709,7 +709,7 @@ f_binary_operation:
       arithmetical_expression
       mov r12, rax
 
-      dictionary 0
+      dictionary
       dictionary_set rax, [тип], [ТИП_КЛЮЧЕВОЕ_СЛОВО]
       dictionary_set rax, [значение], [И]
 
@@ -730,7 +730,7 @@ f_atom:
   dictionary_copy [токен]
   mov rbx, rax
 
-  list 0
+  list
   list_append rax, [ТИП_ЦЕЛОЕ_ЧИСЛО]
   list_append rax, [ТИП_ВЕЩЕСТВЕННОЕ_ЧИСЛО]
   token_check_type rbx, rax
@@ -760,12 +760,13 @@ f_atom:
     integer 2
     integer_sub [индекс], rax
     list_get [токены], rax
-    token_check_type rax, [ТОЧКА]
+    token_check_type rax, [ТИП_ТОЧКА]
     cmp rax, 1
     jne .not_field_access
       next
 
-      list 0
+      list
+      list_node rax
       access_node rbx, rax
 
       ret
@@ -776,15 +777,15 @@ f_atom:
 
     ; RCX — keys
 
-    list 0
+    list
     mov rcx, rax
 
-    token_check_type [токен], [ТОЧКА]
+    token_check_type [токен], [ТИП_ТОЧКА]
     cmp rax, 1
     jne .end_while
       next
 
-      list 0
+      list
       list_append rax, [ТИП_ИДЕНТИФИКАТОР]
       list_append rax, [ТИП_СТРОКА]
       list_append rax, [ТИП_ЦЕЛОЕ_ЧИСЛО]
@@ -822,7 +823,8 @@ f_atom:
 
     .end_while:
 
-    access_node rbx, rcx
+    list_node rcx
+    access_node rbx, rax
 
     ret
 
@@ -963,7 +965,7 @@ f_call_expression:
   next
 
   ; RCX — argument_nodes
-  list 0
+  list
   mov rcx, rax
 
   token_check_type [токен], [ТИП_ПЕРЕНОС_СТРОКИ]
@@ -1029,7 +1031,7 @@ f_call_expression:
   ret
 
 f_power_root:
-  list 0
+  list
   list_append rax, [ТИП_ВОЗВЕДЕНИЕ_В_СТЕПЕНЬ]
   list_append rax, [ТИП_ИЗЪЯТИЕ_КОРНЯ]
 
@@ -1042,7 +1044,7 @@ f_factor:
   dictionary_copy [токен]
   mov rbx, rax
 
-  list 0
+  list
   list_append rax, [ТИП_ВЫЧИТАНИЕ]
   list_append rax, [ТИП_ИЗЪЯТИЕ_КОРНЯ]
   list_append rax, [ТИП_ИНКРЕМЕНТАЦИЯ]
@@ -1066,7 +1068,7 @@ f_factor:
   ret
 
 f_term:
-  list 0
+  list
   list_append rax, [ТИП_УМНОЖЕНИЕ]
   list_append rax, [ТИП_ДЕЛЕНИЕ]
 
@@ -1094,7 +1096,7 @@ f_comparison_expression:
   ret
 
 f_arithmetical_expression:
-  list 0
+  list
   list_append rax, [ТИП_СЛОЖЕНИЕ]
   list_append rax, [ТИП_ВЫЧИТАНИЕ]
 
@@ -1106,7 +1108,7 @@ f_list_expression:
   ; RBX — value
   ; RCX — is_dictionary
 
-  dictionary 0
+  dictionary
   mov rbx, rax
 
   mov rcx, 0
@@ -1134,7 +1136,7 @@ f_list_expression:
 
     next
 
-    list 0
+    list
     list_node rax
 
     ret
@@ -1162,7 +1164,7 @@ f_list_expression:
 
   ; R9 — value
 
-  dictionary 0
+  dictionary
   dictionary_set rax, rdx, r8
   mov r9, rax
 
@@ -1219,7 +1221,7 @@ f_list_expression:
 
     .skip_dictionary_append:
 
-    dictionary 0
+    dictionary
     dictionary_set rax, rdx, r8
     mov r9, rax
 
@@ -1263,7 +1265,7 @@ f_check_expression:
   ; RBX — cases
   ; RCX — else_case
 
-  list 0
+  list
   mov rbx, rax
 
   mov rcx, 0
@@ -1283,7 +1285,7 @@ f_check_expression:
   mov rdx, rax
 
   ; R8 — operator
-  dictionary 0
+  dictionary
   dictionary_set rax, [тип], [РАВНО]
   mov r8, rax
 
@@ -1348,7 +1350,7 @@ f_check_expression:
     mov r11, rax
 
     .and_or_while:
-      list 0
+      list
       list_append rax, [И]
       list_append rax, [ИЛИ]
       token_check_keyword [токен], rax
@@ -1388,12 +1390,12 @@ f_check_expression:
 
     ; R13 — body
 
-    list 0
+    list
     mov r13, rax
 
     .on_else_while:
 
-      list 0
+      list
       list_append rax, [ПРИ]
       list_append rax, [ИНАЧЕ]
       token_check_keyword [токен], rax
@@ -1423,7 +1425,7 @@ f_check_expression:
     list_node r13
     mov r13, rax
 
-    list 0
+    list
     list_append rax, r11
     list_append rax, r13
     list_append rax, 0
@@ -1452,7 +1454,7 @@ f_if_expression:
   ; RBX — cases
   ; RCX — else_case
 
-  list 0
+  list
   mov rbx, rax
 
   mov rcx, 0
@@ -1492,7 +1494,7 @@ f_if_expression:
     statements
     mov r8, rax
 
-    list 0
+    list
     list_append rax, rdx
     list_append rax, r8
     list_append rax, 1
@@ -1518,7 +1520,7 @@ f_if_expression:
     statement
     mov r9, rax
 
-    list 0
+    list
     list_append rax, rdx
     list_append rax, r9
     list_append rax, 0
@@ -1553,7 +1555,7 @@ f_else_expression:
     statement
     mov rbx, rax
 
-    list 0
+    list
     list_append rax, rbx
     list_append rax, 0
 
@@ -1578,7 +1580,7 @@ f_else_expression:
 
   next
 
-  list 0
+  list
   list_append rax, rcx
   list_append rax, 1
 
@@ -1831,7 +1833,7 @@ f_function_expression:
 
   ; RDX — arguments
 
-  list 0
+  list
   mov rdx, rax
 
   .while:
@@ -1979,7 +1981,7 @@ f_class_expression:
   .correct_open_paren:
 
   ; RCX — parents
-  list 0
+  list
   mov rcx, rax
 
   token_check_type [токен], [ОТКРЫВАЮЩАЯ_СКОБКА]
@@ -1987,7 +1989,7 @@ f_class_expression:
   jne .no_parents
     next
 
-    list 0
+    list
     list_append rax, [ТИП_ИДЕНТИФИКАТОР]
     list_append rax, [ЗАКРЫВАЮЩАЯ_СКОБКА]
     token_check_type [токен], rax
@@ -2015,7 +2017,7 @@ f_class_expression:
 
       .no_newline_1:
 
-      list 0
+      list
       list_append rax, [ТИП_ПРОБЕЛ]
       list_append rax, [ЗАКРЫВАЮЩАЯ_СКОБКА]
       token_check_type [токен], rax
@@ -2038,7 +2040,7 @@ f_class_expression:
 
     .end_while_1:
 
-    list 0
+    list
     list_append rax, [ТИП_ИДЕНТИФИКАТОР]
     list_append rax, [ЗАКРЫВАЮЩАЯ_СКОБКА]
     token_check_type [токен], rax
@@ -2078,7 +2080,7 @@ f_class_expression:
   .correct_function_end_of_construction:
 
   ; RDX — methods
-  list 0
+  list
   mov rdx, rax
 
   .while_2:
@@ -2104,7 +2106,7 @@ f_class_expression:
     string_node rax
     mov r9, rax
 
-    list 0
+    list
     list_append rax, r9
     list_append rax, r8
 
@@ -2193,7 +2195,7 @@ f_include_statement:
 
 f_statements:
   ; RBX — statements
-  list 0
+  list
   mov rbx, rax
 
   token_check_type [токен], [ПЕРЕНОС_СТРОКИ]
@@ -2207,7 +2209,7 @@ f_statements:
   statement
   mov rcx, rax
 
-  list 0
+  list
   list_append rax, rcx
   mov rcx, rax
 

@@ -1,22 +1,20 @@
-; Тест отображения
+string "Тест отображения"
+print rax
 
-buffer_to_string print.буфер
-mov [print.строка], rax
+string "Привет, мир!"
+mov r8, rax
 
 ; Проверка строк (строки, помещённые в кучу)
-print <[print.строка]>
-
-; Проверка буфера (строки, захардкоженные в FASM)
-print <STRING_CONTENT_TEXT>
+print r8
 
 ; Проверка чисел
 integer 1024
 print <rax>
 
-list 0
+list
 print rax
 
-list 0
+list
 mov rbx, rax
 
 integer 0
@@ -28,20 +26,20 @@ list_append rbx, rax
 
 print rax
 
-list 0
+list
 mov rbx, rax
 
 integer 0
 list_append rbx, rax
-list_append rbx, [print.строка]
+list_append rbx, r8
 
-list 0
+list
 mov rcx, rax
 
 integer 99
 list_append rcx, rax
 
-list 0
+list
 mov rdx, rax
 
 integer 0
@@ -56,16 +54,16 @@ list_append rcx, rdx
 dictionary rbx, rcx
 print rax
 
-;; Проверка множественного отображения
-;integer 1024
-;print <rax, STRING_CONTENT_TEXT, [print.строка]>
-;
-;; Проверка замены разделителя и конца стрки
-;
-;integer 1024
-;mov rbx, rax
-;mov rcx, rax
-;
-;print <rax, rbx, rcx>, "?"
-;
-;print <rax, rbx, rcx>, "_", "*"
+; Проверка множественного отображения
+integer 1024
+print <rax, STRING_CONTENT_TEXT, r8>
+
+; Проверка замены разделителя и конца стрки
+
+integer 1024
+mov rbx, rax
+mov rcx, rax
+
+print <rax, rbx, rcx>, "?"
+
+print <rax, rbx, rcx>, "_", "*"

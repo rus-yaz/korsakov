@@ -89,7 +89,7 @@ f_dictionary_keys:
 
   mov rbx, [rax + 8*1]
 
-  list 0
+  list
   mov rdx, rax
 
   .while:
@@ -115,7 +115,7 @@ f_dictionary_values:
 
   mov rbx, [rax + 8*1]
 
-  list 0
+  list
   mov rdx, rax
 
   .while:
@@ -202,7 +202,7 @@ f_dictionary_items:
   integer 0
   mov r8, rax
 
-  list 0
+  list
 
   .while:
     cmp rdx, 0
@@ -210,7 +210,7 @@ f_dictionary_items:
 
     push rdx, rax
 
-    list 0
+    list
     mov rdx, rax
 
     list_get rbx, r8
@@ -293,7 +293,7 @@ f_dictionary_set:
   mem_mov [rax + 8*1], 0
   mov rdx, rax
 
-  list 0
+  list
   list_append rax, rbx
   list_append rax, rcx
 

@@ -319,8 +319,8 @@ macro integer_sub int_1*, int_2* {
 
 section "list" executable
 
-macro list list_start = 0, length = 0 {
-  enter list_start, length
+macro list {
+  enter
 
   call f_list
 
@@ -590,6 +590,30 @@ macro addition first*, second* {
   enter first, second
 
   call f_addition
+
+  return
+}
+
+macro subtraction first*, second* {
+  enter first, second
+
+  call f_subtraction
+
+  return
+}
+
+macro multiplication first*, second* {
+  enter first, second
+
+  call f_multiplication
+
+  return
+}
+
+macro division first*, second* {
+  enter first, second
+
+  call f_division
 
   return
 }

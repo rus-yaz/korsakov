@@ -171,7 +171,7 @@ macro break_node {
 f_access_node:
   mov rcx, rax
 
-  dictionary 0
+  dictionary
   dictionary_set rax, [узел], [УЗЕЛ_ДОСТУПА_К_ПЕРЕМЕННОЙ]
   dictionary_set rax, [переменная], rcx
   dictionary_set rax, [ключи], rbx
@@ -181,7 +181,7 @@ f_access_node:
 f_assign_node:
   mov rdx, rax
 
-  dictionary 0
+  dictionary
   dictionary_set rax, [узел], [УЗЕЛ_ПРИСВАИВАНИЯ_ПЕРЕМЕННОЙ]
   dictionary_set rax, [переменная], rdx
   dictionary_set rax, [ключи], rbx
@@ -192,7 +192,7 @@ f_assign_node:
 f_binary_operation_node:
   mov rdx, rax
 
-  dictionary 0
+  dictionary
   dictionary_set rax, [узел], [УЗЕЛ_БИНАРНОЙ_ОПЕРАЦИИ]
   dictionary_set rax, [левый_узел], rdx
   dictionary_set rax, [оператор], rbx
@@ -203,7 +203,7 @@ f_binary_operation_node:
 f_list_node:
   mov rbx, rax
 
-  dictionary 0
+  dictionary
   dictionary_set rax, [узел], [УЗЕЛ_СПИСКА]
   dictionary_set rax, [элементы], rbx
 
@@ -212,7 +212,7 @@ f_list_node:
 f_number_node:
   mov rbx, rax
 
-  dictionary 0
+  dictionary
   dictionary_set rax, [узел], [УЗЕЛ_ЧИСЛА]
   dictionary_set rax, [значение], rbx
 
@@ -221,7 +221,7 @@ f_number_node:
 f_string_node:
   mov rbx, rax
 
-  dictionary 0
+  dictionary
   dictionary_set rax, [узел], [УЗЕЛ_СТРОКИ]
   dictionary_set rax, [значение], rbx
 
@@ -230,7 +230,7 @@ f_string_node:
 f_call_node:
   mov rcx, rax
 
-  dictionary 0
+  dictionary
   dictionary_set rax, [узел], [УЗЕЛ_ВЫЗОВА]
   dictionary_set rax, [переменная], rcx
   dictionary_set rax, [аргументы], rbx
@@ -240,7 +240,7 @@ f_call_node:
 f_unary_operation_node:
   mov rcx, rax
 
-  dictionary 0
+  dictionary
   dictionary_set rax, [узел], [УЗЕЛ_УНАРНОЙ_ОПЕРАЦИИ]
   dictionary_set rax, [оператор], rcx
   dictionary_set rax, [операнд], rbx
@@ -250,7 +250,7 @@ f_unary_operation_node:
 f_dictionary_node:
   mov rbx, rax
 
-  dictionary 0
+  dictionary
   dictionary_set rax, [узел], [УЗЕЛ_СЛОВАРЯ]
   dictionary_set rax, [элементы], rbx
 
@@ -259,7 +259,7 @@ f_dictionary_node:
 f_check_node:
   mov rcx, rax
 
-  dictionary 0
+  dictionary
   dictionary_set rax, [узел], [УЗЕЛ_ПРОВЕРКИ]
   dictionary_set rax, [случаи], rcx
   dictionary_set rax, [случай_иначе], rbx
@@ -269,7 +269,7 @@ f_check_node:
 f_if_node:
   mov rcx, rax
 
-  dictionary 0
+  dictionary
   dictionary_set rax, [узел], [УЗЕЛ_ЕСЛИ]
   dictionary_set rax, [случаи], rcx
   dictionary_set rax, [случай_иначе], rbx
@@ -279,7 +279,7 @@ f_if_node:
 f_for_node:
   mov r11, rax
 
-  dictionary 0
+  dictionary
   dictionary_set rax, [узел], [УЗЕЛ_ДЛЯ]
   dictionary_set rax, [переменная], r11
   dictionary_set rax, [начало], rbx
@@ -294,7 +294,7 @@ f_for_node:
 f_while_node:
   mov r8, rax
 
-  dictionary 0
+  dictionary
   dictionary_set rax, [узел], [УЗЕЛ_ПОКА]
   dictionary_set rax, [условие], r8
   dictionary_set rax, [тело], rbx
@@ -308,19 +308,19 @@ f_method_node:
 
   cmp r8, 0
   jne .skip_class_name_default
-    string_copy [пустая_строка]
+    string ""
     mov r8, rax
 
   .skip_class_name_default:
 
   cmp r9, 0
   jne .skip_object_name_default
-    string_copy [пустая_строка]
+    string ""
     mov r9, rax
 
   .skip_object_name_default:
 
-  dictionary 0
+  dictionary
   dictionary_set rax, [узел], [УЗЕЛ_МЕТОДА]
   dictionary_set rax, [переменная], r10
   dictionary_set rax, [аргументы], rbx
@@ -334,7 +334,7 @@ f_method_node:
 f_function_node:
   mov r8, rax
 
-  dictionary 0
+  dictionary
   dictionary_set rax, [узел], [УЗЕЛ_ФУНКЦИИ]
   dictionary_set rax, [переменная], r8
   dictionary_set rax, [аргументы], rbx
@@ -346,7 +346,7 @@ f_function_node:
 f_class_node:
   mov rdx, rax
 
-  dictionary 0
+  dictionary
   dictionary_set rax, [узел], [УЗЕЛ_КЛАССА]
   dictionary_set rax, [переменная], rdx
   dictionary_set rax, [тело], rbx
@@ -357,7 +357,7 @@ f_class_node:
 f_delete_node:
   mov rbx, rax
 
-  dictionary 0
+  dictionary
   dictionary_set rax, [узел], [УЗЕЛ_УДАЛЕНИЯ]
   dictionary_set rax, [переменная], rbx
 
@@ -366,7 +366,7 @@ f_delete_node:
 f_include_node:
   mov rbx, rax
 
-  dictionary 0
+  dictionary
   dictionary_set rax, [узел], [УЗЕЛ_ВКЛЮЧЕНИЯ]
   dictionary_set rax, [путь], rbx
 
@@ -375,20 +375,20 @@ f_include_node:
 f_return_node:
   mov rbx, rax
 
-  dictionary 0
+  dictionary
   dictionary_set rax, [узел], [УЗЕЛ_УДАЛЕНИЯ]
   dictionary_set rax, [значение], rbx
 
   ret
 
 f_skip_node:
-  dictionary 0
+  dictionary
   dictionary_set rax, [узел], [УЗЕЛ_ПРОПУСКА]
 
   ret
 
 f_break_node:
-  dictionary 0
+  dictionary
   dictionary_set rax, [узел], [УЗЕЛ_ПРЕРЫВАНИЯ]
 
   ret
