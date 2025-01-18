@@ -74,6 +74,7 @@ include "../lib/print.asm"
 include "../lib/string.asm"
 include "../lib/to_string.asm"
 include "../lib/variables.asm"
+include "../lib/null.asm"
 
 section "_start" executable
 _start:

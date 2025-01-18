@@ -147,6 +147,28 @@ f_tokenizer:
 
     .not_string:
 
+    string "%"
+    is_equal [токен], rax
+    cmp rax, 1
+    jne .not_list_paren
+
+      integer_inc [индекс]
+      list_get [символы], [индекс]
+      string_append [токен], rax
+
+      integer_copy [ТИП_ОТКРЫВАЮЩАЯ_СКОБКА_СПИСКА]
+      mov [тип_токена], rax
+
+      string "%("
+      is_equal [токен], rax
+      cmp rax, 1
+      je .add_token
+
+      print <UNEXPECTED_TOKEN_ERROR, [токен]>
+      exit -1
+
+    .not_list_paren:
+
     integer -1
     dictionary_get [типы], [токен], rax
     mov [тип_токена], rax

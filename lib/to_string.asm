@@ -1,6 +1,9 @@
 f_to_string:
   mov rbx, [rax]
 
+  cmp rbx, NULL
+  je .null
+
   cmp rbx, INTEGER
   je .integer
 
@@ -31,6 +34,10 @@ f_to_string:
   print rax
 
   exit -1
+
+  .null:
+    string "НУЛЬ"
+    ret
 
   .integer:
     mov rax, [rax + INTEGER_HEADER*8]
@@ -118,25 +125,12 @@ f_to_string:
     join rax
 
     mov rbx, rax
-    mov r8, rsp
 
-    mov rdx, rsp
-    push 0, "("
-    mov rax, rsp
-
-    buffer_to_string rax
-    mov rcx, rax
-
-    push 0, ")"
-    mov rax, rsp
-
-    buffer_to_string rax
-    mov rdx, rax
-
-    mov rsp, r8
-
-    string_add rcx, rbx
-    string_add rax, rdx
+    string "%("
+    string_add rax, rbx
+    mov rbx, rax
+    string ")"
+    string_add rbx, rax
 
     ret
 
@@ -168,7 +162,7 @@ f_to_string:
     cmp rcx, 0
     jne .not_empty
 
-      string "(:)"
+      string "%(:)"
       ret
 
     .not_empty:
@@ -213,26 +207,94 @@ f_to_string:
 
     .end_dictionary_while:
     join rax
-
     mov rbx, rax
-    mov r8, rsp
 
-    mov rdx, rsp
-    push 0, '('
-    mov rax, rsp
-
-    buffer_to_string rax
-    mov rcx, rax
-
-    push 0, ')'
-    mov rax, rsp
-
-    buffer_to_string rax
-    mov rdx, rax
-
-    string_add rcx, rbx
-    string_add rax, rdx
-
-    mov rsp, r8
+    string "%("
+    string_append rax, rbx
+    mov rbx, rax
+    string ")"
+    string_append rbx, rax
 
     ret
+
+f_type_to_string:
+  mov rdx, rax
+
+  dictionary
+  mov rcx, rax
+
+  integer HEAP_BLOCK
+  mov rbx, rax
+  string "Блок кучи"
+  dictionary_set rcx, rbx, rax
+
+  integer NULL
+  mov rbx, rax
+  string "НУЛЬ"
+  dictionary_set rcx, rbx, rax
+
+  integer INTEGER
+  mov rbx, rax
+  string "Целое число"
+  dictionary_set rcx, rbx, rax
+
+  integer FLOAT
+  mov rbx, rax
+  string "Вещественное число"
+  dictionary_set rcx, rbx, rax
+
+  integer LIST
+  mov rbx, rax
+  string "Список"
+  dictionary_set rcx, rbx, rax
+
+  integer BINARY
+  mov rbx, rax
+  string "Бинарная последовательность"
+  dictionary_set rcx, rbx, rax
+
+  integer STRING
+  mov rbx, rax
+  string "Строка"
+  dictionary_set rcx, rbx, rax
+
+  integer DICTIONARY
+  mov rbx, rax
+  string "Словарь"
+  dictionary_set rcx, rbx, rax
+
+  integer CLASS
+  mov rbx, rax
+  string "Класс"
+  dictionary_set rcx, rbx, rax
+
+  integer FILE
+  mov rbx, rax
+  string "Файл"
+  dictionary_set rcx, rbx, rax
+
+  integer rdx
+  mov rdx, rax
+
+  null
+  dictionary_get rcx, rdx
+  mov rbx, rax
+
+  null
+  is_equal rbx, rax
+  cmp rax, 1
+  jne .correct_type
+
+    string "Неизвестный тип: "
+    mov rbx, rax
+    to_string rdx
+    string_append rbx, rax
+    print rax
+
+    exit -1
+
+  .correct_type:
+
+  mov rax, rbx
+
+  ret

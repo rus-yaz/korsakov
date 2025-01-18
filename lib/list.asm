@@ -109,6 +109,9 @@ f_list_append:
 
   mov rax, [rbx]
 
+  cmp rax, NULL
+  je .null
+
   cmp rax, INTEGER
   je .integer
 
@@ -140,6 +143,11 @@ f_list_append:
   print rax
 
   exit -1
+
+  .null:
+    null
+    mov r8, NULL_SIZE
+    jmp .continue
 
   .integer:
     integer_copy rbx
@@ -397,5 +405,122 @@ f_list_set:
   mem_copy rbx, rax, r9
 
   mov rax, rcx
+
+  ret
+
+f_list_pop:
+  ; RBX — index = 0
+  ; RCX — list
+
+  mov rcx, rax
+
+  cmp rbx, 0
+  jne .not_default
+
+    integer -1
+    mov rbx, rax
+
+  .not_default:
+
+  check_type rbx, INTEGER
+  check_type rcx, LIST
+
+  mov rax, [rbx + INTEGER_HEADER*8]
+  cmp rax, 0
+  jge .positive_index
+    list_length rcx
+    integer rax
+    integer_add rbx, rax
+    mov rbx, rax
+
+  .positive_index:
+
+  mov rax, [rbx + INTEGER_HEADER*8]
+
+  cmp rax, 0
+  jge .correct_index
+  mov rdx, rax
+  list_length rcx
+  cmp rdx, rax
+  jl .correct_index
+
+    string "Индекс выходит за пределы списка"
+    print rax
+    exit -1
+
+  .correct_index:
+
+  mov r8, rcx
+
+  integer_inc rbx
+  mov rbx, [rbx + INTEGER_HEADER*8]
+
+  .while:
+    cmp rbx, 0
+    je .end_while
+
+    mov r8, [r8 + 8*1]
+
+    dec rbx
+    jmp .while
+
+  .end_while:
+
+  list_length rcx
+  dec rax
+  mem_mov [rcx + 8*2], rax
+
+  mov rax, [r8 + 8*0]
+  mem_mov [rax + 8*1], [r8 + 8*1]
+
+  mem_mov rax, [r8 + 8*1]
+  cmp rax, 0
+  je .last_item
+    mem_mov [rax + 8*0], [r8 + 8*0]
+
+  .last_item:
+
+  add r8, 8*2
+  mov rax, [r8]
+
+  cmp rax, INTEGER
+  je .integer
+
+  cmp rax, LIST
+  je .list
+
+  cmp rax, STRING
+  je .string
+
+  cmp rax, DICTIONARY
+  je .dictionary
+
+    type_to_string rax
+    mov rbx, rax
+    string "Неподдерживаемый тип: "
+    string_append rax, rbx
+    print rax
+    exit -1
+
+  .integer:
+    integer_copy r8
+    jmp .continue
+
+  .list:
+    list_copy r8
+    jmp .continue
+
+  .string:
+    string_copy r8
+    jmp .continue
+
+  .dictionary:
+    dictionary_copy r8
+    jmp .continue
+
+  .continue:
+
+  sub r8, 8*2
+  delete_block r8
 
   ret

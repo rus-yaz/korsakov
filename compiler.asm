@@ -311,7 +311,7 @@ f_compile:
       cmp rax, 1
       je .list_end_while
 
-      list_get rcx, rax
+      list_get rcx, r8
       compile rax, rbx
       string_append rdx, rax
       string "list_append rbx, rax"

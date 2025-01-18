@@ -546,7 +546,7 @@ f_expression:
   ; R8  — variables
   ; R9  — index
 
-  token_check_type [токен], [ОТКРЫВАЮЩАЯ_СКОБКА_СПИСКА]
+  token_check_type [токен], [ТИП_ОТКРЫВАЮЩАЯ_СКОБКА_СПИСКА]
   cmp rax, 1
   jne .skip_list
 
@@ -797,7 +797,7 @@ f_atom:
 
       .not_atom:
 
-      token_check_type [токен], [ОТКРЫВАЮЩАЯ_СКОБКА]
+      token_check_type [токен], [ТИП_ОТКРЫВАЮЩАЯ_СКОБКА]
       cmp rax, 1
       jne .not_arithmetical_expression
         arithmetical_expression
@@ -830,7 +830,7 @@ f_atom:
 
   .not_identifier:
 
-  token_check_type rbx, [ОТКРЫВАЮЩАЯ_СКОБКА_СПИСКА]
+  token_check_type rbx, [ТИП_ОТКРЫВАЮЩАЯ_СКОБКА]
   cmp rax, 1
   jne .not_open_paren
     next
@@ -838,7 +838,7 @@ f_atom:
     expression
     mov rbx, rax
 
-    token_check_type rbx, [ОТКРЫВАЮЩАЯ_СКОБКА_СПИСКА]
+    token_check_type rbx, [ТИП_ОТКРЫВАЮЩАЯ_СКОБКА_СПИСКА]
     cmp rax, 1
     jne .correct_token
 
@@ -855,7 +855,7 @@ f_atom:
 
   mov rbx, 0
 
-  token_check_type [токен], [ОТКРЫВАЮЩАЯ_СКОБКА_СПИСКА]
+  token_check_type [токен], [ТИП_ОТКРЫВАЮЩАЯ_СКОБКА_СПИСКА]
   cmp rax, 1
   jne .not_list
     list_expression
@@ -1113,24 +1113,24 @@ f_list_expression:
 
   mov rcx, 0
 
-  token_check_type [токен], [ОТКРЫВАЮЩАЯ_СКОБКА_СПИСКА]
+  token_check_type [токен], [ТИП_ОТКРЫВАЮЩАЯ_СКОБКА_СПИСКА]
   cmp rax, 1
   je .correct_token
-    print <EXPECTED, ОТКРЫВАЮЩАЯ_СКОБКА>
+    print <EXPECTED, ОТКРЫВАЮЩАЯ_СКОБКА_СПИСКА>
     exit -1
 
   .correct_token:
 
   next
 
-  token_check_type [токен], [ПЕРЕНОС_СТРОКИ]
+  token_check_type [токен], [ТИП_ПЕРЕНОС_СТРОКИ]
   cmp rax, 1
   jne .skip_newline_1
     next
 
   .skip_newline_1:
 
-  token_check_type [токен], [ЗАКРЫВАЮЩАЯ_СКОБКА_СПИСКА]
+  token_check_type [токен], [ТИП_ЗАКРЫВАЮЩАЯ_СКОБКА]
   cmp rax, 1
   jne .not_empty
 
@@ -1148,9 +1148,10 @@ f_list_expression:
   expression
   mov rdx, rax
 
-  mov r8, 0
+  null
+  mov r8, rax
 
-  token_check_type [токен], [ДВОЕТОЧИЕ]
+  token_check_type [токен], [ТИП_ДВОЕТОЧИЕ]
   cmp rax, 1
   jne .not_dictionary
     mov rcx, 1
@@ -1169,32 +1170,27 @@ f_list_expression:
   mov r9, rax
 
   .while:
-    token_check_type [токен], [ТИП_ПРОБЕЛ]
+    token_check_type [токен], [ТИП_ЗАКРЫВАЮЩАЯ_СКОБКА]
     cmp rax, 1
-    jne .end_while
+    je .end_while
 
-    next
-
-    token_check_type [токен], [ПЕРЕНОС_СТРОКИ]
+    token_check_type [токен], [ТИП_ПЕРЕНОС_СТРОКИ]
     cmp rax, 1
     jne .skip_newline_2
       next
 
     .skip_newline_2:
 
-    token_check_type [токен], [ЗАКРЫВАЮЩАЯ_СКОБКА_СПИСКА]
-    cmp rax, 1
-    je .end_while
-
     expression
     mov rdx, rax
 
-    mov r8, 0
+    null
+    mov r8, rax
 
     cmp rcx, 1
     je .skip_dictionary_append_error
 
-    token_check_type [токен], [ДВОЕТОЧИЕ]
+    token_check_type [токен], [ТИП_ДВОЕТОЧИЕ]
     cmp rax, 1
     jne .skip_dictionary_append_error
 
@@ -1206,7 +1202,7 @@ f_list_expression:
     cmp rcx, 1
     jne .skip_dictionary_append
 
-      token_check_type [токен], [ДВОЕТОЧИЕ]
+      token_check_type [токен], [ТИП_ДВОЕТОЧИЕ]
       cmp rax, 1
       je .skip_colon_error
         print <EXPECTED, COLON>
@@ -1221,22 +1217,20 @@ f_list_expression:
 
     .skip_dictionary_append:
 
-    dictionary
-    dictionary_set rax, rdx, r8
-    mov r9, rax
+    dictionary_set r9, rdx, r8
 
     jmp .while
 
   .end_while:
 
-  token_check_type [токен], [ПЕРЕНОС_СТРОКИ]
+  token_check_type [токен], [ТИП_ПЕРЕНОС_СТРОКИ]
   cmp rax, 1
   jne .skip_newline_3
     next
 
   .skip_newline_3:
 
-  token_check_type [токен], [ЗАКРЫВАЮЩАЯ_СКОБКА_СПИСКА]
+  token_check_type [токен], [ТИП_ЗАКРЫВАЮЩАЯ_СКОБКА]
   cmp rax, 1
   je .skip_closed_paren_error
     print <EXPECTED>, "", " "

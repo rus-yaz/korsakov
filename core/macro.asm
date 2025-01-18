@@ -407,6 +407,14 @@ macro list_set list*, index*, item* {
   return
 }
 
+macro list_pop list*, index = 0 {
+  enter list, index
+
+  call f_list_pop
+
+  return
+}
+
 section "print" executable
 
 macro print_string string* {
@@ -556,6 +564,14 @@ macro to_string value* {
   return
 }
 
+macro type_to_string type* {
+  enter type
+
+  call f_type_to_string
+
+  return
+}
+
 section "delete" executable
 
 macro delete variable* {
@@ -614,6 +630,16 @@ macro division first*, second* {
   enter first, second
 
   call f_division
+
+  return
+}
+
+section "null" executable
+
+macro null {
+  enter
+
+  call f_null
 
   return
 }

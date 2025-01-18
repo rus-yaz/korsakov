@@ -38,6 +38,9 @@ f_print_string:
 f_print:
   mov rbx, [rax]
 
+  cmp rbx, NULL
+  je .not_string
+
   cmp rbx, INTEGER
   je .not_string
 

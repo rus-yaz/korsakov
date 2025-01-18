@@ -16,11 +16,15 @@ f_is_equal:
   cmp rcx, LIST
   je .is_list
 
+  cmp rcx, DICTIONARY
+  je .is_dictionary
+
   ; Выход с ошибкой при неизвестном типе
   print EXPECTED_TYPE_ERROR, 0, 0
   print INTEGER_TYPE, 44, 32
   print STRING_TYPE, 44, 32
-  print LIST_TYPE, 0
+  print LIST_TYPE, 44, 32
+  print DICTIONARY_TYPE, 0
   exit -1
 
   .is_integer:
@@ -124,6 +128,15 @@ f_is_equal:
 
       dec rdi
       jmp .list_check
+
+  .is_dictionary:
+    mov rcx, rax
+
+    dictionary_items rbx
+    mov rdx, rax
+    dictionary_items rcx
+    is_equal rax, rdx
+    ret
 
   .return_true:
     mov rax, 1

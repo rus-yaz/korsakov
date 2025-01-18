@@ -59,3 +59,33 @@ print rax
 integer 0
 list_index rbx, rax
 print rax
+
+list
+mov rbx, rax
+integer 2
+list_append rbx, rax
+integer 3
+list_append rbx, rax
+integer 4
+list_append rbx, rax
+integer 5
+list_append rbx, rax
+integer 6
+list_append rbx, rax
+integer 7
+list_append rbx, rax
+
+list_pop rbx
+print <rax, rbx>
+
+integer -1
+list_pop rbx, rax
+print <rax, rbx>
+
+integer 0
+list_pop rbx, rax
+print <rax, rbx>
+
+integer 1
+list_pop rbx, rax
+print <rax, rbx>
