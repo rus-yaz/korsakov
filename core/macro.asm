@@ -415,6 +415,14 @@ macro list_pop list*, index = 0 {
   return
 }
 
+macro list_insert list*, index*, item* {
+  enter list, index, item
+
+  call f_list_insert
+
+  return
+}
+
 section "print" executable
 
 macro print_string string* {
@@ -550,6 +558,14 @@ macro is_digit string* {
   enter string
 
   call f_is_digit
+
+  return
+}
+
+macro string_set string*, index*, value* {
+  enter string, index, value
+
+  call f_string_set
 
   return
 }

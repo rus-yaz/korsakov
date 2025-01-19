@@ -15,48 +15,28 @@ section "data" writable
 
   СРАВНЕНИЯ          rq 1
   АСД                rq 1
-  КОЛИЧЕСТВО_СТРОК   rq 1
 
   INCORRECT_TOKEN_TYPE_ERROR db "Неверный токен:", 0
   INCORRECT_NODE             db "Неверный узел:", 0
   INVALID_NODE_TYPE          db "Неизвестный тип узла:", 0
 
-  двойная_кавычка           db '"', 0
   ДВОЙНАЯ_КАВЫЧКА           rq 1
-  открывающая_скобка        db "(", 0
   ОТКРЫВАЮЩАЯ_СКОБКА        rq 1
-  закрывающая_скобка        db ")", 0
   ЗАКРЫВАЮЩАЯ_СКОБКА        rq 1
-  двоеточие                 db ":", 0
   ДВОЕТОЧИЕ                 rq 1
-  точка_с_запятой           db ";", 0
   ТОЧКА_С_ЗАПЯТОЙ           rq 1
-  точка                     db ".", 0
   ТОЧКА                     rq 1
-  восклицательный_знак      db "!", 0
   ВОСКЛИЦАТЕЛЬНЫЙ_ЗНАК      rq 1
-  равно                     db "=", 0
   РАВНО                     rq 1
-  плюс                      db "+", 0
   ПЛЮС                      rq 1
-  минус                     db "-", 0
   МИНУС                     rq 1
-  звёздочка                 db "*", 0
   ЗВЁЗДОЧКА                 rq 1
-  косая_черта               db "/", 0
   КОСАЯ_ЧЕРТА               rq 1
-  обратная_косая_черта      db "\\", 0
   ОБРАТНАЯ_КОСАЯ_ЧЕРТА      rq 1
-  табуляция                 db 9, 0
   ТАБУЛЯЦИЯ                 rq 1
-  перенос_строки            db 10, 0
   ПЕРЕНОС_СТРОКИ            rq 1
-  пробел                    db " ", 0
   ПРОБЕЛ                    rq 1
-  открывающая_скобка_списка db "%(", 0
   ОТКРЫВАЮЩАЯ_СКОБКА_СПИСКА rq 1
-  закрывающая_скобка_списка db ")%", 0
-  ЗАКРЫВАЮЩАЯ_СКОБКА_СПИСКА rq 1
 
   и          db "и", 0
   И          rq 1
@@ -105,55 +85,30 @@ section "data" writable
   пропустить db "пропустить", 0
   ПРОПУСТИТЬ rq 1
 
-  ТИП             db "тип", 0
   тип             rq 1
-  УЗЕЛ            db "узел", 0
   узел            rq 1
-  ЗНАЧЕНИЕ        db "значение", 0
   значение        rq 1
-  АРГУМЕНТЫ       db "аргументы", 0
   аргументы       rq 1
-  ПЕРЕМЕННАЯ      db "переменная", 0
   переменная      rq 1
-  КЛЮЧИ           db "ключи", 0
   ключи           rq 1
-  ЛЕВЫЙ_УЗЕЛ      db "левый_узел", 0
   левый_узел      rq 1
-  ПРАВЫЙ_УЗЕЛ     db "правый_узел", 0
   правый_узел     rq 1
-  ОПЕРАТОР        db "оператор", 0
   оператор        rq 1
-  ОПЕРАНД         db "операнд", 0
   операнд         rq 1
-  ЭЛЕМЕНТЫ        db "элементы", 0
   элементы        rq 1
-  СЛУЧАИ          db "случаи", 0
   случаи          rq 1
-  СЛУЧАЙ_ИНАЧЕ    db "случай_иначе", 0
   случай_иначе    rq 1
-  НАЧАЛО          db "начало", 0
   начало          rq 1
-  КОНЕЦ           db "конец", 0
   конец           rq 1
-  ШАГ             db "шаг", 0
   шаг             rq 1
-  ТЕЛО            db "тело", 0
   тело            rq 1
-  ВЕРНУТЬ_НУЛЬ    db "вернуть_нуль", 0
   вернуть_нуль    rq 1
-  УСЛОВИЕ         db "условие", 0
   условие         rq 1
-  АВТОВОЗВРАЩЕНИЕ db "автовозвращение", 0
   автовозвращение rq 1
-  ИМЯ_КЛАССА      db "имя_класса", 0
   имя_класса      rq 1
-  ИМЯ_ОБЪЕКТА     db "имя_объекта", 0
   имя_объекта     rq 1
-  РОДИТЕЛИ        db "родители", 0
   родители        rq 1
-  ПУТЬ            db "путь", 0
   путь            rq 1
-  ИМЯ_ПЕРЕМЕННОЙ  db "имя_переменной", 0
   имя_переменной  rq 1
 
   код            rq 1
@@ -280,48 +235,39 @@ section "data" writable
 
 section "start" executable
 start:
-  integer 0
-  mov [КОЛИЧЕСТВО_СТРОК], rax
 
-  buffer_to_string двойная_кавычка
+  string '"'
   mov [ДВОЙНАЯ_КАВЫЧКА], rax
-  buffer_to_string открывающая_скобка
+  string "("
   mov [ОТКРЫВАЮЩАЯ_СКОБКА], rax
-  buffer_to_string закрывающая_скобка
+  string ")"
   mov [ЗАКРЫВАЮЩАЯ_СКОБКА], rax
-  buffer_to_string двоеточие
+  string ":"
   mov [ДВОЕТОЧИЕ], rax
-  buffer_to_string точка_с_запятой
+  string ";"
   mov [ТОЧКА_С_ЗАПЯТОЙ], rax
-  buffer_to_string точка
+  string "."
   mov [ТОЧКА], rax
-  buffer_to_string восклицательный_знак
+  string "!"
   mov [ВОСКЛИЦАТЕЛЬНЫЙ_ЗНАК], rax
-  buffer_to_string равно
+  string "="
   mov [РАВНО], rax
-  buffer_to_string плюс
+  string "+"
   mov [ПЛЮС], rax
-  buffer_to_string минус
+  string "-"
   mov [МИНУС], rax
-  buffer_to_string звёздочка
+  string "*"
   mov [ЗВЁЗДОЧКА], rax
-  buffer_to_string косая_черта
+  string "/"
   mov [КОСАЯ_ЧЕРТА], rax
-  buffer_to_string обратная_косая_черта
+  string "\\"
   mov [ОБРАТНАЯ_КОСАЯ_ЧЕРТА], rax
-  buffer_to_string табуляция
+  string 9
   mov [ТАБУЛЯЦИЯ], rax
-  buffer_to_string перенос_строки
+  string 10
   mov [ПЕРЕНОС_СТРОКИ], rax
-  buffer_to_string пробел
+  string " "
   mov [ПРОБЕЛ], rax
-  buffer_to_string открывающая_скобка_списка
-  mov [ОТКРЫВАЮЩАЯ_СКОБКА_СПИСКА], rax
-  buffer_to_string закрывающая_скобка_списка
-  mov [ЗАКРЫВАЮЩАЯ_СКОБКА_СПИСКА], rax
-
-  dictionary
-  mov rbx, rax
 
   integer [тип_конец_файла]
   mov [ТИП_КОНЕЦ_ФАЙЛА], rax
@@ -390,8 +336,6 @@ start:
   integer [тип_конец_конструкции]
   mov [ТИП_КОНЕЦ_КОНСТРУКЦИИ], rax
 
-  mov [типы], rbx
-
   list
   list_append rax, [ТИП_РАВНО]
   list_append rax, [ТИП_НЕ_РАВНО]
@@ -401,146 +345,147 @@ start:
   list_append rax, [ТИП_МЕНЬШЕ_ИЛИ_РАВНО]
   mov [СРАВНЕНИЯ], rax
 
-  dictionary_set rbx, [ОТКРЫВАЮЩАЯ_СКОБКА], [ТИП_ОТКРЫВАЮЩАЯ_СКОБКА]
-  dictionary_set rbx, [ЗАКРЫВАЮЩАЯ_СКОБКА], [ТИП_ЗАКРЫВАЮЩАЯ_СКОБКА]
-  dictionary_set rbx, [ДВОЕТОЧИЕ], [ТИП_ДВОЕТОЧИЕ]
-  dictionary_set rbx, [ТОЧКА_С_ЗАПЯТОЙ], [ТИП_ТОЧКА_С_ЗАПЯТОЙ]
-  dictionary_set rbx, [ТОЧКА], [ТИП_ТОЧКА]
-  dictionary_set rbx, [ВОСКЛИЦАТЕЛЬНЫЙ_ЗНАК], [ТИП_ВОСКЛИЦАТЕЛЬНЫЙ_ЗНАК]
-  dictionary_set rbx, [РАВНО], [ТИП_ПРИСВАИВАНИЕ]
-  dictionary_set rbx, [ПЛЮС], [ТИП_СЛОЖЕНИЕ]
-  dictionary_set rbx, [МИНУС], [ТИП_ВЫЧИТАНИЕ]
-  dictionary_set rbx, [ЗВЁЗДОЧКА], [ТИП_УМНОЖЕНИЕ]
-  dictionary_set rbx, [КОСАЯ_ЧЕРТА], [ТИП_ДЕЛЕНИЕ]
-  dictionary_set rbx, [ОБРАТНАЯ_КОСАЯ_ЧЕРТА], [ТИП_ОБРАТНАЯ_КОСАЯ_ЧЕРТА]
-  dictionary_set rbx, [ПЕРЕНОС_СТРОКИ], [ТИП_ПЕРЕНОС_СТРОКИ]
-  dictionary_set rbx, [ТАБУЛЯЦИЯ], [ТИП_ТАБУЛЯЦИЯ]
-  dictionary_set rbx, [ПРОБЕЛ], [ТИП_ПРОБЕЛ]
+  dictionary
+  mov [типы], rax
+
+  dictionary_set [типы], [ОТКРЫВАЮЩАЯ_СКОБКА], [ТИП_ОТКРЫВАЮЩАЯ_СКОБКА]
+  dictionary_set [типы], [ЗАКРЫВАЮЩАЯ_СКОБКА], [ТИП_ЗАКРЫВАЮЩАЯ_СКОБКА]
+  dictionary_set [типы], [ДВОЕТОЧИЕ], [ТИП_ДВОЕТОЧИЕ]
+  dictionary_set [типы], [ТОЧКА_С_ЗАПЯТОЙ], [ТИП_ТОЧКА_С_ЗАПЯТОЙ]
+  dictionary_set [типы], [ТОЧКА], [ТИП_ТОЧКА]
+  dictionary_set [типы], [ВОСКЛИЦАТЕЛЬНЫЙ_ЗНАК], [ТИП_ВОСКЛИЦАТЕЛЬНЫЙ_ЗНАК]
+  dictionary_set [типы], [РАВНО], [ТИП_ПРИСВАИВАНИЕ]
+  dictionary_set [типы], [ПЛЮС], [ТИП_СЛОЖЕНИЕ]
+  dictionary_set [типы], [МИНУС], [ТИП_ВЫЧИТАНИЕ]
+  dictionary_set [типы], [ЗВЁЗДОЧКА], [ТИП_УМНОЖЕНИЕ]
+  dictionary_set [типы], [КОСАЯ_ЧЕРТА], [ТИП_ДЕЛЕНИЕ]
+  dictionary_set [типы], [ОБРАТНАЯ_КОСАЯ_ЧЕРТА], [ТИП_ОБРАТНАЯ_КОСАЯ_ЧЕРТА]
+  dictionary_set [типы], [ПЕРЕНОС_СТРОКИ], [ТИП_ПЕРЕНОС_СТРОКИ]
+  dictionary_set [типы], [ТАБУЛЯЦИЯ], [ТИП_ТАБУЛЯЦИЯ]
+  dictionary_set [типы], [ПРОБЕЛ], [ТИП_ПРОБЕЛ]
 
   list
-  mov rbx, rax
+  mov [ключевые_слова], rax
 
   buffer_to_string и
   mov [И], rax
-  list_append rbx, rax
+  list_append [ключевые_слова], rax
   buffer_to_string из
   mov [ИЗ], rax
-  list_append rbx, rax
+  list_append [ключевые_слова], rax
   buffer_to_string от
   mov [ОТ], rax
-  list_append rbx, rax
+  list_append [ключевые_слова], rax
   buffer_to_string до
   mov [ДО], rax
-  list_append rbx, rax
+  list_append [ключевые_слова], rax
   buffer_to_string не
   mov [НЕ], rax
-  list_append rbx, rax
+  list_append [ключевые_слова], rax
   buffer_to_string то
   mov [ТО], rax
-  list_append rbx, rax
+  list_append [ключевые_слова], rax
   buffer_to_string или
   mov [ИЛИ], rax
-  list_append rbx, rax
+  list_append [ключевые_слова], rax
   buffer_to_string при
   mov [ПРИ], rax
-  list_append rbx, rax
+  list_append [ключевые_слова], rax
   buffer_to_string для
   mov [ДЛЯ], rax
-  list_append rbx, rax
+  list_append [ключевые_слова], rax
   buffer_to_string если
   mov [ЕСЛИ], rax
-  list_append rbx, rax
+  list_append [ключевые_слова], rax
   buffer_to_string ложь
   mov [ЛОЖЬ], rax
-  list_append rbx, rax
+  list_append [ключевые_слова], rax
   buffer_to_string пока
   mov [ПОКА], rax
-  list_append rbx, rax
+  list_append [ключевые_слова], rax
   buffer_to_string через
   mov [ЧЕРЕЗ], rax
-  list_append rbx, rax
+  list_append [ключевые_слова], rax
   buffer_to_string класс
   mov [КЛАСС], rax
-  list_append rbx, rax
+  list_append [ключевые_слова], rax
   buffer_to_string иначе
   mov [ИНАЧЕ], rax
-  list_append rbx, rax
+  list_append [ключевые_слова], rax
   buffer_to_string истина
   mov [ИСТИНА], rax
-  list_append rbx, rax
+  list_append [ключевые_слова], rax
   buffer_to_string вернуть
   mov [ВЕРНУТЬ], rax
-  list_append rbx, rax
+  list_append [ключевые_слова], rax
   buffer_to_string удалить
   mov [УДАЛИТЬ], rax
-  list_append rbx, rax
+  list_append [ключевые_слова], rax
   buffer_to_string функция
   mov [ФУНКЦИЯ], rax
-  list_append rbx, rax
+  list_append [ключевые_слова], rax
   buffer_to_string прервать
   mov [ПРЕРВАТЬ], rax
-  list_append rbx, rax
+  list_append [ключевые_слова], rax
   buffer_to_string включить
   mov [ВКЛЮЧИТЬ], rax
-  list_append rbx, rax
+  list_append [ключевые_слова], rax
   buffer_to_string проверить
   mov [ПРОВЕРИТЬ], rax
-  list_append rbx, rax
+  list_append [ключевые_слова], rax
   buffer_to_string пропустить
   mov [ПРОПУСТИТЬ], rax
-  list_append rbx, rax
+  list_append [ключевые_слова], rax
 
-  mov [ключевые_слова], rbx
-
-  buffer_to_string ТИП
+  string "тип"
   mov [тип], rax
-  buffer_to_string УЗЕЛ
+  string "узел"
   mov [узел], rax
-  buffer_to_string ЗНАЧЕНИЕ
+  string "значение"
   mov [значение], rax
-  buffer_to_string АРГУМЕНТЫ
+  string "аргументы"
   mov [аргументы], rax
-  buffer_to_string ПЕРЕМЕННАЯ
+  string "переменная"
   mov [переменная], rax
-  buffer_to_string КЛЮЧИ
+  string "ключи"
   mov [ключи], rax
-  buffer_to_string ЛЕВЫЙ_УЗЕЛ
+  string "левый_узел"
   mov [левый_узел], rax
-  buffer_to_string ПРАВЫЙ_УЗЕЛ
+  string "правый_узел"
   mov [правый_узел], rax
-  buffer_to_string ОПЕРАТОР
+  string "оператор"
   mov [оператор], rax
-  buffer_to_string ОПЕРАНД
+  string "операнд"
   mov [операнд], rax
-  buffer_to_string ЭЛЕМЕНТЫ
+  string "элементы"
   mov [элементы], rax
-  buffer_to_string СЛУЧАИ
+  string "случаи"
   mov [случаи], rax
-  buffer_to_string СЛУЧАЙ_ИНАЧЕ
+  string "случай_иначе"
   mov [случай_иначе], rax
-  buffer_to_string НАЧАЛО
+  string "начало"
   mov [начало], rax
-  buffer_to_string КОНЕЦ
+  string "конец"
   mov [конец], rax
-  buffer_to_string ШАГ
+  string "шаг"
   mov [шаг], rax
-  buffer_to_string ТЕЛО
+  string "тело"
   mov [тело], rax
-  buffer_to_string ВЕРНУТЬ_НУЛЬ
+  string "вернуть_нуль"
   mov [вернуть_нуль], rax
-  buffer_to_string УСЛОВИЕ
+  string "условие"
   mov [условие], rax
-  buffer_to_string АВТОВОЗВРАЩЕНИЕ
+  string "автовозвращение"
   mov [автовозвращение], rax
-  buffer_to_string ИМЯ_КЛАССА
+  string "имя_класса"
   mov [имя_класса], rax
-  buffer_to_string ИМЯ_ОБЪЕКТА
+  string "имя_объекта"
   mov [имя_объекта], rax
-  buffer_to_string РОДИТЕЛИ
+  string "родители"
   mov [родители], rax
-  buffer_to_string ПУТЬ
+  string "путь"
   mov [путь], rax
-  buffer_to_string ИМЯ_ПЕРЕМЕННОЙ
+  string "имя_переменной"
   mov [имя_переменной], rax
 
   integer [узел_доступа_к_переменной]
@@ -597,9 +542,8 @@ start:
   ;print rax
 
   compiler [АСД], [GLOBAL_CONTEXT]
-  ;print rax
-
-  mov rbx, rax
+  ;mov rbx, rax
+  ;print rbx
 
   list
   mov rcx, rax

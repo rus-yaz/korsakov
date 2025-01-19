@@ -89,3 +89,32 @@ print <rax, rbx>
 integer 1
 list_pop rbx, rax
 print <rax, rbx>
+
+list
+mov rcx, rax
+integer 1
+list_append rcx, rax
+integer 2
+list_append rcx, rax
+integer 3
+list_append rcx, rax
+
+print rcx
+
+integer 0
+mov rbx, rax
+integer 0
+list_insert rcx, rbx, rax
+print rcx
+
+integer -1
+mov rbx, rax
+integer 4
+list_insert rcx, rbx, rax
+print rcx
+
+integer 4
+mov rbx, rax
+integer 10
+list_insert rcx, rbx, rax
+print rcx

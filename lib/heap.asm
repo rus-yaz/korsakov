@@ -22,9 +22,11 @@ f_allocate_heap:
   jne .allocated
 
     push rax
-    add rax, [PAGE_SIZE]  ; Смещение на размер страницы памяти
+    mov [LAST_USED_HEAP_BLOCK], rax
 
+    add rax, [PAGE_SIZE]  ; Смещение на размер страницы памяти
     mov [HEAP_END], rax   ; Сохранение указателя на конец кучи
+
     pop rax
 
   .allocated:
@@ -100,6 +102,8 @@ f_delete_block:
     add rcx, HEAP_BLOCK_HEADER*8
     mov [rax + 8*1], rcx
 
+    mov [LAST_USED_HEAP_BLOCK], rax
+
     ; Удаление заголовка удаляемого блока
     mem_mov [r8 + 8*0], 0
     mem_mov [r8 + 8*1], 0
@@ -140,11 +144,6 @@ f_delete_block:
   ret
 
 f_create_block:
-  cmp [HEAP_START], 0
-  jne .allocated
-    allocate_heap
-  .allocated:
-
   ; Приведение размера к числу, кратному 8
   mov rbx, 8
   mov rdx, 0
@@ -160,7 +159,7 @@ f_create_block:
   .skip:
 
   mov r8, rax           ; Сохранение размера создаваемого блока
-  mov rax, [HEAP_START] ; Запись указателя на начало кучи в RAX
+  mov rax, [LAST_USED_HEAP_BLOCK] ; Запись указателя на начало кучи в RAX
 
   ; Цикл для нахождения подходящего блока
   .do:
@@ -230,6 +229,7 @@ f_create_block:
     mov [rbx + 8*2], rcx
   .end:
 
+  mov [LAST_USED_HEAP_BLOCK], rax
   add rax, HEAP_BLOCK_HEADER*8
 
   ret

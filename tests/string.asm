@@ -30,3 +30,17 @@ print rax
 
 join rax, " "
 print rax
+
+string "Привет, мир!"
+mov rcx, rax
+print rcx
+
+integer 6
+mov rbx, rax
+string "!"
+string_set rcx, rbx, rax
+integer 8
+mov rbx, rax
+string "М"
+string_set rcx, rbx, rax
+print rcx

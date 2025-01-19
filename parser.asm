@@ -472,7 +472,7 @@ f_expression:
     next
 
     .identifier_while:
-      token_check_type [токен], [ТОЧКА]
+      token_check_type [токен], [ТИП_ТОЧКА]
       cmp rax, 1
       jne .identifier_end_while
 
@@ -502,7 +502,7 @@ f_expression:
     token_check_type [токен], [ТИП_ДЕЛЕНИЕ]
     cmp rax, 1
     jne .skip_operator
-    ;token_check_type [токен], [ВОЗВЕДЕНИЕ_В_СТЕПЕНЬ]
+    ;token_check_type [токен], [ТИП_ВОЗВЕДЕНИЕ_В_СТЕПЕНЬ]
     ;cmp rax, 1
     ;jne .skip_operator
 
@@ -1116,7 +1116,8 @@ f_list_expression:
   token_check_type [токен], [ТИП_ОТКРЫВАЮЩАЯ_СКОБКА_СПИСКА]
   cmp rax, 1
   je .correct_token
-    print <EXPECTED, ОТКРЫВАЮЩАЯ_СКОБКА_СПИСКА>
+    string "%("
+    print <EXPECTED, rax>
     exit -1
 
   .correct_token:
@@ -2192,7 +2193,7 @@ f_statements:
   list
   mov rbx, rax
 
-  token_check_type [токен], [ПЕРЕНОС_СТРОКИ]
+  token_check_type [токен], [ТИП_ПЕРЕНОС_СТРОКИ]
   cmp rax, 1
   jne .no_newline_1
     next
@@ -2219,7 +2220,7 @@ f_statements:
     dictionary_copy [индекс]
     mov r9, rax
 
-    token_check_type [токен], [ПЕРЕНОС_СТРОКИ]
+    token_check_type [токен], [ТИП_ПЕРЕНОС_СТРОКИ]
     cmp rax, 1
     jne .no_newline_2
       next
@@ -2310,7 +2311,6 @@ f_statement:
 
   .not_break:
 
-  ; RBX — expression
   expression
 
   ret

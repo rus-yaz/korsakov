@@ -356,6 +356,80 @@ f_string_get:
 
   ret
 
+f_string_set:
+  ; RBX — index
+  ; RCX — value
+  ; RDX — string
+
+  mov rdx, rax
+
+  check_type rbx, INTEGER
+  check_type rcx, STRING
+  check_type rdx, STRING
+
+  string_length rcx
+  cmp rax, 1
+  je .correct_value_length
+
+    string "Значение для замены должно иметь содержать один символ"
+    print rax
+    exit -1
+
+  .correct_value_length:
+
+  mov rax, [rbx + INTEGER_HEADER*8]
+  cmp rax, 0
+  jge .positive_index
+    list_length rdx
+    integer rax
+    integer_add rbx, rax
+    mov rbx, rax
+
+  .positive_index:
+
+  mov rax, [rbx + INTEGER_HEADER*8]
+
+  cmp rax, 0
+  jl .index_out_of_range
+
+  mov r8, rax
+  string_length rdx
+  cmp r8, rax
+  jl .correct_index
+
+  .index_out_of_range:
+
+    string "Индекс выходит за пределы списка"
+    print rax
+    exit -1
+
+  .correct_index:
+
+  mov rbx, [rbx + INTEGER_HEADER*8]
+  inc rbx
+
+  mov r8, rdx
+
+  .while:
+    cmp rbx, 0
+    je .end_while
+
+    mov r8, [r8 + 8*1]
+
+    dec rbx
+    jmp .while
+
+  .end_while:
+
+  mov rcx, [rcx + 8*1]
+  add rcx, (2 + INTEGER_HEADER) * 8
+
+  add r8, (2 + INTEGER_HEADER) * 8
+  mem_mov [r8], [rcx]
+
+  mov rax, rdx
+  ret
+
 f_split:
   check_type rax, STRING
 

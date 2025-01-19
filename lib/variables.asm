@@ -6,6 +6,182 @@ f_assign:
 
   mov r8, rax
 
+  list_length rbx
+  cmp rax, 0
+  je .empty_keys
+
+    ; R9 — item
+    dictionary_get rdx, r8, 0
+    mov r9, rax
+    cmp r9, 0
+    jne .correct_variable
+      string "Переменная `"
+      string_append rax, r8
+      mov rbx, rax
+      string "` не найдена"
+      string_append rbx, rax
+      print rax
+      exit -1
+
+    .correct_variable:
+
+    ; R10 — items
+    list
+    mov r10, rax
+    list_append r10, r9
+
+    ; R11 — key_index
+    integer 0
+    mov r11, rax
+
+    .get_while:
+
+      list_length rbx
+      dec rax
+      integer rax
+      is_equal r11, rax
+      cmp rax, 1
+      je .get_end_while
+
+      ; R12 — key
+      list_get rbx, r11
+      mov r12, rax
+
+      ; R13 — item
+      integer 0
+      list_get r10, rax
+      mov r13, rax
+
+      mov rax, [r13]
+
+      cmp rax, LIST
+      jne .get_not_list
+
+        list_get r13, r12
+        jmp .get_continue
+
+      .get_not_list:
+
+      cmp rax, STRING
+      jne .get_not_string
+
+        string_get r13, r12
+        jmp .get_continue
+
+      .get_not_string:
+
+      cmp rax, DICTIONARY
+      jne .get_not_dictionary
+
+        dictionary_get r13, r12
+        jmp .get_continue
+
+      .get_not_dictionary:
+
+        type_to_string rax
+        mov rbx, rax
+        string "Тип `"
+        string_append rax, rbx
+        mov rbx, rax
+        string "` не является коллекцией"
+        string_append rbx, rax
+        print rax
+        exit -1
+
+      .get_continue:
+
+      mov r13, rax
+
+      integer 0
+      list_insert r10, rax, r13
+
+      integer_inc r11
+      jmp .get_while
+
+    .get_end_while:
+
+    integer 0
+    list_insert r10, rax, rcx
+
+    ; R11 — key_index
+    list_length rbx
+    integer rax
+    mov r11, rax
+
+    .set_while:
+      integer 0
+      is_equal r11, rax
+      cmp rax, 1
+      je .set_end_while
+
+      integer_dec r11
+
+      integer 0
+      list_pop r10, rax
+      mov rcx, rax
+
+      ; R12 — item
+      integer 0
+      list_get r10, rax
+      mov r12, rax
+
+      ; R13 — key
+      list_get rbx, r11
+      mov r13, rax
+
+      mov rax, [r12]
+
+      cmp rax, LIST
+      jne .set_not_list
+
+        list_set r12, r13, rcx
+        jmp .set_continue
+
+      .set_not_list:
+
+      cmp rax, STRING
+      jne .set_not_string
+
+        string_set r12, r13, rcx
+        jmp .set_continue
+
+      .set_not_string:
+
+      cmp rax, DICTIONARY
+      jne .set_not_dictionary
+
+        dictionary_set r12, r13, rcx
+        jmp .set_continue
+
+      .set_not_dictionary:
+
+        type_to_string rax
+        mov rbx, rax
+        string "Тип `"
+        string_append rax, rbx
+        mov rbx, rax
+        string "` не является коллекцией"
+        string_append rbx, rax
+        print rax
+        exit -1
+
+      .set_continue:
+
+      mov rcx, rax
+
+      integer 0
+      list_set r10, rax, rcx
+
+      jmp .set_while
+
+    .set_end_while:
+
+    integer 0
+    list_get r10, rax
+    mov rcx, rax
+
+  .empty_keys:
+
   dictionary_set rdx, r8, rcx
   mov rax, rcx
 

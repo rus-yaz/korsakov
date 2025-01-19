@@ -47,6 +47,49 @@ f_list_get:
 
   add rax, 8*2
 
+  mov rbx, [rax]
+
+  cmp rbx, INTEGER
+  jne .not_integer
+
+    integer_copy rax
+    jmp .continue
+
+  .not_integer:
+
+  cmp rbx, LIST
+  jne .not_list
+
+    list_copy rax
+    jmp .continue
+
+  .not_list:
+
+  cmp rbx, STRING
+  jne .not_string
+
+    string_copy rax
+    jmp .continue
+
+  .not_string:
+
+  cmp rbx, DICTIONARY
+  jne .not_dictionary
+
+    dictionary_copy rax
+    jmp .continue
+
+  .not_dictionary:
+
+    type_to_string rbx
+    mov rbx, rax
+    string "Не поддерживаемый тип: "
+    string_append rax, rbx
+    print rax
+    exit -1
+
+  .continue:
+
   ret
 
 f_list_copy:
@@ -294,8 +337,8 @@ f_list_set:
 
   mov rdx, rax
 
-  ; RCX — item
   ; RBX — index
+  ; RCX — item
   ; RDX — list
 
   mov r8, rdx
@@ -330,25 +373,25 @@ f_list_set:
   cmp rax, DICTIONARY
   je .dictionary
 
-  ; Выход с ошибкой при неизвестном типе
-  print EXPECTED_TYPE_ERROR, "", ""
+    ; Выход с ошибкой при неизвестном типе
+    print EXPECTED_TYPE_ERROR, "", ""
 
-  list
-  mov rbx, rax
+    list
+    mov rbx, rax
 
-  buffer_to_string INTEGER_TYPE
-  list_append rbx, rax
-  buffer_to_string STRING_TYPE
-  list_append rbx, rax
-  buffer_to_string LIST_TYPE
-  list_append rbx, rax
-  buffer_to_string DICTIONARY_TYPE
-  list_append rbx, rax
+    type_to_string INTEGER
+    list_append rbx, rax
+    type_to_string LIST
+    list_append rbx, rax
+    type_to_string STRING
+    list_append rbx, rax
+    type_to_string DICTIONARY
+    list_append rbx, rax
 
-  join rbx, ", "
-  print rax
+    join rbx, ", "
+    print rax
 
-  exit -1
+    exit -1
 
   .integer:
     integer_copy rbx
@@ -396,10 +439,10 @@ f_list_set:
 
   mov r10, [rax + 8*1]
   cmp r10, 0
-  je .not_last
+  je .last
     mov [r10 + 8*0], rax
 
-  .not_last:
+  .last:
 
   add rax, 8*2
   mem_copy rbx, rax, r9
@@ -522,5 +565,129 @@ f_list_pop:
 
   sub r8, 8*2
   delete_block r8
+
+  ret
+
+f_list_insert:
+  ; RBX — index
+  ; RCX — value
+  ; RDX — list
+
+  mov rdx, rax
+
+  check_type rbx, INTEGER
+  check_type rdx, LIST
+
+  mov rax, [rbx + INTEGER_HEADER*8]
+  cmp rax, 0
+  jge .positive_index
+    list_length rdx
+    integer rax
+    integer_add rbx, rax
+    mov rbx, rax
+
+  .positive_index:
+
+  mov rax, [rbx + INTEGER_HEADER*8]
+
+  cmp rax, 0
+  jl .index_out_of_range
+
+  mov r8, rax
+  list_length rdx
+  cmp r8, rax
+  jl .correct_index
+
+  .index_out_of_range:
+
+    string "Индекс выходит за пределы списка"
+    print rax
+    exit -1
+
+  .correct_index:
+
+  list_length rdx
+  inc rax
+  mem_mov [rdx + 8*2], rax
+
+  mov rbx, [rbx + INTEGER_HEADER*8]
+  inc rbx
+
+  push rdx
+  mov r8, rdx
+
+  .while:
+    cmp rbx, 0
+    je .end_while
+
+    mov r8, [r8 + 8*1]
+
+    dec rbx
+    jmp .while
+
+  .end_while:
+
+  mov rdx, r8
+  mov rax, [rcx]
+
+  cmp rax, INTEGER
+  jne .not_integer
+
+    mov rax, INTEGER_SIZE
+    jmp .continue
+
+  .not_integer:
+
+  cmp rax, LIST
+  jne .not_list
+
+    mov rax, LIST_HEADER
+    jmp .continue
+
+  .not_list:
+
+  cmp rax, STRING
+  jne .not_string
+
+    mov rax, STRING_HEADER
+    jmp .continue
+
+  .not_string:
+
+  cmp rax, DICTIONARY
+  jne .not_dictionary
+
+    mov rax, DICTIONARY_HEADER
+    jmp .continue
+
+  .not_dictionary:
+
+    type_to_string rax
+    mov rbx, rax
+    string "Неподдерживаемый тип: "
+    string_append rax, rbx
+    print rax
+
+    exit -1
+
+  .continue:
+
+  mov r9, rax
+  add rax, 2
+
+  imul rax, 8
+  create_block rax
+
+  mem_mov r8, [rdx + 8*0]
+  mem_mov [rax + 8*0], r8
+
+  mem_mov [rdx + 8*0], rax
+  mem_mov [r8  + 8*1], rax
+
+  mem_mov [rax + 8*1], rdx
+  add rax, 8*2
+
+  mem_copy rcx, rax, r9
+  pop rax
 
   ret
