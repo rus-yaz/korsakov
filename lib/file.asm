@@ -1,4 +1,5 @@
 f_get_file_size:
+  get_arg 0
   push rax
 
   create_block STAT_BUFFER_SIZE
@@ -18,6 +19,12 @@ f_get_file_size:
   ret
 
 f_open_file:
+  get_arg 2
+  mov rcx, rax
+  get_arg 1
+  mov rbx, rax
+  get_arg 0
+
   ; Сохранение указателя на имя файла
   push rax
 
@@ -51,6 +58,8 @@ f_open_file:
   ret
 
 f_close_file:
+  get_arg 0
+
   ; Проверка типа
   check_type rax, FILE
 
@@ -64,6 +73,8 @@ f_close_file:
   ret
 
 f_read_file:
+  get_arg 0
+
   ; Проверка типа
   check_type rax, FILE
 
@@ -109,6 +120,10 @@ f_read_file:
   ret
 
 f_write_file:
+  get_arg 1
+  mov rbx, rax
+  get_arg 0
+
   check_type rax, FILE
 
   ; Сохранение файлового дескриптора

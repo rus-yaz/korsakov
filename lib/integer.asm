@@ -1,4 +1,5 @@
 f_integer:
+  get_arg 0
   mov rbx, rax
 
   create_block INTEGER_SIZE*8
@@ -9,6 +10,7 @@ f_integer:
   ret
 
 f_integer_copy:
+  get_arg 0
   check_type rax, INTEGER
   mov rbx, [rax + 8*1]
 
@@ -19,6 +21,7 @@ f_integer_copy:
   ret
 
 f_integer_inc:
+  get_arg 0
   check_type rax, INTEGER
 
   mov rbx, [rax + INTEGER_HEADER * 8]
@@ -28,6 +31,7 @@ f_integer_inc:
   ret
 
 f_integer_dec:
+  get_arg 0
   check_type rax, INTEGER
 
   mov rbx, [rax + INTEGER_HEADER * 8]
@@ -37,6 +41,10 @@ f_integer_dec:
   ret
 
 f_integer_add:
+  get_arg 1
+  mov rbx, rax
+  get_arg 0
+
   check_type rax, INTEGER
   check_type rbx, INTEGER
 
@@ -51,6 +59,10 @@ f_integer_add:
   ret
 
 f_integer_sub:
+  get_arg 1
+  mov rbx, rax
+  get_arg 0
+
   check_type rax, INTEGER
   check_type rbx, INTEGER
 

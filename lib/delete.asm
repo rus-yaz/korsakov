@@ -1,4 +1,6 @@
 f_delete:
+  get_arg 0
+
   mov rbx, [rax - HEAP_BLOCK_HEADER*8]
   mov rcx, HEAP_BLOCK
 

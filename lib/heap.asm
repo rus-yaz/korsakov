@@ -37,6 +37,7 @@ f_allocate_heap:
   ret
 
 f_delete_block:
+  get_arg 0
   sub rax, HEAP_BLOCK_HEADER*8
 
   ; Если заголовок не найден, выйти с ошибкой
@@ -144,6 +145,8 @@ f_delete_block:
   ret
 
 f_create_block:
+  get_arg 0
+
   ; Приведение размера к числу, кратному 8
   mov rbx, 8
   mov rdx, 0

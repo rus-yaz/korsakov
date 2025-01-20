@@ -1,4 +1,5 @@
 f_buffer_length:
+  get_arg 0
   mov rcx, 0 ; Счётчик
 
   .while:
@@ -17,6 +18,10 @@ f_buffer_length:
   ret
 
 f_sys_print:
+  get_arg 1
+  mov rbx, rax
+  get_arg 0
+
   sys_write STDOUT,\
             rax,\       ; Указатель на данные для вывода
             rbx         ; Длина данных для вывода
@@ -24,7 +29,9 @@ f_sys_print:
   ret
 
 f_print_buffer:
+  get_arg 0
   mov rsi, rax
+
   buffer_length rsi
   mov rbx, rax
 
@@ -34,20 +41,28 @@ f_print_buffer:
   ret
 
 f_mem_copy:
+  get_arg 2
+  mov rcx, rax ; Количество блоков
+
+  get_arg 1
+  mov rdi, rax ; Место назначения
+
+  get_arg 0
   mov rsi, rax ; Источник
-  mov rdi, rbx ; Место назначения
-  ; RCX — количество блоков
 
   rep movsq
 
   ret
 
 f_check_error:
+  get_arg 0
   exit -1, rax
 
 f_check_type:
+  get_arg 0
   mov r8, [rax]
-  mov r9, rbx
+  get_arg 1
+  mov r9, rax
 
   cmp r8, r9
   jne .continue

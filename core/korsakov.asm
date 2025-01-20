@@ -79,6 +79,8 @@ include "../lib/null.asm"
 
 section "_start" executable
 _start:
+  allocate_heap
+
   dictionary
   mov [GLOBAL_CONTEXT], rax
 

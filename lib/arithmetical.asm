@@ -1,4 +1,7 @@
 f_addition:
+  get_arg 1
+  mov rbx, rax
+  get_arg 0
   mov rcx, rax
 
   mov rdx, [rbx]
@@ -30,6 +33,9 @@ f_addition:
   ret
 
 f_subtraction:
+  get_arg 1
+  mov rbx, rax
+  get_arg 0
   mov rcx, rax
 
   mov rdx, [rbx]
@@ -61,6 +67,9 @@ f_subtraction:
   ret
 
 f_multiplication:
+  get_arg 1
+  mov rbx, rax
+  get_arg 0
   mov rcx, rax
 
   mov rdx, [rbx]
@@ -93,6 +102,9 @@ f_multiplication:
   ret
 
 f_division:
+  get_arg 1
+  mov rbx, rax
+  get_arg 0
   mov rcx, rax
 
   mov rdx, [rbx]

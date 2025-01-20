@@ -8,6 +8,7 @@ f_list:
   ret
 
 f_list_length:
+  get_arg 0
   check_type rax, LIST
 
   mov rax, [rax + 8*2]
@@ -15,6 +16,10 @@ f_list_length:
   ret
 
 f_list_get:
+  get_arg 1
+  mov rbx, rax
+  get_arg 0
+
   ; Проверка типа
   check_type rax, LIST
   check_type rbx, INTEGER
@@ -93,6 +98,7 @@ f_list_get:
   ret
 
 f_list_copy:
+  get_arg 0
   check_type rax, LIST
 
   push rax
@@ -130,6 +136,9 @@ f_list_copy:
 
 
 f_list_append:
+  get_arg 1
+  mov rbx, rax
+  get_arg 0
   check_type rax, LIST
 
   mov rcx, rax
@@ -244,6 +253,7 @@ f_list_append:
   ret
 
 f_string_to_list:
+  get_arg 0
   check_type rax, STRING
 
   mov rbx, rax
@@ -282,6 +292,9 @@ f_string_to_list:
   ret
 
 f_list_index:
+  get_arg 1
+  mov rbx, rax
+  get_arg 0
   check_type rax, LIST
 
   mov rcx, rax
@@ -315,6 +328,9 @@ f_list_index:
   ret
 
 f_list_include:
+  get_arg 1
+  mov rbx, rax
+  get_arg 0
   check_type rax, LIST
 
   list_index rax, rbx
@@ -332,6 +348,12 @@ f_list_include:
   ret
 
 f_list_set:
+  get_arg 2
+  mov rcx, rax
+  get_arg 1
+  mov rbx, rax
+  get_arg 0
+
   check_type rax, LIST
   check_type rbx, INTEGER
 
@@ -452,10 +474,12 @@ f_list_set:
   ret
 
 f_list_pop:
+  get_arg 0
+  mov rcx, rax
+  get_arg 1
+  mov rbx, rax
   ; RBX — index = 0
   ; RCX — list
-
-  mov rcx, rax
 
   cmp rbx, 0
   jne .not_default
@@ -569,11 +593,15 @@ f_list_pop:
   ret
 
 f_list_insert:
+  get_arg 0
+  mov rdx, rax
+  get_arg 1
+  mov rbx, rax
+  get_arg 2
+  mov rcx, rax
   ; RBX — index
   ; RCX — value
   ; RDX — list
-
-  mov rdx, rax
 
   check_type rbx, INTEGER
   check_type rdx, LIST

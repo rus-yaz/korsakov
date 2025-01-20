@@ -1,4 +1,8 @@
 f_is_equal:
+  get_arg 1
+  mov rbx, rax
+  get_arg 0
+
   ; Сохранение типов
   mov rcx, [rax]
   mov rdx, [rbx]

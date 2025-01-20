@@ -1,4 +1,5 @@
 f_to_string:
+  get_arg 0
   mov rbx, [rax]
 
   cmp rbx, NULL
@@ -218,6 +219,7 @@ f_to_string:
     ret
 
 f_type_to_string:
+  get_arg 0
   mov rdx, rax
 
   dictionary

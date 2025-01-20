@@ -1,4 +1,6 @@
 f_buffer_to_binary:
+  get_arg 0
+
   push rax ; Сохранение указателя на буфер
   buffer_length rax
 
@@ -42,6 +44,7 @@ f_buffer_to_binary:
   ret
 
 f_binary_to_string:
+  get_arg 0
   check_type rax, BINARY
 
   mov rbx, [rax + 8*1]
@@ -183,6 +186,8 @@ f_binary_to_string:
   ret
 
 f_buffer_to_string:
+  get_arg 0
+
   buffer_to_binary rax
   push rax
 
@@ -194,6 +199,7 @@ f_buffer_to_string:
   ret
 
 f_string_length:
+  get_arg 0
   check_type rax, STRING
 
   mov rax, [rax + 8*2]
@@ -201,6 +207,7 @@ f_string_length:
   ret
 
 f_string_copy:
+  get_arg 0
   check_type rax, STRING
 
   mov rbx, rax
@@ -242,6 +249,10 @@ f_string_copy:
   ret
 
 f_string_append:
+  get_arg 1
+  mov rbx, rax
+  get_arg 0
+
   check_type rax, STRING
   check_type rbx, STRING
 
@@ -295,6 +306,10 @@ f_string_append:
   ret
 
 f_string_add:
+  get_arg 1
+  mov rbx, rax
+  get_arg 0
+
   check_type rax, STRING
   check_type rbx, STRING
 
@@ -304,6 +319,10 @@ f_string_add:
   ret
 
 f_string_get:
+  get_arg 1
+  mov rbx, rax
+  get_arg 0
+
   check_type rax, STRING
   check_type rbx, INTEGER
 
@@ -357,11 +376,15 @@ f_string_get:
   ret
 
 f_string_set:
+  get_arg 0
+  mov rdx, rax
+  get_arg 1
+  mov rbx, rax
+  get_arg 2
+  mov rcx, rax
   ; RBX — index
   ; RCX — value
   ; RDX — string
-
-  mov rdx, rax
 
   check_type rbx, INTEGER
   check_type rcx, STRING
@@ -431,6 +454,10 @@ f_string_set:
   ret
 
 f_split:
+  get_arg 1
+  mov rbx, rax
+  get_arg 0
+
   check_type rax, STRING
 
   push rax
@@ -502,6 +529,9 @@ f_split:
   ret
 
 f_join:
+  get_arg 1
+  mov rbx, rax
+  get_arg 0
   check_type rax, LIST
 
   mov r15, rsp
@@ -566,6 +596,7 @@ f_join:
   ret
 
 f_is_alpha:
+  get_arg 0
   check_type rax, STRING
   mov rbx, rax
 
@@ -621,6 +652,7 @@ f_is_alpha:
   ret
 
 f_is_digit:
+  get_arg 0
   check_type rax, STRING
   mov rbx, rax
 

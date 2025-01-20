@@ -1,4 +1,8 @@
 f_dictionary:
+  get_arg 1
+  mov rbx, rax
+  get_arg 0
+
   cmp rax, 0
   jne .not_empty
   cmp rbx, 0
@@ -79,12 +83,14 @@ f_dictionary:
   ret
 
 f_dictionary_length:
+  get_arg 0
   check_type rax, DICTIONARY
 
   mov rax, [rax + 8*2]
   ret
 
 f_dictionary_keys:
+  get_arg 0
   check_type rax, DICTIONARY
 
   mov rbx, [rax + 8*1]
@@ -111,6 +117,7 @@ f_dictionary_keys:
   ret
 
 f_dictionary_values:
+  get_arg 0
   check_type rax, DICTIONARY
 
   mov rbx, [rax + 8*1]
@@ -137,6 +144,12 @@ f_dictionary_values:
   ret
 
 f_dictionary_get:
+  get_arg 2
+  mov rcx, rax
+  get_arg 1
+  mov rbx, rax
+  get_arg 0
+
   check_type rax, DICTIONARY
   mov rdx, rbx
 
@@ -172,6 +185,7 @@ f_dictionary_get:
   ret
 
 f_dictionary_copy:
+  get_arg 0
   check_type rax, DICTIONARY
 
   push rax
@@ -186,6 +200,7 @@ f_dictionary_copy:
   ret
 
 f_dictionary_items:
+  get_arg 0
   check_type rax, DICTIONARY
 
   push rax
@@ -235,6 +250,12 @@ f_dictionary_items:
   ret
 
 f_dictionary_set:
+  get_arg 2
+  mov rcx, rax
+  get_arg 1
+  mov rbx, rax
+  get_arg 0
+
   check_type rax, DICTIONARY
   mov rdx, rax
 

@@ -1,5 +1,5 @@
 f_print_string:
-  ; Проверка типа
+  get_arg 0
   check_type rax, STRING
 
   mov rcx, [rax + 8*2]       ; Длина строки
@@ -36,6 +36,7 @@ f_print_string:
   ret
 
 f_print:
+  get_arg 0
   mov rbx, [rax]
 
   cmp rbx, NULL

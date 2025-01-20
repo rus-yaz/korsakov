@@ -162,14 +162,6 @@ macro arithmetical_expression {
   return
 }
 
-macro arithmetical_expression {
-  enter
-
-  call f_arithmetical_expression
-
-  return
-}
-
 macro list_expression {
   enter
 
@@ -205,7 +197,7 @@ macro else_expression {
 macro for_expression {
   enter
 
-  call f_else_expression
+  call f_for_expression
 
   return
 }
@@ -266,15 +258,8 @@ macro statement {
   return
 }
 
-macro include_statement {
-  enter
-
-  call f_include_statement
-
-  return
-}
-
 f_parser:
+  get_arg 0
   check_type rax, LIST
 
   ; Инициализация
@@ -324,6 +309,7 @@ f_next:
   ret
 
 f_reverse:
+  get_arg 0
   ; RAX — amount = 0
 
   cmp rax, 0
@@ -362,6 +348,9 @@ f_update_token:
   ret
 
 f_token_check_type:
+  get_arg 1
+  mov rbx, rax
+  get_arg 0
   ; RAX — token
   ; RBX — types
 
@@ -408,8 +397,11 @@ f_token_check_type:
   ret
 
 f_token_check_keyword:
+  get_arg 1
+  mov rbx, rax
+  get_arg 0
+  ; RAX — token
   ; RBX — keywords
-  ; RCX — token
 
   check_type rax, DICTIONARY
   dictionary_get rax, [значение]
@@ -451,7 +443,6 @@ f_token_check_keyword:
 
 f_expression:
   ; RBX — index
-
   integer_copy [индекс]
   mov rbx, rax
 
@@ -487,8 +478,6 @@ f_expression:
 
     list_node rdx
     mov rdx, rax
-
-    mov r8, 0
 
     token_check_type [токен], [ТИП_СЛОЖЕНИЕ]
     cmp rax, 1
@@ -648,6 +637,12 @@ f_expression:
   ret
 
 f_binary_operation:
+  get_arg 0
+  mov rdx, rax
+  get_arg 1
+  mov rbx, rax
+  get_arg 2
+  mov rcx, rax
   ; RBX — left_function
   ; RCX — right_function = 0
   ; RDX — operators
@@ -657,8 +652,6 @@ f_binary_operation:
   ; R11 — right_operator
   ; R12 — right
 
-  mov rdx, rax ; Сохранение операторов
-
   cmp rcx, 0
   jne .not_default
     mov rcx, rbx
@@ -666,6 +659,7 @@ f_binary_operation:
   .not_default:
 
   enter rbx
+  get_arg 0
   call rax
   return
   mov r8, rax
@@ -687,6 +681,7 @@ f_binary_operation:
     next
 
     enter rcx
+    get_arg 0
     call rax
     return
     mov r10, rax
@@ -1790,6 +1785,8 @@ f_while_expression:
   ret
 
 f_function_expression:
+  get_arg 0
+  mov rbx, rax
   ; RBX — is_method
 
   token_check_keyword [токен], [ФУНКЦИЯ]

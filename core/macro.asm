@@ -1,39 +1,69 @@
 section "macro" executable
 
-macro push [arg*] {
+macro push [arg] {
   push arg
 }
 
-macro pop [arg*] {
+macro pop [arg] {
   pop arg
 }
 
-macro enter arg_1 = 0, arg_2 = 0, arg_3 = 0, arg_4 = 0, arg_5 = 0, arg_6 = 0, arg_7 = 0, arg_8 = 0, arg_9 = 0, arg_10 = 0, arg_11 = 0, arg_12 = 0 {
-  push rax, rbx, rcx, rdx, rsi, rdi, r8, r9, r10, r11, r12, r13, r14, r15
+macro enter [arg] {
+  common
+    push rbp, rax, rbx, rcx, rdx, rsi, rdi, r8, r9, r10, r11, r12, r13, r14, r15
+    count = 0
 
-  macro pushq [arg*] \{
-    mov [rsp - 8*2], rax
-    mov rax, arg
-    mov [rsp - 8*1], rax
-    mov rax, [rsp - 8*2]
-    sub rsp, 8
-  \}
+  reverse
+    if arg eqtype
+    else
+      mov rbp, arg
+      push rbp
+      count = count + 1
+    end if
 
-  pushq arg_12, arg_11, arg_10, arg_9, arg_8, arg_7, arg_6, arg_5, arg_4, arg_3, arg_2, arg_1
-  pop   rax,    rbx,    rcx,    rdx,   r8,    r9,    r10,   r11,   r12,   r13,   r14,   r15
+  common
+    push count
+    mov rbp, rsp
+}
+
+macro get_arg index {
+
+  mov rax, index
+  cmp rax, 0
+  jge @f
+
+    exit -1
+  @@:
+
+  mov rax, [rbp]
+  cmp rax, index
+  jg @f
+
+    exit -1
+  @@:
+
+  mov rax, index
+  mov rax, [rbp + (1 + index) * 8]
 }
 
 macro leave {
-  pop r15, r14, r13, r12, r11, r10, r9, r8, rdi, rsi, rdx, rcx, rbx, rax
+  pop rax
+  imul rax, 8
+  add rsp, rax
+  pop r15, r14, r13, r12, r11, r10, r9, r8, rdi, rsi, rdx, rcx, rbx, rax, rbp
 }
 
 macro return {
-  push rax
-  add rsp, 8
+  mov rbp, rax
+  pop rax
 
-  leave
+  imul rax, 8
+  add rsp, rax
 
-  mov rax, [rsp - 8*15]
+  pop r15, r14, r13, r12, r11, r10, r9, r8, rdi, rsi, rdx, rcx, rbx, rax
+  mov rax, rbp
+
+  pop rbp
 }
 
 macro mem_mov dst*, src* {
@@ -79,7 +109,7 @@ macro sys_print ptr*, size* {
   leave
 }
 
-macro print_buffer [buffer*] {
+macro print_buffer buffer* {
   enter buffer
 
   call f_print_buffer

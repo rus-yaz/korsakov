@@ -9,6 +9,7 @@ macro tokenizer filename* {
 }
 
 f_tokenizer:
+  get_arg 0
   open_file rax
   mov rbx, rax
 

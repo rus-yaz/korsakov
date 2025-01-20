@@ -1,4 +1,12 @@
 f_run:
+  get_arg 3
+  mov rdx, rax
+  get_arg 2
+  mov rcx, rax
+  get_arg 1
+  mov rbx, rax
+  get_arg 0
+
   push rdx
   push rax
   push rcx

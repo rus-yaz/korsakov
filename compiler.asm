@@ -33,6 +33,9 @@ macro compile node*, context* {
 }
 
 f_check_node_type:
+  get_arg 1
+  mov rbx, rax
+  get_arg 0
   mov rcx, rax
 
   string "узел"
@@ -42,6 +45,9 @@ f_check_node_type:
   ret
 
 f_compiler:
+  get_arg 1
+  mov rbx, rax
+  get_arg 0
   mov [АСД], rax
 
   integer 0
@@ -75,6 +81,9 @@ f_compiler:
   ret
 
 f_compile:
+  get_arg 1
+  mov rbx, rax
+  get_arg 0
   mov rcx, rax
 
   string ""

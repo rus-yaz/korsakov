@@ -54,7 +54,7 @@ section "syscalls_amd64" writable
   define MAP_GROWSUP   0x0200
   define MAP_HUGETLB   0x4000
 
-section "syscall" executable
+section "syscalls" executable
 
 macro syscall number*, arg_1 = 0, arg_2 = 0, arg_3 = 0, arg_4 = 0, arg_5 = 0, arg_6 = 0 {
   push r9, r8, r10, rdx, rsi, rdi
@@ -71,16 +71,12 @@ macro syscall number*, arg_1 = 0, arg_2 = 0, arg_3 = 0, arg_4 = 0, arg_5 = 0, ar
   pop r9, r8, r10, rdx, rsi, rdi
 }
 
-section "sys_read" executable
-
 macro sys_read file_descriptor*, buffer_ptr*, size* {
   syscall SYS_READ,\
           file_descriptor,\ ; Файловый дескриптор, место чтение
           buffer_ptr,\      ; Указатель на сегмент памяти, место записи
           size              ; Размер читаемой последовательности в байтах
 }
-
-section "sys_write" executable
 
 macro sys_write file_descriptor*, buffer_ptr*, size* {
   syscall SYS_WRITE,\
@@ -89,8 +85,6 @@ macro sys_write file_descriptor*, buffer_ptr*, size* {
           size              ; Размер читаемой последовательности в байтах
 }
 
-section "sys_open" executable
-
 macro sys_open filename*, flags*, mode* {
   syscall SYS_OPEN,\
           filename,\ ; Указатель на имя файла
@@ -98,22 +92,16 @@ macro sys_open filename*, flags*, mode* {
           mode       ; Первоначальное разрешение на доступ к файлу
 }
 
-section "sys_close" executable
-
 macro sys_close file_descriptor* {
   syscall SYS_CLOSE,\
           file_descriptor ; Файловый дескриптор для закрытия
 }
-
-section "sys_stat" executable
 
 macro sys_stat filename*, buffer_ptr* {
   syscall SYS_STAT,\
           filename,\ ; Указатель на имя файла
           buffer_ptr ; Указатель на сегмент памяти, место записи
 }
-
-section "sys_mmap" executable
 
 macro sys_mmap addr*, length*, rights*, flags*, file_descriptor*, offset* {
   syscall SYS_MMAP,\
@@ -125,28 +113,20 @@ macro sys_mmap addr*, length*, rights*, flags*, file_descriptor*, offset* {
           offset            ; Смещение относительно начала файла
 }
 
-section "sys_munmap" executable
-
 macro sys_munmap addr*, length* {
   syscall SYS_MUNMAP,\
           addr,\ ; Адрес
           length ; Количество памяти для очистки
 }
 
-section "sys_exit" executable
-
 macro sys_exit error_code* {
   syscall SYS_EXIT,\
           error_code ; Код выхода
 }
 
-section "sys_fork" executable
-
 macro sys_fork {
   syscall SYS_FORK
 }
-
-section "sys_execve" executable
 
 macro sys_execve command*, args*, env* {
   syscall SYS_EXECVE,\
@@ -156,8 +136,6 @@ macro sys_execve command*, args*, env* {
 }
 
 ; TODO: Другие аргументы
-
-section "sys_wait4" executable
 
 macro sys_wait4 pid* {
   syscall SYS_WAIT4,\

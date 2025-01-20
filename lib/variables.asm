@@ -1,10 +1,16 @@
 f_assign:
+  get_arg 0
+  mov r8, rax
+  get_arg 1
+  mov rbx, rax
+  get_arg 2
+  mov rcx, rax
+  get_arg 3
+  mov rdx, rax
   ; RBX — keys
   ; RCX — value
   ; RDX — context
   ; R8  — variable
-
-  mov r8, rax
 
   list_length rbx
   cmp rax, 0
@@ -188,11 +194,15 @@ f_assign:
   ret
 
 f_access:
+  get_arg 0
+  mov rdx, rax
+  get_arg 1
+  mov rbx, rax
+  get_arg 2
+  mov rcx, rax
   ; RBX — keys
   ; RCX — context
   ; RDX — variable
-
-  mov rdx, rax
 
   dictionary_keys rcx
   list_include rax, rdx
