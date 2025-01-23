@@ -1,4 +1,4 @@
-![Фирменный блок](<https://gitverse.ru/api/repos/korsakov/mediakit/raw/branch/master/Корсаков%20(блок)/Корсаков%20(блок,%20скруглённый%20прямоугольник)/Корсаков%20(блок,%20скруглённый%20прямоугольник).svg>)
+![Фирменный блок](<https://gitverse.ru/api/repos/rus.yaz/mediakit/raw/branch/master/Корсаков%20(блок)/Корсаков%20(блок,%20скруглённый%20прямоугольник)/Корсаков%20(блок,%20скруглённый%20прямоугольник).svg>)
 
 <p align="center">
     <a><img src="https://badgen.net/badge/Текущая%20версия/v0.5.6.1/green" /></a>
