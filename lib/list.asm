@@ -54,6 +54,14 @@ f_list_get:
 
   mov rbx, [rax]
 
+  cmp rbx, NULL
+  jne .not_null
+
+    null
+    jmp .continue
+
+  .not_null:
+
   cmp rbx, INTEGER
   jne .not_integer
 
@@ -61,6 +69,14 @@ f_list_get:
     jmp .continue
 
   .not_integer:
+
+  cmp rbx, BOOLEAN
+  jne .not_boolean
+
+    boolean_copy rax
+    jmp .continue
+
+  .not_boolean:
 
   cmp rbx, LIST
   jne .not_list
@@ -91,6 +107,7 @@ f_list_get:
     string "Не поддерживаемый тип: "
     string_append rax, rbx
     print rax
+
     exit -1
 
   .continue:
@@ -167,6 +184,9 @@ f_list_append:
   cmp rax, INTEGER
   je .integer
 
+  cmp rax, BOOLEAN
+  je .boolean
+
   cmp rax, LIST
   je .list
 
@@ -176,25 +196,24 @@ f_list_append:
   cmp rax, DICTIONARY
   je .dictionary
 
-  ; Выход с ошибкой при неизвестном типе
-  print EXPECTED_TYPE_ERROR, "", ""
+    ; Выход с ошибкой при неизвестном типе
+    list
+    mov rbx, rax
+    buffer_to_string EXPECTED_TYPE_ERROR
+    list_append rbx, rax
+    buffer_to_string INTEGER_TYPE
+    list_append rbx, rax
+    buffer_to_string STRING_TYPE
+    list_append rbx, rax
+    buffer_to_string LIST_TYPE
+    list_append rbx, rax
+    buffer_to_string DICTIONARY_TYPE
+    list_append rbx, rax
 
-  list
-  mov rbx, rax
+    join rbx
+    print rax
 
-  buffer_to_string INTEGER_TYPE
-  list_append rbx, rax
-  buffer_to_string STRING_TYPE
-  list_append rbx, rax
-  buffer_to_string LIST_TYPE
-  list_append rbx, rax
-  buffer_to_string DICTIONARY_TYPE
-  list_append rbx, rax
-
-  join rbx, ", "
-  print rax
-
-  exit -1
+    exit -1
 
   .null:
     null
@@ -204,6 +223,11 @@ f_list_append:
   .integer:
     integer_copy rbx
     mov r8, INTEGER_SIZE
+    jmp .continue
+
+  .boolean:
+    boolean_copy rbx
+    mov r8, BOOLEAN_SIZE
     jmp .continue
 
   .list:
@@ -396,11 +420,10 @@ f_list_set:
   je .dictionary
 
     ; Выход с ошибкой при неизвестном типе
-    print EXPECTED_TYPE_ERROR, "", ""
-
     list
     mov rbx, rax
-
+    buffer_to_string EXPECTED_TYPE_ERROR
+    list_append rbx, rax
     type_to_string INTEGER
     list_append rbx, rax
     type_to_string LIST
@@ -409,7 +432,6 @@ f_list_set:
     list_append rbx, rax
     type_to_string DICTIONARY
     list_append rbx, rax
-
     join rbx, ", "
     print rax
 

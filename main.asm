@@ -1,12 +1,13 @@
 include "./core/korsakov.asm"
 
+include "./token.asm"
 include "./nodes.asm"
 include "./tokenizer.asm"
 include "./parser.asm"
 include "./compiler.asm"
 
 section "data" writable
-  заголовок      db 'include "core/korsakov.asm"', 10,           0
+  заголовок      db 'include "core/korsakov.asm"', 10,          0
   сегмент_кода   db "section 'start' executable", 10, "start:", 0
   конец_кода     db "exit 0",                     10,           0
 
@@ -15,10 +16,6 @@ section "data" writable
 
   СРАВНЕНИЯ          rq 1
   АСД                rq 1
-
-  INCORRECT_TOKEN_TYPE_ERROR db "Неверный токен:", 0
-  INCORRECT_NODE             db "Неверный узел:", 0
-  INVALID_NODE_TYPE          db "Неизвестный тип узла:", 0
 
   ДВОЙНАЯ_КАВЫЧКА           rq 1
   ОТКРЫВАЮЩАЯ_СКОБКА        rq 1
@@ -235,7 +232,6 @@ section "data" writable
 
 section "start" executable
 start:
-
   string '"'
   mov [ДВОЙНАЯ_КАВЫЧКА], rax
   string "("
@@ -542,7 +538,7 @@ start:
   ;print rax
 
   compiler [АСД], [GLOBAL_CONTEXT]
-  ;mov rbx, rax
+  mov rbx, rax
   ;print rbx
 
   list

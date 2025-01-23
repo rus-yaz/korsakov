@@ -1,32 +1,22 @@
 section "data" writable
-  результат  rq 1
+  результат rq 1
+  try dq 0
 
-  INVALID_SYNTAX_ERROR db "Неверный синтаксис", 0
-  EXPECTED             db "Ожидалось:", 0
-  LIST_LENGTH_EXPECTED db "ожидалось", 0
-  LIST_LENGTH_RECEIVED db "получено", 0
-  SEQUENCE             db "последовательность элементов", 0
+  INVALID_SYNTAX_ERROR db "Неверный синтаксис:", 0
+
+  KEYWORD              db "ключевое слово", 0
+  IDENTIFIER           db "идентификатор", 0
+  INTEGER_TYPE_NAME    db "целое число", 0
+  FLOAT_TYPE_NAME      db "вещественное число", 0
+  LIST_TYPE_NAME       db "список", 0
+  STRING_TYPE_NAME     db "строка", 0
+  COMPARISON_OPERATOR  db "оператор сравнения", 0
   NEWLINE              db "перенос строки", 0
-  COMPARISONS          db "операция сравнения", 0
-  END_OF_CONTRUCTION   db "конец конструкции", 0
-  NAMED_ARGUMENT       db "именованный аргумент", 0
-  MODULE_NAME          db "название модуля", 0
-
-  CONTINUE_USAGE_ERROR   db "`продолжить` может использоваться только в цикле", 0
-  METHOD_ARGUMENTS_ERROR db "Метод должен иметь хотя бы один аргумент, в который будет помещён сам объект", 0
-
-  IDENTIFIER           db "Идентификатор", 0
-  INTEGER_TYPE_NAME    db "Целое число", 0
-  FLOAT_TYPE_NAME      db "Вещественное число", 0
-  LIST_TYPE_NAME       db "Список", 0
-  STRING_TYPE_NAME     db "Строка", 0
-  OPEN_PAREN           db "Открывающая скобка", 0
-  CLOSED_PAREN         db "Закрывающая скобка", 0
-  OPEN_LIST_PAREN      db "Открывающая скобка списка", 0
-  CLOSED_LIST_PAREN    db "Закрывающая скобка списка", 0
-  KEYWORD              db "Ключевое слово", 0
-  SPACE                db "Пробел", 0
-  COLON                db "Двоеточие", 0
+  SPACE                db "` `", 0
+  COLON                db "`:`", 0
+  OPEN_PAREN           db "`(`", 0
+  CLOSED_PAREN         db "`)`", 0
+  OPEN_LIST_PAREN      db "`%(`", 0
   CHECK                db "`проверить`", 0
   ON_KEYWORD           db "`при`", 0
   FROM_KEYWORD         db "`от`", 0
@@ -43,219 +33,253 @@ section "data" writable
 section "parser" executable
 
 macro parser tokens* {
+  debug_start "parser"
   enter tokens
 
   call f_parser
 
   return
+  debug_end "parser"
 }
 
 macro next {
+  debug_start "next"
   enter
 
   call f_next
 
   return
+  debug_end "next"
 }
 
 macro reverse amount = 0 {
+  debug_start "reverse"
   enter amount
 
   call f_reverse
 
   return
+  debug_end "reverse"
 }
 
 macro update_token {
+  debug_start "update_token"
   enter
 
   call f_update_token
 
   leave
-}
-
-macro token_check_type token*, types* {
-  enter token, types
-
-  call f_token_check_type
-
-  return
-}
-
-macro token_check_keyword token*, keywords* {
-  enter token, keywords
-
-  call f_token_check_keyword
-
-  return
+  debug_end "update_token"
 }
 
 macro expression {
+  debug_start "expression"
   enter
 
   call f_expression
 
   return
+  debug_end "expression"
 }
 
 macro binary_operation operators*, left_function*, right_function = 0 {
+  debug_start "binary_operation"
   enter operators, left_function, right_function
 
   call f_binary_operation
 
   return
+  debug_end "binary_operation"
 }
 
 macro atom {
+  debug_start "atom"
   enter
 
   call f_atom
 
   return
+  debug_end "atom"
 }
 
 macro call_expression {
+  debug_start "call_expression"
   enter
 
   call f_call_expression
 
   return
+  debug_end "call_expression"
 }
 
 macro power_root {
+  debug_start "power_root"
   enter
 
   call f_power_root
 
   return
+  debug_end "power_root"
 }
 
 macro factor {
+  debug_start "factor"
   enter
 
   call f_factor
 
   return
+  debug_end "factor"
 }
 
 macro term {
+  debug_start "term"
   enter
 
   call f_term
 
   return
+  debug_end "term"
 }
 
 macro comparison_expression {
+  debug_start "comparison_expression"
   enter
 
   call f_comparison_expression
 
   return
+  debug_end "comparison_expression"
 }
 
 macro arithmetical_expression {
+  debug_start "arithmetical_expression"
   enter
 
   call f_arithmetical_expression
 
   return
+  debug_end "arithmetical_expression"
 }
 
 macro list_expression {
+  debug_start "list_expression"
   enter
 
   call f_list_expression
 
   return
+  debug_end "list_expression"
 }
 
 macro check_expression {
+  debug_start "check_expression"
   enter
 
   call f_check_expression
 
   return
+  debug_end "check_expression"
 }
 
 macro if_expression {
+  debug_start "if_expression"
   enter
 
   call f_if_expression
 
   return
+  debug_end "if_expression"
 }
 
 macro else_expression {
+  debug_start "else_expression"
   enter
 
   call f_else_expression
 
   return
+  debug_end "else_expression"
 }
 
 macro for_expression {
+  debug_start "for_expression"
   enter
 
   call f_for_expression
 
   return
+  debug_end "for_expression"
 }
 
 macro while_expression {
+  debug_start "while_expression"
   enter
 
   call f_while_expression
 
   return
+  debug_end "while_expression"
 }
 
 macro function_expression is_method = 0 {
+  debug_start "function_expression"
   enter is_method
 
   call f_function_expression
 
   return
+  debug_end "function_expression"
 }
 
 macro class_expression {
+  debug_start "class_expression"
   enter
 
   call f_class_expression
 
   return
+  debug_end "class_expression"
 }
 
 macro delete_expression {
+  debug_start "delete_expression"
   enter
 
   call f_delete_expression
 
   return
+  debug_end "delete_expression"
 }
 
 macro include_statement {
+  debug_start "include_statement"
   enter
 
   call f_include_statement
 
   return
+  debug_end "include_statement"
 }
 
 macro statements {
+  debug_start "statements"
   enter
 
   call f_statements
 
   return
+  debug_end "statements"
 }
 
 macro statement {
+  debug_start "statement"
   enter
 
   call f_statement
 
   return
+  debug_end "statement"
 }
 
 f_parser:
@@ -347,100 +371,6 @@ f_update_token:
   .skip:
   ret
 
-f_token_check_type:
-  get_arg 1
-  mov rbx, rax
-  get_arg 0
-  ; RAX — token
-  ; RBX — types
-
-  check_type rax, DICTIONARY
-
-  dictionary_get rax, [тип]
-  mov rcx, rax
-
-  mov rdx, [rbx]
-  cmp rdx, LIST
-  je .list
-
-    list
-    list_append rax, rbx
-    mov rbx, rax
-
-  .list:
-
-  integer 0
-  mov r8, rax
-
-  list_length rbx
-  integer rax
-  mov r9, rax
-
-  .while:
-    is_equal r9, r8
-    cmp rax, 1
-    je .return_false
-
-    list_get rbx, r8
-    is_equal rax, rcx
-
-    cmp rax, 1
-    je .end_while
-
-    integer_inc r8
-    jmp .while
-
-  .return_false:
-  mov rax, 0
-
-  .end_while:
-  ret
-
-f_token_check_keyword:
-  get_arg 1
-  mov rbx, rax
-  get_arg 0
-  ; RAX — token
-  ; RBX — keywords
-
-  check_type rax, DICTIONARY
-  dictionary_get rax, [значение]
-  mov rcx, rax
-
-  mov rdx, [rbx]
-  cmp rdx, LIST
-  je .list
-    list
-    list_append rax, rbx
-
-    mov rbx, rax
-
-  .list:
-
-  integer 0
-  mov r8, rax
-
-  list_length rbx
-  integer rax
-  mov r9, rax
-
-  .while:
-
-    is_equal r8, r9
-    cmp rax, 1
-    je .end_while
-
-    list_get rbx, r8
-    is_equal rax, rcx
-    cmp rax, 1
-    jmp .end_while
-
-    integer_inc r9
-    jmp .while
-
-  .end_while:
-  ret
-
 f_expression:
   ; RBX — index
   integer_copy [индекс]
@@ -479,21 +409,27 @@ f_expression:
     list_node rdx
     mov rdx, rax
 
+    mov r8, 0
+
     token_check_type [токен], [ТИП_СЛОЖЕНИЕ]
     cmp rax, 1
-    jne .skip_operator
+    je .assig_with_operation
     token_check_type [токен], [ТИП_ВЫЧИТАНИЕ]
     cmp rax, 1
-    jne .skip_operator
+    je .assig_with_operation
     token_check_type [токен], [ТИП_УМНОЖЕНИЕ]
     cmp rax, 1
-    jne .skip_operator
+    je .assig_with_operation
     token_check_type [токен], [ТИП_ДЕЛЕНИЕ]
     cmp rax, 1
-    jne .skip_operator
+    je .assig_with_operation
     ;token_check_type [токен], [ТИП_ВОЗВЕДЕНИЕ_В_СТЕПЕНЬ]
     ;cmp rax, 1
-    ;jne .skip_operator
+    ;jne .assig_with_operation
+
+    jmp .skip_operator
+
+    .assig_with_operation:
 
       dictionary_copy [токен]
       mov r8, rax
@@ -557,17 +493,34 @@ f_expression:
 
       cmp rbx, rax
       je .skip_length_error
-        print INVALID_SYNTAX_ERROR, "", ": "
+        cmp [try], 1
+        jne @f
+          null
+          ret
 
-        print LIST_LENGTH_EXPECTED, "", " "
+        @@:
+
+        list
+        mov rbx, rax
+        buffer_to_string INVALID_SYNTAX_ERROR
+        list_append rbx, rax
+        string "ожидаемая длина Списка — "
+        list_append rbx, rax
 
         list_length rcx
         integer rax
-        print rax, "", ", "
+        to_string rax
+        list_append rbx, rax
 
-        print LIST_LENGTH_RECEIVED, "", " "
+        string ", но получен Список с длиной "
+        list_append rbx, rax
+
         list_length rdx
         integer rax
+        to_string rax
+        list_append rbx, rax
+
+        join rbx
         print rax
 
         exit -1
@@ -593,7 +546,21 @@ f_expression:
         cmp rax, 1
         je .skip_access_error
 
-          print <EXPECTED, IDENTIFIER>
+          cmp [try], 1
+          jne @f
+            null
+            ret
+
+          @@:
+
+          list
+          mov rbx, rax
+          string "Ожидался"
+          list_append rbx, rax
+          buffer_to_string IDENTIFIER
+          list_append rbx, rax
+          join rbx
+          print rax
           exit -1
 
         .skip_access_error:
@@ -808,8 +775,27 @@ f_atom:
 
       .not_factor:
 
-      print <EXPECTED>, "", " "
-      print <IDENTIFIER, INTEGER_TYPE_NAME, STRING_TYPE_NAME, OPEN_PAREN>, ", "
+      cmp [try], 1
+      jne @f
+        null
+        ret
+
+      @@:
+
+      list
+      mov rbx, rax
+      string "Ожидались "
+      list_append rbx, rax
+      buffer_to_string IDENTIFIER
+      list_append rbx, rax
+      buffer_to_string INTEGER_TYPE_NAME
+      list_append rbx, rax
+      buffer_to_string STRING_TYPE_NAME
+      list_append rbx, rax
+      buffer_to_string OPEN_PAREN
+      list_append rbx, rax
+      join rbx
+      print rax
       exit -1
 
       .add_key:
@@ -833,11 +819,25 @@ f_atom:
     expression
     mov rbx, rax
 
-    token_check_type rbx, [ТИП_ОТКРЫВАЮЩАЯ_СКОБКА_СПИСКА]
+    token_check_type [токен], [ТИП_ЗАКРЫВАЮЩАЯ_СКОБКА]
     cmp rax, 1
-    jne .correct_token
+    je .correct_token
 
-      print <EXPECTED, CLOSED_PAREN>
+      cmp [try], 1
+      jne @f
+        null
+        ret
+
+      @@:
+
+      list
+      mov rbx, rax
+      string "Ожидалось"
+      list_append rbx, rax
+      buffer_to_string CLOSED_PAREN
+      list_append rbx, rax
+      join rax
+      print rax
       exit -1
 
     .correct_token:
@@ -935,8 +935,33 @@ f_atom:
 
   cmp rbx, 0
   jne .correct_expression
-    print EXPECTED, "", " "
-    print <KEYWORD, INTEGER_TYPE_NAME, FLOAT_TYPE_NAME, STRING_TYPE_NAME, IDENTIFIER, LIST_TYPE_NAME>, ", "
+
+    cmp [try], 1
+    jne @f
+      null
+      ret
+
+    @@:
+
+    list
+    mov rbx, rax
+    string "Ожидались"
+    list_append rbx, rax
+    buffer_to_string KEYWORD
+    list_append rbx, rax
+    buffer_to_string IDENTIFIER
+    list_append rbx, rax
+    buffer_to_string INTEGER_TYPE_NAME
+    list_append rbx, rax
+    buffer_to_string FLOAT_TYPE_NAME
+    list_append rbx, rax
+    buffer_to_string STRING_TYPE_NAME
+    list_append rbx, rax
+    buffer_to_string LIST_TYPE_NAME
+    list_append rbx, rax
+    join rbx
+    print rax
+
     exit -1
 
   .correct_expression:
@@ -1014,8 +1039,22 @@ f_call_expression:
   token_check_type [токен], [ТИП_ЗАКРЫВАЮЩАЯ_СКОБКА]
   cmp rax, 1
   je .correct_token
-    print EXPECTED, "", " "
-    print <SEQUENCE, CLOSED_PAREN>, ", "
+
+    cmp [try], 1
+    jne @f
+      null
+      ret
+
+    @@:
+
+    list
+    mov rbx, rax
+    string "Ожидалось"
+    list_append rbx, rax
+    buffer_to_string CLOSED_PAREN
+    list_append rbx, rax
+    join rbx
+    print rax
     exit -1
 
   .correct_token:
@@ -1044,7 +1083,6 @@ f_factor:
   list_append rax, [ТИП_ИЗЪЯТИЕ_КОРНЯ]
   list_append rax, [ТИП_ИНКРЕМЕНТАЦИЯ]
   list_append rax, [ТИП_ДЕКРЕМЕНТАЦИЯ]
-
   token_check_type rbx, rax
   cmp rax, 1
   je .pre_unary_operation
@@ -1111,8 +1149,20 @@ f_list_expression:
   token_check_type [токен], [ТИП_ОТКРЫВАЮЩАЯ_СКОБКА_СПИСКА]
   cmp rax, 1
   je .correct_token
-    string "%("
-    print <EXPECTED, rax>
+
+    cmp [try], 1
+    jne @f
+      null
+      ret
+
+    @@:
+
+    list
+    mov rbx, rax
+    string "Ожидалось"
+    list_append rbx, rax
+    buffer_to_string OPEN_LIST_PAREN
+    print rax
     exit -1
 
   .correct_token:
@@ -1152,6 +1202,8 @@ f_list_expression:
   jne .not_dictionary
     mov rcx, 1
 
+    next
+
     ; R8  — value_node
 
     expression
@@ -1190,7 +1242,21 @@ f_list_expression:
     cmp rax, 1
     jne .skip_dictionary_append_error
 
-      print <EXPECTED, SPACE>
+      cmp [try], 1
+      jne @f
+        null
+        ret
+
+      @@:
+
+      list
+      mov rbx, rax
+      string "Ожидалось"
+      list_append rbx, rax
+      buffer_to_string SPACE
+      list_append rbx, rax
+      join rbx
+      print rax
       exit -1
 
     .skip_dictionary_append_error:
@@ -1201,7 +1267,22 @@ f_list_expression:
       token_check_type [токен], [ТИП_ДВОЕТОЧИЕ]
       cmp rax, 1
       je .skip_colon_error
-        print <EXPECTED, COLON>
+
+        cmp [try], 1
+        jne @f
+          null
+          ret
+
+        @@:
+
+        list
+        mov rbx, rax
+        string "Ожидалось"
+        list_append rbx, rax
+        buffer_to_string COLON
+        list_append rbx, rax
+        join rbx
+        print rax
         exit -1
 
       .skip_colon_error:
@@ -1229,8 +1310,24 @@ f_list_expression:
   token_check_type [токен], [ТИП_ЗАКРЫВАЮЩАЯ_СКОБКА]
   cmp rax, 1
   je .skip_closed_paren_error
-    print <EXPECTED>, "", " "
-    print <SPACE, CLOSED_LIST_PAREN>, ", "
+
+    cmp [try], 1
+    jne @f
+      null
+      ret
+
+    @@:
+
+    list
+    mov rbx, rax
+    string "Ожидались ` ` или `)`"
+    list_append rbx, rax
+    buffer_to_string SPACE
+    list_append rbx, rax
+    buffer_to_string CLOSED_PAREN
+    list_append rbx, rax
+    join rbx
+    print rax
     exit -1
 
   .skip_closed_paren_error:
@@ -1240,6 +1337,32 @@ f_list_expression:
   cmp rcx, 1
   jne .skip_dictionary_return
     dictionary_items r9
+    delete r9
+    mov r9, rax
+
+    integer 0
+    mov r10, rax
+
+    list
+    mov r11, rax
+
+    .dictionary_while:
+      list_length r9
+      integer rax
+      is_equal r10, rax
+      cmp rax, 1
+      je .dictionary_end_while
+
+      list_get r9, r10
+      list_node rax
+      list_append r11, rax
+
+      integer_inc r10
+      jmp .dictionary_while
+
+    .dictionary_end_while:
+
+    list_node r11
     dictionary_node rax
 
     ret
@@ -1262,7 +1385,22 @@ f_check_expression:
 
   token_check_keyword [токен], [ПРОВЕРИТЬ]
   je .correct_start
-    print <EXPECTED, CHECK>
+
+    cmp [try], 1
+    jne @f
+      null
+      ret
+
+    @@:
+
+    list
+    mov rbx, rax
+    string "Ожидалось"
+    list_append rbx, rax
+    buffer_to_string CHECK
+    list_append rbx, rax
+    join rbx
+    print rax
     exit -1
 
   .correct_start:
@@ -1280,11 +1418,27 @@ f_check_expression:
   mov r8, rax
 
   list_copy [СРАВНЕНИЯ]
-  list_append rax, [ПЕРЕНОС_СТРОКИ]
+  list_append rax, [ТИП_ПЕРЕНОС_СТРОКИ]
   token_check_type [токен], rax
   je .skip_condition_error
-    print EXPECTED, "", " "
-    print <COMPARISONS, NEWLINE>, ", "
+
+    cmp [try], 1
+    jne @f
+      null
+      ret
+
+    @@:
+
+    list
+    mov rbx, rax
+    string "Ожидались оператор сравнения или перенос строки"
+    list_append rbx, rax
+    buffer_to_string COMPARISON_OPERATOR
+    list_append rbx, rax
+    buffer_to_string NEWLINE
+    list_append rbx, rax
+    join rbx
+    print rax
     exit -1
 
   .skip_condition_error:
@@ -1299,7 +1453,22 @@ f_check_expression:
     token_check_type [токен], [ПЕРЕНОС_СТРОКИ]
     cmp rax, 1
     jne .skip_newline_error_2
-      print <EXPECTED, NEWLINE>
+
+      cmp [try], 1
+      jne @f
+        null
+        ret
+
+      @@:
+
+      list
+      mov rbx, rax
+      string "Ожидался"
+      list_append rbx, rax
+      buffer_to_string NEWLINE
+      list_append rbx, rax
+      join rbx
+      print rax
       exit -1
 
     .skip_newline_error_1:
@@ -1311,7 +1480,22 @@ f_check_expression:
   token_check_keyword [токен], [ПРИ]
   cmp rax, 1
   je .correct_on
-    print <EXPECTED, ON_KEYWORD>
+
+    cmp [try], 1
+    jne @f
+      null
+      ret
+
+    @@:
+
+    list
+    mov rbx, rax
+    string "Ожидалось"
+    list_append rbx, rax
+    buffer_to_string ON_KEYWORD
+    list_append rbx, rax
+    join rbx
+    print rax
     exit -1
 
   .correct_on:
@@ -1371,7 +1555,22 @@ f_check_expression:
     token_check_type [токен], [ПЕРЕНОС_СТРОКИ]
     cmp rax, 1
     jne .skip_newline_error_2
-      print <EXPECTED, NEWLINE>
+
+      cmp [try], 1
+      jne @f
+        null
+        ret
+
+      @@:
+
+      list
+      mov rbx, rax
+      string "Ожидался"
+      list_append rbx, rax
+      buffer_to_string NEWLINE
+      list_append rbx, rax
+      join rbx
+      print rax
       exit -1
 
     .skip_newline_error_2:
@@ -1401,7 +1600,16 @@ f_check_expression:
       is_equal rax, [ПРОПУСТИТЬ]
       cmp rax, 1
       jne .skip_continue_error
-        print CONTINUE_USAGE_ERROR
+
+        cmp [try], 1
+        jne @f
+          null
+          ret
+
+        @@:
+
+        string "Ключевое слово `продолжить` может использоваться только в цикле"
+        print rax
         exit -1
 
       .skip_continue_error:
@@ -1447,12 +1655,22 @@ f_if_expression:
   list
   mov rbx, rax
 
-  mov rcx, 0
+  null
+  mov rcx, rax
 
   token_check_keyword [токен], [ЕСЛИ]
   cmp rax, 1
   je .correct_token_if
-    print <EXPECTED, IF_KEYWORD>
+
+    cmp [try], 1
+    jne @f
+      null
+      ret
+
+    @@:
+
+    string "Ожидалось ключевое слово `если`"
+    print rax
     exit -1
 
   .correct_token_if:
@@ -1467,14 +1685,23 @@ f_if_expression:
   token_check_keyword [токен], [ТО]
   cmp rax, 1
   je .correct_token_then
-    print <EXPECTED, THEN>
+
+    cmp [try], 1
+    jne @f
+      null
+      ret
+
+    @@:
+
+    string "Ожидалось ключевое слово `то`"
+    print rax
     exit -1
 
   .correct_token_then:
 
   next
 
-  token_check_type [токен], [ПЕРЕНОС_СТРОКИ]
+  token_check_type [токен], [ТИП_ПЕРЕНОС_СТРОКИ]
   cmp rax, 1
   jne .make_oneline
     next
@@ -1484,12 +1711,18 @@ f_if_expression:
     statements
     mov r8, rax
 
-    list
-    list_append rax, rdx
-    list_append rax, r8
-    list_append rax, 1
+    dictionary
+    mov r9, rax
+    string "условие"
+    dictionary_set r9, rax, rdx
+    string "действия"
+    dictionary_set r9, rax, r8
+    boolean 1
+    mov rdx, rax
+    string "вернуть_нуль"
+    dictionary_set r9, rax, rdx
 
-    list_append rbx, rax
+    list_append rbx, r9
 
     token_check_type [токен], [ТИП_КОНЕЦ_КОНСТРУКЦИИ]
     cmp rax, 1
@@ -1510,12 +1743,18 @@ f_if_expression:
     statement
     mov r9, rax
 
-    list
-    list_append rax, rdx
-    list_append rax, r9
-    list_append rax, 0
+    dictionary
+    mov r8, rax
+    string "условие"
+    dictionary_set r8, rax, rdx
+    string "действия"
+    dictionary_set r8, rax, r9
+    boolean 0
+    mov rdx, rax
+    string "вернуть_нуль"
+    dictionary_set r8, rax, rdx
 
-    list_append rbx, rax
+    list_append rbx, r8
 
   .continue:
 
@@ -1539,7 +1778,7 @@ f_else_expression:
 
   next
 
-  token_check_keyword [токен], [ИНАЧЕ]
+  token_check_type [токен], [ТИП_ПЕРЕНОС_СТРОКИ]
   cmp rax, 1
   je .make_multiline
     statement
@@ -1547,7 +1786,9 @@ f_else_expression:
 
     list
     list_append rax, rbx
-    list_append rax, 0
+    mov rbx, rax
+    integer 0
+    list_append rbx, rax
 
     ret
 
@@ -1563,7 +1804,16 @@ f_else_expression:
   token_check_type [токен], [ТИП_КОНЕЦ_КОНСТРУКЦИИ]
   cmp rax, 1
   je .correct_token
-    print <EXPECTED, END_OF_CONTRUCTION>
+
+    cmp [try], 1
+    jne @f
+      null
+      ret
+
+    @@:
+
+    string "Ожидался конец конструкции"
+    print rax
     exit -1
 
   .correct_token:
@@ -1572,7 +1822,9 @@ f_else_expression:
 
   list
   list_append rax, rcx
-  list_append rax, 1
+  mov rcx, rax
+  integer 1
+  list_append rcx, rax
 
   ret
 
@@ -1583,7 +1835,16 @@ f_for_expression:
   token_check_keyword [токен], [ДЛЯ]
   cmp rax, 1
   je .correct_for
-    print <EXPECTED, FOR>
+
+    cmp [try], 1
+    jne @f
+      null
+      ret
+
+    @@:
+
+    string "Ожидалось ключевое слово `для`"
+    print rax
     exit -1
 
   .correct_for:
@@ -1593,7 +1854,16 @@ f_for_expression:
   token_check_type [токен], [ТИП_ИДЕНТИФИКАТОР]
   cmp rax, 1
   je .correct_identifier
-    print <EXPECTED, IDENTIFIER>
+
+    cmp [try], 1
+    jne @f
+      null
+      ret
+
+    @@:
+
+    string "Ожидался идентификатор"
+    print rax
     exit -1
 
   .correct_identifier:
@@ -1619,7 +1889,16 @@ f_for_expression:
     token_check_type [токен], [ДО]
     cmp rax, 1
     je .correct_to
-      print <EXPECTED, TO>
+
+      cmp [try], 1
+      jne @f
+        null
+        ret
+
+      @@:
+
+      string "Ожидалось ключевое слово `до`"
+      print rax
       exit -1
 
     .correct_to:
@@ -1668,8 +1947,16 @@ f_for_expression:
     jmp .if_end
 
   .unknown_token:
-    print <EXPECTED>, "", " "
-    print <FROM_KEYWORD, OF>, ", "
+
+    cmp [try], 1
+    jne @f
+      null
+      ret
+
+    @@:
+
+    string "Ожидались ключевое слово `от` или `из`"
+    print rax
     exit -1
 
   .if_end:
@@ -1708,7 +1995,16 @@ f_for_expression:
   token_check_type [токен], [ДВОЕТОЧИЕ]
   cmp rax, 1
   je .correct_colon
-    print <EXPECTED, COLON>
+
+    cmp [try], 1
+    jne @f
+      null
+      ret
+
+    @@:
+
+    string "Ожидалось `:`"
+    print rax
     exit -1
 
   .correct_colon:
@@ -1728,7 +2024,16 @@ f_while_expression:
   token_check_keyword [токен], [ПОКА]
   cmp rax, 1
   je .correct_while
-    print <EXPECTED, WHILE_KEYWORD>
+
+    cmp [try], 1
+    jne @f
+      null
+      ret
+
+    @@:
+
+    string "Ожидалось ключевое слово `пока`"
+    print rax
     exit -1
 
   .correct_while:
@@ -1772,7 +2077,16 @@ f_while_expression:
   token_check_type [токен], [ДВОЕТОЧИЕ]
   cmp rax, 1
   je .correct_colon
-    print <EXPECTED, COLON>
+
+    cmp [try], 1
+    jne @f
+      null
+      ret
+
+    @@:
+
+    string "Ожидалось `:`"
+    print rax
     exit -1
 
   .correct_colon:
@@ -1792,7 +2106,16 @@ f_function_expression:
   token_check_keyword [токен], [ФУНКЦИЯ]
   cmp rax, 1
   je .correct_function
-    print <EXPECTED, FUNCTION>
+
+    cmp [try], 1
+    jne @f
+      null
+      ret
+
+    @@:
+
+    string "Ожидалось ключевое слово `функция`"
+    print rax
     exit -1
 
   .correct_function:
@@ -1816,7 +2139,16 @@ f_function_expression:
   token_check_type [токен], [ОТКРЫВАЮЩАЯ_СКОБКА]
   cmp rax, 1
   je .correct_open_paren
-    print <EXPECTED, OPEN_PAREN>
+
+    cmp [try], 1
+    jne @f
+      null
+      ret
+
+    @@:
+
+    string "Ожидалось `(`"
+    print rax
     exit -1
 
   .correct_open_paren:
@@ -1853,7 +2185,16 @@ f_function_expression:
     cmp rax, 1
 
     jne .correct_argument
-      print <EXPECTED, NAMED_ARGUMENT>
+
+      cmp [try], 1
+      jne @f
+        null
+        ret
+
+      @@:
+
+      string "Ожидался именованный аргумент"
+      print rax
       exit -1
 
     .correct_argument:
@@ -1874,8 +2215,16 @@ f_function_expression:
   token_check_type [токен], [ЗАКРЫВАЮЩАЯ_СКОБКА]
   cmp rax, 1
   je .correct_closed_paren
-    print <EXPECTED>, "", " "
-    print <IDENTIFIER, CLOSED_PAREN>, ", "
+
+    cmp [try], 1
+    jne @f
+      null
+      ret
+
+    @@:
+
+    string "Ожидались Идентификатор или `)`"
+    print rax
     exit -1
 
   .correct_closed_paren:
@@ -1895,7 +2244,16 @@ f_function_expression:
     token_check_type [токен], [ТИП_КОНЕЦ_КОНСТРУКЦИИ]
     cmp rax, 1
     je .correct_end_construction
-      print <EXPECTED, END_OF_CONTRUCTION>
+
+      cmp [try], 1
+      jne @f
+        null
+        ret
+
+      @@:
+
+      string "Ожидался конец конструкции"
+      print rax
       exit -1
 
     .correct_end_construction:
@@ -1917,7 +2275,16 @@ f_function_expression:
   token_check_type [токен], [ДВОЕТОЧИЕ]
   cmp rax, 1
   je .correct_colon
-    print <EXPECTED, COLON>
+
+    cmp [try], 1
+    jne @f
+      null
+      ret
+
+    @@:
+
+    string "Ожидалось `:`"
+    print rax
     exit -1
 
   .correct_colon:
@@ -1943,17 +2310,35 @@ f_class_expression:
   token_check_keyword [токен], [КЛАСС]
   cmp rax, 1
   je .correct_class
-    print <EXPECTED, CLASS>
+
+    cmp [try], 1
+    jne @f
+      null
+      ret
+
+    @@:
+
+    string "Ожидалось ключевое слово `класс`"
+    print rax
     exit -1
 
   .correct_class:
 
   next
 
-  token_check_keyword [токен], [ТИП_ИДЕНТИФИКАТОР]
+  token_check_type [токен], [ТИП_ИДЕНТИФИКАТОР]
   cmp rax, 1
   je .correct_identifier
-    print <EXPECTED, IDENTIFIER>
+
+    cmp [try], 1
+    jne @f
+      null
+      ret
+
+    @@:
+
+    string "Ожидался Идентификатор"
+    print rax
     exit -1
 
   .correct_identifier:
@@ -1964,10 +2349,19 @@ f_class_expression:
 
   next
 
-  token_check_keyword [токен], [ОТКРЫВАЮЩАЯ_СКОБКА]
+  token_check_type [токен], [ТИП_ОТКРЫВАЮЩАЯ_СКОБКА]
   cmp rax, 1
   je .correct_open_paren
-    print <EXPECTED, OPEN_PAREN>
+
+    cmp [try], 1
+    jne @f
+      null
+      ret
+
+    @@:
+
+    string "Ожидалось `(`"
+    print rax
     exit -1
 
   .correct_open_paren:
@@ -1976,18 +2370,26 @@ f_class_expression:
   list
   mov rcx, rax
 
-  token_check_type [токен], [ОТКРЫВАЮЩАЯ_СКОБКА]
+  token_check_type [токен], [ТИП_ОТКРЫВАЮЩАЯ_СКОБКА]
   cmp rax, 1
   jne .no_parents
     next
 
     list
     list_append rax, [ТИП_ИДЕНТИФИКАТОР]
-    list_append rax, [ЗАКРЫВАЮЩАЯ_СКОБКА]
+    list_append rax, [ТИП_ЗАКРЫВАЮЩАЯ_СКОБКА]
     token_check_type [токен], rax
     je .correct_identifier_closed_paren_1
-      print <EXPECTED>, "", " "
-      print <IDENTIFIER, CLOSED_PAREN>, ", "
+
+      cmp [try], 1
+      jne @f
+        null
+        ret
+
+      @@:
+
+      string "Ожидались Идентификатор или `)`"
+      print rax
       exit -1
 
     .correct_identifier_closed_paren_1:
@@ -2002,7 +2404,7 @@ f_class_expression:
 
       next
 
-      token_check_type [токен], [ПЕРЕНОС_СТРОКИ]
+      token_check_type [токен], [ТИП_ПЕРЕНОС_СТРОКИ]
       cmp rax, 1
       jne .no_newline_1
         next
@@ -2011,17 +2413,25 @@ f_class_expression:
 
       list
       list_append rax, [ТИП_ПРОБЕЛ]
-      list_append rax, [ЗАКРЫВАЮЩАЯ_СКОБКА]
+      list_append rax, [ТИП_ЗАКРЫВАЮЩАЯ_СКОБКА]
       token_check_type [токен], rax
       cmp rax, 1
       je .correct_space_closed_paren_2
-        print <EXPECTED>, "", " "
-        print <SPACE, CLOSED_PAREN>, ", "
+
+        cmp [try], 1
+        jne @f
+          null
+          ret
+
+        @@:
+
+        string "Ожидались ` ` или `)`"
+        print rax
         exit -1
 
       .correct_space_closed_paren_2:
 
-      token_check_type [токен], [ПЕРЕНОС_СТРОКИ]
+      token_check_type [токен], [ТИП_ПЕРЕНОС_СТРОКИ]
       cmp rax, 1
       jne .no_space
         next
@@ -2034,22 +2444,39 @@ f_class_expression:
 
     list
     list_append rax, [ТИП_ИДЕНТИФИКАТОР]
-    list_append rax, [ЗАКРЫВАЮЩАЯ_СКОБКА]
+    list_append rax, [ТИП_ЗАКРЫВАЮЩАЯ_СКОБКА]
     token_check_type [токен], rax
     cmp rax, 1
     je .correct_identifier_closed_paren_3
-      print <EXPECTED>, "", " "
-      print <IDENTIFIER, CLOSED_PAREN>, ", "
+
+      cmp [try], 1
+      jne @f
+        null
+        ret
+
+      @@:
+
+      string "Ожидались Идентификатор или `)`"
+      print rax
       exit -1
 
     .correct_identifier_closed_paren_3:
 
     next
 
-    token_check_type [токен], [ПЕРЕНОС_СТРОКИ]
+    token_check_type [токен], [ТИП_ПЕРЕНОС_СТРОКИ]
     cmp rax, 1
     jne .no_newline_2
-      print <EXPECTED, NEWLINE>
+
+      cmp [try], 1
+      jne @f
+        null
+        ret
+
+      @@:
+
+      string "Ожидался перенос строки"
+      print rax
       exit -1
 
     .no_newline_2:
@@ -2065,8 +2492,16 @@ f_class_expression:
   token_check_type [токен], [ТИП_КОНЕЦ_КОНСТРУКЦИИ]
   cmp rax, 1
   je .correct_function_end_of_construction
-    print <EXPECTED>
-    print <FUNCTION, END_OF_CONTRUCTION>
+
+    cmp [try], 1
+    jne @f
+      null
+      ret
+
+    @@:
+
+    string "Ожидались ключевое слово `функция` или конец конструкции"
+    print rax
     exit -1
 
   .correct_function_end_of_construction:
@@ -2088,7 +2523,16 @@ f_class_expression:
     list_length rax
     cmp rax, 1
     jge .correct_arguments
-      print METHOD_ARGUMENTS_ERROR
+
+      cmp [try], 1
+      jne @f
+        null
+        ret
+
+      @@:
+
+      string "Метод должен иметь хотя бы один аргумент, в который будет помещён сам объект"
+      print rax
       exit -1
 
     .correct_arguments:
@@ -2113,7 +2557,16 @@ f_class_expression:
   token_check_type [токен], [ТИП_КОНЕЦ_КОНСТРУКЦИИ]
   cmp rax, 1
   je .correct_end_construction
-    print <EXPECTED, END_OF_CONTRUCTION>
+
+    cmp [try], 1
+    jne @f
+      null
+      ret
+
+    @@:
+
+    string "Ожидался конец конструкции"
+    print rax
     exit -1
 
   .correct_end_construction:
@@ -2122,7 +2575,8 @@ f_class_expression:
 
   next
 
-  dictionary_node rdx
+  list_node rdx
+  dictionary_node rax
   class_node rbx, rax, rcx
 
   ret
@@ -2131,17 +2585,35 @@ f_delete_expression:
   token_check_keyword [токен], [УДАЛИТЬ]
   cmp rax, 1
   je .correct_delete
-    print <EXPECTED, DELETE>
+
+    cmp [try], 1
+    jne @f
+      null
+      ret
+
+    @@:
+
+    string "Ожидалось ключевое слово `удалить`"
+    print rax
     exit -1
 
   .correct_delete:
 
   next
 
-  token_check_keyword [токен], [ТИП_ИДЕНТИФИКАТОР]
+  token_check_type [токен], [ТИП_ИДЕНТИФИКАТОР]
   cmp rax, 1
   je .correct_identifier
-    print <EXPECTED, IDENTIFIER>
+
+    cmp [try], 1
+    jne @f
+      null
+      ret
+
+    @@:
+
+    string "Ожидался Идентфикатор"
+    print rax
     exit -1
 
   .correct_identifier:
@@ -2160,7 +2632,16 @@ f_include_statement:
   token_check_keyword [токен], [ВКЛЮЧИТЬ]
   cmp rax, 1
   je .correct_include
-    print <EXPECTED, INCLUDE_KEYWORD>
+
+    cmp [try], 1
+    jne @f
+      null
+      ret
+
+    @@:
+
+    string "Ожидалось ключевое слово `включить`"
+    print rax
     exit -1
 
   .correct_include:
@@ -2170,7 +2651,16 @@ f_include_statement:
   token_check_type [токен], [ТИП_СТРОКА]
   cmp rax, 1
   je .correct_module
-    print <EXPECTED, MODULE_NAME>
+
+    cmp [try], 1
+    jne @f
+      null
+      ret
+
+    @@:
+
+    string "Ожидалось имя модуля (строка)"
+    print rax
     exit -1
 
   .correct_module:
@@ -2198,12 +2688,11 @@ f_statements:
   .no_newline_1:
 
   ; RCX — statements
-  statement
-  mov rcx, rax
 
   list
-  list_append rax, rcx
   mov rcx, rax
+  statement
+  list_append rcx, rax
 
   ; RDX — more_statements
   mov rdx, 1
@@ -2213,8 +2702,8 @@ f_statements:
     integer 0
     mov r8, rax
 
-    ; R9 — index
-    dictionary_copy [индекс]
+    ; R9 — index_for_reverse
+    integer_copy [индекс]
     mov r9, rax
 
     token_check_type [токен], [ТИП_ПЕРЕНОС_СТРОКИ]
@@ -2237,15 +2726,27 @@ f_statements:
     jne .end_while
 
     ; R10 — statement
+
+    mov rax, [try]
+    push rax
+    mov [try], 1
+
     statement
     mov r10, rax
 
-    cmp r10, 1
-    je .skip_reverse
+    pop rax
+    mov [try], rax
+
+    null
+    is_equal r10, rax
+    cmp rax, 1
+    jne .skip_reverse
+
       integer_copy [индекс]
       integer_sub rax, r9
       reverse rax
       mov rdx, 0
+      jmp .while
 
     .skip_reverse:
 
@@ -2268,12 +2769,22 @@ f_statement:
 
     next
 
+    mov rax, [try]
+    push rax
+    mov [try], 1
+
     ; RCX — expression
     expression
     mov rcx, rax
 
-    cmp rcx, 0
+    pop rax
+    mov [try], rax
+
+    null
+    is_equal rcx, rax
+    cmp rax, 1
     jne .return_value
+
       integer_copy [индекс]
       integer_sub rax, rbx
       reverse rax

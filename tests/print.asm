@@ -56,9 +56,15 @@ print rax
 
 ; Проверка множественного отображения
 integer 1024
-print <rax, STRING_CONTENT_TEXT, r8>
+mov rbx, rax
+string "Содержимое строки:"
+print <rbx, rax, r8>
 
 ; Проверка замены разделителя и конца стрки
+
+
+string <"*", 10>
+mov rdx, rax
 
 integer 1024
 mov rbx, rax
@@ -66,4 +72,4 @@ mov rcx, rax
 
 print <rax, rbx, rcx>, "?"
 
-print <rax, rbx, rcx>, "_", "*"
+print <rax, rbx, rcx>, "_", rdx

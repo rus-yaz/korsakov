@@ -7,30 +7,34 @@ section "data" writable
   define NULL        0
   define INTEGER     1
   define FLOAT       2
-  define LIST        3
-  define STRING      4
-  define BINARY      5
-  define DICTIONARY  6
-  define CLASS       8
-  define FILE        9
+  define BOOLEAN     3
+  define LIST        4
+  define STRING      5
+  define BINARY      6
+  define DICTIONARY  7
+  define CLASS       9
+  define FILE        10
 
   ; Размер заголовка
-  define HEAP_BLOCK_HEADER 4
-  define FILE_HEADER       4
   define NULL_HEADER       1
+  define BOOLEAN_HEADER    1
   define INTEGER_HEADER    1
   define BINARY_HEADER     2
-  define STRING_HEADER     3
   define LIST_HEADER       3
+  define STRING_HEADER     3
   define DICTIONARY_HEADER 3
+  define FILE_HEADER       4
+  define HEAP_BLOCK_HEADER 4
 
   ; Полные размеры типа (для неизменяемых по длине)
   define NULL_SIZE    1
   define INTEGER_SIZE 2
+  define BOOLEAN_SIZE 2
   define FILE_SIZE    4
 
   EXPECTED_TYPE_ERROR db "Ожидался тип: ",              0
   INTEGER_TYPE        db "Целое число",                 0
+  BOOLEAN_TYPE        db "Булево значение",             0
   LIST_TYPE           db "Список",                      0
   STRING_TYPE         db "Строка",                      0
   BINARY_TYPE         db "Бинарная последовательность", 0
@@ -57,12 +61,15 @@ section "data" writable
   LAST_USED_HEAP_BLOCK rq 1
 
   GLOBAL_CONTEXT rq 1
+  time rq 1
 
-include "macro.asm"
-include "syscalls_amd64.asm"
-include "utils.asm"
+include "./debug.asm"
+include "./macro.asm"
+include "./syscalls_amd64.asm"
+include "./utils.asm"
 
 include "../lib/arithmetical.asm"
+include "../lib/boolean.asm"
 include "../lib/delete.asm"
 include "../lib/dictionary.asm"
 include "../lib/exec.asm"
@@ -83,5 +90,8 @@ _start:
 
   dictionary
   mov [GLOBAL_CONTEXT], rax
+
+  list
+  mov [time], rax
 
   call start

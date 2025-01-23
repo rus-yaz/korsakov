@@ -1,9 +1,5 @@
 section "const_buffers" writable
-  FILE_SIZE_TEXT       db "Размер файла:", 0
-  STRING_SIZE_TEXT     db "Размер строки:", 0
-  STRING_CONTENT_TEXT  db "Содержимое строки:", 0
-  CHAR_BY_INDEX_TEXT   db "Символ по индексу:", 0
-  ITEM_BY_INDEX_TEXT   db "Элемент по индексу:", 0
+
 
   ; tests/print
   print.буфер  db "Привет, мир!", 0

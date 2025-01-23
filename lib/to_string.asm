@@ -8,6 +8,9 @@ f_to_string:
   cmp rbx, INTEGER
   je .integer
 
+  cmp rbx, BOOLEAN
+  je .boolean
+
   cmp rbx, LIST
   je .list
 
@@ -17,12 +20,13 @@ f_to_string:
   cmp rbx, DICTIONARY
   je .dictionary
 
-  print EXPECTED_TYPE_ERROR, "", ""
-
   list
   mov rbx, rax
-
+  buffer_to_string EXPECTED_TYPE_ERROR
+  list_append rbx, rax
   buffer_to_string INTEGER_TYPE
+  list_append rbx, rax
+  buffer_to_string BOOLEAN_TYPE
   list_append rbx, rax
   buffer_to_string LIST_TYPE
   list_append rbx, rax
@@ -58,7 +62,7 @@ f_to_string:
     mov rbx, 10 ; Мощность системы счисления
     mov rdx, 0  ; Обнуление регистра, хранящего остаток от деления
 
-    .integet_while:
+    .integer_while:
       idiv rbx    ; Деление на мощность системы счисления
       add rdx, 48 ; Приведение числа к значению по ASCII
 
@@ -67,7 +71,7 @@ f_to_string:
 
       inc rcx
       cmp rax, 0
-      jne .integet_while
+      jne .integer_while
 
     cmp r9, 1
     jne .not_negate
@@ -84,6 +88,17 @@ f_to_string:
     binary_to_string rax
 
     mov rsp, r8 ; Восстановление конца стека
+    ret
+
+  .boolean:
+    mov rax, [rax + BOOLEAN_HEADER*8]
+    cmp rax, 1
+    jne .false
+      string "Истина"
+      ret
+    .false:
+
+    string "Ложь"
     ret
 
   .list:
@@ -243,6 +258,11 @@ f_type_to_string:
   integer FLOAT
   mov rbx, rax
   string "Вещественное число"
+  dictionary_set rcx, rbx, rax
+
+  integer BOOLEAN
+  mov rbx, rax
+  string "Булево значение"
   dictionary_set rcx, rbx, rax
 
   integer LIST

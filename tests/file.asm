@@ -4,7 +4,9 @@ print rax
 ; Получение размера файла
 get_file_size file.имя_файла_для_чтения
 integer rax
-print <FILE_SIZE_TEXT, rax>
+mov rbx, rax
+string "Размер файла:"
+print <rax, rbx>
 
 ; Открытие файла
 open_file file.имя_файла_для_чтения
@@ -20,10 +22,13 @@ close_file rbx
 ; Получение длины строки
 string_length rcx
 integer rax
-print <STRING_SIZE_TEXT, rax>
+mov rbx, rax
+string  "Размер строки:"
+print <rax, rbx>
 
 ; Вывод содержимого файла
-print <STRING_CONTENT_TEXT, rcx>
+string "Содержимое строки:"
+print <rax, rcx>
 
 ; ---------
 ; Тест записи файла
@@ -50,4 +55,5 @@ mov rcx, rax
 close_file r8
 
 ; Вывод содержимого файла
-print <STRING_CONTENT_TEXT, rcx>
+string "Содержимое строки:"
+print <rax, rcx>

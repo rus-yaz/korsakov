@@ -5,8 +5,6 @@ f_dictionary:
 
   cmp rax, 0
   jne .not_empty
-  cmp rbx, 0
-  jne .not_empty
     create_block DICTIONARY_HEADER*8
 
     mem_mov [rax + 8*0], DICTIONARY
@@ -16,6 +14,50 @@ f_dictionary:
     ret
 
   .not_empty:
+
+  cmp rbx, 0
+  jne .not_from_items
+
+    mov rdx, [rax]
+    cmp rdx, LIST
+    jne .invalid_arguments
+
+    mov rbx, rax
+
+    dictionary
+    mov rcx, rax
+
+    integer 0
+    mov r8, rax
+
+    .from_items_while:
+      list_length rbx
+      integer rax
+      is_equal rax, r8
+      cmp rax, 1
+      je .from_items_end_while
+
+      list_get rbx, r8
+      check_type rax, LIST
+      mov r9, rax
+
+      integer 0
+      list_get r9, rax
+      mov r10, rax
+      integer 1
+      list_get r9, rax
+      dictionary_set rcx, r10, rax
+
+      integer_inc r8
+      jmp .from_items_while
+
+    .from_items_end_while:
+
+    mov rax, rcx
+
+    ret
+
+  .not_from_items:
 
   mov rdx, [rax]
   cmp rdx, LIST
@@ -27,8 +69,10 @@ f_dictionary:
   jmp .correct_arguments
 
   .invalid_arguments:
-    print EXPECTED_TYPE_ERROR, "", ""
-    print LIST_TYPE, ""
+    buffer_to_string EXPECTED_TYPE_ERROR
+    mov rbx, rax
+    buffer_to_string LIST_TYPE
+    print <rbx, rax>
     exit -1
 
   .correct_arguments:
@@ -175,8 +219,20 @@ f_dictionary_get:
     jmp .while
 
   .end_while:
-  mov rax, rcx
-  ret
+
+    cmp rcx, 0
+    jne .continue
+      string "Ключ `"
+      string_append rax, rdx
+      mov rbx, rax
+      string "` не найден"
+      string_append rbx, rax
+      print rax
+      exit -1
+
+    .continue:
+    mov rax, rcx
+    ret
 
   .return:
   integer 1

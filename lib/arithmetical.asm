@@ -67,9 +67,9 @@ f_subtraction:
   ret
 
 f_multiplication:
-  get_arg 1
-  mov rbx, rax
   get_arg 0
+  mov rbx, rax
+  get_arg 1
   mov rcx, rax
 
   mov rdx, [rbx]
@@ -90,10 +90,36 @@ f_multiplication:
 
     .second_not_integer:
 
+    cmp r8, STRING
+    jne .second_not_string
+      mov r9, [rbx + INTEGER_HEADER*8]
+
+      string ""
+
+      .string_while:
+        cmp r9, 0
+        je .string_end_while
+
+        string_append rax, rcx
+
+        dec r9
+        jmp .string_while
+
+      .string_end_while:
+
+      jmp .continue
+
+    .second_not_string:
+
   .first_not_integer:
 
   string "Операция сложения не может быть проведена между типами "
   mov rbx, rax
+  type_to_string rdx
+  mov rdx, rax
+  type_to_string r8
+  mov r8, rax
+
   string " и "
   print <rbx, rdx, rax, r8>
 

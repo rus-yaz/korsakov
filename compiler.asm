@@ -1,35 +1,35 @@
 section "compiler" executable
 
-macro string_to_data string* {
-  enter string
-
-  call f_string_to_data
-
-  return
-}
+IF_COUNTER = 0
 
 macro check_node_type node*, type* {
+  debug_start "check_node_type"
   enter node, type
 
   call f_check_node_type
 
   return
+  debug_end "check_node_type"
 }
 
 macro compiler ast*, context* {
+  debug_start "compiler"
   enter ast, context
 
   call f_compiler
 
   return
+  debug_end "compiler"
 }
 
 macro compile node*, context* {
+  debug_start "compile"
   enter node, context
 
   call f_compile
 
   return
+  debug_end "compile"
 }
 
 f_check_node_type:
@@ -341,6 +341,151 @@ f_compile:
     jmp .continue
 
   .not_list:
+
+  check_node_type rcx, [УЗЕЛ_СТРОКИ]
+  cmp rax, 1
+  jne .not_string
+
+    string "string "
+    string_append rdx, rax
+    string "значение"
+    dictionary_get rcx, rax
+    mov rcx, rax
+    string "значение"
+    dictionary_get rcx, rax
+    string_append rdx, rax
+    string 10
+    string_append rdx, rax
+
+    jmp .continue
+
+  .not_string:
+
+  check_node_type rcx, [УЗЕЛ_СЛОВАРЯ]
+  cmp rax, 1
+  jne .not_dictionary
+
+    string <"push rbx", 10>
+    string_append rdx, rax
+
+    string "элементы"
+    dictionary_get rcx, rax
+    compile rax, rbx
+    string_append rdx, rax
+    string <"dictionary rax", 10>
+    string_append rdx, rax
+
+    jmp .continue
+
+  .not_dictionary:
+
+  check_node_type rcx, [УЗЕЛ_ЕСЛИ]
+  cmp rax, 1
+  jne .not_if
+
+    IF_COUNTER = IF_COUNTER + 1
+    BRANCH_COUNTER = 0
+
+    string "случаи"
+    dictionary_get rcx, rax
+    mov r8, rax
+
+    integer 0
+    mov r9, rax
+
+    .while:
+      list_length r8
+      integer rax
+      is_equal r9, rax
+      cmp rax, 1
+      je .end_while
+
+      BRANCH_COUNTER = BRANCH_COUNTER + 1
+
+      list_get r8, r9
+      mov r10, rax
+
+      string "условие"
+      dictionary_get r10, rax
+      compile rax, rbx
+      string_append rdx, rax
+      string 10
+      string_append rdx, rax
+
+      string <"boolean rax", 10>
+      string_append rdx, rax
+      string <"is_true rax", 10>
+      string_append rdx, rax
+      string <"cmp rax, 1", 10>
+      string_append rdx, rax
+
+      string "jne .if_"
+      string_append rdx, rax
+      integer IF_COUNTER
+      to_string rax
+      string_append rdx, rax
+      string "_branch_"
+      string_append rdx, rax
+      integer BRANCH_COUNTER
+      to_string rax
+      string_append rdx, rax
+      string 10
+      string_append rdx, rax
+
+      string "действия"
+      dictionary_get r10, rax
+      compile rax, rbx
+      string_append rdx, rax
+
+      string "jmp .if_"
+      string_append rdx, rax
+      mov r11, rax
+      integer IF_COUNTER
+      to_string rax
+      string_append rdx, rax
+      string <"_end", 10>
+      string_append rdx, rax
+
+      string ".if_"
+      string_append rdx, rax
+      mov r11, rax
+      integer IF_COUNTER
+      to_string rax
+      string_append rdx, rax
+      string "_branch_"
+      string_append rdx, rax
+      integer BRANCH_COUNTER
+      to_string rax
+      string_append rdx, rax
+      string <":", 10>
+      string_append rdx, rax
+
+      integer_inc r9
+      jmp .while
+
+    .end_while:
+
+    string "случай_иначе"
+    dictionary_get rcx, rax
+    mov r8, rax
+    integer 0
+    list_get r8, rax
+    print rax
+    compile rax, rbx
+    string_append rdx, rax
+
+    string "jmp .if_"
+    string_append rdx, rax
+    mov r11, rax
+    integer IF_COUNTER
+    to_string rax
+    string_append rdx, rax
+    string "_end"
+    string_append rdx, rax
+
+    jmp .continue
+
+  .not_if:
 
   string "Неизвестный узел: "
   print <rax, rcx>

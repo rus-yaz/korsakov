@@ -11,25 +11,43 @@ f_is_equal:
   cmp rcx, rdx
   jne .return_false
 
+  cmp rcx, NULL
+  je .is_null
+
   cmp rcx, INTEGER
   je .is_integer
 
-  cmp rcx, STRING
-  je .is_string
+  cmp rcx, BOOLEAN
+  je .is_boolean
 
   cmp rcx, LIST
   je .is_list
+
+  cmp rcx, STRING
+  je .is_string
 
   cmp rcx, DICTIONARY
   je .is_dictionary
 
   ; Выход с ошибкой при неизвестном типе
-  print EXPECTED_TYPE_ERROR, 0, 0
-  print INTEGER_TYPE, 44, 32
-  print STRING_TYPE, 44, 32
-  print LIST_TYPE, 44, 32
-  print DICTIONARY_TYPE, 0
+  list
+  mov rbx, rax
+  buffer_to_string EXPECTED_TYPE_ERROR
+  list_append rbx, rax
+  buffer_to_string INTEGER_TYPE
+  list_append rbx, rax
+  buffer_to_string STRING_TYPE
+  list_append rbx, rax
+  buffer_to_string LIST_TYPE
+  list_append rbx, rax
+  buffer_to_string DICTIONARY_TYPE
+  list_append rbx, rax
+  join rax, ", "
+  print rax
   exit -1
+
+  .is_null:
+    jmp .return_true
 
   .is_integer:
     mov rcx, [rax + INTEGER_HEADER*8]
@@ -40,49 +58,14 @@ f_is_equal:
 
     jmp .return_true
 
-  .is_string:
-    push rax
-
-    ; Сравнение длин строк
-    string_length rax
-    mov rcx, rax
-
-    string_length rbx
-    mov rdx, rax
-
-    pop rax
+  .is_boolean:
+    mov rcx, [rax + BOOLEAN_HEADER*8]
+    mov rdx, [rbx + BOOLEAN_HEADER*8]
 
     cmp rcx, rdx
     jne .return_false
 
-    mov rsi, rax
-    integer 0
-    xchg rsi, rax
-
-    mov rdi, rcx
-    .string_check:
-
-      cmp rdi, 0
-      je .return_true
-
-      push rax
-
-      string_get rax, rsi
-      mov rax, [rax + 8*1]
-      mov rcx, [rax + (2 + INTEGER_HEADER) * 8]
-
-      string_get rbx, rsi
-      mov rax, [rax + 8*1]
-      mov rdx, [rax + (2 + INTEGER_HEADER) * 8]
-
-      integer_inc rsi
-      pop rax
-
-      cmp rcx, rdx
-      jne .return_false
-
-      dec rdi
-      jmp .string_check
+    jmp .return_true
 
   .is_list:
 
@@ -132,6 +115,50 @@ f_is_equal:
 
       dec rdi
       jmp .list_check
+
+  .is_string:
+    push rax
+
+    ; Сравнение длин строк
+    string_length rax
+    mov rcx, rax
+
+    string_length rbx
+    mov rdx, rax
+
+    pop rax
+
+    cmp rcx, rdx
+    jne .return_false
+
+    mov rsi, rax
+    integer 0
+    xchg rsi, rax
+
+    mov rdi, rcx
+    .string_check:
+
+      cmp rdi, 0
+      je .return_true
+
+      push rax
+
+      string_get rax, rsi
+      mov rax, [rax + 8*1]
+      mov rcx, [rax + (2 + INTEGER_HEADER) * 8]
+
+      string_get rbx, rsi
+      mov rax, [rax + 8*1]
+      mov rdx, [rax + (2 + INTEGER_HEADER) * 8]
+
+      integer_inc rsi
+      pop rax
+
+      cmp rcx, rdx
+      jne .return_false
+
+      dec rdi
+      jmp .string_check
 
   .is_dictionary:
     mov rcx, rax

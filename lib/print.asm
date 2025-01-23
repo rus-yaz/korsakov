@@ -1,74 +1,105 @@
 f_print_string:
   get_arg 0
+
   check_type rax, STRING
+  mov rbx, rax
 
-  mov rcx, [rax + 8*2]       ; Длина строки
-  cmp rcx, 0
-  jne .not_empty
-    ret
+  string_length rbx
+  mov rcx, rax
 
-  .not_empty:
+  push 0
 
   .while:
-    dec rcx
-    mov rax, [rax + 8*1]
+    cmp rcx, 0
+    je .end_while
 
-    push rax
+    mov rbx, [rbx + 8*1]
+
+    mov rax, rbx
     add rax, 8*2
 
     check_type rax, INTEGER
     mov rdx, [rax + INTEGER_HEADER*8] ; Символ
 
     bswap rdx
-    pop rax
 
-    push rdx
-    mov rdx, rsp
+    .byte_while:
+      cmp rdx, 0
+      je .byte_end_while
 
-    sys_print rdx,\ ; Указатель на строку
-              8     ; Длина строки
+      movzx r8, dl
+      shr rdx, 8
 
-    add rsp, 8
+      cmp r8, 0
+      je .byte_while
 
-    cmp rcx, 0
-    jg .while
+      mov [rsp], r8
+      mov r8, rsp
+      sys_print r8,\ ; Указатель на строку
+                1    ; Длина строки
+
+      jmp .byte_while
+    .byte_end_while:
+
+    dec rcx
+    jmp .while
+
+  .end_while:
+
+  pop rax
 
   ret
 
 f_print:
-  get_arg 0
-  mov rbx, [rax]
+  mov rbx, 0
 
-  cmp rbx, NULL
-  je .not_string
+  list
+  mov rcx, rax
 
-  cmp rbx, INTEGER
-  je .not_string
+  .while:
+    get_arg rbx
+    cmp rax, 0
+    je .end_while
 
-  cmp rbx, LIST
-  je .not_string
+    mov rdx, [rax]
+    cmp rdx, STRING
+    je .string
+      to_string rax
 
-  cmp rbx, DICTIONARY
-  je .not_string
+    .string:
 
-  cmp rbx, STRING
-  je .string
+    list_append rcx, rax
 
-  jmp .buffer
+    inc rbx
+    jmp .while
 
-  .string:
-    print_string rax
-    jmp .end
+  .end_while:
 
-  .not_string:
-    to_string rax
-    print_string rax
-    jmp .end
+  inc rbx
+  get_arg rbx
 
-  .buffer:
-    print_buffer rax
-    jmp .end
+  cmp rax, 0
+  jne .not_default_separator
 
-  .end:
+    mov rax, " "
+
+  .not_default_separator:
+
+  join rcx, rax
+  delete rcx
+  mov rcx, rax
+
+  inc rbx
+  get_arg rbx
+
+  cmp rax, 0
+  jne .not_default_end_of_string
+
+    string 10
+
+  .not_default_end_of_string:
+
+  string_append rcx, rax
+  print_string rcx
 
   ret

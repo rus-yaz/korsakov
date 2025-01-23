@@ -4,7 +4,7 @@ section "data" writable
   fasm      db "/bin/fasm", 0
   fasm_arg1 db "main.asm", 0
   fasm_arg2 db "-m", 0
-  fasm_arg3 db "32768", 0
+  fasm_arg3 db "65536", 0
   fasm_args dq fasm, fasm_arg1, fasm_arg2, fasm_arg3, 0
 
   ld      db "/bin/ld", 0

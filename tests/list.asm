@@ -20,7 +20,9 @@ mov rcx, rax
 
 ; показать(список.индекс)
 list_get rbx, rcx
-print <ITEM_BY_INDEX_TEXT, rax>
+mov rcx, rax
+string "Элемент по индексу:"
+print <rax, rcx>
 
 ; список.добавить(5)
 integer 5
@@ -28,7 +30,9 @@ list_append rbx, rax
 
 ; показать(список.индекс)
 list_get rbx, rcx
-print <ITEM_BY_INDEX_TEXT, rax>
+mov rbx, rax
+string "Элемент по индексу:"
+print <rax, rbx>
 
 list
 mov rbx, rax

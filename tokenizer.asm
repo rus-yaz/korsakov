@@ -165,10 +165,136 @@ f_tokenizer:
       cmp rax, 1
       je .add_token
 
-      print <UNEXPECTED_TOKEN_ERROR, [токен]>
+      buffer_to_string UNEXPECTED_TOKEN_ERROR
+      print <rax, [токен]>
       exit -1
 
     .not_list_paren:
+
+    string "+"
+    is_equal [токен], rax
+    cmp rax, 1
+    jne .not_plus
+
+      integer_inc [индекс]
+      list_get [символы], [индекс]
+      string_append [токен], rax
+
+      integer_copy [ТИП_СЛОЖЕНИЕ]
+      mov [тип_токена], rax
+
+      string "++"
+      is_equal [токен], rax
+      cmp rax, 1
+      jne .add_token
+
+      list_length [токены]
+      cmp rax, 1
+      jne .non_pre_increment
+
+      mov rcx, 0
+      mov rdx, 0
+
+      integer -1
+      list_get [токены], rax
+      token_check_type rax, [ТИП_ИДЕНТИФИКАТОР]
+      cmp rax, 1
+      jne .non_pre_increment
+
+        list_pop [токены]
+        mov rcx, rax
+        mov rdx, 1
+
+      .non_pre_increment:
+
+      dictionary
+      mov rbx, rax
+      integer_copy [ТИП_ИНКРЕМЕНТАЦИЯ]
+      dictionary_set rbx, [тип], rax
+      dictionary_set rbx, [значение], rdx
+
+      list_append [токены], rax
+
+      cmp rcx, 0
+      je .continue
+
+      list_append [токены], rcx
+      jmp .continue
+
+    .not_plus:
+
+    string "-"
+    is_equal [токен], rax
+    cmp rax, 1
+    jne .not_minus
+
+      integer_inc [индекс]
+      list_get [символы], [индекс]
+      string_append [токен], rax
+
+      integer_copy [ТИП_ВЫЧИТАНИЕ]
+      mov [тип_токена], rax
+
+      string "--"
+      is_equal [токен], rax
+      cmp rax, 1
+      jne .add_token
+
+      integer_copy [индекс]
+      integer_inc rax
+      list_get [символы], rax
+      string_append rax, [токен]
+      mov rbx, rax
+
+      string "---"
+      is_equal rbx, rax
+      cmp rax, 1
+      jne .non_construction_end
+
+        integer_inc [индекс]
+        list_get [символы], [индекс]
+        string_append [токен], rax
+
+        integer_copy [ТИП_КОНЕЦ_КОНСТРУКЦИИ]
+        mov [тип_токена], rax
+        jmp .add_token
+
+      .non_construction_end:
+
+      list_length [токены]
+      cmp rax, 1
+      jne .non_pre_decrement
+
+      mov rcx, 0
+      mov rdx, 0
+
+      integer -1
+      list_get [токены], rax
+      token_check_type rax, [ТИП_ИДЕНТИФИКАТОР]
+      cmp rax, 1
+      jne .non_pre_decrement
+
+        list_pop [токены]
+        mov rcx, rax
+        mov rdx, 1
+
+      .non_pre_decrement:
+
+      dictionary
+      mov rbx, rax
+      integer_copy [ТИП_ИНКРЕМЕНТАЦИЯ]
+      dictionary_set rbx, [тип], rax
+      dictionary_set rbx, [значение], rdx
+
+      list_append [токены], rax
+
+      cmp rcx, 0
+      je .continue
+
+      list_append [токены], rcx
+      jmp .continue
+
+    .not_minus:
 
     integer -1
     dictionary_get [типы], [токен], rax
@@ -179,7 +305,8 @@ f_tokenizer:
     cmp rax, 1
     jne .add_token
 
-    print <UNEXPECTED_TOKEN_ERROR, [токен]>
+    buffer_to_string UNEXPECTED_TOKEN_ERROR
+    print <rax, [токен]>
     exit -1
 
     .add_token:

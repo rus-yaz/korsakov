@@ -142,7 +142,6 @@ macro check_error operation*, message* {
   pop rax
 }
 
-
 section "dictionary" executable
 
 macro dictionary keys = 0, values = 0 {
@@ -463,33 +462,12 @@ macro print_string string* {
   leave
 }
 
-; TODO: Реализовать через `join`
+macro print arguments*, separator = 0, end_of_string = 0 {
+  enter arguments, 0, separator, end_of_string
 
-macro print arguments*, separator = " ", end_of_string = 10 {
-  push rax
+  call f_print
 
-  macro print_argument [argument*] \{
-    enter argument
-
-    call f_print
-
-    push separator
-    mov rax, rsp
-    sys_print rax, 8
-    pop rax
-
-    leave
-  \}
-
-  print_argument arguments
-
-  push 0, end_of_string
-  mov rax, rsp
-
-  sys_print rax, 8*2
-  pop rax, rax
-
-  pop rax
+  leave
 }
 
 section "string" executable
@@ -620,7 +598,7 @@ macro type_to_string type* {
 
 section "delete" executable
 
-macro delete variable* {
+macro delete [variable*] {
   enter variable
 
   call f_delete
@@ -686,6 +664,32 @@ macro null {
   enter
 
   call f_null
+
+  return
+}
+
+section "boolean" executable
+
+macro boolean value {
+  enter value
+
+  call f_boolean
+
+  return
+}
+
+macro boolean_copy boolean {
+  enter boolean
+
+  call f_boolean_copy
+
+  return
+}
+
+macro is_true boolean {
+  enter boolean
+
+  call f_is_true
 
   return
 }
