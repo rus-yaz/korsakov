@@ -69,9 +69,10 @@ f_dictionary:
   jmp .correct_arguments
 
   .invalid_arguments:
-    buffer_to_string EXPECTED_TYPE_ERROR
+    string "Ожидался тип"
     mov rbx, rax
-    buffer_to_string LIST_TYPE
+    type_to_string LIST
+
     print <rbx, rax>
     exit -1
 

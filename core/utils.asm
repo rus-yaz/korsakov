@@ -136,24 +136,24 @@ f_type_to_string:
   print <rax, rbx>
   exit -1
 
-f_type_header_size:
+f_type_full_size:
   get_arg 0
 
   cmp rax, NULL
   jne .not_null
-    mov rax, NULL_HEADER
+    mov rax, NULL_SIZE
     ret
   .not_null:
 
   cmp rax, INTEGER
   jne .not_integer
-    mov rax, INTEGER_HEADER
+    mov rax, INTEGER_SIZE
     ret
   .not_integer:
 
   cmp rax, BOOLEAN
   jne .not_boolean
-    mov rax, BOOLEAN_HEADER
+    mov rax, BOOLEAN_SIZE
     ret
   .not_boolean:
 
@@ -180,48 +180,9 @@ f_type_header_size:
 
   type_to_string rax
   mov rbx, rax
-  string "type_header_size: Не определён размер заголовка для типа"
+  string "type_full_size: Не определён размер заголовка для типа"
   print <rax, rbx>
   exit -1
-
-f_type_full_size:
-  get_arg 0
-
-  cmp rax, NULL
-  jne .not_null
-    mov rax, NULL_SIZE
-    ret
-  .not_null:
-
-  cmp rax, INTEGER
-  jne .not_integer
-    mov rax, INTEGER_SIZE
-    ret
-  .not_integer:
-
-  cmp rax, BOOLEAN
-  jne .not_boolean
-    mov rax, BOOLEAN_SIZE
-    ret
-  .not_boolean:
-
-  cmp rax, LIST
-  je .collection
-  cmp rax, STRING
-  je .collection
-  cmp rax, DICTIONARY
-  je .collection
-
-    type_to_string rax
-    mov rbx, rax
-    string "type_full_size: Не определён размер для типа"
-    print <rax, rbx>
-    exit -1
-
-  .collection:
-
-  type_header_size rax
-  ret
 
 f_check_type:
   get_arg 0

@@ -467,7 +467,7 @@ f_list_insert:
 
   mov r10, r8
 
-  type_header_size [rcx]
+  type_full_size [rcx]
   mov r9, rax
 
   add rax, 2

@@ -6,7 +6,7 @@ macro debug_start function_name* {
   if DEBUG eqtype
   enter
 
-  list_length [time]
+  list_length [DEBUG_TIME]
   integer rax
   mov rbx, rax
   string " "
@@ -34,7 +34,7 @@ macro debug_start function_name* {
   integer [r8 + 8*1]
   list_append rbx, rax
 
-  list_append [time], rbx
+  list_append [DEBUG_TIME], rbx
 
   print <rcx, rdx>
 
@@ -46,7 +46,7 @@ macro debug_end function_name* {
   if DEBUG eqtype
   enter
 
-  list_length [time]
+  list_length [DEBUG_TIME]
   dec rax
   integer rax
   mov rbx, rax
@@ -61,7 +61,7 @@ macro debug_end function_name* {
   string function_name
   mov rdx, rax
 
-  list_pop [time]
+  list_pop [DEBUG_TIME]
   mov rbx, rax
 
   push rcx

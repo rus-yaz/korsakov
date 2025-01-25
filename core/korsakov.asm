@@ -32,16 +32,6 @@ section "data" writable
   define BOOLEAN_SIZE 2
   define FILE_SIZE    4
 
-  EXPECTED_TYPE_ERROR db "Ожидался тип: ",              0
-  INTEGER_TYPE        db "Целое число",                 0
-  BOOLEAN_TYPE        db "Булево значение",             0
-  LIST_TYPE           db "Список",                      0
-  STRING_TYPE         db "Строка",                      0
-  BINARY_TYPE         db "Бинарная последовательность", 0
-  FILE_TYPE           db "Файл",                        0
-  DICTIONARY_TYPE     db "Словарь",                     0
-  HEAP_BLOCK_TYPE     db "Блок кучи",                   0
-
   INDEX_OUT_OF_LIST_ERROR       db "Индекс выходит за пределы списка",              0
   INDEX_OUT_OF_STRING_ERROR     db "Индекс выходит за пределы строки",              0
   OPENING_FILE_ERROR            db "Не удалось открыть файл",                       0
@@ -61,7 +51,7 @@ section "data" writable
   LAST_USED_HEAP_BLOCK rq 1
 
   GLOBAL_CONTEXT rq 1
-  time rq 1
+  DEBUG_TIME rq 1
 
 include "./debug.asm"
 include "./macro.asm"
@@ -92,6 +82,6 @@ _start:
   mov [GLOBAL_CONTEXT], rax
 
   list
-  mov [time], rax
+  mov [DEBUG_TIME], rax
 
   call start

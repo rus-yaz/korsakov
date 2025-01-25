@@ -69,7 +69,9 @@ f_is_equal:
       add rcx, 8*2
       add rdx, 8*2
 
+      mov r8, rax
       is_equal rcx, rdx
+      xchg r8, rax
       cmp rax, 1
       jne .return_false
 
@@ -122,7 +124,10 @@ f_is_equal:
     mov rdx, rax
     dictionary_items rcx
 
+
+    mov r8, rax
     is_equal rax, rdx
+    xchg r8, rax
     cmp rax, 0
 
     je .return_false
@@ -132,20 +137,23 @@ f_is_equal:
 
   ; Выход с ошибкой при неизвестном типе
 
+  string "Ожидался тип"
+  mov rcx, rax
+
   list
   mov rbx, rax
-  buffer_to_string EXPECTED_TYPE_ERROR
+
+  type_to_string INTEGER
   list_append rbx, rax
-  buffer_to_string INTEGER_TYPE
+  type_to_string STRING
   list_append rbx, rax
-  buffer_to_string STRING_TYPE
+  type_to_string LIST
   list_append rbx, rax
-  buffer_to_string LIST_TYPE
-  list_append rbx, rax
-  buffer_to_string DICTIONARY_TYPE
+  type_to_string DICTIONARY
   list_append rbx, rax
   join rax, ", "
-  print rax
+
+  print <rcx, rax>
   exit -1
 
   .return_true:
