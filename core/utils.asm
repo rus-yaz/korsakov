@@ -58,6 +58,171 @@ f_check_error:
   get_arg 0
   exit -1, rax
 
+f_type_to_string:
+  get_arg 0
+
+  mov rbx, HEAP_BLOCK
+  cmp rax, rbx
+  jne .not_heap_block
+    string "Блок кучи"
+    ret
+
+  .not_heap_block:
+
+  cmp rax, NULL
+  jne .not_null
+    string "НУЛЬ"
+    ret
+  .not_null:
+
+  cmp rax, INTEGER
+  jne .not_integer
+    string "Целое число"
+    ret
+  .not_integer:
+
+  cmp rax, FLOAT
+  jne .not_float
+    string "Вещественное число"
+    ret
+  .not_float:
+
+  cmp rax, BOOLEAN
+  jne .not_boolean
+    string "Булево значение"
+    ret
+  .not_boolean:
+
+  cmp rax, LIST
+  jne .not_list
+    string "Список"
+    ret
+  .not_list:
+
+  cmp rax, BINARY
+  jne .not_binary
+    string "Бинарная последовательность"
+    ret
+  .not_binary:
+
+  cmp rax, STRING
+  jne .not_string
+    string "Строка"
+    ret
+  .not_string:
+
+  cmp rax, DICTIONARY
+  jne .not_dictionary
+    string "Словарь"
+    ret
+  .not_dictionary:
+
+  cmp rax, CLASS
+  jne .not_class
+    string "Класс"
+    ret
+  .not_class:
+
+  cmp rax, FILE
+  jne .not_file
+    string "Файл"
+    ret
+  .not_file:
+
+  integer rax
+  to_string rax
+  mov rbx, rax
+  string "type_to_string: Нет строкового обозначения для типа"
+  print <rax, rbx>
+  exit -1
+
+f_type_header_size:
+  get_arg 0
+
+  cmp rax, NULL
+  jne .not_null
+    mov rax, NULL_HEADER
+    ret
+  .not_null:
+
+  cmp rax, INTEGER
+  jne .not_integer
+    mov rax, INTEGER_HEADER
+    ret
+  .not_integer:
+
+  cmp rax, BOOLEAN
+  jne .not_boolean
+    mov rax, BOOLEAN_HEADER
+    ret
+  .not_boolean:
+
+  cmp rax, LIST
+  jne .not_list
+    mov rax, LIST_HEADER
+    ret
+  .not_list:
+
+  cmp rax, STRING
+  jne .not_string
+    mov rax, STRING_HEADER
+    ret
+  .not_string:
+
+  cmp rax, DICTIONARY
+  jne .not_dictionary
+    mov rax, DICTIONARY_HEADER
+    ret
+  .not_dictionary:
+
+  integer 1
+  print rax
+
+  type_to_string rax
+  mov rbx, rax
+  string "type_header_size: Не определён размер заголовка для типа"
+  print <rax, rbx>
+  exit -1
+
+f_type_full_size:
+  get_arg 0
+
+  cmp rax, NULL
+  jne .not_null
+    mov rax, NULL_SIZE
+    ret
+  .not_null:
+
+  cmp rax, INTEGER
+  jne .not_integer
+    mov rax, INTEGER_SIZE
+    ret
+  .not_integer:
+
+  cmp rax, BOOLEAN
+  jne .not_boolean
+    mov rax, BOOLEAN_SIZE
+    ret
+  .not_boolean:
+
+  cmp rax, LIST
+  je .collection
+  cmp rax, STRING
+  je .collection
+  cmp rax, DICTIONARY
+  je .collection
+
+    type_to_string rax
+    mov rbx, rax
+    string "type_full_size: Не определён размер для типа"
+    print <rax, rbx>
+    exit -1
+
+  .collection:
+
+  type_header_size rax
+  ret
+
 f_check_type:
   get_arg 0
   mov r8, [rax]
@@ -70,56 +235,8 @@ f_check_type:
 
   .continue:
 
-  print_buffer EXPECTED_TYPE_ERROR
-
-  cmp r9, INTEGER
-  jne .not_integer
-    print_buffer INTEGER_TYPE
-    jmp .exit
-  .not_integer:
-
-  cmp r9, STRING
-  jne .not_string
-    print_buffer STRING_TYPE
-    jmp .exit
-  .not_string:
-
-  cmp r9, LIST
-  jne .not_list
-    print_buffer LIST_TYPE
-    jmp .exit
-  .not_list:
-
-  cmp r9, FILE
-  jne .not_file
-    print_buffer FILE_TYPE
-    jmp .exit
-  .not_file:
-
-  cmp r9, BINARY
-  jne .not_binary
-    print_buffer BINARY_TYPE
-    jmp .exit
-  .not_binary:
-
-  cmp r9, DICTIONARY
-  jne .not_dictionary
-    print_buffer DICTIONARY_TYPE
-    jmp .exit
-  .not_dictionary:
-
-  mov r8, HEAP_BLOCK
-  cmp r9, r8
-  jne .not_heap_block
-    print_buffer HEAP_BLOCK_TYPE
-    jmp .exit
-  .not_heap_block:
-
-  check_error jmp, UNEXPECTED_TYPE_ERROR
-
-  .exit:
-    push 10
-    mov rax, rsp
-    sys_print rax, 8
-
-    exit -1
+  type_to_string r9
+  mov rbx, rax
+  string "Ожидался тип"
+  print rax, rbx
+  exit -1

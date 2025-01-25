@@ -7,9 +7,9 @@ f_dictionary:
   jne .not_empty
     create_block DICTIONARY_HEADER*8
 
-    mem_mov [rax + 8*0], DICTIONARY
-    mem_mov [rax + 8*1], 0
-    mem_mov [rax + 8*2], 0
+    mem_mov [rax + 8*0], DICTIONARY ; Тип
+    mem_mov [rax + 8*1], 0          ; Первый элемент
+    mem_mov [rax + 8*2], 0          ; Длина
 
     ret
 
@@ -76,6 +76,7 @@ f_dictionary:
     exit -1
 
   .correct_arguments:
+
   mov rcx, rbx
   mov rbx, rax
 
@@ -131,6 +132,21 @@ f_dictionary_length:
   check_type rax, DICTIONARY
 
   mov rax, [rax + 8*2]
+  ret
+
+f_dictionary_copy:
+  get_arg 0
+  check_type rax, DICTIONARY
+
+  push rax
+  dictionary_values rax
+  mov rbx, rax
+
+  pop rax
+  dictionary_keys rax
+
+  dictionary rax, rbx
+
   ret
 
 f_dictionary_keys:
@@ -220,38 +236,22 @@ f_dictionary_get:
 
   .end_while:
 
-    cmp rcx, 0
-    jne .continue
-      string "Ключ `"
-      string_append rax, rdx
-      mov rbx, rax
-      string "` не найден"
-      string_append rbx, rax
-      print rax
-      exit -1
+  cmp rcx, 0
+  jne .continue
+    string "Ключ"
+    mov rbx, rax
+    string "` не найден"
+    mov rcx, rax
+    print <rbx, rdx, rcx>
+    exit -1
 
-    .continue:
+  .continue:
     mov rax, rcx
     ret
 
   .return:
-  integer 1
-  list_get rbx, rax
-
-  ret
-
-f_dictionary_copy:
-  get_arg 0
-  check_type rax, DICTIONARY
-
-  push rax
-  dictionary_values rax
-  mov rbx, rax
-
-  pop rax
-  dictionary_keys rax
-
-  dictionary rax, rbx
+    integer 1
+    list_get rbx, rax
 
   ret
 
@@ -311,9 +311,13 @@ f_dictionary_set:
   get_arg 1
   mov rbx, rax
   get_arg 0
-
-  check_type rax, DICTIONARY
   mov rdx, rax
+
+  check_type rdx, DICTIONARY
+
+  ; RBX — key
+  ; RCX — value
+  ; RDX — dictionary
 
   dictionary_keys rdx
   list_index rax, rbx
@@ -332,6 +336,7 @@ f_dictionary_set:
 
     mov r9, r8
     add r8, 8*2
+
     integer 1
     list_set r8, rax, rcx
 

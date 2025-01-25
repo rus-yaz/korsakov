@@ -382,6 +382,7 @@ f_string_set:
   mov rbx, rax
   get_arg 2
   mov rcx, rax
+
   ; RBX — index
   ; RCX — value
   ; RDX — string

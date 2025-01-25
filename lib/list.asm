@@ -2,8 +2,8 @@ f_list:
   create_block LIST_HEADER*8
 
   mem_mov [rax + 8*0], LIST ; Тип
-  mem_mov [rax + 8*1], 0    ; Место для ссылки на первый элемент
-  mem_mov [rax + 8*2], 0    ; Начальная длина
+  mem_mov [rax + 8*1], 0    ; Указатель на первый элемент
+  mem_mov [rax + 8*2], 0    ; Длина
 
   ret
 
@@ -52,65 +52,7 @@ f_list_get:
 
   add rax, 8*2
 
-  mov rbx, [rax]
-
-  cmp rbx, NULL
-  jne .not_null
-
-    null
-    jmp .continue
-
-  .not_null:
-
-  cmp rbx, INTEGER
-  jne .not_integer
-
-    integer_copy rax
-    jmp .continue
-
-  .not_integer:
-
-  cmp rbx, BOOLEAN
-  jne .not_boolean
-
-    boolean_copy rax
-    jmp .continue
-
-  .not_boolean:
-
-  cmp rbx, LIST
-  jne .not_list
-
-    list_copy rax
-    jmp .continue
-
-  .not_list:
-
-  cmp rbx, STRING
-  jne .not_string
-
-    string_copy rax
-    jmp .continue
-
-  .not_string:
-
-  cmp rbx, DICTIONARY
-  jne .not_dictionary
-
-    dictionary_copy rax
-    jmp .continue
-
-  .not_dictionary:
-
-    type_to_string rbx
-    mov rbx, rax
-    string "Не поддерживаемый тип: "
-    string_append rax, rbx
-    print rax
-
-    exit -1
-
-  .continue:
+  copy rax
 
   ret
 
@@ -151,13 +93,12 @@ f_list_copy:
 
   ret
 
-
 f_list_append:
   get_arg 1
   mov rbx, rax
   get_arg 0
-  check_type rax, LIST
 
+  check_type rax, LIST
   mov rcx, rax
 
   ; RBX — item
@@ -174,89 +115,23 @@ f_list_append:
   ; RBX — item
   ; RCX — list
   ; RDX — last_item_link
+
   mov rdx, r8
 
-  mov rax, [rbx]
-
-  cmp rax, NULL
-  je .null
-
-  cmp rax, INTEGER
-  je .integer
-
-  cmp rax, BOOLEAN
-  je .boolean
-
-  cmp rax, LIST
-  je .list
-
-  cmp rax, STRING
-  je .string
-
-  cmp rax, DICTIONARY
-  je .dictionary
-
-    ; Выход с ошибкой при неизвестном типе
-    list
-    mov rbx, rax
-    buffer_to_string EXPECTED_TYPE_ERROR
-    list_append rbx, rax
-    buffer_to_string INTEGER_TYPE
-    list_append rbx, rax
-    buffer_to_string STRING_TYPE
-    list_append rbx, rax
-    buffer_to_string LIST_TYPE
-    list_append rbx, rax
-    buffer_to_string DICTIONARY_TYPE
-    list_append rbx, rax
-
-    join rbx
-    print rax
-
-    exit -1
-
-  .null:
-    null
-    mov r8, NULL_SIZE
-    jmp .continue
-
-  .integer:
-    integer_copy rbx
-    mov r8, INTEGER_SIZE
-    jmp .continue
-
-  .boolean:
-    boolean_copy rbx
-    mov r8, BOOLEAN_SIZE
-    jmp .continue
-
-  .list:
-    list_copy rbx
-    mov r8, LIST_HEADER
-    jmp .continue
-
-  .string:
-    string_copy rbx
-    mov r8, STRING_HEADER
-    jmp .continue
-
-  .dictionary:
-    dictionary_copy rbx
-    mov r8, DICTIONARY_HEADER
-    jmp .continue
-
-  .continue:
-
+  copy rbx
   mov rbx, rax
+
+  type_full_size [rbx]
+  mov r8, rax
 
   ; RBX — item
   ; RCX — list
   ; RDX — last_item_link
   ; R8  — item_size
 
-  mem_mov rax, [rcx + 2*8]
+  list_length rcx
   inc rax
-  mem_mov [rcx + 2*8], rax
+  mem_mov [rcx + 8*2], rax
 
   mov r9, r8
 
@@ -296,6 +171,7 @@ f_string_to_list:
   ; RBX — индекс (Целое число)
   ; RCX — длина  (число)
   ; RDX — список (Список)
+
   .while:
     cmp rcx, 0
     je .end_while
@@ -405,61 +281,11 @@ f_list_set:
   ; RCX — list
   ; RDX — index_item_link
 
-  mov rax, [rbx]
-
-  cmp rax, INTEGER
-  je .integer
-
-  cmp rax, LIST
-  je .list
-
-  cmp rax, STRING
-  je .string
-
-  cmp rax, DICTIONARY
-  je .dictionary
-
-    ; Выход с ошибкой при неизвестном типе
-    list
-    mov rbx, rax
-    buffer_to_string EXPECTED_TYPE_ERROR
-    list_append rbx, rax
-    type_to_string INTEGER
-    list_append rbx, rax
-    type_to_string LIST
-    list_append rbx, rax
-    type_to_string STRING
-    list_append rbx, rax
-    type_to_string DICTIONARY
-    list_append rbx, rax
-    join rbx, ", "
-    print rax
-
-    exit -1
-
-  .integer:
-    integer_copy rbx
-    mov r8, INTEGER_SIZE
-    jmp .continue
-
-  .list:
-    list_copy rbx
-    mov r8, LIST_HEADER
-    jmp .continue
-
-  .string:
-    string_copy rbx
-    mov r8, STRING_HEADER
-    jmp .continue
-
-  .dictionary:
-    dictionary_copy rbx
-    mov r8, DICTIONARY_HEADER
-    jmp .continue
-
-  .continue:
-
+  copy rbx
   mov rbx, rax
+
+  type_full_size [rbx]
+  mov r8, rax
 
   ; RBX — item
   ; RCX — list
@@ -570,44 +396,7 @@ f_list_pop:
   .last_item:
 
   add r8, 8*2
-  mov rax, [r8]
-
-  cmp rax, INTEGER
-  je .integer
-
-  cmp rax, LIST
-  je .list
-
-  cmp rax, STRING
-  je .string
-
-  cmp rax, DICTIONARY
-  je .dictionary
-
-    type_to_string rax
-    mov rbx, rax
-    string "Неподдерживаемый тип: "
-    string_append rax, rbx
-    print rax
-    exit -1
-
-  .integer:
-    integer_copy r8
-    jmp .continue
-
-  .list:
-    list_copy r8
-    jmp .continue
-
-  .string:
-    string_copy r8
-    jmp .continue
-
-  .dictionary:
-    dictionary_copy r8
-    jmp .continue
-
-  .continue:
+  copy r8
 
   sub r8, 8*2
   delete_block r8
@@ -663,7 +452,6 @@ f_list_insert:
   mov rbx, [rbx + INTEGER_HEADER*8]
   inc rbx
 
-  push rdx
   mov r8, rdx
 
   .while:
@@ -677,67 +465,25 @@ f_list_insert:
 
   .end_while:
 
-  mov rdx, r8
-  mov rax, [rcx]
+  mov r10, r8
 
-  cmp rax, INTEGER
-  jne .not_integer
-
-    mov rax, INTEGER_SIZE
-    jmp .continue
-
-  .not_integer:
-
-  cmp rax, LIST
-  jne .not_list
-
-    mov rax, LIST_HEADER
-    jmp .continue
-
-  .not_list:
-
-  cmp rax, STRING
-  jne .not_string
-
-    mov rax, STRING_HEADER
-    jmp .continue
-
-  .not_string:
-
-  cmp rax, DICTIONARY
-  jne .not_dictionary
-
-    mov rax, DICTIONARY_HEADER
-    jmp .continue
-
-  .not_dictionary:
-
-    type_to_string rax
-    mov rbx, rax
-    string "Неподдерживаемый тип: "
-    string_append rax, rbx
-    print rax
-
-    exit -1
-
-  .continue:
-
+  type_header_size [rcx]
   mov r9, rax
-  add rax, 2
 
+  add rax, 2
   imul rax, 8
   create_block rax
 
-  mem_mov r8, [rdx + 8*0]
+  mem_mov r8, [r10 + 8*0]
   mem_mov [rax + 8*0], r8
 
-  mem_mov [rdx + 8*0], rax
+  mem_mov [r10 + 8*0], rax
   mem_mov [r8  + 8*1], rax
 
-  mem_mov [rax + 8*1], rdx
+  mem_mov [rax + 8*1], r10
+
   add rax, 8*2
-
   mem_copy rcx, rax, r9
-  pop rax
 
+  mov rax, rdx
   ret

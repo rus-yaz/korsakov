@@ -17,6 +17,7 @@ f_boolean:
   jne .not_integer
     mov rax, [rbx + INTEGER_HEADER*8]
     cmp rax, 0
+
     je .false
     jmp .true
 
@@ -26,6 +27,7 @@ f_boolean:
   jne .not_boolean
     mov rax, [rbx + BOOLEAN_HEADER*8]
     cmp rax, 0
+
     je .false
     jmp .true
 
@@ -35,6 +37,7 @@ f_boolean:
   jne .not_list
     list_length rbx
     cmp rax, 0
+
     je .false
     jmp .true
 
@@ -44,6 +47,7 @@ f_boolean:
   jne .not_string
     string_length rbx
     cmp rax, 0
+
     je .false
     jmp .true
 
@@ -53,6 +57,7 @@ f_boolean:
   jne .not_dictionary
     dictionary_length rbx
     cmp rax, 0
+
     je .false
     jmp .true
 
@@ -75,18 +80,11 @@ f_boolean:
 
 f_boolean_copy:
   get_arg 0
+  check_type rax, BOOLEAN
   mov rbx, rax
-  check_type rbx, BOOLEAN
 
   create_block BOOLEAN_SIZE*8
   mem_mov [rax + 8*0], BOOLEAN
   mem_mov [rax + 8*1], [rbx + BOOLEAN_HEADER*8]
 
-  ret
-
-f_is_true:
-  get_arg 0
-  check_type rax, BOOLEAN
-
-  mov rax, [rax + BOOLEAN_HEADER*8]
-  ret
+ ret

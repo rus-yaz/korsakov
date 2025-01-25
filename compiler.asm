@@ -1,7 +1,5 @@
 section "compiler" executable
 
-IF_COUNTER = 0
-
 macro check_node_type node*, type* {
   debug_start "check_node_type"
   enter node, type
@@ -383,8 +381,17 @@ f_compile:
   cmp rax, 1
   jne .not_if
 
-    IF_COUNTER = IF_COUNTER + 1
-    BRANCH_COUNTER = 0
+    string "СЧЁТЧИК_ЕСЛИ"
+    mov r8, rax
+    list
+    mov r9, rax
+    access r8, r9
+    integer_inc rax
+
+    assign r8, r9, rax
+    mov r13, [rax + INTEGER_HEADER*8]
+
+    mov r12, 0
 
     string "случаи"
     dictionary_get rcx, rax
@@ -400,7 +407,8 @@ f_compile:
       cmp rax, 1
       je .end_while
 
-      BRANCH_COUNTER = BRANCH_COUNTER + 1
+      inc r12
+      integer r12
 
       list_get r8, r9
       mov r10, rax
@@ -414,19 +422,19 @@ f_compile:
 
       string <"boolean rax", 10>
       string_append rdx, rax
-      string <"is_true rax", 10>
+      string <"mov rax, [rax + BOOLEAN_HEADER*8]", 10>
       string_append rdx, rax
       string <"cmp rax, 1", 10>
       string_append rdx, rax
 
       string "jne .if_"
       string_append rdx, rax
-      integer IF_COUNTER
+      integer r13
       to_string rax
       string_append rdx, rax
       string "_branch_"
       string_append rdx, rax
-      integer BRANCH_COUNTER
+      integer r12
       to_string rax
       string_append rdx, rax
       string 10
@@ -440,7 +448,7 @@ f_compile:
       string "jmp .if_"
       string_append rdx, rax
       mov r11, rax
-      integer IF_COUNTER
+      integer r13
       to_string rax
       string_append rdx, rax
       string <"_end", 10>
@@ -449,12 +457,12 @@ f_compile:
       string ".if_"
       string_append rdx, rax
       mov r11, rax
-      integer IF_COUNTER
+      integer r13
       to_string rax
       string_append rdx, rax
       string "_branch_"
       string_append rdx, rax
-      integer BRANCH_COUNTER
+      integer r12
       to_string rax
       string_append rdx, rax
       string <":", 10>
@@ -467,20 +475,16 @@ f_compile:
 
     string "случай_иначе"
     dictionary_get rcx, rax
-    mov r8, rax
-    integer 0
-    list_get r8, rax
-    print rax
     compile rax, rbx
     string_append rdx, rax
 
-    string "jmp .if_"
+    string ".if_"
     string_append rdx, rax
     mov r11, rax
-    integer IF_COUNTER
+    integer r13
     to_string rax
     string_append rdx, rax
-    string "_end"
+    string <"_end:", 10>
     string_append rdx, rax
 
     jmp .continue

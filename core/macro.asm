@@ -91,6 +91,16 @@ macro exit code*, buffer = 0 {
   sys_exit code
 }
 
+macro string str {
+  a = $
+  jmp @f
+    db str, 0
+  @@:
+  buffer_to_string a + 2
+  ; `+ 2` — что-то из разряда магии
+  ; Потому что без него захватываются лишние 2 бита
+}
+
 section "utils" executable
 
 macro buffer_length buffer_ptr* {
@@ -117,14 +127,6 @@ macro print_buffer buffer* {
   leave
 }
 
-macro check_type variable_ptr*, type* {
-  enter variable_ptr, type
-
-  call f_check_type
-
-  leave
-}
-
 macro mem_copy source*, destination*, size* {
   enter source, destination, size
 
@@ -142,6 +144,108 @@ macro check_error operation*, message* {
   pop rax
 }
 
+macro type_to_string type* {
+  enter type
+
+  call f_type_to_string
+
+  return
+}
+
+macro type_header_size type* {
+  enter type
+
+  call f_type_header_size
+
+  return
+}
+
+macro type_full_size type* {
+  enter type
+
+  call f_type_full_size
+
+  return
+}
+
+macro check_type variable_ptr*, type* {
+  enter variable_ptr, type
+
+  call f_check_type
+
+  leave
+}
+
+section "arithmetical" executable
+
+macro addition first*, second* {
+  enter first, second
+
+  call f_addition
+
+  return
+}
+
+macro subtraction first*, second* {
+  enter first, second
+
+  call f_subtraction
+
+  return
+}
+
+macro multiplication first*, second* {
+  enter first, second
+
+  call f_multiplication
+
+  return
+}
+
+macro division first*, second* {
+  enter first, second
+
+  call f_division
+
+  return
+}
+
+section "boolean" executable
+
+macro boolean value {
+  enter value
+
+  call f_boolean
+
+  return
+}
+
+macro boolean_value boolean {
+  enter boolean
+
+  call f_boolean_value
+
+  return
+}
+
+macro boolean_copy boolean {
+  enter boolean
+
+  call f_boolean_copy
+
+  return
+}
+
+section "delete" executable
+
+macro delete [variable*] {
+  enter variable
+
+  call f_delete
+
+  leave
+}
+
 section "dictionary" executable
 
 macro dictionary keys = 0, values = 0 {
@@ -156,6 +260,14 @@ macro dictionary_length dictionary* {
   enter dictionary
 
   call f_dictionary_length
+
+  return
+}
+
+macro dictionary_copy dictionary* {
+  enter dictionary
+
+  call f_dictionary_copy
 
   return
 }
@@ -188,14 +300,6 @@ macro dictionary_items dictionary* {
   enter dictionary
 
   call f_dictionary_items
-
-  return
-}
-
-macro dictionary_copy dictionary* {
-  enter dictionary
-
-  call f_dictionary_copy
 
   return
 }
@@ -266,6 +370,14 @@ macro is_equal val_1*, val_2* {
   enter val_1, val_2
 
   call f_is_equal
+
+  return
+}
+
+macro copy value {
+  enter value
+
+  call f_copy
 
   return
 }
@@ -372,14 +484,6 @@ macro list_get list*, index* {
   return
 }
 
-macro join list*, separator = " " {
-  enter list, separator
-
-  call f_join
-
-  return
-}
-
 macro list_copy list* {
   enter list
 
@@ -400,14 +504,6 @@ macro string_to_list string* {
   enter string
 
   call f_string_to_list
-
-  return
-}
-
-macro list_to_string list {
-  enter list
-
-  call f_list_to_string
 
   return
 }
@@ -452,6 +548,16 @@ macro list_insert list*, index*, item* {
   return
 }
 
+section "null" executable
+
+macro null {
+  enter
+
+  call f_null
+
+  return
+}
+
 section "print" executable
 
 macro print_string string* {
@@ -471,16 +577,6 @@ macro print arguments*, separator = 0, end_of_string = 0 {
 }
 
 section "string" executable
-
-macro string str {
-  a = $
-  jmp @f
-    db str, 0
-  @@:
-  buffer_to_string a + 2
-  ; `+ 2` — что-то из разряда магии
-  ; Потому что без него захватываются лишние 2 бита
-}
 
 macro buffer_to_binary buffer_addr* {
   enter buffer_addr
@@ -546,10 +642,26 @@ macro string_get string*, index* {
   return
 }
 
+macro string_set string*, index*, value* {
+  enter string, index, value
+
+  call f_string_set
+
+  return
+}
+
 macro split string*, separator = " " {
   enter string, separator
 
   call f_split
+
+  return
+}
+
+macro join list*, separator = " " {
+  enter list, separator
+
+  call f_join
 
   return
 }
@@ -570,14 +682,6 @@ macro is_digit string* {
   return
 }
 
-macro string_set string*, index*, value* {
-  enter string, index, value
-
-  call f_string_set
-
-  return
-}
-
 section "to_string" executable
 
 macro to_string value* {
@@ -586,24 +690,6 @@ macro to_string value* {
   call f_to_string
 
   return
-}
-
-macro type_to_string type* {
-  enter type
-
-  call f_type_to_string
-
-  return
-}
-
-section "delete" executable
-
-macro delete [variable*] {
-  enter variable
-
-  call f_delete
-
-  leave
 }
 
 section "variables" executable
@@ -620,76 +706,6 @@ macro access variable*, keys*, context = [GLOBAL_CONTEXT] {
   enter variable, keys, context
 
   call f_access
-
-  return
-}
-
-section "arithmetical" executable
-
-macro addition first*, second* {
-  enter first, second
-
-  call f_addition
-
-  return
-}
-
-macro subtraction first*, second* {
-  enter first, second
-
-  call f_subtraction
-
-  return
-}
-
-macro multiplication first*, second* {
-  enter first, second
-
-  call f_multiplication
-
-  return
-}
-
-macro division first*, second* {
-  enter first, second
-
-  call f_division
-
-  return
-}
-
-section "null" executable
-
-macro null {
-  enter
-
-  call f_null
-
-  return
-}
-
-section "boolean" executable
-
-macro boolean value {
-  enter value
-
-  call f_boolean
-
-  return
-}
-
-macro boolean_copy boolean {
-  enter boolean
-
-  call f_boolean_copy
-
-  return
-}
-
-macro is_true boolean {
-  enter boolean
-
-  call f_is_true
 
   return
 }

@@ -7,6 +7,7 @@ f_assign:
   mov rcx, rax
   get_arg 3
   mov rdx, rax
+
   ; RBX — keys
   ; RCX — value
   ; RDX — context
@@ -200,6 +201,7 @@ f_access:
   mov rbx, rax
   get_arg 2
   mov rcx, rax
+
   ; RBX — keys
   ; RCX — context
   ; RDX — variable

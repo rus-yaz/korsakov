@@ -12,24 +12,126 @@ f_is_equal:
   jne .return_false
 
   cmp rcx, NULL
-  je .is_null
+  je .return_true
 
   cmp rcx, INTEGER
-  je .is_integer
+  jne .not_integer
+    mov rax, [rax + INTEGER_HEADER*8]
+    mov rbx, [rbx + INTEGER_HEADER*8]
+
+    cmp rax, rbx
+    jne .return_false
+
+    jmp .return_true
+
+  .not_integer:
 
   cmp rcx, BOOLEAN
-  je .is_boolean
+  jne .not_boolean
+    mov rax, [rax + BOOLEAN_HEADER*8]
+    mov rbx, [rbx + BOOLEAN_HEADER*8]
+
+    cmp rax, rbx
+    jne .return_false
+
+    jmp .return_true
+
+  .not_boolean:
 
   cmp rcx, LIST
-  je .is_list
+  jne .not_list
+
+    push rax
+
+    list_length rax
+    mov rcx, rax
+
+    list_length rbx
+    mov rdx, rax
+
+    pop rax
+
+    ; Сравнение длин списков
+    cmp rcx, rdx
+    jne .return_false
+
+    mov rdi, rcx
+    .list_while:
+      cmp rdi, 0
+      je .return_true
+
+      mov rax, [rax + 8*1]
+      mov rbx, [rbx + 8*1]
+
+      mov rcx, rax
+      mov rdx, rbx
+
+      add rcx, 8*2
+      add rdx, 8*2
+
+      is_equal rcx, rdx
+      cmp rax, 1
+      jne .return_false
+
+      dec rdi
+      jmp .list_while
+
+  .not_list:
 
   cmp rcx, STRING
-  je .is_string
+  jne .not_string
+    push rax
+
+    ; Сравнение длин строк
+    string_length rax
+    mov rcx, rax
+
+    string_length rbx
+    mov rdx, rax
+
+    pop rax
+
+    cmp rcx, rdx
+    jne .return_false
+
+    mov rdi, rcx
+    .string_while:
+
+      cmp rdi, 0
+      je .return_true
+
+      mov rax, [rax + 8*1]
+      mov rcx, [rax + (2 + INTEGER_HEADER) * 8]
+
+      mov rbx, [rbx + 8*1]
+      mov rdx, [rbx + (2 + INTEGER_HEADER) * 8]
+
+      cmp rcx, rdx
+      jne .return_false
+
+      dec rdi
+      jmp .string_while
+
+  .not_string:
 
   cmp rcx, DICTIONARY
-  je .is_dictionary
+  jne .not_dictionary
+    mov rcx, rax
+
+    dictionary_items rbx
+    mov rdx, rax
+    dictionary_items rcx
+
+    is_equal rax, rdx
+    cmp rax, 0
+
+    je .return_false
+    jmp .return_true
+
+  .not_dictionary:
 
   ; Выход с ошибкой при неизвестном типе
+
   list
   mov rbx, rax
   buffer_to_string EXPECTED_TYPE_ERROR
@@ -46,129 +148,6 @@ f_is_equal:
   print rax
   exit -1
 
-  .is_null:
-    jmp .return_true
-
-  .is_integer:
-    mov rcx, [rax + INTEGER_HEADER*8]
-    mov rdx, [rbx + INTEGER_HEADER*8]
-
-    cmp rcx, rdx
-    jne .return_false
-
-    jmp .return_true
-
-  .is_boolean:
-    mov rcx, [rax + BOOLEAN_HEADER*8]
-    mov rdx, [rbx + BOOLEAN_HEADER*8]
-
-    cmp rcx, rdx
-    jne .return_false
-
-    jmp .return_true
-
-  .is_list:
-
-    push rax
-
-    list_length rax
-    mov rcx, rax
-
-    list_length rbx
-    mov rdx, rax
-
-    pop rax
-
-    ; Сравнение длин списков
-    cmp rcx, rdx
-    jne .return_false
-
-    mov rsi, rax
-    integer 0
-    xchg rsi, rax
-
-    mov rdi, rcx
-    .list_check:
-
-      cmp rdi, 0
-      je .return_true
-
-      push rax
-
-      list_get rax, rsi
-      mov rcx, rax
-
-      list_get rbx, rsi
-      mov rdx, rax
-
-      is_equal rcx, rdx
-      mov rcx, rax
-
-      pop rax
-
-      cmp rcx, 1
-      jne .return_false
-
-      push rax
-      integer_inc rsi
-      pop rax
-
-      dec rdi
-      jmp .list_check
-
-  .is_string:
-    push rax
-
-    ; Сравнение длин строк
-    string_length rax
-    mov rcx, rax
-
-    string_length rbx
-    mov rdx, rax
-
-    pop rax
-
-    cmp rcx, rdx
-    jne .return_false
-
-    mov rsi, rax
-    integer 0
-    xchg rsi, rax
-
-    mov rdi, rcx
-    .string_check:
-
-      cmp rdi, 0
-      je .return_true
-
-      push rax
-
-      string_get rax, rsi
-      mov rax, [rax + 8*1]
-      mov rcx, [rax + (2 + INTEGER_HEADER) * 8]
-
-      string_get rbx, rsi
-      mov rax, [rax + 8*1]
-      mov rdx, [rax + (2 + INTEGER_HEADER) * 8]
-
-      integer_inc rsi
-      pop rax
-
-      cmp rcx, rdx
-      jne .return_false
-
-      dec rdi
-      jmp .string_check
-
-  .is_dictionary:
-    mov rcx, rax
-
-    dictionary_items rbx
-    mov rdx, rax
-    dictionary_items rcx
-    is_equal rax, rdx
-    ret
-
   .return_true:
     mov rax, 1
     ret
@@ -176,3 +155,50 @@ f_is_equal:
   .return_false:
     mov rax, 0
     ret
+
+f_copy:
+  get_arg 0
+  mov rbx, [rax]
+
+  cmp rbx, NULL
+  jne .not_null
+    null
+    ret
+  .not_null:
+
+  cmp rbx, INTEGER
+  jne .not_integer
+    integer_copy rax
+    ret
+  .not_integer:
+
+  cmp rbx, BOOLEAN
+  jne .not_boolean
+    boolean_copy rax
+    ret
+  .not_boolean:
+
+  cmp rbx, LIST
+  jne .not_list
+    list_copy rax
+    ret
+  .not_list:
+
+  cmp rbx, STRING
+  jne .not_string
+    string_copy rax
+    ret
+  .not_string:
+
+  cmp rbx, DICTIONARY
+  jne .not_dictionary
+    dictionary_copy rax
+    ret
+  .not_dictionary:
+
+  type_to_string rbx
+  mov rbx, rax
+  string "copy: Нет функции копирования для типа"
+  print <rax, rbx>
+
+  exit -1

@@ -54,7 +54,7 @@ section "syscalls_amd64" writable
   define MAP_GROWSUP   0x0200
   define MAP_HUGETLB   0x4000
 
-section "syscalls" executable
+section "syscall" executable
 
 macro syscall number*, arg_1 = 0, arg_2 = 0, arg_3 = 0, arg_4 = 0, arg_5 = 0, arg_6 = 0 {
   push r9, r8, r10, rdx, rsi, rdi

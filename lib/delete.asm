@@ -17,16 +17,14 @@ f_delete:
 
   cmp rbx, LIST
   je .collection
-
   cmp rbx, STRING
   je .collection
-
   cmp rbx, DICTIONARY
   je .collection
 
-  ; Если прыжка не произошло, переменная не является коллекцией
-  delete_block rax
-  ret
+    ; Если прыжка не произошло, переменная не является коллекцией
+    delete_block rax
+    ret
 
   .collection:
 

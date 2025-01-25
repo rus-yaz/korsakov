@@ -1660,7 +1660,7 @@ f_if_expression:
 
   token_check_keyword [токен], [ЕСЛИ]
   cmp rax, 1
-  je .correct_token_if
+  je .while
 
     cmp [try], 1
     jne @f
@@ -1673,95 +1673,136 @@ f_if_expression:
     print rax
     exit -1
 
-  .correct_token_if:
+  .while:
 
-  next
+    next
 
-  ; RDX — condition
+    ; RDX — condition
 
-  expression
-  mov rdx, rax
+    expression
+    mov rdx, rax
 
-  token_check_keyword [токен], [ТО]
-  cmp rax, 1
-  je .correct_token_then
+    token_check_keyword [токен], [ТО]
+    cmp rax, 1
+    je .correct_token_then
 
-    cmp [try], 1
-    jne @f
-      null
-      ret
+      cmp [try], 1
+      jne @f
+        null
+        ret
 
-    @@:
+      @@:
 
-    string "Ожидалось ключевое слово `то`"
-    print rax
-    exit -1
+      string "Ожидалось ключевое слово `то`"
+      print rax
+      exit -1
 
-  .correct_token_then:
+    .correct_token_then:
 
-  next
+    next
 
-  token_check_type [токен], [ТИП_ПЕРЕНОС_СТРОКИ]
-  cmp rax, 1
-  jne .make_oneline
+    token_check_type [токен], [ТИП_ПЕРЕНОС_СТРОКИ]
+    cmp rax, 1
+    je .correct_token_newline
+
+      cmp [try], 1
+      jne @f
+        null
+        ret
+
+      @@:
+
+      string "Ожидался перенос строки"
+      print rax
+      exit -1
+
+    .correct_token_newline:
+
     next
 
     ; R8 — statements
+    list
+    mov r8, rax
 
-    statements
+    .body_while:
+      token_check_keyword [токен], [ИНАЧЕ]
+      cmp rax, 1
+      je .body_end_while
+
+      token_check_type [токен], [ТИП_КОНЕЦ_КОНСТРУКЦИИ]
+      cmp rax, 1
+      je .body_end_while
+
+      statement
+      list_append r8, rax
+
+      next
+
+      jmp .body_while
+
+    .body_end_while:
+
+    list_node r8
     mov r8, rax
 
     dictionary
     mov r9, rax
+
     string "условие"
     dictionary_set r9, rax, rdx
     string "действия"
     dictionary_set r9, rax, r8
-    boolean 1
-    mov rdx, rax
-    string "вернуть_нуль"
-    dictionary_set r9, rax, rdx
 
     list_append rbx, r9
 
-    token_check_type [токен], [ТИП_КОНЕЦ_КОНСТРУКЦИИ]
+    token_check_keyword [токен], [ИНАЧЕ]
     cmp rax, 1
-    jne .parse_other_branches
+    jne .check_end_of_construction
+
       next
 
-      if_node rbx, rcx
-      ret
+      token_check_keyword [токен], [ЕСЛИ]
+      cmp rax, 1
+      je .while
 
-    .parse_other_branches:
+      integer 1
+      reverse rax
 
-    jmp .continue
+      jmp .else_branch
 
-  .make_oneline:
+    .check_end_of_construction:
 
-    ; R9 — expression
+    token_check_type [токен], [ТИП_КОНЕЦ_КОНСТРУКЦИИ]
+    cmp rax, 1
+    je .end_while
 
-    statement
-    mov r9, rax
+      cmp [try], 1
+      jne @f
+        null
+        ret
 
-    dictionary
-    mov r8, rax
-    string "условие"
-    dictionary_set r8, rax, rdx
-    string "действия"
-    dictionary_set r8, rax, r9
-    boolean 0
-    mov rdx, rax
-    string "вернуть_нуль"
-    dictionary_set r8, rax, rdx
+      @@:
 
-    list_append rbx, r8
+      string "Ожидался конец конструкции"
+      print rax
+      exit -1
 
-  .continue:
+  .end_while:
 
-  else_expression
-  if_node rbx, rax
+    next
 
-  ret
+    list
+    list_node rax
+    if_node rbx, rax
+
+    ret
+
+  .else_branch:
+
+    else_expression
+    if_node rbx, rax
+
+    ret
 
 f_else_expression:
   ; RBX — else_case
@@ -1819,12 +1860,7 @@ f_else_expression:
   .correct_token:
 
   next
-
-  list
-  list_append rax, rcx
-  mov rcx, rax
-  integer 1
-  list_append rcx, rax
+  list_node rcx
 
   ret
 

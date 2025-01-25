@@ -523,6 +523,13 @@ start:
   integer [узел_возвращения]
   mov [УЗЕЛ_ВОЗВРАЩЕНИЯ], rax
 
+  string "СЧЁТЧИК_ЕСЛИ"
+  mov rcx, rax
+  list
+  mov rbx, rax
+  integer 0
+  assign rcx, rbx, rax
+
   tokenizer файл_для_чтения
   mov [токены], rax
   ;print [токены]

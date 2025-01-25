@@ -23,9 +23,9 @@ f_addition:
 
   .first_not_integer:
 
-  string "Операция сложения не может быть проведена между типами "
+  string "Операция сложения не может быть проведена между типами"
   mov rbx, rax
-  string " и "
+  string "и"
   print <rbx, rdx, rax, r8>
 
   .continue:
@@ -57,9 +57,9 @@ f_subtraction:
 
   .first_not_integer:
 
-  string "Операция сложения не может быть проведена между типами "
+  string "Операция сложения не может быть проведена между типами"
   mov rbx, rax
-  string " и "
+  string "и"
   print <rbx, rdx, rax, r8>
 
   .continue:
@@ -113,14 +113,14 @@ f_multiplication:
 
   .first_not_integer:
 
-  string "Операция сложения не может быть проведена между типами "
+  string "Операция сложения не может быть проведена между типами"
   mov rbx, rax
   type_to_string rdx
   mov rdx, rax
   type_to_string r8
   mov r8, rax
 
-  string " и "
+  string "и"
   print <rbx, rdx, rax, r8>
 
   .continue:
@@ -154,9 +154,9 @@ f_division:
 
   .first_not_integer:
 
-  string "Операция сложения не может быть проведена между типами "
+  string "Операция сложения не может быть проведена между типами"
   mov rbx, rax
-  string " и "
+  string "и"
   print <rbx, rdx, rax, r8>
 
   .continue:

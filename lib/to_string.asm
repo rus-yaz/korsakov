@@ -3,48 +3,14 @@ f_to_string:
   mov rbx, [rax]
 
   cmp rbx, NULL
-  je .null
-
-  cmp rbx, INTEGER
-  je .integer
-
-  cmp rbx, BOOLEAN
-  je .boolean
-
-  cmp rbx, LIST
-  je .list
-
-  cmp rbx, STRING
-  je .string
-
-  cmp rbx, DICTIONARY
-  je .dictionary
-
-  list
-  mov rbx, rax
-  buffer_to_string EXPECTED_TYPE_ERROR
-  list_append rbx, rax
-  buffer_to_string INTEGER_TYPE
-  list_append rbx, rax
-  buffer_to_string BOOLEAN_TYPE
-  list_append rbx, rax
-  buffer_to_string LIST_TYPE
-  list_append rbx, rax
-  buffer_to_string STRING_TYPE
-  list_append rbx, rax
-  buffer_to_string DICTIONARY_TYPE
-  list_append rbx, rax
-
-  join rax, ", "
-  print rax
-
-  exit -1
-
-  .null:
-    string "НУЛЬ"
+  jne .not_null
+    string "Нуль"
     ret
 
-  .integer:
+  .not_null:
+
+  cmp rbx, INTEGER
+  jne .not_integer
     mov rax, [rax + INTEGER_HEADER*8]
 
     mov r8, rsp ; Сохранение указателя на конец стека
@@ -90,8 +56,12 @@ f_to_string:
     mov rsp, r8 ; Восстановление конца стека
     ret
 
-  .boolean:
+  .not_integer:
+
+  cmp rbx, BOOLEAN
+  jne .not_boolean
     mov rax, [rax + BOOLEAN_HEADER*8]
+
     cmp rax, 1
     jne .false
       string "Истина"
@@ -101,7 +71,10 @@ f_to_string:
     string "Ложь"
     ret
 
-  .list:
+  .not_boolean:
+
+  cmp rbx, LIST
+  jne .not_list
     mov rbx, rax
 
     mov rcx, rax
@@ -150,23 +123,24 @@ f_to_string:
 
     ret
 
-  .string:
+  .not_list:
+
+  cmp rbx, STRING
+  jne .not_string
     mov rbx, rax
 
-    mov rdx, rsp
-    push 0, '"'
-    mov rax, rsp
-    buffer_to_string rax
+    string '"'
     mov rcx, rax
 
     string_add rcx, rbx
     string_add rax, rcx
 
-    mov rsp, rdx
-
     ret
 
-  .dictionary:
+  .not_string:
+
+  cmp rbx, DICTIONARY
+  jne .not_dictionary
     push rax
     dictionary_items rax
     mov rbx, rax
@@ -233,90 +207,9 @@ f_to_string:
 
     ret
 
-f_type_to_string:
-  get_arg 0
-  mov rdx, rax
+  .not_dictionary:
 
-  dictionary
-  mov rcx, rax
-
-  integer HEAP_BLOCK
-  mov rbx, rax
-  string "Блок кучи"
-  dictionary_set rcx, rbx, rax
-
-  integer NULL
-  mov rbx, rax
-  string "НУЛЬ"
-  dictionary_set rcx, rbx, rax
-
-  integer INTEGER
-  mov rbx, rax
-  string "Целое число"
-  dictionary_set rcx, rbx, rax
-
-  integer FLOAT
-  mov rbx, rax
-  string "Вещественное число"
-  dictionary_set rcx, rbx, rax
-
-  integer BOOLEAN
-  mov rbx, rax
-  string "Булево значение"
-  dictionary_set rcx, rbx, rax
-
-  integer LIST
-  mov rbx, rax
-  string "Список"
-  dictionary_set rcx, rbx, rax
-
-  integer BINARY
-  mov rbx, rax
-  string "Бинарная последовательность"
-  dictionary_set rcx, rbx, rax
-
-  integer STRING
-  mov rbx, rax
-  string "Строка"
-  dictionary_set rcx, rbx, rax
-
-  integer DICTIONARY
-  mov rbx, rax
-  string "Словарь"
-  dictionary_set rcx, rbx, rax
-
-  integer CLASS
-  mov rbx, rax
-  string "Класс"
-  dictionary_set rcx, rbx, rax
-
-  integer FILE
-  mov rbx, rax
-  string "Файл"
-  dictionary_set rcx, rbx, rax
-
-  integer rdx
-  mov rdx, rax
-
-  null
-  dictionary_get rcx, rdx
-  mov rbx, rax
-
-  null
-  is_equal rbx, rax
-  cmp rax, 1
-  jne .correct_type
-
-    string "Неизвестный тип: "
-    mov rbx, rax
-    to_string rdx
-    string_append rbx, rax
-    print rax
-
-    exit -1
-
-  .correct_type:
-
-  mov rax, rbx
-
-  ret
+  type_to_string rbx
+  string "to_string: Не поддерживается тип"
+  print <rax, rbx>
+  exit -1
