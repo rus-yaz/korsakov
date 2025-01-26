@@ -95,8 +95,17 @@ f_compile:
 
     string "значение"
     dictionary_get rcx, rax
-    compile rax, rbx
-    string_append rdx, rax
+    mov r8, rax
+
+    null
+    is_equal rax, r8
+    cmp rax, 1
+    je .use_exists_value
+      compile r8, rbx
+      string_append rdx, rax
+
+    .use_exists_value:
+
     string <"mov rdx, rax", 10>
     string_append rdx, rax
 
@@ -400,12 +409,12 @@ f_compile:
     integer 0
     mov r9, rax
 
-    .while:
+    .if_while:
       list_length r8
       integer rax
       is_equal r9, rax
       cmp rax, 1
-      je .end_while
+      je .if_end_while
 
       inc r12
       integer r12
@@ -469,9 +478,9 @@ f_compile:
       string_append rdx, rax
 
       integer_inc r9
-      jmp .while
+      jmp .if_while
 
-    .end_while:
+    .if_end_while:
 
     string "случай_иначе"
     dictionary_get rcx, rax
@@ -490,6 +499,127 @@ f_compile:
     jmp .continue
 
   .not_if:
+
+  check_node_type rcx, [УЗЕЛ_ДЛЯ]
+  cmp rax, 1
+  jne .not_for
+
+    string "СЧЁТЧИК_ЕСЛИ"
+    mov r8, rax
+    list
+    mov r9, rax
+    access r8, r9
+    integer_inc rax
+
+    assign r8, r9, rax
+    mov r8, [rax + INTEGER_HEADER*8]
+
+    string <"push rbx, rcx, rdx", 10>
+    string_append rdx, rax
+
+    string "переменная"
+    dictionary_get rcx, rax
+    mov r9, rax
+
+    string "конец"
+    dictionary_get rcx, rax
+    compile rax, rbx
+    string_append rdx, rax
+    string <"mov rbx, rax", 10>
+    string_append rdx, rax
+
+    string "шаг"
+    dictionary_get rcx, rax
+    mov r11, rax
+    null
+    is_equal r11, rax
+    cmp rax, 1
+    je .default_step
+      compile rax, rbx
+      string_append rdx, rax
+      string <"mov rcx, rax", 10>
+      string_append rdx, rax
+
+      jmp .after_step
+
+    .default_step:
+
+      string <"integer 1", 10>
+      string_append rdx, rax
+      string <"mov rcx, rax", 10>
+      string_append rdx, rax
+
+    .after_step:
+
+    string "начало"
+    dictionary_get rcx, rax
+    compile rax, rbx
+    string_append rdx, rax
+
+    string ".for_"
+    string_append rdx, rax
+    integer r8
+    to_string rax
+    string_append rdx, rax
+    string <":", 10>
+    string_append rdx, rax
+
+    string <"mov rdx, rax", 10>
+    string_append rdx, rax
+
+    string <"is_equal rdx, rbx", 10>
+    string_append rdx, rax
+    string <"cmp rax, 1", 10>
+    string_append rdx, rax
+
+    string "jge .end_for_"
+    string_append rdx, rax
+    integer r8
+    to_string rax
+    string_append rdx, rax
+    string 10
+    string_append rdx, rax
+
+    string <"mov rax, rdx", 10>
+    string_append rdx, rax
+    null
+    mov r10, rax
+    list
+    list_node rax
+    assign_node r9, rax, r10
+    compile rax, rbx
+    string_append rdx, rax
+
+    string "тело"
+    dictionary_get rcx, rax
+    compile rax, rbx
+    string_append rdx, rax
+
+    string <"integer_add rdx, rcx", 10>
+    string_append rdx, rax
+
+    string "jmp .for_"
+    string_append rdx, rax
+    integer r8
+    to_string rax
+    string_append rdx, rax
+    string 10
+    string_append rdx, rax
+
+    string ".end_for_"
+    string_append rdx, rax
+    integer r8
+    to_string rax
+    string_append rdx, rax
+    string <":", 10>
+    string_append rdx, rax
+
+    string <"pop rdx, rcx, rbx", 10>
+    string_append rdx, rax
+
+    jmp .continue
+
+  .not_for:
 
   string "Неизвестный узел: "
   print <rax, rcx>

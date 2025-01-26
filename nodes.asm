@@ -88,8 +88,8 @@ macro if_node cases*, else_case* {
   return
 }
 
-macro for_node variable*, start*, end*, step*, body*, return_null*, else_case* {
-  enter variable, start, end, step, body, return_null, else_case
+macro for_node variable*, start*, end*, step*, body*, else_case* {
+  enter variable, start, end, step, body, else_case
 
   call f_for_node
 
@@ -312,8 +312,6 @@ f_for_node:
   get_arg 4
   dictionary_set rbx, [тело], rax
   get_arg 5
-  dictionary_set rbx, [вернуть_нуль], rax
-  get_arg 6
   dictionary_set rbx, [случай_иначе], rax
 
   ret

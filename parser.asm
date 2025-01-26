@@ -262,16 +262,6 @@ macro include_statement {
   debug_end "include_statement"
 }
 
-macro statements {
-  debug_start "statements"
-  enter
-
-  call f_statements
-
-  return
-  debug_end "statements"
-}
-
 macro statement {
   debug_start "statement"
   enter
@@ -1839,25 +1829,32 @@ f_else_expression:
 
   ; RCX — statements
 
-  statements
+  list
   mov rcx, rax
 
-  token_check_type [токен], [ТИП_КОНЕЦ_КОНСТРУКЦИИ]
-  cmp rax, 1
-  je .correct_token
+  .while:
+    token_check_type [токен], [ТИП_КОНЕЦ_ФАЙЛА]
+    jne .continue
 
-    cmp [try], 1
-    jne @f
-      null
-      ret
+      cmp [try], 1
+      jne @f
+        null
+        ret
 
-    @@:
+      @@:
 
-    string "Ожидался конец конструкции"
-    print rax
-    exit -1
+      string "Ожидался конец конструкции"
+      print rax
+      exit -1
 
-  .correct_token:
+    .continue:
+
+    statement
+    list_append rcx, rax
+
+    token_check_type [токен], [ТИП_КОНЕЦ_КОНСТРУКЦИИ]
+    cmp rax, 1
+    jne .while
 
   next
   list_node rcx
@@ -1911,7 +1908,7 @@ f_for_expression:
 
   next
 
-  token_check_type [токен], [ОТ]
+  token_check_keyword [токен], [ОТ]
   cmp rax, 1
   jne .loop_with_enter
 
@@ -1922,7 +1919,7 @@ f_for_expression:
     expression
     mov rdx, rax
 
-    token_check_type [токен], [ДО]
+    token_check_keyword [токен], [ДО]
     cmp rax, 1
     je .correct_to
 
@@ -1941,28 +1938,23 @@ f_for_expression:
 
     next
 
-    ; R8 — end_value
-
     expression
     mov r8, rax
 
-    token_check_type [токен], [ЧЕРЕЗ]
+    token_check_keyword [токен], [ЧЕРЕЗ]
     cmp rax, 1
-    je .loop_without_custom_step
+    jne .default_step
       next
-
-      ; R9 — step_value
 
       expression
       mov r9, rax
 
-      jmp .continue
+      jmp .if_end
 
-    .loop_without_custom_step:
+    .default_step:
 
-    mov r9, 0
-
-    .continue:
+    null
+    mov r9, rax
 
     jmp .if_end
 
@@ -1974,11 +1966,13 @@ f_for_expression:
 
     ; R10 — start_value
 
+    null
+    mov r8, rax
+    null
+    mov r9, rax
+
     expression
     mov r10, rax
-
-    mov r9, 0
-    mov r8, 0
 
     jmp .if_end
 
@@ -1997,58 +1991,78 @@ f_for_expression:
 
   .if_end:
 
-  token_check_type [токен], [ПЕРЕНОС_СТРОКИ]
+  token_check_type [токен], [ТИП_ПЕРЕНОС_СТРОКИ]
   cmp rax, 1
-  jne .make_oneline
+  je .correct_token
 
-    next
-
-    ; R11 — body
-
-    statements
-    mov r11, rax
-
-    token_check_type [токен], [ТИП_КОНЕЦ_КОНСТРУКЦИИ]
-    cmp rax, 1
-    jne .check_else
-
-      next
-
-      jmp .return
-
-    .check_else:
-
-      else_expression
-      mov rbx, rax
-
-    .return:
-
-    for_node rcx, r10, r8, r9, r11, 1, rbx
-    ret
-
-  .make_oneline:
-
-  token_check_type [токен], [ДВОЕТОЧИЕ]
-  cmp rax, 1
-  je .correct_colon
-
-    cmp [try], 1
-    jne @f
-      null
-      ret
-
-    @@:
-
-    string "Ожидалось `:`"
+    string "Ожидался перенос строки"
     print rax
     exit -1
 
-  .correct_colon:
+  .correct_token:
 
   next
 
-  statement
-  for_node rcx, r10, r8, r9, rax, 0, 0
+  ; R11 — body
+
+  list
+  mov r10, rax
+
+  .while:
+    token_check_type [токен], [ТИП_КОНЕЦ_КОНСТРУКЦИИ]
+    cmp rax, 1
+    je .end_while
+
+    token_check_type [токен], [ТИП_КОНЕЦ_ФАЙЛА]
+    jne .not_end_of_file
+
+      cmp [try], 1
+      jne @f
+        null
+        ret
+
+      @@:
+
+      string "Ожидался конец конструкции"
+      print rax
+      exit -1
+
+    .not_end_of_file:
+
+    statement
+    list_append r10, rax
+
+    next
+
+    token_check_keyword [токен], [ИНАЧЕ]
+    cmp rax, 1
+    je .else_branch
+
+    jmp .while
+
+  .end_while:
+
+  next
+
+  list
+  list_node rax
+
+  jmp .return
+
+  .else_branch:
+
+    else_expression
+
+  .return:
+
+  push rax
+
+  list_node r10
+  mov r10, rax
+
+  pop rax
+
+  for_node rcx, rdx, r8, r9, r10, rax
 
   ret
 
@@ -2089,7 +2103,7 @@ f_while_expression:
 
     ; RDX — body
 
-    statements
+    list
     mov rdx, rax
 
     token_check_type [токен], [ТИП_КОНЕЦ_КОНСТРУКЦИИ]
@@ -2274,7 +2288,7 @@ f_function_expression:
 
     ; R9 — body
 
-    statements
+    list
     mov r9, rax
 
     token_check_type [токен], [ТИП_КОНЕЦ_КОНСТРУКЦИИ]
@@ -2709,90 +2723,6 @@ f_include_statement:
 
   include_node rbx
 
-  ret
-
-f_statements:
-  ; RBX — statements
-  list
-  mov rbx, rax
-
-  token_check_type [токен], [ТИП_ПЕРЕНОС_СТРОКИ]
-  cmp rax, 1
-  jne .no_newline_1
-    next
-
-  .no_newline_1:
-
-  ; RCX — statements
-
-  list
-  mov rcx, rax
-  statement
-  list_append rcx, rax
-
-  ; RDX — more_statements
-  mov rdx, 1
-
-  .while:
-    ; R8 — newline_count
-    integer 0
-    mov r8, rax
-
-    ; R9 — index_for_reverse
-    integer_copy [индекс]
-    mov r9, rax
-
-    token_check_type [токен], [ТИП_ПЕРЕНОС_СТРОКИ]
-    cmp rax, 1
-    jne .no_newline_2
-      next
-      integer_inc r8
-
-    .no_newline_2:
-
-    integer 0
-    is_equal r8, rax
-    cmp rax, 1
-    jne .check_more_statements
-      mov rdx, 0
-
-    .check_more_statements:
-
-    cmp rdx, 1
-    jne .end_while
-
-    ; R10 — statement
-
-    mov rax, [try]
-    push rax
-    mov [try], 1
-
-    statement
-    mov r10, rax
-
-    pop rax
-    mov [try], rax
-
-    null
-    is_equal r10, rax
-    cmp rax, 1
-    jne .skip_reverse
-
-      integer_copy [индекс]
-      integer_sub rax, r9
-      reverse rax
-      mov rdx, 0
-      jmp .while
-
-    .skip_reverse:
-
-    list_append rcx, r10
-
-    jmp .while
-
-  .end_while:
-
-  list_node rcx
   ret
 
 f_statement:
