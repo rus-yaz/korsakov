@@ -92,13 +92,11 @@ macro exit code*, buffer = 0 {
 }
 
 macro string str {
-  a = $
   jmp @f
+    a = $
     db str, 0
   @@:
-  buffer_to_string a + 2
-  ; `+ 2` — что-то из разряда магии
-  ; Потому что без него захватываются лишние 2 бита
+  buffer_to_string a
 }
 
 section "utils" executable
