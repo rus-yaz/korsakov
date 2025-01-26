@@ -413,9 +413,6 @@ f_expression:
     token_check_type [токен], [ТИП_ДЕЛЕНИЕ]
     cmp rax, 1
     je .assig_with_operation
-    ;token_check_type [токен], [ТИП_ВОЗВЕДЕНИЕ_В_СТЕПЕНЬ]
-    ;cmp rax, 1
-    ;jne .assig_with_operation
 
     jmp .skip_operator
 
@@ -1852,6 +1849,8 @@ f_else_expression:
     statement
     list_append rcx, rax
 
+    next
+
     token_check_type [токен], [ТИП_КОНЕЦ_КОНСТРУКЦИИ]
     cmp rax, 1
     jne .while
@@ -2013,6 +2012,10 @@ f_for_expression:
     cmp rax, 1
     je .end_while
 
+    token_check_keyword [токен], [ИНАЧЕ]
+    cmp rax, 1
+    je .else_branch
+
     token_check_type [токен], [ТИП_КОНЕЦ_ФАЙЛА]
     jne .not_end_of_file
 
@@ -2033,11 +2036,6 @@ f_for_expression:
     list_append r10, rax
 
     next
-
-    token_check_keyword [токен], [ИНАЧЕ]
-    cmp rax, 1
-    je .else_branch
-
     jmp .while
 
   .end_while:
@@ -2055,14 +2053,12 @@ f_for_expression:
 
   .return:
 
-  push rax
+  mov r11, rax
 
   list_node r10
   mov r10, rax
 
-  pop rax
-
-  for_node rcx, rdx, r8, r9, r10, rax
+  for_node rcx, rdx, r8, r9, r10, r11
 
   ret
 

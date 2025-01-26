@@ -7,10 +7,6 @@ include "./parser.asm"
 include "./compiler.asm"
 
 section "data" writable
-  заголовок      db 'include "core/korsakov.asm"', 10,          0
-  сегмент_кода   db "section 'start' executable", 10, "start:", 0
-  конец_кода     db "exit 0",                     10,           0
-
   файл_для_чтения db "привет, мир.корс", 0
   файл_для_записи db "привет, мир.asm", 0
 
@@ -35,51 +31,28 @@ section "data" writable
   ПРОБЕЛ                    rq 1
   ОТКРЫВАЮЩАЯ_СКОБКА_СПИСКА rq 1
 
-  и          db "и", 0
   И          rq 1
-  из         db "из", 0
   ИЗ         rq 1
-  от         db "от", 0
   ОТ         rq 1
-  до         db "до", 0
   ДО         rq 1
-  не         db "не", 0
   НЕ         rq 1
-  то         db "то", 0
   ТО         rq 1
-  или        db "или", 0
   ИЛИ        rq 1
-  при        db "при", 0
   ПРИ        rq 1
-  для        db "для", 0
   ДЛЯ        rq 1
-  если       db "если", 0
   ЕСЛИ       rq 1
-  ложь       db "ложь", 0
   ЛОЖЬ       rq 1
-  пока       db "пока", 0
   ПОКА       rq 1
-  через      db "через", 0
   ЧЕРЕЗ      rq 1
-  класс      db "класс", 0
   КЛАСС      rq 1
-  иначе      db "иначе", 0
   ИНАЧЕ      rq 1
-  истина     db "истина", 0
   ИСТИНА     rq 1
-  вернуть    db "вернуть", 0
   ВЕРНУТЬ    rq 1
-  удалить    db "удалить", 0
   УДАЛИТЬ    rq 1
-  функция    db "функция", 0
   ФУНКЦИЯ    rq 1
-  прервать   db "прервать", 0
   ПРЕРВАТЬ   rq 1
-  включить   db "включить", 0
   ВКЛЮЧИТЬ   rq 1
-  проверить  db "проверить", 0
   ПРОВЕРИТЬ  rq 1
-  пропустить db "пропустить", 0
   ПРОПУСТИТЬ rq 1
 
   тип             rq 1
@@ -117,62 +90,6 @@ section "data" writable
   символы        rq 1
   тип_токена     rq 1
   ключевые_слова rq 1
-
-  тип_конец_файла               dq 0
-  тип_идентификатор             dq 1
-  тип_ключевое_слово            dq 2
-  тип_открывающая_скобка        dq 3
-  тип_закрывающая_скобка        dq 4
-  тип_открывающая_скобка_списка dq 5
-  тип_строка                    dq 6
-  тип_целое_число               dq 7
-  тип_вещественное_число        dq 8
-  тип_табуляция                 dq 9
-  тип_перенос_строки            dq 10
-  тип_двоеточие                 dq 11
-  тип_точка_с_запятой           dq 12
-  тип_точка                     dq 13
-  тип_восклицательный_знак      dq 14
-  тип_присваивание              dq 15
-  тип_сложение                  dq 16
-  тип_вычитание                 dq 17
-  тип_умножение                 dq 18
-  тип_деление                   dq 19
-  тип_возведение_в_степень      dq 20
-  тип_изъятие_корня             dq 21
-  тип_обратная_косая_черта      dq 22
-  тип_пробел                    dq 23
-  тип_равно                     dq 24
-  тип_не_равно                  dq 25
-  тип_больше                    dq 26
-  тип_меньше                    dq 27
-  тип_больше_или_равно          dq 28
-  тип_меньше_или_равно          dq 29
-  тип_инкрементация             dq 30
-  тип_декрементация             dq 31
-  тип_конец_конструкции         dq 32
-
-  узел_доступа_к_переменной    dq 1
-  узел_бинарной_операции       dq 2
-  узел_присваивания_переменной dq 3
-  узел_списка                  dq 4
-  узел_числа                   dq 5
-  узел_строки                  dq 6
-  узел_вызова                  dq 7
-  узел_унарной_операции        dq 8
-  узел_словаря                 dq 9
-  узел_проверки                dq 10
-  узел_если                    dq 11
-  узел_для                     dq 12
-  узел_пока                    dq 13
-  узел_метода                  dq 14
-  узел_функции                 dq 15
-  узел_класса                  dq 16
-  узел_удаления                dq 17
-  узел_включения               dq 18
-  узел_возвращения             dq 19
-  узел_пропуска                dq 20
-  узел_прерывания              dq 21
 
   ТИП_КОНЕЦ_ФАЙЛА               rq 1
   ТИП_ИДЕНТИФИКАТОР             rq 1
@@ -265,71 +182,71 @@ start:
   string " "
   mov [ПРОБЕЛ], rax
 
-  integer [тип_конец_файла]
+  integer 0
   mov [ТИП_КОНЕЦ_ФАЙЛА], rax
-  integer [тип_идентификатор]
+  integer 1
   mov [ТИП_ИДЕНТИФИКАТОР], rax
-  integer [тип_ключевое_слово]
+  integer 2
   mov [ТИП_КЛЮЧЕВОЕ_СЛОВО], rax
-  integer [тип_открывающая_скобка]
+  integer 3
   mov [ТИП_ОТКРЫВАЮЩАЯ_СКОБКА], rax
-  integer [тип_закрывающая_скобка]
+  integer 4
   mov [ТИП_ЗАКРЫВАЮЩАЯ_СКОБКА], rax
-  integer [тип_открывающая_скобка_списка]
+  integer 5
   mov [ТИП_ОТКРЫВАЮЩАЯ_СКОБКА_СПИСКА], rax
-  integer [тип_строка]
+  integer 6
   mov [ТИП_СТРОКА], rax
-  integer [тип_целое_число]
+  integer 7
   mov [ТИП_ЦЕЛОЕ_ЧИСЛО], rax
-  integer [тип_вещественное_число]
+  integer 8
   mov [ТИП_ВЕЩЕСТВЕННОЕ_ЧИСЛО], rax
-  integer [тип_перенос_строки]
+  integer 9
   mov [ТИП_ПЕРЕНОС_СТРОКИ], rax
-  integer [тип_табуляция]
+  integer 10
   mov [ТИП_ТАБУЛЯЦИЯ], rax
-  integer [тип_двоеточие]
+  integer 11
   mov [ТИП_ДВОЕТОЧИЕ], rax
-  integer [тип_точка_с_запятой]
+  integer 12
   mov [ТИП_ТОЧКА_С_ЗАПЯТОЙ], rax
-  integer [тип_точка]
+  integer 13
   mov [ТИП_ТОЧКА], rax
-  integer [тип_восклицательный_знак]
+  integer 14
   mov [ТИП_ВОСКЛИЦАТЕЛЬНЫЙ_ЗНАК], rax
-  integer [тип_присваивание]
+  integer 15
   mov [ТИП_ПРИСВАИВАНИЕ], rax
-  integer [тип_сложение]
+  integer 16
   mov [ТИП_СЛОЖЕНИЕ], rax
-  integer [тип_вычитание]
+  integer 17
   mov [ТИП_ВЫЧИТАНИЕ], rax
-  integer [тип_умножение]
+  integer 18
   mov [ТИП_УМНОЖЕНИЕ], rax
-  integer [тип_деление]
+  integer 19
   mov [ТИП_ДЕЛЕНИЕ], rax
-  integer [тип_возведение_в_степень]
+  integer 20
   mov [ТИП_ВОЗВЕДЕНИЕ_В_СТЕПЕНЬ], rax
-  integer [тип_изъятие_корня]
+  integer 21
   mov [ТИП_ИЗЪЯТИЕ_КОРНЯ], rax
-  integer [тип_обратная_косая_черта]
+  integer 22
   mov [ТИП_ОБРАТНАЯ_КОСАЯ_ЧЕРТА], rax
-  integer [тип_пробел]
+  integer 23
   mov [ТИП_ПРОБЕЛ], rax
-  integer [тип_равно]
+  integer 24
   mov [ТИП_РАВНО], rax
-  integer [тип_не_равно]
+  integer 25
   mov [ТИП_НЕ_РАВНО], rax
-  integer [тип_больше]
+  integer 26
   mov [ТИП_БОЛЬШЕ], rax
-  integer [тип_меньше]
+  integer 27
   mov [ТИП_МЕНЬШЕ], rax
-  integer [тип_больше_или_равно]
+  integer 28
   mov [ТИП_БОЛЬШЕ_ИЛИ_РАВНО], rax
-  integer [тип_меньше_или_равно]
+  integer 29
   mov [ТИП_МЕНЬШЕ_ИЛИ_РАВНО], rax
-  integer [тип_инкрементация]
+  integer 30
   mov [ТИП_ИНКРЕМЕНТАЦИЯ], rax
-  integer [тип_декрементация]
+  integer 31
   mov [ТИП_ДЕКРЕМЕНТАЦИЯ], rax
-  integer [тип_конец_конструкции]
+  integer 32
   mov [ТИП_КОНЕЦ_КОНСТРУКЦИИ], rax
 
   list
@@ -363,73 +280,73 @@ start:
   list
   mov [ключевые_слова], rax
 
-  buffer_to_string и
+  string "и"
   mov [И], rax
   list_append [ключевые_слова], rax
-  buffer_to_string из
+  string "из"
   mov [ИЗ], rax
   list_append [ключевые_слова], rax
-  buffer_to_string от
+  string "от"
   mov [ОТ], rax
   list_append [ключевые_слова], rax
-  buffer_to_string до
+  string "до"
   mov [ДО], rax
   list_append [ключевые_слова], rax
-  buffer_to_string не
+  string "не"
   mov [НЕ], rax
   list_append [ключевые_слова], rax
-  buffer_to_string то
+  string "то"
   mov [ТО], rax
   list_append [ключевые_слова], rax
-  buffer_to_string или
+  string "или"
   mov [ИЛИ], rax
   list_append [ключевые_слова], rax
-  buffer_to_string при
+  string "при"
   mov [ПРИ], rax
   list_append [ключевые_слова], rax
-  buffer_to_string для
+  string "для"
   mov [ДЛЯ], rax
   list_append [ключевые_слова], rax
-  buffer_to_string если
+  string "если"
   mov [ЕСЛИ], rax
   list_append [ключевые_слова], rax
-  buffer_to_string ложь
+  string "ложь"
   mov [ЛОЖЬ], rax
   list_append [ключевые_слова], rax
-  buffer_to_string пока
+  string "пока"
   mov [ПОКА], rax
   list_append [ключевые_слова], rax
-  buffer_to_string через
+  string "через"
   mov [ЧЕРЕЗ], rax
   list_append [ключевые_слова], rax
-  buffer_to_string класс
+  string "класс"
   mov [КЛАСС], rax
   list_append [ключевые_слова], rax
-  buffer_to_string иначе
+  string "иначе"
   mov [ИНАЧЕ], rax
   list_append [ключевые_слова], rax
-  buffer_to_string истина
+  string "истина"
   mov [ИСТИНА], rax
   list_append [ключевые_слова], rax
-  buffer_to_string вернуть
+  string "вернуть"
   mov [ВЕРНУТЬ], rax
   list_append [ключевые_слова], rax
-  buffer_to_string удалить
+  string "удалить"
   mov [УДАЛИТЬ], rax
   list_append [ключевые_слова], rax
-  buffer_to_string функция
+  string "функция"
   mov [ФУНКЦИЯ], rax
   list_append [ключевые_слова], rax
-  buffer_to_string прервать
+  string "прервать"
   mov [ПРЕРВАТЬ], rax
   list_append [ключевые_слова], rax
-  buffer_to_string включить
+  string "включить"
   mov [ВКЛЮЧИТЬ], rax
   list_append [ключевые_слова], rax
-  buffer_to_string проверить
+  string "проверить"
   mov [ПРОВЕРИТЬ], rax
   list_append [ключевые_слова], rax
-  buffer_to_string пропустить
+  string "пропустить"
   mov [ПРОПУСТИТЬ], rax
   list_append [ключевые_слова], rax
 
@@ -484,43 +401,43 @@ start:
   string "имя_переменной"
   mov [имя_переменной], rax
 
-  integer [узел_доступа_к_переменной]
+  integer 1
   mov [УЗЕЛ_ДОСТУПА_К_ПЕРЕМЕННОЙ], rax
-  integer [узел_бинарной_операции]
+  integer 2
   mov [УЗЕЛ_БИНАРНОЙ_ОПЕРАЦИИ], rax
-  integer [узел_присваивания_переменной]
+  integer 3
   mov [УЗЕЛ_ПРИСВАИВАНИЯ_ПЕРЕМЕННОЙ], rax
-  integer [узел_списка]
+  integer 4
   mov [УЗЕЛ_СПИСКА], rax
-  integer [узел_числа]
+  integer 5
   mov [УЗЕЛ_ЧИСЛА], rax
-  integer [узел_строки]
+  integer 6
   mov [УЗЕЛ_СТРОКИ], rax
-  integer [узел_вызова]
+  integer 7
   mov [УЗЕЛ_ВЫЗОВА], rax
-  integer [узел_унарной_операции]
+  integer 8
   mov [УЗЕЛ_УНАРНОЙ_ОПЕРАЦИИ], rax
-  integer [узел_если]
+  integer 9
   mov [УЗЕЛ_ЕСЛИ], rax
-  integer [узел_словаря]
+  integer 10
   mov [УЗЕЛ_СЛОВАРЯ], rax
-  integer [узел_проверки]
+  integer 11
   mov [УЗЕЛ_ПРОВЕРКИ], rax
-  integer [узел_для]
+  integer 12
   mov [УЗЕЛ_ДЛЯ], rax
-  integer [узел_пока]
+  integer 13
   mov [УЗЕЛ_ПОКА], rax
-  integer [узел_метода]
+  integer 14
   mov [УЗЕЛ_МЕТОДА], rax
-  integer [узел_функции]
+  integer 15
   mov [УЗЕЛ_ФУНКЦИИ], rax
-  integer [узел_класса]
+  integer 16
   mov [УЗЕЛ_КЛАССА], rax
-  integer [узел_удаления]
+  integer 17
   mov [УЗЕЛ_УДАЛЕНИЯ], rax
-  integer [узел_включения]
+  integer 18
   mov [УЗЕЛ_ВКЛЮЧЕНИЯ], rax
-  integer [узел_возвращения]
+  integer 19
   mov [УЗЕЛ_ВОЗВРАЩЕНИЯ], rax
 
   string "СЧЁТЧИК_ЕСЛИ"
@@ -532,7 +449,7 @@ start:
 
   tokenizer файл_для_чтения
   mov [токены], rax
-  ;print [токены]
+  print [токены]
 
   ;string ""
   ;print rax
@@ -548,25 +465,19 @@ start:
   mov rbx, rax
   ;print rbx
 
-  list
+  string <"include 'core/korsakov.asm'", 10>
   mov rcx, rax
 
-  buffer_to_string заголовок
-  list_append rcx, rax
+  string <"section 'start' executable", 10, "start:", 10>
+  string_append rcx, rax
 
-  buffer_to_string сегмент_кода
-  list_append rcx, rax
+  string_append rcx, rbx
 
-  list_append rcx, rbx
-
-  buffer_to_string конец_кода
-  list_append rcx, rax
-
-  join rcx, 10
-  mov [код], rax
+  string "exit 0"
+  string_append rcx, rax
 
   open_file файл_для_записи, O_WRONLY + O_CREAT + O_TRUNC, 644o
-  write_file rax, [код]
+  write_file rax, rcx
   close_file rax
 
   exit 0

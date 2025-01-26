@@ -70,13 +70,7 @@ f_tokenizer:
     is_alpha [токен]
     cmp rax, 1
     je .while_identifier
-
-    mov rbx, rsp
-    push 0, "_"
-    mov rax, rsp
-    buffer_to_string rax
-    mov rsp, rbx
-
+    string "_"
     is_equal [токен], rax
     cmp rax, 1
     jne .not_identifier
@@ -92,12 +86,7 @@ f_tokenizer:
         cmp rax, 1
         je .continue_identifier
 
-        mov rbx, rsp
-        push 0, "_"
-        mov rax, rsp
-        buffer_to_string rax
-        mov rsp, rbx
-
+        string "_"
         is_equal [токен], rax
         cmp rax, 1
         jne .end_while_identifier
@@ -176,24 +165,27 @@ f_tokenizer:
     cmp rax, 1
     jne .not_plus
 
-      integer_inc [индекс]
-      list_get [символы], [индекс]
-      string_append [токен], rax
-
       integer_copy [ТИП_СЛОЖЕНИЕ]
       mov [тип_токена], rax
 
-      string "++"
-      is_equal [токен], rax
+      integer_copy [индекс]
+      integer_inc rax
+      list_get [символы], rax
+      mov rcx, rax
+
+      string "+"
+      is_equal rcx, rax
       cmp rax, 1
       jne .add_token
+
+      null
+      mov rcx, rax
+      boolean 0
+      mov rdx, rax
 
       list_length [токены]
       cmp rax, 1
       jne .non_pre_increment
-
-      mov rcx, 0
-      mov rdx, 0
 
       integer -1
       list_get [токены], rax
@@ -203,7 +195,8 @@ f_tokenizer:
 
         list_pop [токены]
         mov rcx, rax
-        mov rdx, 1
+        boolean 1
+        mov rdx, rax
 
       .non_pre_increment:
 
@@ -215,7 +208,9 @@ f_tokenizer:
 
       list_append [токены], rax
 
-      cmp rcx, 0
+      null
+      is_equal rcx, rax
+      cmp rax, 1
       je .continue
 
       list_append [токены], rcx
@@ -228,17 +223,22 @@ f_tokenizer:
     cmp rax, 1
     jne .not_minus
 
-      integer_inc [индекс]
-      list_get [символы], [индекс]
-      string_append [токен], rax
-
       integer_copy [ТИП_ВЫЧИТАНИЕ]
       mov [тип_токена], rax
 
-      string "--"
-      is_equal [токен], rax
+      integer_copy [индекс]
+      integer_inc rax
+      list_get [символы], rax
+      mov rcx, rax
+
+      string "-"
+      is_equal rcx, rax
       cmp rax, 1
       jne .add_token
+
+      integer_inc [индекс]
+      list_get [символы], rax
+      string_append [токен], rax
 
       integer_copy [индекс]
       integer_inc rax
@@ -282,7 +282,7 @@ f_tokenizer:
 
       dictionary
       mov rbx, rax
-      integer_copy [ТИП_ИНКРЕМЕНТАЦИЯ]
+      integer_copy [ТИП_ДЕКРЕМЕНТАЦИЯ]
       dictionary_set rbx, [тип], rax
       dictionary_set rbx, [значение], rdx
 
