@@ -527,6 +527,89 @@ f_compile:
 
   .not_if:
 
+  check_node_type rcx, [УЗЕЛ_ПОКА]
+  cmp rax, 1
+  jne .not_while
+
+    string "СЧЁТЧИК_ВЛОЖЕННОСТИ"
+    mov r8, rax
+    list
+    mov r9, rax
+    access r8, r9
+    integer_inc rax
+    assign r8, r9, rax
+
+    string "СЧЁТЧИК_ЦИКЛОВ"
+    mov r8, rax
+    list
+    mov r9, rax
+    access r8, r9
+    integer_inc rax
+    assign r8, r9, rax
+
+    mov r13, [rax + INTEGER_HEADER*8]
+
+    string ".loop_start_"
+    string_append rdx, rax
+    integer r13
+    to_string rax
+    string_append rdx, rax
+    string <":", 10>
+    string_append rdx, rax
+
+    string "условие"
+    dictionary_get rcx, rax
+    compile rax, rbx
+    string_append rdx, rax
+
+    string <"boolean rax", 10>
+    string_append rdx, rax
+    string <"mov rax, [rax + BOOLEAN_HEADER*8]", 10>
+    string_append rdx, rax
+    string <"cmp rax, 1", 10>
+    string_append rdx, rax
+
+    string "jne .loop_end_"
+    string_append rdx, rax
+    integer r13
+    to_string rax
+    string_append rdx, rax
+    string 10
+    string_append rdx, rax
+
+    string "тело"
+    dictionary_get rcx, rax
+    compile rax, rbx
+    string_append rdx, rax
+
+    string "jmp .loop_start_"
+    string_append rdx, rax
+    integer r13
+    to_string rax
+    string_append rdx, rax
+    string 10
+    string_append rdx, rax
+
+    string ".loop_end_"
+    string_append rdx, rax
+    integer r13
+    to_string rax
+    string_append rdx, rax
+    string <":", 10>
+    string_append rdx, rax
+
+    string "СЧЁТЧИК_ВЛОЖЕННОСТИ"
+    mov r8, rax
+    list
+    mov r9, rax
+    access r8, r9
+    integer_dec rax
+    assign r8, r9, rax
+
+    jmp .continue
+
+  .not_while:
+
   check_node_type rcx, [УЗЕЛ_ДЛЯ]
   cmp rax, 1
   jne .not_for
@@ -544,9 +627,7 @@ f_compile:
     list
     mov r9, rax
     access r8, r9
-
     integer_inc rax
-
     assign r8, r9, rax
 
     mov r8, [rax + INTEGER_HEADER*8]

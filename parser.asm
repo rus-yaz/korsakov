@@ -2085,38 +2085,9 @@ f_while_expression:
   expression
   mov rcx, rax
 
-  token_check_type [токен], [ПЕРЕНОС_СТРОКИ]
+  token_check_type [токен], [ТИП_ПЕРЕНОС_СТРОКИ]
   cmp rax, 1
-  jne .make_multiline
-
-    next
-
-    ; RDX — body
-
-    list
-    mov rdx, rax
-
-    token_check_type [токен], [ТИП_КОНЕЦ_КОНСТРУКЦИИ]
-    cmp rax, 1
-    jne .parse_else
-      next
-
-      jmp .return
-
-    .parse_else:
-      else_expression
-      mov rbx, rax
-
-    .return:
-
-    while_node rcx, rdx, 1, rbx
-    ret
-
-  .make_multiline:
-
-  token_check_type [токен], [ДВОЕТОЧИЕ]
-  cmp rax, 1
-  je .correct_colon
+  je .correct_newline
 
     cmp [try], 1
     jne @f
@@ -2125,16 +2096,65 @@ f_while_expression:
 
     @@:
 
-    string "Ожидалось `:`"
+    string "Ожидался перенос строки"
     print rax
     exit -1
 
-  .correct_colon:
+  .correct_newline:
 
   next
 
-  statement
-  while_node rcx, rax, 0, 0
+  list
+  mov r10, rax
+
+  .while:
+    token_check_type [токен], [ТИП_КОНЕЦ_КОНСТРУКЦИИ]
+    cmp rax, 1
+    je .end_while
+
+    token_check_keyword [токен], [ИНАЧЕ]
+    cmp rax, 1
+    je .else_branch
+
+    token_check_type [токен], [ТИП_КОНЕЦ_ФАЙЛА]
+    jne .not_end_of_file
+
+      cmp [try], 1
+      jne @f
+        null
+        ret
+
+      @@:
+
+      string "Ожидался конец конструкции"
+      print rax
+      exit -1
+
+    .not_end_of_file:
+
+    statement
+    list_append r10, rax
+
+    next
+    jmp .while
+
+  .end_while:
+
+  next
+
+  list
+
+  jmp .return
+
+  .else_branch:
+
+    else_expression
+
+  .return:
+
+  mov r11, rax
+
+  while_node rcx, r10, r11
 
   ret
 

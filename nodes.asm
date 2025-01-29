@@ -96,8 +96,8 @@ macro for_node variable*, start*, end*, step*, body*, else_case* {
   return
 }
 
-macro while_node condition*, body*, return_null*, else_case* {
-  enter condition, body, return_null, else_case
+macro while_node condition*, body*, else_case* {
+  enter condition, body, else_case
 
   call f_while_node
 
@@ -326,8 +326,6 @@ f_while_node:
   get_arg 1
   dictionary_set rbx, [тело], rax
   get_arg 2
-  dictionary_set rbx, [вернуть_нуль], rax
-  get_arg 3
   dictionary_set rbx, [случай_иначе], rax
 
   ret
