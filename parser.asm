@@ -1729,15 +1729,12 @@ f_if_expression:
 
     .body_end_while:
 
-    list_node r8
-    mov r8, rax
-
     dictionary
     mov r9, rax
 
     string "условие"
     dictionary_set r9, rax, rdx
-    string "действия"
+    string "тело"
     dictionary_set r9, rax, r8
 
     list_append rbx, r9
@@ -1779,7 +1776,6 @@ f_if_expression:
     next
 
     list
-    list_node rax
     if_node rbx, rax
 
     ret
@@ -1856,7 +1852,7 @@ f_else_expression:
     jne .while
 
   next
-  list_node rcx
+  mov rax, rcx
 
   ret
 
@@ -2045,7 +2041,6 @@ f_for_expression:
   next
 
   list
-  list_node rax
 
   jmp .return
 
@@ -2056,9 +2051,6 @@ f_for_expression:
   .return:
 
   mov r11, rax
-
-  list_node r10
-  mov r10, rax
 
   for_node rcx, rdx, r8, r9, r10, r11
 

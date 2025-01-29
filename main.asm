@@ -418,11 +418,11 @@ start:
   integer 8
   mov [УЗЕЛ_УНАРНОЙ_ОПЕРАЦИИ], rax
   integer 9
-  mov [УЗЕЛ_ЕСЛИ], rax
-  integer 10
   mov [УЗЕЛ_СЛОВАРЯ], rax
-  integer 11
+  integer 10
   mov [УЗЕЛ_ПРОВЕРКИ], rax
+  integer 11
+  mov [УЗЕЛ_ЕСЛИ], rax
   integer 12
   mov [УЗЕЛ_ДЛЯ], rax
   integer 13
@@ -439,8 +439,26 @@ start:
   mov [УЗЕЛ_ВКЛЮЧЕНИЯ], rax
   integer 19
   mov [УЗЕЛ_ВОЗВРАЩЕНИЯ], rax
+  integer 20
+  mov [УЗЕЛ_ПРОПУСКА], rax
+  integer 21
+  mov [УЗЕЛ_ПРЕРЫВАНИЯ], rax
 
   string "СЧЁТЧИК_ЕСЛИ"
+  mov rcx, rax
+  list
+  mov rbx, rax
+  integer 0
+  assign rcx, rbx, rax
+
+  string "СЧЁТЧИК_ЦИКЛОВ"
+  mov rcx, rax
+  list
+  mov rbx, rax
+  integer 0
+  assign rcx, rbx, rax
+
+  string "СЧЁТЧИК_ВЛОЖЕННОСТИ"
   mov rcx, rax
   list
   mov rbx, rax

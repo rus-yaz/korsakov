@@ -87,6 +87,33 @@ f_compile:
   string ""
   mov rdx, rax
 
+  mov rax, [rcx]
+  cmp rax, LIST
+  jne .not_body
+
+    integer 0
+    mov r8, rax
+
+    .body_while:
+      list_length rcx
+      integer rax
+      is_equal rax, r8
+      cmp rax, 1
+      je .body_end_while
+
+      list_get rcx, r8
+      compile rax, rbx
+      string_append rdx, rax
+
+      integer_inc r8
+      jmp .body_while
+
+    .body_end_while:
+
+    jmp .continue
+
+  .not_body:
+
   check_node_type rcx, [УЗЕЛ_ПРИСВАИВАНИЯ_ПЕРЕМЕННОЙ]
   cmp rax, 1
   jne .not_assign
@@ -449,7 +476,7 @@ f_compile:
       string 10
       string_append rdx, rax
 
-      string "действия"
+      string "тело"
       dictionary_get r10, rax
       compile rax, rbx
       string_append rdx, rax
@@ -504,14 +531,24 @@ f_compile:
   cmp rax, 1
   jne .not_for
 
-    string "СЧЁТЧИК_ЕСЛИ"
+    string "СЧЁТЧИК_ВЛОЖЕННОСТИ"
     mov r8, rax
     list
     mov r9, rax
     access r8, r9
     integer_inc rax
+    assign r8, r9, rax
+
+    string "СЧЁТЧИК_ЦИКЛОВ"
+    mov r8, rax
+    list
+    mov r9, rax
+    access r8, r9
+
+    integer_inc rax
 
     assign r8, r9, rax
+
     mov r8, [rax + INTEGER_HEADER*8]
 
     string <"push rbx, rcx, rdx", 10>
@@ -563,7 +600,7 @@ f_compile:
       compile rax, rbx
       string_append rdx, rax
 
-      string ".for_"
+      string ".loop_start_"
       string_append rdx, rax
       integer r8
       to_string rax
@@ -579,7 +616,7 @@ f_compile:
       string <"cmp rax, 1", 10>
       string_append rdx, rax
 
-      string "je .end_for_"
+      string "je .loop_end_"
       string_append rdx, rax
       integer r8
       to_string rax
@@ -602,18 +639,7 @@ f_compile:
       compile rax, rbx
       string_append rdx, rax
 
-      string <"integer_add rdx, rcx", 10>
-      string_append rdx, rax
-
-      string "jmp .for_"
-      string_append rdx, rax
-      integer r8
-      to_string rax
-      string_append rdx, rax
-      string 10
-      string_append rdx, rax
-
-      string ".end_for_"
+      string ".loop_iteration_"
       string_append rdx, rax
       integer r8
       to_string rax
@@ -621,10 +647,10 @@ f_compile:
       string <":", 10>
       string_append rdx, rax
 
-      string <"pop rdx, rcx, rbx", 10>
+      string <"integer_add rdx, rcx", 10>
       string_append rdx, rax
 
-      jmp .continue
+      jmp .for_end
 
     .loop_with_enter:
 
@@ -638,7 +664,7 @@ f_compile:
       string <"integer 0", 10>
       string_append rdx, rax
 
-      string ".for_"
+      string ".loop_start_"
       string_append rdx, rax
       integer r8
       to_string rax
@@ -659,7 +685,7 @@ f_compile:
       string <"cmp rax, 1", 10>
       string_append rdx, rax
 
-      string "je .end_for_"
+      string "je .loop_end_"
       string_append rdx, rax
       integer r8
       to_string rax
@@ -679,22 +705,10 @@ f_compile:
 
       string "тело"
       dictionary_get rcx, rax
-      print rax
       compile rax, rbx
       string_append rdx, rax
 
-      string <"integer_inc rdx", 10>
-      string_append rdx, rax
-
-      string "jmp .for_"
-      string_append rdx, rax
-      integer r8
-      to_string rax
-      string_append rdx, rax
-      string 10
-      string_append rdx, rax
-
-      string ".end_for_"
+      string ".loop_iteration_"
       string_append rdx, rax
       integer r8
       to_string rax
@@ -702,12 +716,83 @@ f_compile:
       string <":", 10>
       string_append rdx, rax
 
-      string <"pop rdx, rcx, rbx", 10>
+      string <"integer_inc rdx", 10>
       string_append rdx, rax
 
-      jmp .continue
+    .for_end:
+
+    string "jmp .loop_start_"
+    string_append rdx, rax
+    integer r8
+    to_string rax
+    string_append rdx, rax
+    string 10
+    string_append rdx, rax
+
+    string ".loop_end_"
+    string_append rdx, rax
+    integer r8
+    to_string rax
+    string_append rdx, rax
+    string <":", 10>
+    string_append rdx, rax
+
+    string <"pop rdx, rcx, rbx", 10>
+    string_append rdx, rax
+
+    string "СЧЁТЧИК_ВЛОЖЕННОСТИ"
+    mov r8, rax
+    list
+    mov r9, rax
+    access r8, r9
+    integer_dec rax
+    assign r8, r9, rax
+
+    jmp .continue
 
   .not_for:
+
+  check_node_type rcx, [УЗЕЛ_ПРОПУСКА]
+  cmp rax, 1
+  jne .not_skip
+
+    string "СЧЁТЧИК_ЦИКЛОВ"
+    mov r8, rax
+    list
+    access r8, rax
+    mov r8, rax
+
+    string "jmp .loop_iteration_"
+    string_append rdx, rax
+    to_string r8
+    string_append rdx, rax
+    string 10
+    string_append rdx, rax
+
+    jmp .continue
+
+  .not_skip:
+
+  check_node_type rcx, [УЗЕЛ_ПРЕРЫВАНИЯ]
+  cmp rax, 1
+  jne .not_break
+
+    string "СЧЁТЧИК_ЦИКЛОВ"
+    mov r8, rax
+    list
+    access r8, rax
+    mov r8, rax
+
+    string "jmp .loop_end_"
+    string_append rdx, rax
+    to_string r8
+    string_append rdx, rax
+    string 10
+    string_append rdx, rax
+
+    jmp .continue
+
+  .not_break:
 
   string "Неизвестный узел: "
   print <rax, rcx>
