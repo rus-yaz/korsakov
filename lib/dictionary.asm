@@ -69,7 +69,7 @@ f_dictionary:
   jmp .correct_arguments
 
   .invalid_arguments:
-    string "Ожидался тип"
+    string "dictionary: Ожидался тип"
     mov rbx, rax
     type_to_string LIST
 

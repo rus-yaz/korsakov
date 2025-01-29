@@ -128,16 +128,73 @@ f_is_equal:
     mov r8, rax
     is_equal rax, rdx
     xchg r8, rax
-    cmp rax, 0
+    cmp rax, 1
 
-    je .return_false
+    jne .return_false
     jmp .return_true
 
   .not_dictionary:
 
   ; Выход с ошибкой при неизвестном типе
 
-  string "Ожидался тип"
+  string "is_equal: Ожидался тип"
+  mov rcx, rax
+
+  list
+  mov rbx, rax
+
+  type_to_string INTEGER
+  list_append rbx, rax
+  type_to_string STRING
+  list_append rbx, rax
+  type_to_string LIST
+  list_append rbx, rax
+  type_to_string DICTIONARY
+  list_append rbx, rax
+  join rax, ", "
+
+  print <rcx, rax>
+  exit -1
+
+  .return_true:
+    mov rax, 1
+    ret
+
+  .return_false:
+    mov rax, 0
+    ret
+
+f_is_greater_or_equal:
+  get_arg 1
+  mov rbx, rax
+  get_arg 0
+
+  ; Сохранение типов
+  mov rcx, [rax]
+  mov rdx, [rbx]
+
+  ; Сравнение типов
+  cmp rcx, rdx
+  jne .return_false
+
+  cmp rcx, NULL
+  je .return_true
+
+  cmp rcx, INTEGER
+  jne .not_integer
+    mov rax, [rax + INTEGER_HEADER*8]
+    mov rbx, [rbx + INTEGER_HEADER*8]
+
+    cmp rax, rbx
+    jl .return_false
+
+    jmp .return_true
+
+  .not_integer:
+
+  ; Выход с ошибкой при неизвестном типе
+
+  string "is_greater_or_equal: Ожидался тип"
   mov rcx, rax
 
   list

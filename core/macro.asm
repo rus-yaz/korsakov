@@ -372,6 +372,14 @@ macro is_equal val_1*, val_2* {
   return
 }
 
+macro is_greater_or_equal val_1*, val_2* {
+  enter val_1, val_2
+
+  call f_is_greater_or_equal
+
+  return
+}
+
 macro copy value {
   enter value
 

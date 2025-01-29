@@ -1963,6 +1963,8 @@ f_for_expression:
   cmp rax, 1
   jne .unknown_token
 
+    next
+
     ; R10 — start_value
 
     null
@@ -1971,7 +1973,7 @@ f_for_expression:
     mov r9, rax
 
     expression
-    mov r10, rax
+    mov rdx, rax
 
     jmp .if_end
 

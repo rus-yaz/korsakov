@@ -523,101 +523,189 @@ f_compile:
 
     string "конец"
     dictionary_get rcx, rax
-    compile rax, rbx
-    string_append rdx, rax
-    string <"mov rbx, rax", 10>
-    string_append rdx, rax
+    mov r10, rax
 
-    string "шаг"
-    dictionary_get rcx, rax
-    mov r11, rax
     null
-    is_equal r11, rax
+    is_equal r10, rax
     cmp rax, 1
-    je .default_step
+    je .loop_with_enter
+
+      compile r10, rbx
+      string_append rdx, rax
+      string <"mov rbx, rax", 10>
+      string_append rdx, rax
+
+      string "шаг"
+      dictionary_get rcx, rax
+      mov r11, rax
+      null
+      is_equal r11, rax
+      cmp rax, 1
+      je .default_step
+        compile r11, rbx
+        string_append rdx, rax
+        string <"mov rcx, rax", 10>
+        string_append rdx, rax
+
+        jmp .after_step
+
+      .default_step:
+
+        string <"integer 1", 10>
+        string_append rdx, rax
+        string <"mov rcx, rax", 10>
+        string_append rdx, rax
+
+      .after_step:
+
+      string "начало"
+      dictionary_get rcx, rax
       compile rax, rbx
       string_append rdx, rax
-      string <"mov rcx, rax", 10>
+
+      string ".for_"
+      string_append rdx, rax
+      integer r8
+      to_string rax
+      string_append rdx, rax
+      string <":", 10>
       string_append rdx, rax
 
-      jmp .after_step
-
-    .default_step:
-
-      string <"integer 1", 10>
-      string_append rdx, rax
-      string <"mov rcx, rax", 10>
+      string <"mov rdx, rax", 10>
       string_append rdx, rax
 
-    .after_step:
+      string <"is_greater_or_equal rdx, rbx", 10>
+      string_append rdx, rax
+      string <"cmp rax, 1", 10>
+      string_append rdx, rax
 
-    string "начало"
-    dictionary_get rcx, rax
-    compile rax, rbx
-    string_append rdx, rax
+      string "je .end_for_"
+      string_append rdx, rax
+      integer r8
+      to_string rax
+      string_append rdx, rax
+      string 10
+      string_append rdx, rax
 
-    string ".for_"
-    string_append rdx, rax
-    integer r8
-    to_string rax
-    string_append rdx, rax
-    string <":", 10>
-    string_append rdx, rax
+      string <"mov rax, rdx", 10>
+      string_append rdx, rax
+      null
+      mov r10, rax
+      list
+      list_node rax
+      assign_node r9, rax, r10
+      compile rax, rbx
+      string_append rdx, rax
 
-    string <"mov rdx, rax", 10>
-    string_append rdx, rax
+      string "тело"
+      dictionary_get rcx, rax
+      compile rax, rbx
+      string_append rdx, rax
 
-    string <"is_equal rdx, rbx", 10>
-    string_append rdx, rax
-    string <"cmp rax, 1", 10>
-    string_append rdx, rax
+      string <"integer_add rdx, rcx", 10>
+      string_append rdx, rax
 
-    string "jge .end_for_"
-    string_append rdx, rax
-    integer r8
-    to_string rax
-    string_append rdx, rax
-    string 10
-    string_append rdx, rax
+      string "jmp .for_"
+      string_append rdx, rax
+      integer r8
+      to_string rax
+      string_append rdx, rax
+      string 10
+      string_append rdx, rax
 
-    string <"mov rax, rdx", 10>
-    string_append rdx, rax
-    null
-    mov r10, rax
-    list
-    list_node rax
-    assign_node r9, rax, r10
-    compile rax, rbx
-    string_append rdx, rax
+      string ".end_for_"
+      string_append rdx, rax
+      integer r8
+      to_string rax
+      string_append rdx, rax
+      string <":", 10>
+      string_append rdx, rax
 
-    string "тело"
-    dictionary_get rcx, rax
-    compile rax, rbx
-    string_append rdx, rax
+      string <"pop rdx, rcx, rbx", 10>
+      string_append rdx, rax
 
-    string <"integer_add rdx, rcx", 10>
-    string_append rdx, rax
+      jmp .continue
 
-    string "jmp .for_"
-    string_append rdx, rax
-    integer r8
-    to_string rax
-    string_append rdx, rax
-    string 10
-    string_append rdx, rax
+    .loop_with_enter:
 
-    string ".end_for_"
-    string_append rdx, rax
-    integer r8
-    to_string rax
-    string_append rdx, rax
-    string <":", 10>
-    string_append rdx, rax
+      string "начало"
+      dictionary_get rcx, rax
+      compile rax, rbx
+      string_append rdx, rax
+      string <"mov rbx, rax", 10>
+      string_append rdx, rax
 
-    string <"pop rdx, rcx, rbx", 10>
-    string_append rdx, rax
+      string <"integer 0", 10>
+      string_append rdx, rax
 
-    jmp .continue
+      string ".for_"
+      string_append rdx, rax
+      integer r8
+      to_string rax
+      string_append rdx, rax
+      string <":", 10>
+      string_append rdx, rax
+
+      string <"mov rdx, rax", 10>
+      string_append rdx, rax
+
+      string <"list_length rbx", 10>
+      string_append rdx, rax
+      string <"integer rax", 10>
+      string_append rdx, rax
+
+      string <"is_equal rdx, rax", 10>
+      string_append rdx, rax
+      string <"cmp rax, 1", 10>
+      string_append rdx, rax
+
+      string "je .end_for_"
+      string_append rdx, rax
+      integer r8
+      to_string rax
+      string_append rdx, rax
+      string 10
+      string_append rdx, rax
+
+      string <"list_get rbx, rdx", 10>
+      string_append rdx, rax
+      null
+      mov r10, rax
+      list
+      list_node rax
+      assign_node r9, rax, r10
+      compile rax, rbx
+      string_append rdx, rax
+
+      string "тело"
+      dictionary_get rcx, rax
+      print rax
+      compile rax, rbx
+      string_append rdx, rax
+
+      string <"integer_inc rdx", 10>
+      string_append rdx, rax
+
+      string "jmp .for_"
+      string_append rdx, rax
+      integer r8
+      to_string rax
+      string_append rdx, rax
+      string 10
+      string_append rdx, rax
+
+      string ".end_for_"
+      string_append rdx, rax
+      integer r8
+      to_string rax
+      string_append rdx, rax
+      string <":", 10>
+      string_append rdx, rax
+
+      string <"pop rdx, rcx, rbx", 10>
+      string_append rdx, rax
+
+      jmp .continue
 
   .not_for:
 
