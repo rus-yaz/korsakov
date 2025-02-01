@@ -206,8 +206,9 @@ f_access:
   ; RCX — context
   ; RDX — variable
 
-  dictionary_keys rcx
+  dictionary_keys_links rcx
   list_include rax, rdx
+  mov rax, [rax + BOOLEAN_HEADER*8]
   cmp rax, 1
   je .correct_variable
     string "Переменная `"

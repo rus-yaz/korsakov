@@ -1,49 +1,44 @@
 f_delete:
   get_arg 0
+  mov rbx, rax
 
-  mov rbx, [rax - HEAP_BLOCK_HEADER*8]
-  mov rcx, HEAP_BLOCK
+  mov rcx, rbx
+  sub rcx, HEAP_BLOCK_HEADER*8
+  check_type rcx, HEAP_BLOCK
 
-  cmp rbx, rcx
-  je .not_collection_item
-    sub rax, 2*8 ; Учёт ссылок
-    mov rbx, rax
+  mov rcx, [rbx]
 
-    sub rbx, HEAP_BLOCK_HEADER*8
-    check_type rbx, HEAP_BLOCK
-
-  .not_collection_item:
-  mov rbx, [rax]
-
-  cmp rbx, LIST
+  cmp rcx, COLLECTION
   je .collection
-  cmp rbx, STRING
+  cmp rcx, LIST
   je .collection
-  cmp rbx, DICTIONARY
+  cmp rcx, STRING
   je .collection
 
     ; Если прыжка не произошло, переменная не является коллекцией
-    delete_block rax
+    delete_block rbx
     ret
 
   .collection:
 
-  mov rbx, [rax + 8*1]
-  delete_block rax
-  mov rax, rbx
+  mov rcx, [rbx + 8*3]
+  mov rdx, [rbx + 8*1]
+  delete_block rbx
+
+  mov r8, rcx
 
   .while:
-    cmp rax, 0
+    cmp rdx, 0
     je .end_while
 
-    mov rbx, [rax + 8*1]
-    add rax, 8*2
+    delete [r8]
+    add r8, 8
 
-    delete rax
-
-    mov rax, rbx
+    dec rdx
     jmp .while
 
   .end_while:
+
+  delete_block rcx
 
   ret

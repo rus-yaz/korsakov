@@ -1,125 +1,122 @@
 f_dictionary:
-  get_arg 1
-  mov rbx, rax
   get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
 
-  cmp rax, 0
-  jne .not_empty
-    create_block DICTIONARY_HEADER*8
-
-    mem_mov [rax + 8*0], DICTIONARY ; Тип
-    mem_mov [rax + 8*1], 0          ; Первый элемент
-    mem_mov [rax + 8*2], 0          ; Длина
-
+  cmp rcx, 0
+  je .not_from_lists
+    dictionary_from_lists rbx, rcx
     ret
 
-  .not_empty:
+  .not_from_lists:
 
   cmp rbx, 0
-  jne .not_from_items
-
-    mov rdx, [rax]
-    cmp rdx, LIST
-    jne .invalid_arguments
-
-    mov rbx, rax
-
-    dictionary
-    mov rcx, rax
-
-    integer 0
-    mov r8, rax
-
-    .from_items_while:
-      list_length rbx
-      integer rax
-      is_equal rax, r8
-      cmp rax, 1
-      je .from_items_end_while
-
-      list_get rbx, r8
-      check_type rax, LIST
-      mov r9, rax
-
-      integer 0
-      list_get r9, rax
-      mov r10, rax
-      integer 1
-      list_get r9, rax
-      dictionary_set rcx, r10, rax
-
-      integer_inc r8
-      jmp .from_items_while
-
-    .from_items_end_while:
-
-    mov rax, rcx
-
+  je .not_from_items
+    dictionary_from_items rbx
     ret
 
   .not_from_items:
 
-  mov rdx, [rax]
-  cmp rdx, LIST
-  jne .invalid_arguments
-  mov rdx, [rbx]
-  cmp rdx, LIST
-  jne .invalid_arguments
-
-  jmp .correct_arguments
-
-  .invalid_arguments:
-    string "dictionary: Ожидался тип"
-    mov rbx, rax
-    type_to_string LIST
-
-    print <rbx, rax>
-    exit -1
-
-  .correct_arguments:
-
-  mov rcx, rbx
-  mov rbx, rax
-
-  create_block DICTIONARY_HEADER*8
-
+  collection
   mem_mov [rax + 8*0], DICTIONARY
-  mem_mov [rax + 8*1], 0
-  push rax
+
+  ret
+
+f_dictionary_from_lists:
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
+
+  check_type rbx, LIST
+  check_type rcx, LIST
 
   list_length rbx
   mov rdx, rax
-
   list_length rcx
-
   cmp rdx, rax
-  je .correct_length
-    exit -1, DIFFERENT_LISTS_LENGTH_ERROR
+  je .continue
+    string "dictionary_from_lists: Длина списков должна быть равна"
+    print rax
+    exit -1
 
-  .correct_length:
+  .continue:
 
-  pop rdx
-  mem_mov [rdx + 8*2], 0
-  mov r8, rdx
-
-  integer rax
+  integer rdx
   mov rdx, rax
 
   integer 0
-  mov r10, rax
+  mov r8, rax
+
+  dictionary
+  mov r9, rax
 
   .while:
-    is_equal rdx, r10
+
+    is_equal rdx, r8
     cmp rax, 1
     je .end_while
 
-    list_get rbx, r10
+    list_get_link rbx, r8
+    mov r10, rax
+    list_get_link rcx, r8
+    dictionary_set r9, r10, rax
+
+    integer_inc r8
+    jmp .while
+
+  .end_while:
+
+  mov rax, r9
+
+  ret
+
+f_dictionary_from_items:
+  get_arg 0
+  mov rbx, rax
+
+  check_type rbx, LIST
+
+  list_length rcx
+  integer rax
+  mov rcx, rax
+
+  integer 0
+  mov rdx, rax
+
+  dictionary
+  mov r8, rax
+
+  .while:
+
+    is_equal rcx, rdx
+    cmp rax, 1
+    je .end_while
+
+    list_get_link rbx, rdx
     mov r9, rax
-    list_get rcx, r10
 
-    dictionary_set r8, r9, rax
+    check_type rax, LIST
 
-    integer_inc r10
+    list_length r9
+    cmp rax, 2
+    je .correct_length
+      string "dictionary_from_lists: Длины внутренних списков должны равняться двум"
+      print rax
+      exit -1
+
+    .correct_length:
+
+    integer 0
+    list_get_link r9, rax
+    mov r10, rax
+    integer 1
+    list_get_link r9, rax
+
+    dictionary_set r8, r10, rax
+
+    integer_inc rdx
     jmp .while
 
   .end_while:
@@ -132,21 +129,90 @@ f_dictionary_length:
   get_arg 0
   check_type rax, DICTIONARY
 
-  mov rax, [rax + 8*2]
+  collection_length rax
+  ret
+
+f_dictionary_capacity:
+  get_arg 0
+  check_type rax, DICTIONARY
+
+  collection_capacity rax
+  ret
+
+f_dictionary_copy_links:
+  get_arg 0
+  check_type rax, DICTIONARY
+
+  collection_copy_links rax
   ret
 
 f_dictionary_copy:
   get_arg 0
   check_type rax, DICTIONARY
 
-  push rax
-  dictionary_values rax
+  mem_mov [rax], LIST
+  mov rbx, rax
+  list_copy rax
+
+  mem_mov [rbx], DICTIONARY
+  mem_mov [rax], DICTIONARY
+
+  ret
+
+f_dictionary_items_links:
+  get_arg 0
+  check_type rax, DICTIONARY
+
+  dictionary_copy_links rax
+  mem_mov [rax + 8*0], LIST
+  ret
+
+f_dictionary_items:
+  get_arg 0
+  check_type rax, DICTIONARY
+
+  dictionary_items_links rax
+  copy rax
+
+  ret
+
+f_dictionary_keys_links:
+  get_arg 0
   mov rbx, rax
 
-  pop rax
-  dictionary_keys rax
+  check_type rbx, DICTIONARY
 
-  dictionary rax, rbx
+  dictionary_items_links rbx
+  mov rbx, rax
+
+  list_length rbx
+  integer rax
+  mov rcx, rax
+
+  integer 0
+  mov rdx, rax
+
+  integer 0
+  mov r8, rax
+
+  list
+  mov r9, rax
+
+  .while:
+    is_equal rcx, rdx
+    cmp rax, 1
+    je .end_while
+
+    list_get_link rbx, rdx
+    list_get_link rax, r8
+    list_append_link r9, rax
+
+    integer_inc rdx
+    jmp .while
+
+  .end_while:
+
+  mov rax, r9
 
   ret
 
@@ -154,235 +220,168 @@ f_dictionary_keys:
   get_arg 0
   check_type rax, DICTIONARY
 
-  mov rbx, [rax + 8*1]
+  dictionary_keys_links rax
+  copy rax
 
-  list
+  ret
+
+f_dictionary_values_links:
+  get_arg 0
+  mov rbx, rax
+
+  check_type rbx, DICTIONARY
+
+  dictionary_items_links rbx
+  mov rbx, rax
+
+  list_length rbx
+  integer rax
+  mov rcx, rax
+
+  integer 0
   mov rdx, rax
 
+  integer 1
+  mov r8, rax
+
+  list
+  mov r9, rax
+
   .while:
-    cmp rbx, 0
+    is_equal rcx, rdx
+    cmp rax, 1
     je .end_while
 
-    integer 0
-    mov rcx, rbx
-    add rcx, 8*2
-    list_get rcx, rax
-    list_append rdx, rax
+    list_get_link rbx, rdx
+    list_get_link rax, r8
+    list_append_link r9, rax
 
-    mov rbx, [rbx + 8*1]
+    integer_inc rdx
     jmp .while
 
   .end_while:
 
-  mov rax, rdx
+  mov rax, r9
+
   ret
 
 f_dictionary_values:
   get_arg 0
   check_type rax, DICTIONARY
 
-  mov rbx, [rax + 8*1]
+  dictionary_values_links rax
+  copy rax
 
-  list
+  ret
+
+f_dictionary_get_link:
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
+  get_arg 2
   mov rdx, rax
 
-  .while:
-    cmp rbx, 0
-    je .end_while
+  check_type rbx, DICTIONARY
 
-    integer 1
-    mov rcx, rbx
-    add rcx, 8*2
-    list_get rcx, rax
-    list_append rdx, rax
+  dictionary_keys_links rbx
+  list_index rax, rcx
+  mov r8, rax
 
-    mov rbx, [rbx + 8*1]
-    jmp .while
+  integer -1
+  is_equal rax, r8
+  cmp rax, 1
+  jne .no_key
+    cmp rdx, 0
+    jne .return_default
 
-  .end_while:
+      string "Ключ не найден:"
+      mov rdx, rax
+      to_string rcx
+      print <rdx, rax, rbx>
+      exit -1
 
-  mov rax, rdx
+    .return_default:
+
+    mov rax, rdx
+    ret
+
+  .no_key:
+
+  dictionary_values_links rbx
+  list_get rax, r8
+
   ret
 
 f_dictionary_get:
-  get_arg 2
-  mov rcx, rax
-  get_arg 1
-  mov rbx, rax
   get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
+  get_arg 2
+  mov rdx, rax
 
-  check_type rax, DICTIONARY
-  mov rdx, rbx
-
-  ; Получение адреса на перый элемент
-  mov rbx, [rax + 8*1]
-  .while:
-    cmp rbx, 0
-    je .end_while
-
-    add rbx, 2*8 ; Сдвиг к телу списка (элементы словаря — списки)
-
-    ; Взятие первого значения списка — ключа
-    integer 0
-    list_get rbx, rax
-
-    ; Сравнение текущего и искомого ключа
-    is_equal rax, rdx
-    cmp rax, 1
-    je .return
-
-    ; Взятие следующего элемента
-    mov rbx, [rbx - 8*1]
-    jmp .while
-
-  .end_while:
-
-  cmp rcx, 0
-  jne .continue
-    string "Ключ"
-    mov rbx, rax
-    string "` не найден"
-    mov rcx, rax
-    print <rbx, rdx, rcx>
-    exit -1
-
-  .continue:
-    mov rax, rcx
-    ret
-
-  .return:
-    integer 1
-    list_get rbx, rax
+  check_type rbx, DICTIONARY
+  dictionary_get_link rbx, rcx, rdx
+  copy rax
 
   ret
 
-f_dictionary_items:
+f_dictionary_set_link:
   get_arg 0
-  check_type rax, DICTIONARY
-
-  push rax
-  dictionary_keys rax
   mov rbx, rax
-
-  pop rax
-  dictionary_values rax
-  mov rcx, rax
-
-  list_length rcx
-  mov rdx, rax
-
-  integer 0
-  mov r8, rax
-
-  list
-
-  .while:
-    cmp rdx, 0
-    je .end_while
-
-    push rdx, rax
-
-    list
-    mov rdx, rax
-
-    list_get rbx, r8
-    list_append rdx, rax
-    list_get rcx, r8
-    list_append rdx, rax
-
-    pop rdx
-    list_append rdx, rax
-
-    pop rdx
-
-    push rax
-    integer_inc r8
-    dec rdx
-    pop rax
-
-    jmp .while
-
-  .end_while:
-
-  ret
-
-f_dictionary_set:
-  get_arg 2
-  mov rcx, rax
   get_arg 1
-  mov rbx, rax
-  get_arg 0
+  mov rcx, rax
+  get_arg 2
   mov rdx, rax
 
-  check_type rdx, DICTIONARY
+  check_type rbx, DICTIONARY
 
   ; RBX — key
   ; RCX — value
   ; RDX — dictionary
 
-  dictionary_keys rdx
-  list_index rax, rbx
-  mov rax, [rax + INTEGER_HEADER*8]
-  cmp rax, -1
+  dictionary_keys_links rbx
+  list_index rax, rcx
+
+  mov r8, [rax + INTEGER_HEADER*8]
+  cmp r8, -1
   je .new_key
 
-    inc rax
-    mov r8, rdx
-    .key_while:
-      mov r8, [r8 + 8*1]
-      dec rax
+    imul r8, 8
 
-      cmp rax, 0
-      jne .key_while
-
-    mov r9, r8
-    add r8, 8*2
+    mov rcx, [rbx + 8*3]
+    add rcx, r8
 
     integer 1
-    list_set r8, rax, rcx
+    list_set [rcx], rax, rdx
 
-    mov rax, rdx
+    mov rax, rbx
     ret
 
   .new_key:
 
-  mov rax, rdx
-  push rdx, rdx
-
-  dictionary_length rdx
-  xchg rdx, rax
-
-  inc rdx
-  mem_mov [rax + 8*2], rdx
-  pop rdx
-
-  .while:
-    cmp rdx, 0
-    je .end_while
-
-    mov rax, rdx
-    mov rdx, [rax + 8*1]
-
-    jmp .while
-
-  .end_while:
-  mov rdx, rax
-
-  create_block (2 + LIST_HEADER) * 8
-
-  mem_mov [rdx + 8*1], rax
-  mem_mov [rax + 8*0], rdx
-
-  mem_mov [rax + 8*1], 0
-  mov rdx, rax
-
   list
-  list_append rax, rbx
-  list_append rax, rcx
+  list_append_link rax, rcx
+  list_append_link rax, rdx
 
-  add rdx, 8*2
-  mem_copy rax, rdx, LIST_HEADER
-  delete_block rax
+  collection_append_link rbx, rax
+  ret
 
-  pop rax
+f_dictionary_set:
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
+  get_arg 2
+  mov rdx, rax
+
+  check_type rbx, DICTIONARY
+
+  copy rcx
+  mov rcx, rax
+  copy rdx
+
+  dictionary_set_link rbx, rcx, rax
+
   ret

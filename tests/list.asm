@@ -5,120 +5,76 @@ print rax
 
 list
 mov rbx, rax
+list
+list_append rbx, rax
+print rax
+
+list
+mov rbx, rax
+
 integer 1
 list_append rbx, rax
 integer 2
-list_append rbx, rax
+list_append_link rbx, rax
 integer 3
 list_append rbx, rax
 integer 4
-list_append rbx, rax
+list_append_link rbx, rax
+print rax
 
-; индекс = -1
+integer 1
+list_get_link rbx, rax
+print rax
+
 integer -1
-mov rcx, rax
-
-; показать(список.индекс)
-list_get rbx, rcx
-mov rcx, rax
-string "Элемент по индексу:"
-print <rax, rcx>
-
-; список.добавить(5)
-integer 5
-list_append rbx, rax
-
-; показать(список.индекс)
-list_get rbx, rcx
-mov rbx, rax
-string "Элемент по индексу:"
-print <rax, rbx>
-
-list
-mov rbx, rax
-
-mov rcx, rsp
-push 0
-mov rax, rsp
-buffer_to_string rax
-mov rdx, rax
-mov rsp, rcx
-list_append rbx, rax
-
-list
-mov rbx, rax
-integer 1
-list_append rbx, rax
-list_append rax, rax
-
+list_get rbx, rax
 print rax
 
-integer 0
-list_set rbx, rax, rax
 integer 1
-list_set rbx, rax, rax
-
+mov rcx, rax
+integer 11
+list_set_link rbx, rcx, rax
 print rax
 
-integer 0
+integer 3
+mov rcx, rax
+integer 17
+list_set rbx, rcx, rax
+print rax
+
+list_copy rbx
+print rax
+
+list_copy_links rbx
+print rax
+
+integer 1
 list_index rbx, rax
 print rax
 
-list
-mov rbx, rax
-integer 2
-list_append rbx, rax
-integer 3
-list_append rbx, rax
-integer 4
-list_append rbx, rax
-integer 5
-list_append rbx, rax
-integer 6
-list_append rbx, rax
-integer 7
-list_append rbx, rax
+integer 1
+list_include rbx, rax
+print rax
 
-list_pop rbx
-print <rax, rbx>
+integer 21
+list_include rbx, rax
+print rax
 
-integer -1
-list_pop rbx, rax
-print <rax, rbx>
+list_pop_link rbx
+print <rbx, rax>
 
 integer 0
 list_pop rbx, rax
-print <rax, rbx>
+print <rbx, rax>
 
-integer 1
-list_pop rbx, rax
-print <rax, rbx>
-
-list
+integer 0
 mov rcx, rax
-integer 1
-list_append rcx, rax
-integer 2
-list_append rcx, rax
-integer 3
-list_append rcx, rax
-
-print rcx
+integer 9
+list_insert_link rbx, rcx, rax
+print rax
 
 integer 0
-mov rbx, rax
+mov rcx, rax
 integer 0
-list_insert rcx, rbx, rax
-print rcx
-
-integer -1
-mov rbx, rax
-integer 4
-list_insert rcx, rbx, rax
-print rcx
-
-integer 4
-mov rbx, rax
-integer 10
-list_insert rcx, rbx, rax
-print rcx
+list_insert rbx, rcx, rax
+print rax

@@ -199,5 +199,5 @@ f_check_type:
   type_to_string r9
   mov rbx, rax
   string "check_type: Ожидался тип"
-  print rax, rbx
+  print <rax, rbx>
   exit -1

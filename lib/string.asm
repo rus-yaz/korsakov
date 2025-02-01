@@ -51,11 +51,8 @@ f_binary_to_string:
   cmp rbx, 0
   jne .no_empty
 
-    create_block STRING_HEADER*8
-    mem_mov [rax + 8*0], STRING
-
-    mem_mov [rax + 8*1], 0
-    mem_mov [rax + 8*2], 0
+    collection
+    mem_mov [rax], STRING
 
     ret
 
@@ -100,15 +97,14 @@ f_binary_to_string:
   pop rsi
 
   ; RDI — количество символов в строке
-  ; RSI — Указатель на тело байтовой последовательности
+  ; RSI — указатель на тело байтовой последовательности
 
-  ; Выделение памяти под строку
-  create_block STRING_HEADER*8
-  push rax ; Сохранение указателя на строку
+  collection rdi
+  mem_mov [rax + 8*0], STRING
+  mem_mov [rax + 8*1], rdi
+  push rax
 
-  mem_mov [rax + 8*0], STRING ; Тип строки
-  mem_mov [rax + 8*1], 0      ; Место для указателя на первый элемент
-  mem_mov [rax + 8*2], rdi    ; Длина строки
+  mov rcx, [rax + 8*3]
 
   .while_chars:
     cmp rdi, 0
@@ -148,16 +144,6 @@ f_binary_to_string:
     check_error jge, UNEXPECTED_BIT_SEQUENCE_ERROR
 
   .continue_chars:
-    mov rbx, rax
-    create_block (2 + INTEGER_SIZE) * 8
-
-    mem_mov [rax + 8*0], rbx ; Указатель на предыдущий элемент в текущем блоке
-    mem_mov [rbx + 8*1], rax ; Указатель на текущий элемент в следующем блоке
-
-    mem_mov [rax + 8*1], 0
-    mem_mov [rax + 8*2], INTEGER
-
-    ; Сдвиг последовательности до состояния символа
     .while:
       dec r8
 
@@ -173,7 +159,9 @@ f_binary_to_string:
       jmp .while
     .end:
 
-    mem_mov [rax + 8*3], rdx
+    integer rdx
+    mem_mov [rcx], rax
+    add rcx, 8
 
     inc rsi
     dec rdi
@@ -181,7 +169,6 @@ f_binary_to_string:
     jmp .while_chars
   .end_chars:
 
-  ; Взятие указателя на блок
   pop rax
   ret
 
@@ -189,410 +176,394 @@ f_buffer_to_string:
   get_arg 0
 
   buffer_to_binary rax
-  push rax
+  mov rbx, rax
 
   binary_to_string rax
-
-  pop rbx
   delete_block rbx
 
+  ret
+
+f_string_to_binary:
+  get_arg 0
+  mov rbx, rax
+  check_type rbx, STRING
+
+  string_length rbx
+  integer rax
+  mov rcx, rax
+
+  integer 0
+  mov r8, rax
+
+  mov r9, 0
+
+  mov r15, rsp
+  push 0
+
+  .while:
+    is_equal r8, rcx
+    cmp rax, 1
+    je .end_while
+
+    string_get_link rbx, r8
+
+    mov rax, [rax + 8*3]
+    mov rax, [rax]
+    mov rax, [rax + INTEGER_HEADER*8]
+
+    bswap rax
+
+    .integer_while:
+
+      cmp rax, 0
+      je .integer_end_while
+
+      mov dl, al
+      shr rax, 8
+
+      cmp dl, 0
+      je .integer_while
+
+      mov [rsp], dl
+
+      dec rsp
+      inc r9
+
+      jmp .integer_while
+
+    .integer_end_while:
+
+    integer_inc r8
+    jmp .while
+
+  .end_while:
+
+  ; Приведение размера к числу, кратному 8
+  mov rax, r9
+
+  mov rbx, 8
+  mov rdx, 0
+
+  idiv rbx
+  mov rcx, rdx
+
+  cmp rcx, 0
+  je .skip
+
+    inc rax
+  .skip:
+
+  mov r11, rax
+  add rax, BINARY_HEADER
+  imul rax, 8
+
+  create_block rax
+  mem_mov [rax + 8*0], BINARY
+  mem_mov [rax + 8*1], r9
+
+  mov r12, rax
+  add rax, BINARY_HEADER*8
+
+  mov rbx, rsp
+  add rbx, r9
+
+  .copy_while:
+    cmp r9, 0
+    je .copy_end_while
+
+    mov rcx, [rbx]
+    mov [rax], cl
+
+    dec rbx
+    inc rax
+
+    dec r9
+    jmp .copy_while
+
+  .copy_end_while:
+
+  mov rax, r12
+  mov rsp, r15
+
+  ret
+
+f_binary_length:
+  get_arg 0
+  check_type rax, BINARY
+
+  mov rax, [rax + 8*1]
   ret
 
 f_string_length:
   get_arg 0
   check_type rax, STRING
 
-  mov rax, [rax + 8*2]
+  collection_length rax
+
+  ret
+
+f_string_capacity:
+  get_arg 0
+  check_type rax, STRING
+
+  collection_capacity rax
+
+  ret
+
+f_string_copy_links:
+  get_arg 0
+  mov rbx, rax
+
+  check_type rbx, STRING
+  collection_copy_links rbx
 
   ret
 
 f_string_copy:
   get_arg 0
-  check_type rax, STRING
-
   mov rbx, rax
-  string_length rax
-  mov rdx, rax
 
-  create_block STRING_HEADER*8
-  push rax
-
-  mem_mov [rax + 8*0], STRING
-  mem_mov [rax + 8*1], 0
-  mem_mov [rax + 8*2], [rbx + 8*2]
-
-  ; RAX — создаваемая строка
-  ; RBX — копируемая строка
-
-  .while:
-    cmp rdx, 0
-    je .end_while
-
-    dec rdx
-    mov rcx, rax
-
-    create_block (2 + INTEGER_SIZE) * 8
-    mem_mov rbx, [rbx + 8*1]
-
-    mem_mov [rcx + 8*1], rax
-    mem_mov [rax + 8*0], rcx
-
-    mem_mov [rax + 8*1], 0
-    mem_mov [rax + 8*2], INTEGER
-    mem_mov [rax + 8*3], [rbx + 8*3]
-
-    jmp .while
-  .end_while:
-
-  pop rax
+  check_type rbx, STRING
+  collection_copy rbx
 
   ret
 
-f_string_append:
-  get_arg 1
-  mov rbx, rax
+f_string_add_links:
   get_arg 0
-
-  check_type rax, STRING
-  check_type rbx, STRING
-
-  mov rcx, rax
-
-  string_length rbx
-  cmp rax, 0
-  jne .not_empty
-    mov rax, rcx
-    ret
-
-  .not_empty:
-
-  string_copy rbx
   mov rbx, rax
-
-  string_length rcx
-  xchg rcx, rax
-
-  push rax
-  .while:
-    cmp rcx, 0
-    je .end_while
-
-    mov rax, [rax + 8*1]
-    dec rcx
-
-    jmp .while
-  .end_while:
-
-  mov rcx, [rbx + 8*1] ; Сохранение указателя на первый элемент добавляемой строки
-
-  mov rdx, rax
-  string_length rbx
-
-  xchg rax, rdx ; RDX — длина второй строки, RAX — указатель на конец первой
-  delete_block rbx ; Удаление заголовка строки
-
-  mem_mov [rcx + 8*0], rax ; Запись указателя на текущий блок в предыдущий
-  mem_mov [rax + 8*1], rcx ; Запись указателя на предыдущий блок в текущий
-
-  pop rax
+  get_arg 1
   mov rcx, rax
 
-  string_length rax
-  xchg rcx, rax
+  check_type rbx, STRING
+  check_type rcx, STRING
 
-  add rcx, rdx
-  mem_mov [rax + 8*2], rcx
+  collection_add_links rbx, rcx
 
   ret
 
 f_string_add:
-  get_arg 1
-  mov rbx, rax
   get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
 
-  check_type rax, STRING
   check_type rbx, STRING
+  check_type rcx, STRING
 
-  string_copy rax
-  string_append rax, rbx
+  string_copy rbx
+  mov rbx, rax
+  string_copy rcx
+  mov rcx, rax
+
+  string_add_links rbx, rcx
 
   ret
 
-f_string_get:
-  get_arg 1
-  mov rbx, rax
+f_string_append_links:
   get_arg 0
-
-  check_type rax, STRING
-  check_type rbx, INTEGER
-
-  ; Запись длины списка
-  mov rcx, rax
-  string_length rax
-  xchg rax, rcx
-
-  ; Если индекс меньше нуля, то увеличить его на длину списка
-  mov rbx, [rbx + 8*1]
-  cmp rbx, 0
-  jge .positive_index
-    add rbx, rcx
-  .positive_index:
-
-  ; Проверка, входит ли индекс в список
-  cmp rbx, rcx
-  check_error jge, INDEX_OUT_OF_STRING_ERROR
-  cmp rbx, 0
-  check_error jl, INDEX_OUT_OF_STRING_ERROR
-
-  inc rbx
-  .while:
-    mov rax, [rax + 8*1]
-    dec rbx
-
-    cmp rbx, 0
-    jne .while
-
-  mov rcx, [rax + 8*3]
-  create_block STRING_HEADER*8
-
-  mem_mov [rax + 8*0], STRING
-  mem_mov [rax + 8*1], 0
-
-  mem_mov [rax + 8*2], 1
   mov rbx, rax
+  get_arg 1
+  mov rcx, rax
 
-  ; Размер блока — места под ссылки на предыдущий и предыдущий элементы + размер типа Целове число
-  create_block (2 + INTEGER_SIZE) * 8
-  mem_mov [rax + 8*0], rbx
+  check_type rbx, STRING
+  check_type rcx, STRING
 
-  mem_mov [rbx + 8*1], rax
-  mem_mov [rax + 8*1], 0
+  string_add_links rbx, rcx
+  mov rdx, [rax + 8*3]
 
-  mem_mov [rax + 8*2], INTEGER
-  mem_mov [rax + 8*3], rcx
+  mem_mov [rbx + 8*1], [rax + 8*1]
+  mem_mov [rbx + 8*2], [rax + 8*2]
+
+  delete_block [rbx + 8*3], rax
+  mov [rbx + 8*3], rdx
 
   mov rax, rbx
 
   ret
 
-f_string_set:
+f_string_append:
   get_arg 0
-  mov rdx, rax
-  get_arg 1
   mov rbx, rax
-  get_arg 2
+  get_arg 1
   mov rcx, rax
 
-  ; RBX — index
-  ; RCX — value
-  ; RDX — string
+  check_type rbx, STRING
 
-  check_type rbx, INTEGER
-  check_type rcx, STRING
-  check_type rdx, STRING
+  string_copy rcx
+  string_append_links rbx, rax
 
-  string_length rcx
-  cmp rax, 1
-  je .correct_value_length
+  ret
 
-    string "Значение для замены должно иметь содержать один символ"
-    print rax
-    exit -1
+f_string_get_link:
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
 
-  .correct_value_length:
+  check_type rbx, STRING
+  check_type rcx, INTEGER
 
-  mov rax, [rbx + INTEGER_HEADER*8]
-  cmp rax, 0
-  jge .positive_index
-    list_length rdx
-    integer rax
-    integer_add rbx, rax
-    mov rbx, rax
+  collection_get_link rbx, rcx
+  mov rbx, rax
 
-  .positive_index:
+  collection
+  mem_mov [rax + 8*0], STRING
 
-  mov rax, [rbx + INTEGER_HEADER*8]
+  mem_mov rcx, [rax + 8*1]
+  inc rcx
+  mem_mov [rax + 8*1], rcx
 
-  cmp rax, 0
-  jl .index_out_of_range
+  mem_mov rcx, [rax + 8*3]
+  mem_mov [rcx], rbx
 
-  mov r8, rax
-  string_length rdx
-  cmp r8, rax
-  jl .correct_index
+  ret
 
-  .index_out_of_range:
+f_string_get:
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
 
-    string "Индекс выходит за пределы списка"
-    print rax
-    exit -1
+  check_type rbx, STRING
+  check_type rcx, INTEGER
 
-  .correct_index:
+  string_get_link rbx, rcx
+  string_copy rax
 
-  mov rbx, [rbx + INTEGER_HEADER*8]
-  inc rbx
+  ret
 
-  mov r8, rdx
+f_string_set_link:
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
+  get_arg 2
+  mov rdx, rax
 
-  .while:
-    cmp rbx, 0
-    je .end_while
+  check_type rbx, STRING
+  mov rdx, [rdx + 8*3]
+  mov rdx, [rdx]
+  collection_set_link rbx, rcx, rdx
 
-    mov r8, [r8 + 8*1]
+  ret
 
-    dec rbx
-    jmp .while
+f_string_set:
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
+  get_arg 2
+  mov rdx, rax
 
-  .end_while:
+  check_type rbx, STRING
+  string_set_link rbx, rcx, rdx
 
-  mov rcx, [rcx + 8*1]
-  add rcx, (2 + INTEGER_HEADER) * 8
-
-  add r8, (2 + INTEGER_HEADER) * 8
-  mem_mov [r8], [rcx]
-
-  mov rax, rdx
   ret
 
 f_split:
-  get_arg 1
-  mov rbx, rax
   get_arg 0
-
-  check_type rax, STRING
-
-  push rax
-
-  mov rcx, rsp
-  push 0, rbx
-  mov rax, rsp
-  buffer_to_string rax
-  mov rsp, rcx
   mov rbx, rax
-
-  pop rcx
-  push rcx
-
-  string_length rcx
+  get_arg 1
   mov rcx, rax
 
-  integer 0
-  mov rdx, rax
-
-  mov r8, rsp
-  push 0
+  push 0, rcx
   mov rax, rsp
   buffer_to_string rax
-  mov rsp, r8
-  mov r8, rax
+  mov rcx, rax
+  pop rax, rax
 
   list
+  mov rdx, rax
+
+  integer 0
+  mov r8, rax
+
+  string_length rbx
+  integer rax
   mov r9, rax
 
-  pop rax
+  string ""
+  mov r10, rax
 
   .while:
-    cmp rcx, 0
+    is_equal r8, r9
+    cmp rax, 1
     je .end_while
 
-    push rax
-    string_get rax, rdx
-    mov r10, rax
+    string_get rbx, r8
+    mov r11, rax
 
-    is_equal rbx, rax
+    is_equal r11, rcx
     cmp rax, 1
-    jne .not_separator
-      list_append r9, r8
+    je .split
 
-      mov r8, rsp
-      push 0
-      mov rax, rsp
-      buffer_to_string rax
-      mov rsp, r8
-      mov r8, rax
+      string_append r10, r11
 
       jmp .continue
 
-    .not_separator:
-      string_append r8, r10
+    .split:
+      list_append rdx, r10
+
+      string ""
+      mov r10, rax
 
     .continue:
 
-    integer_inc rdx
-    dec rcx
-    pop rax
+    integer_inc r8
     jmp .while
 
   .end_while:
+  list_append rdx, r10
 
-  list_append r9, r8
+  mov rax, rdx
 
   ret
 
 f_join:
-  get_arg 1
-  mov rbx, rax
   get_arg 0
-  check_type rax, LIST
-
-  mov r15, rsp
-
+  mov rbx, rax
+  get_arg 1
   mov rcx, rax
-  push 0, rbx
+
+  push 0, rcx
   mov rax, rsp
   buffer_to_string rax
-  xchg rcx, rax
-  mov rbx, rcx
-
   mov rcx, rax
-  push 0
-  mov rax, rsp
-  buffer_to_string rax
-  xchg rcx, rax
+  pop rax, rax
 
-  mov rsp, r15
-
+  string ""
   mov rdx, rax
-  list_length rax
-  xchg rdx, rax
 
-  cmp rdx, 0
-  je .end_while
+  integer 0
+  mov r8, rax
 
-  mov rsi, rdx
-  inc rsi
+  list_length rbx
+  integer rax
+  mov r9, rax
+
   .while:
-    push rax
-    push rbx
 
-    mov rbx, rax
-    mov rax, rsi
-    sub rax, rdx
-
-    integer rax
-    integer_dec rax
-
-    list_get rbx, rax
-    check_type rax, STRING
-
-    string_append rcx, rax
-
-    pop rbx
-    pop rax
-
-    dec rdx
-
-    cmp rdx, 0
+    is_equal r8, r9
+    cmp rax, 1
     je .end_while
 
-    push rax
-    string_append rcx, rbx
-    pop rax
+    list_get rbx, r8
+    check_type rax, STRING
+    string_append rdx, rax
+
+    integer_inc r8
+
+    is_equal r8, r9
+    cmp rax, 1
+    je .end_while
+
+    string_append rdx, rcx
 
     jmp .while
+
   .end_while:
 
-  mov rax, rcx
+  mov rax, rdx
 
   ret
 
@@ -615,8 +586,9 @@ f_is_alpha:
 
     string_get rbx, rdx
 
-    mov rax, [rbx + 8*1]
-    mov rax, [rax + (2 + INTEGER_HEADER) * 8]
+    mov rax, [rbx + 8*3]
+    mov rax, [rax]
+    mov rax, [rax + INTEGER_HEADER*8]
 
     cmp rax, 65
     jl .check_lowercase
@@ -670,8 +642,9 @@ f_is_digit:
     je .end_while
 
     string_get rbx, rdx
-    mov rax, [rbx + 8*1]
-    mov rax, [rax + (2 + INTEGER_HEADER) * 8]
+    mov rax, [rbx + 8*3]
+    mov rax, [rax]
+    mov rax, [rax + INTEGER_HEADER*8]
 
     cmp rax, 48
     jl .return_false
@@ -691,4 +664,36 @@ f_is_digit:
   .return_false:
 
   mov rax, 0
+  ret
+
+f_string_to_list:
+  get_arg 0
+  mov rbx, rax
+
+  check_type rbx, STRING
+
+  list
+  mov rcx, rax
+
+  string_length rbx
+  integer rax
+  mov rdx, rax
+
+  integer 0
+  mov r8, rax
+
+  .while:
+    is_equal rdx, r8
+    cmp rax, 1
+    je .end_while
+
+    string_get rbx, r8
+    list_append rcx, rax
+
+    integer_inc r8
+    jmp .while
+
+  .end_while:
+
+  mov rax, rcx
   ret

@@ -42,7 +42,9 @@ dictionary_get rbx, rax
 print rax
 
 integer 99
-dictionary_get rbx, rax, rax
+mov rcx, rax
+integer -1
+dictionary_get rbx, rcx, rax
 print rax
 
 dictionary_keys rbx

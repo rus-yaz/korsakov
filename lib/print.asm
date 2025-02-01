@@ -1,52 +1,18 @@
 f_print_string:
   get_arg 0
-
-  check_type rax, STRING
   mov rbx, rax
 
-  string_length rbx
+  check_type rbx, STRING
+
+  string_to_binary rbx
   mov rcx, rax
 
-  push 0
+  binary_length rcx
 
-  .while:
-    cmp rcx, 0
-    je .end_while
+  mov rbx, rcx
+  add rbx, 8*2
 
-    mov rbx, [rbx + 8*1]
-
-    mov rax, rbx
-    add rax, 8*2
-
-    check_type rax, INTEGER
-    mov rdx, [rax + INTEGER_HEADER*8] ; Символ
-
-    bswap rdx
-
-    .byte_while:
-      cmp rdx, 0
-      je .byte_end_while
-
-      movzx r8, dl
-      shr rdx, 8
-
-      cmp r8, 0
-      je .byte_while
-
-      mov [rsp], r8
-      mov r8, rsp
-      sys_print r8,\ ; Указатель на строку
-                1    ; Длина строки
-
-      jmp .byte_while
-    .byte_end_while:
-
-    dec rcx
-    jmp .while
-
-  .end_while:
-
-  pop rax
+  sys_print rbx, rax
 
   ret
 
@@ -68,7 +34,7 @@ f_print:
 
     .string:
 
-    list_append rcx, rax
+    list_append_link rcx, rax
 
     inc rbx
     jmp .while
@@ -86,7 +52,6 @@ f_print:
   .not_default_separator:
 
   join rcx, rax
-  delete rcx
   mov rcx, rax
 
   inc rbx

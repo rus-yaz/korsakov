@@ -120,68 +120,22 @@ f_read_file:
   ret
 
 f_write_file:
-  get_arg 1
-  mov rbx, rax
   get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
 
-  check_type rax, FILE
+  check_type rbx, FILE
+  check_type rcx, STRING
 
-  ; Сохранение файлового дескриптора
-  mov rax, [rax + 8*2]
-  mov r15, rax
+  string_to_binary rcx
+  mov rdx, rax
 
-  check_type rbx, STRING
-  mov rsi, rbx
+  binary_length rdx
 
-  ; Нахождение длины строки (RDI)
-  mov rdi, rax
-  string_length rbx
+  mov rcx, rdx
+  add rcx, 8*2
 
-  xchg rdi, rax
-  dec rdi
-
-  mov rdx, 0 ; Счётчик считанных байт
-  .while1:
-
-    cmp rdi, 0
-    jl .end1
-
-    integer rdi
-    string_get rsi, rax
-
-    mov rax, [rax + 8*1]
-    mov rbx, [rax + (2 + INTEGER_HEADER) * 8]
-    mov rcx, 0
-
-    .while2:
-
-      cmp rcx, 4
-      je .end2
-
-      cmp rbx, 0
-      je .end2
-
-      dec rsp
-      mov [rsp], bl
-      shr rbx, 8
-
-      inc rcx
-      jmp .while2
-
-    .end2:
-
-    add rdx, rcx
-
-    dec rdi
-    jmp .while1
-
-  .end1:
-
-  mov rcx, rsp
-  mov rbx, rdx
-
-  sys_write r15, rcx, rbx
-
-  add rsp, rbx
+  sys_write [rbx + 8*2], rcx, rax
 
   ret

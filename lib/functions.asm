@@ -1,159 +1,156 @@
 f_is_equal:
-  get_arg 1
-  mov rbx, rax
   get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
 
-  ; Сохранение типов
-  mov rcx, [rax]
   mov rdx, [rbx]
-
-  ; Сравнение типов
-  cmp rcx, rdx
+  mov rax, [rcx]
+  cmp rdx, rax
   jne .return_false
 
-  cmp rcx, NULL
+  cmp rdx, NULL
   je .return_true
 
-  cmp rcx, INTEGER
+  mov rdx, INTEGER
+  cmp rax, rdx
   jne .not_integer
-    mov rax, [rax + INTEGER_HEADER*8]
     mov rbx, [rbx + INTEGER_HEADER*8]
+    mov rcx, [rcx + INTEGER_HEADER*8]
 
-    cmp rax, rbx
-    jne .return_false
+    cmp rbx, rcx
+    je .return_true
 
-    jmp .return_true
+    jmp .return_false
 
   .not_integer:
 
-  cmp rcx, BOOLEAN
+  mov rdx, BOOLEAN
+  cmp rax, rdx
   jne .not_boolean
-    mov rax, [rax + BOOLEAN_HEADER*8]
     mov rbx, [rbx + BOOLEAN_HEADER*8]
+    mov rcx, [rcx + BOOLEAN_HEADER*8]
 
-    cmp rax, rbx
-    jne .return_false
+    cmp rbx, rcx
+    je .return_true
 
-    jmp .return_true
+    jmp .return_false
 
   .not_boolean:
 
-  cmp rcx, LIST
+  mov rdx, LIST
+  cmp rax, rdx
   jne .not_list
-
-    push rax
-
-    list_length rax
-    mov rcx, rax
 
     list_length rbx
     mov rdx, rax
-
-    pop rax
-
-    ; Сравнение длин списков
-    cmp rcx, rdx
+    list_length rcx
+    cmp rax, rdx
     jne .return_false
 
-    mov rdi, rcx
+    integer rdx
+    mov rdx, rax
+
+    integer 0
+    mov r8, rax
+
     .list_while:
-      cmp rdi, 0
-      je .return_true
+      is_equal r8, rdx
+      cmp rax, 1
+      je .list_end_while
 
-      mov rax, [rax + 8*1]
-      mov rbx, [rbx + 8*1]
+      list_get_link rbx, r8
+      mov r9, rax
+      list_get_link rcx, r8
+      mov r10, rax
 
-      mov rcx, rax
-      mov rdx, rbx
-
-      add rcx, 8*2
-      add rdx, 8*2
-
-      mov r8, rax
-      is_equal rcx, rdx
-      xchg r8, rax
+      is_equal r9, r10
       cmp rax, 1
       jne .return_false
 
-      dec rdi
+      integer_inc r8
       jmp .list_while
+
+    .list_end_while:
+
+    jmp .return_true
 
   .not_list:
 
-  cmp rcx, STRING
+  mov rdx, STRING
+  cmp rax, rdx
   jne .not_string
-    push rax
-
-    ; Сравнение длин строк
-    string_length rax
-    mov rcx, rax
 
     string_length rbx
     mov rdx, rax
-
-    pop rax
-
-    cmp rcx, rdx
+    string_length rcx
+    cmp rax, rdx
     jne .return_false
 
-    mov rdi, rcx
+    integer rdx
+    mov rdx, rax
+
+    integer 0
+    mov r8, rax
+
     .string_while:
+      is_equal r8, rdx
+      cmp rax, 1
+      je .string_end_while
 
-      cmp rdi, 0
-      je .return_true
+      string_get_link rbx, r8
+      mov rax, [rax + 8*3]
+      mov r9, [rax]
 
-      mov rax, [rax + 8*1]
-      mov rcx, [rax + (2 + INTEGER_HEADER) * 8]
+      string_get_link rcx, r8
+      mov rax, [rax + 8*3]
+      mov r10, [rax]
 
-      mov rbx, [rbx + 8*1]
-      mov rdx, [rbx + (2 + INTEGER_HEADER) * 8]
-
-      cmp rcx, rdx
+      is_equal r9, r10
+      cmp rax, 1
       jne .return_false
 
-      dec rdi
+      integer_inc r8
       jmp .string_while
+
+    .string_end_while:
+
+    jmp .return_true
 
   .not_string:
 
-  cmp rcx, DICTIONARY
+  mov rdx, DICTIONARY
+  cmp rax, rdx
   jne .not_dictionary
-    mov rcx, rax
 
     dictionary_items rbx
     mov rdx, rax
     dictionary_items rcx
-
-
-    mov r8, rax
-    is_equal rax, rdx
-    xchg r8, rax
-    cmp rax, 1
-
-    jne .return_false
-    jmp .return_true
+    is_equal rdx, rax
+    ret
 
   .not_dictionary:
 
   ; Выход с ошибкой при неизвестном типе
-
   string "is_equal: Ожидался тип"
-  mov rcx, rax
+  mov r8, rax
 
   list
-  mov rbx, rax
+  mov rdx, rax
 
   type_to_string INTEGER
-  list_append rbx, rax
+  list_append rdx, rax
+  type_to_string BOOLEAN
+  list_append rdx, rax
   type_to_string STRING
-  list_append rbx, rax
+  list_append rdx, rax
   type_to_string LIST
-  list_append rbx, rax
+  list_append rdx, rax
   type_to_string DICTIONARY
-  list_append rbx, rax
+  list_append rdx, rax
   join rax, ", "
 
-  print <rcx, rax>
+  print <r8, rax, rbx, rcx>
   exit -1
 
   .return_true:
@@ -242,6 +239,12 @@ f_copy:
     boolean_copy rax
     ret
   .not_boolean:
+
+  cmp rbx, COLLECTION
+  jne .not_collection
+    collection_copy rax
+    ret
+  .not_collection:
 
   cmp rbx, LIST
   jne .not_list

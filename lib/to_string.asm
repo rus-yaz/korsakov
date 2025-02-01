@@ -67,7 +67,6 @@ f_to_string:
       string "Истина"
       ret
     .false:
-
     string "Ложь"
     ret
 
@@ -77,49 +76,39 @@ f_to_string:
   jne .not_list
     mov rbx, rax
 
+    list_length rbx
+    integer rax
     mov rcx, rax
-    integer 0
-    xchg rcx, rax
 
+    integer 0
     mov rdx, rax
-    list_length rax
-    xchg rdx, rax
 
     list
+    mov r8, rax
 
     .list_while:
-      cmp rdx, 0
+      is_equal rdx, rcx
+      cmp rax, 1
       je .list_end_while
 
-      push rbx, rax
-
-      list_get rbx, rcx
+      list_get_link rbx, rdx
       to_string rax
+      list_append_link r8, rax
 
-      mov rbx, rax
-      pop rax
-
-      list_append rax, rbx
-      pop rbx
-
-      push rax
-      integer_inc rcx
-      dec rdx
-      pop rax
-
+      integer_inc rdx
       jmp .list_while
 
     .list_end_while:
 
-    join rax
-
+    join r8
     mov rbx, rax
 
     string "%("
-    string_add rax, rbx
+    string_append_links rax, rbx
     mov rbx, rax
+
     string ")"
-    string_add rbx, rax
+    string_append_links rbx, rax
 
     ret
 
@@ -141,69 +130,67 @@ f_to_string:
 
   cmp rbx, DICTIONARY
   jne .not_dictionary
-    push rax
     dictionary_items rax
     mov rbx, rax
 
-    pop rax
-    dictionary_length rax
-    mov rcx, rax
-
-    cmp rcx, 0
+    list_length rbx
+    cmp rax, 0
     jne .not_empty
-
       string "%(:)"
       ret
 
     .not_empty:
 
+    integer rax
+    mov rcx, rax
+
     integer 0
     mov rdx, rax
 
     list
+    mov r10, rax
 
     .dictionary_while:
-      cmp rcx, 0
-      je .end_dictionary_while
 
-      push rbx, rax
+      is_equal rdx, rcx
+      cmp rax, 1
+      je .dictionary_end_while
 
-      list_get rbx, rdx
-      mov rbx, rax
-
-      list
+      string ""
       mov r8, rax
+
+      list_get_link rbx, rdx
+      mov r9, rax
+
       integer 0
-      list_get rbx, rax
+      list_get_link r9, rax
       to_string rax
-      list_append r8, rax
+      string_append_links r8, rax
+
+      string ": "
+      string_append_links r8, rax
+
       integer 1
-      list_get rbx, rax
+      list_get_link r9, rax
       to_string rax
-      list_append r8, rax
+      string_append_links r8, rax
 
-      join rax, ": "
-      mov rbx, rax
+      list_append_link r10, r8
 
-      pop rax
-      list_append rax, rbx
-      pop rbx
-
-      push rax
       integer_inc rdx
-      dec rcx
-      pop rax
       jmp .dictionary_while
 
-    .end_dictionary_while:
-    join rax
+    .dictionary_end_while:
+
+    join r10
     mov rbx, rax
 
     string "%("
-    string_append rax, rbx
+    string_append_links rax, rbx
     mov rbx, rax
+
     string ")"
-    string_append rbx, rax
+    string_append_links rbx, rax
 
     ret
 

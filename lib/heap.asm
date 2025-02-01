@@ -74,6 +74,8 @@ f_delete_block:
     mem_mov [rax + 8*2], 0
     mem_mov [rax + 8*3], 0
 
+    mov [LAST_USED_HEAP_BLOCK], r8
+
   .skip_current_and_next_blocks_merging:
 
   ; Нахождение предыдущего блока

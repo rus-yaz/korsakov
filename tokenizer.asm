@@ -100,6 +100,7 @@ f_tokenizer:
       .end_while_identifier:
 
       list_include [ключевые_слова], [токен]
+      mov rax, [rax + BOOLEAN_HEADER*8]
       cmp rax, 1
       je .keyword
         integer_copy [ТИП_ИДЕНТИФИКАТОР]
