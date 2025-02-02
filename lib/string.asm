@@ -359,7 +359,7 @@ f_string_add:
 
   ret
 
-f_string_append_links:
+f_string_extend_links:
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -381,7 +381,7 @@ f_string_append_links:
 
   ret
 
-f_string_append:
+f_string_extend:
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -390,7 +390,7 @@ f_string_append:
   check_type rbx, STRING
 
   string_copy rcx
-  string_append_links rbx, rax
+  string_extend_links rbx, rax
 
   ret
 
@@ -497,7 +497,7 @@ f_split:
     cmp rax, 1
     je .split
 
-      string_append r10, r11
+      string_extend r10, r11
 
       jmp .continue
 
@@ -519,7 +519,7 @@ f_split:
 
   ret
 
-f_join:
+f_join_links:
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -549,7 +549,7 @@ f_join:
 
     list_get rbx, r8
     check_type rax, STRING
-    string_append rdx, rax
+    string_extend_links rdx, rax
 
     integer_inc r8
 
@@ -557,13 +557,24 @@ f_join:
     cmp rax, 1
     je .end_while
 
-    string_append rdx, rcx
+    string_extend_links rdx, rcx
 
     jmp .while
 
   .end_while:
 
   mov rax, rdx
+
+  ret
+
+f_join:
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
+
+  join_links rbx, rcx
+  string_copy rax
 
   ret
 
@@ -696,4 +707,33 @@ f_string_to_list:
   .end_while:
 
   mov rax, rcx
+  ret
+
+f_string_pop_link:
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
+
+  mem_mov [rbx], LIST
+  list_pop_link rbx, rcx
+
+  mov rdx, rax
+  mem_mov [rbx], STRING
+
+  list
+  list_append_link rax, rdx
+  mem_mov [rax], STRING
+
+  ret
+
+f_string_pop:
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
+
+  string_pop_link rbx, rcx
+  string_copy rax
+
   ret

@@ -100,15 +100,15 @@ f_to_string:
 
     .list_end_while:
 
-    join r8
+    join_links r8
     mov rbx, rax
 
     string "%("
-    string_append_links rax, rbx
+    string_extend_links rax, rbx
     mov rbx, rax
 
     string ")"
-    string_append_links rbx, rax
+    string_extend_links rbx, rax
 
     ret
 
@@ -122,7 +122,7 @@ f_to_string:
     mov rcx, rax
 
     string_add rcx, rbx
-    string_add rax, rcx
+    string_extend_links rax, rcx
 
     ret
 
@@ -165,15 +165,15 @@ f_to_string:
       integer 0
       list_get_link r9, rax
       to_string rax
-      string_append_links r8, rax
+      string_extend_links r8, rax
 
       string ": "
-      string_append_links r8, rax
+      string_extend_links r8, rax
 
       integer 1
       list_get_link r9, rax
       to_string rax
-      string_append_links r8, rax
+      string_extend_links r8, rax
 
       list_append_link r10, r8
 
@@ -182,15 +182,15 @@ f_to_string:
 
     .dictionary_end_while:
 
-    join r10
+    join_links r10
     mov rbx, rax
 
     string "%("
-    string_append_links rax, rbx
+    string_extend_links rax, rbx
     mov rbx, rax
 
     string ")"
-    string_append_links rbx, rax
+    string_extend_links rbx, rax
 
     ret
 

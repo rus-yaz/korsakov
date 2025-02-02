@@ -586,6 +586,22 @@ macro collection_append collection*, item* {
   return
 }
 
+macro collection_expand_links collection_1*, collection_2* {
+  enter collection_1, collection_2
+
+  call f_collection_expand_links
+
+  return
+}
+
+macro collection_expand collection_1*, collection_2* {
+  enter collection_1, collection_2
+
+  call f_collection_expand
+
+  return
+}
+
 macro collection_get_link collection*, index* {
   enter collection, index
 
@@ -748,6 +764,22 @@ macro list_append list*, item* {
   return
 }
 
+macro list_extend_links list_1*, list_2* {
+  enter list_1, list_2
+
+  call f_list_extend_links
+
+  return
+}
+
+macro list_extend list_1*, list_2* {
+  enter list_1, list_2
+
+  call f_list_extend
+
+  return
+}
+
 macro list_get_link list*, index* {
   enter list, index
 
@@ -856,14 +888,6 @@ macro null {
 
 section "print" executable
 
-macro print_string string* {
-  enter string
-
-  call f_print_string
-
-  leave
-}
-
 macro print arguments*, separator = 0, end_of_string = 0 {
   enter arguments, 0, separator, end_of_string
 
@@ -962,18 +986,18 @@ macro string_add string_1*, string_2* {
   return
 }
 
-macro string_append_links string_1*, string_2* {
+macro string_extend_links string_1*, string_2* {
   enter string_1, string_2
 
-  call f_string_append_links
+  call f_string_extend_links
 
   return
 }
 
-macro string_append string_1*, string_2* {
+macro string_extend string_1*, string_2* {
   enter string_1, string_2
 
-  call f_string_append
+  call f_string_extend
 
   return
 }
@@ -1018,6 +1042,14 @@ macro split string*, separator = " " {
   return
 }
 
+macro join_links list*, separator = " " {
+  enter list, separator
+
+  call f_join_links
+
+  return
+}
+
 macro join list*, separator = " " {
   enter list, separator
 
@@ -1046,6 +1078,22 @@ macro string_to_list string* {
   enter string
 
   call f_string_to_list
+
+  return
+}
+
+macro string_pop_link string*, integer = 0 {
+  enter string, integer
+
+  call f_string_pop_link
+
+  return
+}
+
+macro string_pop string*, integer = 0 {
+  enter string, integer
+
+  call f_string_pop
 
   return
 }

@@ -172,11 +172,11 @@ f_access_node:
   dictionary
   mov rbx, rax
 
-  dictionary_set rbx, [узел], [УЗЕЛ_ДОСТУПА_К_ПЕРЕМЕННОЙ]
+  dictionary_set_link rbx, [узел], [УЗЕЛ_ДОСТУПА_К_ПЕРЕМЕННОЙ]
   get_arg 0
-  dictionary_set rbx, [переменная], rax
+  dictionary_set_link rbx, [переменная], rax
   get_arg 1
-  dictionary_set rbx, [ключи], rax
+  dictionary_set_link rbx, [ключи], rax
 
   ret
 
@@ -184,13 +184,13 @@ f_assign_node:
   dictionary
   mov rbx, rax
 
-  dictionary_set rbx, [узел], [УЗЕЛ_ПРИСВАИВАНИЯ_ПЕРЕМЕННОЙ]
+  dictionary_set_link rbx, [узел], [УЗЕЛ_ПРИСВАИВАНИЯ_ПЕРЕМЕННОЙ]
   get_arg 0
-  dictionary_set rbx, [переменная], rax
+  dictionary_set_link rbx, [переменная], rax
   get_arg 1
-  dictionary_set rbx, [ключи], rax
+  dictionary_set_link rbx, [ключи], rax
   get_arg 2
-  dictionary_set rbx, [значение], rax
+  dictionary_set_link rbx, [значение], rax
 
   ret
 
@@ -198,13 +198,13 @@ f_binary_operation_node:
   dictionary
   mov rbx, rax
 
-  dictionary_set rbx, [узел], [УЗЕЛ_БИНАРНОЙ_ОПЕРАЦИИ]
+  dictionary_set_link rbx, [узел], [УЗЕЛ_БИНАРНОЙ_ОПЕРАЦИИ]
   get_arg 0
-  dictionary_set rbx, [левый_узел], rax
+  dictionary_set_link rbx, [левый_узел], rax
   get_arg 1
-  dictionary_set rbx, [оператор], rax
+  dictionary_set_link rbx, [оператор], rax
   get_arg 2
-  dictionary_set rbx, [правый_узел], rax
+  dictionary_set_link rbx, [правый_узел], rax
 
   ret
 
@@ -212,9 +212,9 @@ f_list_node:
   dictionary
   mov rbx, rax
 
-  dictionary_set rbx, [узел], [УЗЕЛ_СПИСКА]
+  dictionary_set_link rbx, [узел], [УЗЕЛ_СПИСКА]
   get_arg 0
-  dictionary_set rbx, [элементы], rax
+  dictionary_set_link rbx, [элементы], rax
 
   ret
 
@@ -222,9 +222,9 @@ f_number_node:
   dictionary
   mov rbx, rax
 
-  dictionary_set rbx, [узел], [УЗЕЛ_ЧИСЛА]
+  dictionary_set_link rbx, [узел], [УЗЕЛ_ЧИСЛА]
   get_arg 0
-  dictionary_set rbx, [значение], rax
+  dictionary_set_link rbx, [значение], rax
 
   ret
 
@@ -232,9 +232,9 @@ f_string_node:
   dictionary
   mov rbx, rax
 
-  dictionary_set rbx, [узел], [УЗЕЛ_СТРОКИ]
+  dictionary_set_link rbx, [узел], [УЗЕЛ_СТРОКИ]
   get_arg 0
-  dictionary_set rbx, [значение], rax
+  dictionary_set_link rbx, [значение], rax
 
   ret
 
@@ -242,11 +242,11 @@ f_call_node:
   dictionary
   mov rbx, rax
 
-  dictionary_set rbx, [узел], [УЗЕЛ_ВЫЗОВА]
+  dictionary_set_link rbx, [узел], [УЗЕЛ_ВЫЗОВА]
   get_arg 0
-  dictionary_set rbx, [переменная], rax
+  dictionary_set_link rbx, [переменная], rax
   get_arg 1
-  dictionary_set rbx, [аргументы], rax
+  dictionary_set_link rbx, [аргументы], rax
 
   ret
 
@@ -254,11 +254,11 @@ f_unary_operation_node:
   dictionary
   mov rbx, rax
 
-  dictionary_set rbx, [узел], [УЗЕЛ_УНАРНОЙ_ОПЕРАЦИИ]
+  dictionary_set_link rbx, [узел], [УЗЕЛ_УНАРНОЙ_ОПЕРАЦИИ]
   get_arg 0
-  dictionary_set rbx, [оператор], rax
+  dictionary_set_link rbx, [оператор], rax
   get_arg 1
-  dictionary_set rbx, [операнд], rax
+  dictionary_set_link rbx, [операнд], rax
 
   ret
 
@@ -266,9 +266,9 @@ f_dictionary_node:
   dictionary
   mov rbx, rax
 
-  dictionary_set rbx, [узел], [УЗЕЛ_СЛОВАРЯ]
+  dictionary_set_link rbx, [узел], [УЗЕЛ_СЛОВАРЯ]
   get_arg 0
-  dictionary_set rbx, [элементы], rax
+  dictionary_set_link rbx, [элементы], rax
 
   ret
 
@@ -276,11 +276,11 @@ f_check_node:
   dictionary
   mov rbx, rax
 
-  dictionary_set rbx, [узел], [УЗЕЛ_ПРОВЕРКИ]
+  dictionary_set_link rbx, [узел], [УЗЕЛ_ПРОВЕРКИ]
   get_arg 0
-  dictionary_set rbx, [случаи], rax
+  dictionary_set_link rbx, [случаи], rax
   get_arg 1
-  dictionary_set rbx, [случай_иначе], rax
+  dictionary_set_link rbx, [случай_иначе], rax
 
   ret
 
@@ -288,11 +288,11 @@ f_if_node:
   dictionary
   mov rbx, rax
 
-  dictionary_set rbx, [узел], [УЗЕЛ_ЕСЛИ]
+  dictionary_set_link rbx, [узел], [УЗЕЛ_ЕСЛИ]
   get_arg 0
-  dictionary_set rbx, [случаи], rax
+  dictionary_set_link rbx, [случаи], rax
   get_arg 1
-  dictionary_set rbx, [случай_иначе], rax
+  dictionary_set_link rbx, [случай_иначе], rax
 
   ret
 
@@ -300,19 +300,19 @@ f_for_node:
   dictionary
   mov rbx, rax
 
-  dictionary_set rbx, [узел], [УЗЕЛ_ДЛЯ]
+  dictionary_set_link rbx, [узел], [УЗЕЛ_ДЛЯ]
   get_arg 0
-  dictionary_set rbx, [переменная], rax
+  dictionary_set_link rbx, [переменная], rax
   get_arg 1
-  dictionary_set rbx, [начало], rax
+  dictionary_set_link rbx, [начало], rax
   get_arg 2
-  dictionary_set rbx, [конец], rax
+  dictionary_set_link rbx, [конец], rax
   get_arg 3
-  dictionary_set rbx, [шаг], rax
+  dictionary_set_link rbx, [шаг], rax
   get_arg 4
-  dictionary_set rbx, [тело], rax
+  dictionary_set_link rbx, [тело], rax
   get_arg 5
-  dictionary_set rbx, [случай_иначе], rax
+  dictionary_set_link rbx, [случай_иначе], rax
 
   ret
 
@@ -320,13 +320,13 @@ f_while_node:
   dictionary
   mov rbx, rax
 
-  dictionary_set rbx, [узел], [УЗЕЛ_ПОКА]
+  dictionary_set_link rbx, [узел], [УЗЕЛ_ПОКА]
   get_arg 0
-  dictionary_set rbx, [условие], rax
+  dictionary_set_link rbx, [условие], rax
   get_arg 1
-  dictionary_set rbx, [тело], rax
+  dictionary_set_link rbx, [тело], rax
   get_arg 2
-  dictionary_set rbx, [случай_иначе], rax
+  dictionary_set_link rbx, [случай_иначе], rax
 
   ret
 
@@ -359,13 +359,13 @@ f_method_node:
   .skip_object_name_default:
 
   dictionary
-  dictionary_set rbx, [узел], [УЗЕЛ_МЕТОДА]
-  dictionary_set rbx, [переменная], r10
-  dictionary_set rbx, [аргументы], rbx
-  dictionary_set rbx, [тело], rcx
-  dictionary_set rbx, [автовозвращение], rdx ; Уточнить название
-  dictionary_set rbx, [имя_класса], r8
-  dictionary_set rbx, [имя_объекта], r9
+  dictionary_set_link rbx, [узел], [УЗЕЛ_МЕТОДА]
+  dictionary_set_link rbx, [переменная], r10
+  dictionary_set_link rbx, [аргументы], rbx
+  dictionary_set_link rbx, [тело], rcx
+  dictionary_set_link rbx, [автовозвращение], rdx ; Уточнить название
+  dictionary_set_link rbx, [имя_класса], r8
+  dictionary_set_link rbx, [имя_объекта], r9
 
   ret
 
@@ -373,15 +373,15 @@ f_function_node:
   dictionary
   mov rbx, rax
 
-  dictionary_set rbx, [узел], [УЗЕЛ_ФУНКЦИИ]
+  dictionary_set_link rbx, [узел], [УЗЕЛ_ФУНКЦИИ]
   get_arg 0
-  dictionary_set rbx, [переменная], rax
+  dictionary_set_link rbx, [переменная], rax
   get_arg 1
-  dictionary_set rbx, [аргументы], rax
+  dictionary_set_link rbx, [аргументы], rax
   get_arg 2
-  dictionary_set rbx, [тело], rax
+  dictionary_set_link rbx, [тело], rax
   get_arg 3
-  dictionary_set rbx, [автовозвращение], rax ; Уточнить название
+  dictionary_set_link rbx, [автовозвращение], rax ; Уточнить название
 
   ret
 
@@ -389,13 +389,13 @@ f_class_node:
   dictionary
   mov rbx, rax
 
-  dictionary_set rbx, [узел], [УЗЕЛ_КЛАССА]
+  dictionary_set_link rbx, [узел], [УЗЕЛ_КЛАССА]
   get_arg 0
-  dictionary_set rbx, [переменная], rax
+  dictionary_set_link rbx, [переменная], rax
   get_arg 1
-  dictionary_set rbx, [тело], rax
+  dictionary_set_link rbx, [тело], rax
   get_arg 2
-  dictionary_set rbx, [родители], rax
+  dictionary_set_link rbx, [родители], rax
 
   ret
 
@@ -403,9 +403,9 @@ f_delete_node:
   dictionary
   mov rbx, rax
 
-  dictionary_set rbx, [узел], [УЗЕЛ_УДАЛЕНИЯ]
+  dictionary_set_link rbx, [узел], [УЗЕЛ_УДАЛЕНИЯ]
   get_arg 0
-  dictionary_set rbx, [переменная], rax
+  dictionary_set_link rbx, [переменная], rax
 
   ret
 
@@ -413,9 +413,9 @@ f_include_node:
   dictionary
   mov rbx, rax
 
-  dictionary_set rbx, [узел], [УЗЕЛ_ВКЛЮЧЕНИЯ]
+  dictionary_set_link rbx, [узел], [УЗЕЛ_ВКЛЮЧЕНИЯ]
   get_arg 0
-  dictionary_set rbx, [путь], rax
+  dictionary_set_link rbx, [путь], rax
 
   ret
 
@@ -423,20 +423,20 @@ f_return_node:
   dictionary
   mov rbx, rax
 
-  dictionary_set rbx, [узел], [УЗЕЛ_УДАЛЕНИЯ]
+  dictionary_set_link rbx, [узел], [УЗЕЛ_УДАЛЕНИЯ]
   get_arg 0
-  dictionary_set rbx, [значение], rax
+  dictionary_set_link rbx, [значение], rax
 
   ret
 
 f_skip_node:
   dictionary
-  dictionary_set rax, [узел], [УЗЕЛ_ПРОПУСКА]
+  dictionary_set_link rax, [узел], [УЗЕЛ_ПРОПУСКА]
 
   ret
 
 f_break_node:
   dictionary
-  dictionary_set rax, [узел], [УЗЕЛ_ПРЕРЫВАНИЯ]
+  dictionary_set_link rax, [узел], [УЗЕЛ_ПРЕРЫВАНИЯ]
 
   ret

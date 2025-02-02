@@ -123,9 +123,9 @@ f_is_equal:
   cmp rax, rdx
   jne .not_dictionary
 
-    dictionary_items rbx
+    dictionary_items_links rbx
     mov rdx, rax
-    dictionary_items rcx
+    dictionary_items_links rcx
     is_equal rdx, rax
     ret
 

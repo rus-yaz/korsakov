@@ -1,0 +1,13 @@
+#!/bin/sh
+
+LAST_COMMIT=$(git rev-parse --short HEAD)
+COMMIT_MESSAGE=$(git log -1 --pretty=%s)
+VERSION=$(echo "$COMMIT_MESSAGE" | sed -n 's/^\(.*\):.*$/\1/p')
+
+if [ -z "$VERSION" ]; then
+    VERSION=$(echo "$COMMIT_MESSAGE" | sed -n 's/^\(.*\)$/\1/p' | head -n 1)
+fi
+if [ -n "$VERSION" ]; then
+    git tag --delete "$VERSION"
+    git tag -a "$VERSION" -m "$COMMIT_MESSAGE"
+fi

@@ -100,7 +100,7 @@ f_multiplication:
         cmp r9, 0
         je .string_end_while
 
-        string_append rax, rcx
+        string_extend rax, rcx
 
         dec r9
         jmp .string_while

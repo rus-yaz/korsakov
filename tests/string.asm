@@ -17,7 +17,7 @@ print <rax, [string.символ]>
 string_add [string.строка], [string.символ]
 print rax
 
-string_append [string.строка], [string.символ]
+string_extend [string.строка], [string.символ]
 print [string.строка]
 
 list

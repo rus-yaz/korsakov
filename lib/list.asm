@@ -48,6 +48,33 @@ f_list_append:
 
   ret
 
+f_list_extend_links:
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
+
+  check_type rbx, LIST
+  check_type rcx, LIST
+
+  collection_expand_links rbx, rcx
+
+  ret
+
+f_list_extend:
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
+
+  check_type rbx, LIST
+  check_type rcx, LIST
+
+  copy rcx
+  list_extend_links rbx, rax
+
+  ret
+
 f_list_get_link:
   get_arg 0
   mov rbx, rax

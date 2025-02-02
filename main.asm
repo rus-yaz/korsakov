@@ -84,7 +84,6 @@ section "data" writable
   код            rq 1
   типы           rq 1
   токен          rq 1
-  данные         rq 1
   индекс         rq 1
   токены         rq 1
   символы        rq 1
@@ -112,7 +111,8 @@ section "data" writable
   ТИП_УМНОЖЕНИЕ                 rq 1
   ТИП_ДЕЛЕНИЕ                   rq 1
   ТИП_ВОЗВЕДЕНИЕ_В_СТЕПЕНЬ      rq 1
-  ТИП_ИЗЪЯТИЕ_КОРНЯ             rq 1
+  ТИП_ЦЕЛОЧИСЛЕННОЕ_ДЕЛЕНИЕ     rq 1
+  ТИП_ИЗВЛЕЧЕНИЕ_КОРНЯ          rq 1
   ТИП_ОБРАТНАЯ_КОСАЯ_ЧЕРТА      rq 1
   ТИП_ПРОБЕЛ                    rq 1
   ТИП_РАВНО                     rq 1
@@ -225,28 +225,30 @@ start:
   integer 20
   mov [ТИП_ВОЗВЕДЕНИЕ_В_СТЕПЕНЬ], rax
   integer 21
-  mov [ТИП_ИЗЪЯТИЕ_КОРНЯ], rax
+  mov [ТИП_ЦЕЛОЧИСЛЕННОЕ_ДЕЛЕНИЕ], rax
   integer 22
-  mov [ТИП_ОБРАТНАЯ_КОСАЯ_ЧЕРТА], rax
+  mov [ТИП_ИЗВЛЕЧЕНИЕ_КОРНЯ], rax
   integer 23
-  mov [ТИП_ПРОБЕЛ], rax
+  mov [ТИП_ОБРАТНАЯ_КОСАЯ_ЧЕРТА], rax
   integer 24
-  mov [ТИП_РАВНО], rax
+  mov [ТИП_ПРОБЕЛ], rax
   integer 25
-  mov [ТИП_НЕ_РАВНО], rax
+  mov [ТИП_РАВНО], rax
   integer 26
-  mov [ТИП_БОЛЬШЕ], rax
+  mov [ТИП_НЕ_РАВНО], rax
   integer 27
-  mov [ТИП_МЕНЬШЕ], rax
+  mov [ТИП_БОЛЬШЕ], rax
   integer 28
-  mov [ТИП_БОЛЬШЕ_ИЛИ_РАВНО], rax
+  mov [ТИП_МЕНЬШЕ], rax
   integer 29
-  mov [ТИП_МЕНЬШЕ_ИЛИ_РАВНО], rax
+  mov [ТИП_БОЛЬШЕ_ИЛИ_РАВНО], rax
   integer 30
-  mov [ТИП_ИНКРЕМЕНТАЦИЯ], rax
+  mov [ТИП_МЕНЬШЕ_ИЛИ_РАВНО], rax
   integer 31
-  mov [ТИП_ДЕКРЕМЕНТАЦИЯ], rax
+  mov [ТИП_ИНКРЕМЕНТАЦИЯ], rax
   integer 32
+  mov [ТИП_ДЕКРЕМЕНТАЦИЯ], rax
+  integer 33
   mov [ТИП_КОНЕЦ_КОНСТРУКЦИИ], rax
 
   list
@@ -467,7 +469,7 @@ start:
 
   tokenizer файл_для_чтения
   mov [токены], rax
-  print [токены]
+  ;print [токены]
 
   ;string ""
   ;print rax
@@ -487,12 +489,12 @@ start:
   mov rcx, rax
 
   string <"section 'start' executable", 10, "start:", 10>
-  string_append rcx, rax
+  string_extend rcx, rax
 
-  string_append rcx, rbx
+  string_extend rcx, rbx
 
   string "exit 0"
-  string_append rcx, rax
+  string_extend rcx, rax
 
   open_file файл_для_записи, O_WRONLY + O_CREAT + O_TRUNC, 644o
   write_file rax, rcx

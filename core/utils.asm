@@ -41,14 +41,12 @@ f_print_buffer:
   ret
 
 f_mem_copy:
-  get_arg 2
-  mov rcx, rax ; Количество блоков
-
-  get_arg 1
-  mov rdi, rax ; Место назначения
-
   get_arg 0
   mov rsi, rax ; Источник
+  get_arg 1
+  mov rdi, rax ; Место назначения
+  get_arg 2
+  mov rcx, rax ; Количество блоков
 
   rep movsq
 

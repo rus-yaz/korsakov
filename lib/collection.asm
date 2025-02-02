@@ -591,3 +591,50 @@ f_collection_add:
   delete_block [rcx + 8*3], rcx
 
   ret
+
+f_collection_expand_links:
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
+
+  is_collection rbx
+  is_collection rcx
+
+  list_length rcx
+  integer rax
+  mov rdx, rax
+
+  integer 0
+  mov r8, rax
+
+  .while:
+
+    is_equal rdx, r8
+    cmp rax, 1
+    je .end_while
+
+    list_get_link rcx, r8
+    list_append_link rbx, rax
+
+    integer_inc r8
+    jmp .while
+
+  .end_while:
+
+  mov rax, rbx
+  ret
+
+f_collection_expand:
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
+
+  is_collection rbx
+  is_collection rcx
+
+  copy rcx
+  collection_expand_links rbx, rax
+
+  ret

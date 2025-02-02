@@ -1,21 +1,3 @@
-f_print_string:
-  get_arg 0
-  mov rbx, rax
-
-  check_type rbx, STRING
-
-  string_to_binary rbx
-  mov rcx, rax
-
-  binary_length rcx
-
-  mov rbx, rcx
-  add rbx, 8*2
-
-  sys_print rbx, rax
-
-  ret
-
 f_print:
   mov rbx, 0
 
@@ -52,6 +34,7 @@ f_print:
   .not_default_separator:
 
   join rcx, rax
+  delete_block [rcx + 8*3], rcx
   mov rcx, rax
 
   inc rbx
@@ -64,7 +47,18 @@ f_print:
 
   .not_default_end_of_string:
 
-  string_append rcx, rax
-  print_string rcx
+  string_extend_links rcx, rax
+  mov rdx, rax
+
+  string_to_binary rcx
+  mov rcx, rax
+
+  binary_length rcx
+
+  mov rbx, rcx
+  add rbx, 8*2
+
+  sys_print rbx, rax
+  delete rcx, rdx
 
   ret

@@ -23,10 +23,10 @@ f_assign:
     cmp r9, 0
     jne .correct_variable
       string "Переменная `"
-      string_append rax, r8
+      string_extend rax, r8
       mov rbx, rax
       string "` не найдена"
-      string_append rbx, rax
+      string_extend rbx, rax
       print rax
       exit -1
 
@@ -88,10 +88,10 @@ f_assign:
         type_to_string rax
         mov rbx, rax
         string "Тип `"
-        string_append rax, rbx
+        string_extend rax, rbx
         mov rbx, rax
         string "` не является коллекцией"
-        string_append rbx, rax
+        string_extend rbx, rax
         print rax
         exit -1
 
@@ -165,10 +165,10 @@ f_assign:
         type_to_string rax
         mov rbx, rax
         string "Тип `"
-        string_append rax, rbx
+        string_extend rax, rbx
         mov rbx, rax
         string "` не является коллекцией"
-        string_append rbx, rax
+        string_extend rbx, rax
         print rax
         exit -1
 
@@ -212,10 +212,10 @@ f_access:
   cmp rax, 1
   je .correct_variable
     string "Переменная `"
-    string_append rax, rdx
+    string_extend rax, rdx
     mov rbx, rax
     string "` не найдена"
-    string_append rbx, rax
+    string_extend rbx, rax
     print rax
     exit -1
 
@@ -246,9 +246,9 @@ f_access:
         string "Тип `"
         mov rbx, rax
         type_to_string r8
-        string_append rbx, rax
+        string_extend rbx, rax
         string "` не является коллекцией"
-        string_append rbx, rax
+        string_extend rbx, rax
         print rax
         exit -1
 
@@ -272,7 +272,7 @@ f_access:
         type_to_string rax
         mov rbx, rax
         string "Не поддерживаемый тип: "
-        string_append rax, rbx
+        string_extend rax, rbx
         print rax
         exit -1
 
