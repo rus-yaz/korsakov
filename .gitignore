@@ -1,11 +1,5 @@
-main
-main.o
+build
+build.o
+
 korsakov
 korsakov.o
-test
-test.o
-привет, мир
-привет, мир.o
-привет, мир.asm
-
-COMMIT

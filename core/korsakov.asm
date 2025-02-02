@@ -52,8 +52,12 @@ section "data" writable
   HEAP_END             rq 1                  ; Указатель на конец кучи
   LAST_USED_HEAP_BLOCK rq 1
 
-  GLOBAL_CONTEXT rq 1
-  DEBUG_TIME rq 1
+  ENVIRONMENT_VARIABLES rq 1
+  ARGUMENTS_COUNT       rq 1
+  ARGUMENTS             rq 1
+
+  GLOBAL_CONTEXT  rq 1
+  DEBUG_TIME      rq 1
 
 include "./debug.asm"
 include "./macro.asm"
@@ -79,7 +83,59 @@ include "../lib/null.asm"
 
 section "_start" executable
 _start:
+  mov rbp, rsp
+
   allocate_heap
+
+  mov rcx, [rbp] ; Количество переданных аргументов
+  integer rcx
+  mov [ARGUMENTS_COUNT], rax
+
+  list
+  mov [ARGUMENTS], rax
+
+  mov rbx, 0
+  .arguments_while:
+
+    cmp rbx, rcx
+    je .arguments_end_while
+
+    get_arg rbx
+    buffer_to_string rax
+    list_append_link [ARGUMENTS], rax
+
+    inc rbx
+    jmp .arguments_while
+
+  .arguments_end_while:
+
+  list
+  mov [ENVIRONMENT_VARIABLES], rax
+
+  mov rcx, [ARGUMENTS_COUNT]
+  mov rcx, [rcx + INTEGER_HEADER*8]
+  inc rcx ; Учёт блока с количеством аргументов
+  inc rcx ; Учёт нуля-разделителя
+
+  imul rcx, 8
+
+  mov rbx, rbp
+  add rbx, rcx
+
+  mov rcx, 0
+
+  .environment_variables_while:
+
+    cmp [rbx], rcx
+    je .environment_variables_end_while
+
+    buffer_to_string [rbx]
+    list_append_link [ENVIRONMENT_VARIABLES], rax
+
+    add rbx, 8
+    jmp .environment_variables_while
+
+  .environment_variables_end_while:
 
   dictionary
   mov [GLOBAL_CONTEXT], rax

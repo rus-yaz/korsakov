@@ -14,31 +14,13 @@ f_buffer_to_binary:
   mem_mov [rax + 8*1], rcx
 
   ; Приведение размера к числу, кратному 8
-  push rax
-  mov rax, rcx
-
-  mov rbx, 8
-  mov rdx, 0
-
-  idiv rbx
-  mov rcx, rdx
-
-  cmp rcx, 0
-  je .skip
-
-    inc rax
-  .skip:
-
-  mov rcx, rax
-  pop rax
-
   pop rsi      ; Источник копирования
   push rax
 
   add rax, BINARY_HEADER * 8
   mov rdi, rax ; Место назначения
 
-  rep movsq    ; Копирование в аллоцированный блок
+  rep movsb    ; Копирование в аллоцированный блок
   pop rax
 
   ret
@@ -237,6 +219,9 @@ f_string_to_binary:
     jmp .while
 
   .end_while:
+
+  dec rsp
+  inc r9
 
   ; Приведение размера к числу, кратному 8
   mov rax, r9

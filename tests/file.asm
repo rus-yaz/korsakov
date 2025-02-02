@@ -9,7 +9,8 @@ string "Размер файла:"
 print <rax, rbx>
 
 ; Открытие файла
-open_file file.имя_файла_для_чтения
+buffer_to_string file.имя_файла_для_чтения
+open_file rax
 mov rbx, rax
 
 ; Чтение файла
@@ -34,7 +35,8 @@ print <rax, rcx>
 ; Тест записи файла
 
 ; Открытие файла в режиме записи
-open_file file.имя_файла_для_записи, O_WRONLY + O_CREAT + O_TRUNC, 644o
+buffer_to_string file.имя_файла_для_записи
+open_file rax, O_WRONLY + O_CREAT + O_TRUNC, 644o
 mov r8, rax
 
 ; Запись в файл из строки
@@ -44,7 +46,8 @@ write_file r8, rcx
 close_file r8
 
 ; Открытие файла
-open_file file.имя_файла_для_записи
+buffer_to_string file.имя_файла_для_записи
+open_file rax
 mov r8, rax
 
 ; Чтение файла

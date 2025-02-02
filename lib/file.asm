@@ -25,6 +25,10 @@ f_open_file:
   mov rbx, rax
   get_arg 0
 
+  check_type rax, STRING
+  string_to_binary rax
+  add rax, BINARY_HEADER*8
+
   ; Сохранение указателя на имя файла
   push rax
 
@@ -132,6 +136,7 @@ f_write_file:
   mov rdx, rax
 
   binary_length rdx
+  dec rax
 
   mov rcx, rdx
   add rcx, 8*2
