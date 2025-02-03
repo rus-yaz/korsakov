@@ -47,6 +47,7 @@ f_assign:
       dec rax
       integer rax
       is_equal r11, rax
+      boolean_value rax
       cmp rax, 1
       je .get_end_while
 
@@ -118,6 +119,7 @@ f_assign:
     .set_while:
       integer 0
       is_equal r11, rax
+      boolean_value rax
       cmp rax, 1
       je .set_end_while
 

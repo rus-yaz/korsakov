@@ -51,12 +51,13 @@ f_token_check_type:
 
   .while:
     is_equal r9, r8
+    boolean_value rax
     cmp rax, 1
     je .return_false
 
     list_get rbx, r8
     is_equal rax, rcx
-
+    boolean_value rax
     cmp rax, 1
     je .end_while
 
@@ -99,11 +100,13 @@ f_token_check_keyword:
   .while:
 
     is_equal r8, r9
+    boolean_value rax
     cmp rax, 1
     je .end_while
 
     list_get rbx, r8
     is_equal rax, rcx
+    boolean_value rax
     cmp rax, 1
     jmp .end_while
 

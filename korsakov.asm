@@ -466,6 +466,7 @@ start:
 
   integer 2
   is_equal [ARGUMENTS_COUNT], rax
+  boolean_value rax
   cmp rax, 1
   je .continue
     string "Использование:"

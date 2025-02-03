@@ -72,6 +72,7 @@ f_tokenizer:
     je .while_identifier
     string "_"
     is_equal [токен], rax
+    boolean_value rax
     cmp rax, 1
     jne .not_identifier
 
@@ -88,6 +89,7 @@ f_tokenizer:
 
         string "_"
         is_equal [токен], rax
+        boolean_value rax
         cmp rax, 1
         jne .end_while_identifier
 
@@ -118,6 +120,7 @@ f_tokenizer:
 
     string '"'
     is_equal [токен], rax
+    boolean_value rax
     cmp rax, 1
     jne .not_string
       .while_string:
@@ -128,6 +131,7 @@ f_tokenizer:
 
         string '"'
         is_equal rbx, rax
+        boolean_value rax
         cmp rax, 1
         jne .while_string
 
@@ -140,6 +144,7 @@ f_tokenizer:
 
     string "%"
     is_equal [токен], rax
+    boolean_value rax
     cmp rax, 1
     jne .not_percent
 
@@ -150,6 +155,7 @@ f_tokenizer:
 
       string "%("
       is_equal [токен], rax
+      boolean_value rax
       cmp rax, 1
       jne .not_open_list_paren
 
@@ -168,8 +174,9 @@ f_tokenizer:
 
     .not_percent:
 
-    string "\\"
+    string "\"
     is_equal [токен], rax
+    boolean_value rax
     cmp rax, 1
     jne .not_backslash
 
@@ -178,8 +185,9 @@ f_tokenizer:
       list_get_link [символы], rax
       string_extend_links [токен], rax
 
-      string "\\/"
+      string "\/"
       is_equal [токен], rax
+      boolean_value rax
       cmp rax, 1
       jne .not_lower
 
@@ -190,8 +198,9 @@ f_tokenizer:
         list_get_link [символы], rax
         string_extend_links [токен], rax
 
-        string "\\/="
+        string "\/="
         is_equal [токен], rax
+        boolean_value rax
         cmp rax, 1
         jne .not_lower_or_equal
 
@@ -219,6 +228,7 @@ f_tokenizer:
 
     string "/"
     is_equal [токен], rax
+    boolean_value rax
     cmp rax, 1
     jne .not_slash
 
@@ -227,8 +237,9 @@ f_tokenizer:
       list_get_link [символы], rax
       string_extend_links [токен], rax
 
-      string "/\\"
+      string "/\"
       is_equal [токен], rax
+      boolean_value rax
       cmp rax, 1
       jne .not_greater
 
@@ -239,8 +250,9 @@ f_tokenizer:
         list_get_link [символы], rax
         string_extend_links [токен], rax
 
-        string "/\\="
+        string "/\="
         is_equal [токен], rax
+        boolean_value rax
         cmp rax, 1
         jne .not_greater_or_equal
 
@@ -262,6 +274,7 @@ f_tokenizer:
 
       string "//"
       is_equal [токен], rax
+      boolean_value rax
       cmp rax, 1
       jne .not_integer_divison
 
@@ -274,6 +287,7 @@ f_tokenizer:
 
         string "///"
         is_equal [токен], rax
+        boolean_value rax
         cmp rax, 1
         jne .not_rooting
 
@@ -303,6 +317,7 @@ f_tokenizer:
 
     string "*"
     is_equal [токен], rax
+    boolean_value rax
     cmp rax, 1
     jne .not_star
 
@@ -313,6 +328,7 @@ f_tokenizer:
 
       string "**"
       is_equal [токен], rax
+      boolean_value rax
       cmp rax, 1
       jne .not_exponentiation
 
@@ -334,6 +350,7 @@ f_tokenizer:
 
     string "+"
     is_equal [токен], rax
+    boolean_value rax
     cmp rax, 1
     jne .not_plus
 
@@ -344,6 +361,7 @@ f_tokenizer:
 
       string "++"
       is_equal [токен], rax
+      boolean_value rax
       cmp rax, 1
       jne .not_increment
 
@@ -381,6 +399,7 @@ f_tokenizer:
 
         null
         is_equal rcx, rax
+        boolean_value rax
         cmp rax, 1
         je .continue
 
@@ -399,6 +418,7 @@ f_tokenizer:
 
     string "-"
     is_equal [токен], rax
+    boolean_value rax
     cmp rax, 1
     jne .not_minus
 
@@ -409,6 +429,7 @@ f_tokenizer:
 
       string "--"
       is_equal [токен], rax
+      boolean_value rax
       cmp rax, 1
       jne .not_decrement
 
@@ -421,6 +442,7 @@ f_tokenizer:
 
         string "---"
         is_equal [токен], rax
+        boolean_value rax
         cmp rax, 1
         jne .not_end_of_construction_1
 
@@ -464,6 +486,7 @@ f_tokenizer:
 
         null
         is_equal rcx, rax
+        boolean_value rax
         cmp rax, 1
         je .continue
 
@@ -482,6 +505,7 @@ f_tokenizer:
 
     string "="
     is_equal [токен], rax
+    boolean_value rax
     cmp rax, 1
     jne .not_assign
 
@@ -492,6 +516,7 @@ f_tokenizer:
 
       string "=="
       is_equal [токен], rax
+      boolean_value rax
       cmp rax, 1
       jne .not_equal
 
@@ -504,6 +529,7 @@ f_tokenizer:
 
         string "==="
         is_equal [токен], rax
+        boolean_value rax
         cmp rax, 1
         jne .not_end_of_construction_2
 
@@ -537,6 +563,7 @@ f_tokenizer:
 
     integer -1
     is_equal rax, [тип_токена]
+    boolean_value rax
     cmp rax, 1
     jne .add_token
 
@@ -547,6 +574,7 @@ f_tokenizer:
     .add_token:
       .space_while:
         is_equal [токен], [ПРОБЕЛ]
+        boolean_value rax
         cmp rax, 1
         jne .space_end_while
 
@@ -557,11 +585,13 @@ f_tokenizer:
         list_length [символы]
         integer rax
         is_equal rbx, rax
+        boolean_value rax
         cmp rax, 1
         je .write_token
 
         list_get_link [символы], rbx
         is_equal rax, [ПРОБЕЛ]
+        boolean_value rax
         cmp rax, 1
         jne .continue
 
@@ -572,6 +602,7 @@ f_tokenizer:
 
       .newline_while:
         is_equal [токен], [ПЕРЕНОС_СТРОКИ]
+        boolean_value rax
         cmp rax, 1
         jne .newline_end_while
 
@@ -582,11 +613,13 @@ f_tokenizer:
         list_length [символы]
         integer rax
         is_equal rbx, rax
+        boolean_value rax
         cmp rax, 1
         je .write_token
 
         list_get_link [символы], rbx
         is_equal rax, [ПЕРЕНОС_СТРОКИ]
+        boolean_value rax
         cmp rax, 1
         jne .newline_end_while
 
@@ -613,6 +646,7 @@ f_tokenizer:
     list_length [символы]
     integer rax
     is_equal rax, [индекс]
+    boolean_value rax
 
     cmp rax, 1
     jne .while

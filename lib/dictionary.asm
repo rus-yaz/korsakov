@@ -55,6 +55,7 @@ f_dictionary_from_lists:
   .while:
 
     is_equal rdx, r8
+    boolean_value rax
     cmp rax, 1
     je .end_while
 
@@ -91,6 +92,7 @@ f_dictionary_from_items:
   .while:
 
     is_equal rcx, rdx
+    boolean_value rax
     cmp rax, 1
     je .end_while
 
@@ -200,6 +202,7 @@ f_dictionary_keys_links:
 
   .while:
     is_equal rcx, rdx
+    boolean_value rax
     cmp rax, 1
     je .end_while
 
@@ -249,6 +252,7 @@ f_dictionary_values_links:
 
   .while:
     is_equal rcx, rdx
+    boolean_value rax
     cmp rax, 1
     je .end_while
 
@@ -290,6 +294,7 @@ f_dictionary_get_link:
 
   integer -1
   is_equal rax, r8
+  boolean_value rax
   cmp rax, 1
   jne .no_key
     cmp rdx, 0

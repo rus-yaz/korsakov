@@ -173,9 +173,6 @@ f_type_full_size:
     ret
   .not_dictionary:
 
-  integer 1
-  print rax
-
   type_to_string rax
   mov rbx, rax
   string "type_full_size: Не определён размер заголовка для типа"

@@ -88,6 +88,7 @@ f_to_string:
 
     .list_while:
       is_equal rdx, rcx
+      boolean_value rax
       cmp rax, 1
       je .list_end_while
 
@@ -153,6 +154,7 @@ f_to_string:
     .dictionary_while:
 
       is_equal rdx, rcx
+      boolean_value rax
       cmp rax, 1
       je .dictionary_end_while
 

@@ -184,6 +184,7 @@ f_string_to_binary:
 
   .while:
     is_equal r8, rcx
+    boolean_value rax
     cmp rax, 1
     je .end_while
 
@@ -472,6 +473,7 @@ f_split:
 
   .while:
     is_equal r8, r9
+    boolean_value rax
     cmp rax, 1
     je .end_while
 
@@ -479,6 +481,7 @@ f_split:
     mov r11, rax
 
     is_equal r11, rcx
+    boolean_value rax
     cmp rax, 1
     je .split
 
@@ -529,6 +532,7 @@ f_join_links:
   .while:
 
     is_equal r8, r9
+    boolean_value rax
     cmp rax, 1
     je .end_while
 
@@ -539,6 +543,7 @@ f_join_links:
     integer_inc r8
 
     is_equal r8, r9
+    boolean_value rax
     cmp rax, 1
     je .end_while
 
@@ -577,6 +582,7 @@ f_is_alpha:
 
   .while:
     is_equal rcx, rdx
+    boolean_value rax
     cmp rax, 1
     je .end_while
 
@@ -634,6 +640,7 @@ f_is_digit:
 
   .while:
     is_equal rcx, rdx
+    boolean_value rax
     cmp rax, 1
     je .end_while
 
@@ -680,6 +687,7 @@ f_string_to_list:
 
   .while:
     is_equal rdx, r8
+    boolean_value rax
     cmp rax, 1
     je .end_while
 

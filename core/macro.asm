@@ -218,6 +218,14 @@ macro boolean value {
   return
 }
 
+macro boolean_copy boolean {
+  enter boolean
+
+  call f_boolean_copy
+
+  return
+}
+
 macro boolean_value boolean {
   enter boolean
 
@@ -226,10 +234,10 @@ macro boolean_value boolean {
   return
 }
 
-macro boolean_copy boolean {
+macro boolean_not boolean {
   enter boolean
 
-  call f_boolean_copy
+  call f_boolean_not
 
   return
 }
@@ -444,10 +452,42 @@ macro is_equal val_1*, val_2* {
   return
 }
 
-macro is_greater_or_equal val_1*, val_2* {
+macro is_not_equal val_1*, val_2* {
   enter val_1, val_2
 
-  call f_is_greater_or_equal
+  call f_is_not_equal
+
+  return
+}
+
+macro is_lower val_1*, val_2* {
+  enter val_1, val_2
+
+  call f_is_lower
+
+  return
+}
+
+macro is_greater val_1*, val_2* {
+  enter val_1, val_2
+
+  call f_is_greater
+
+  return
+}
+
+macro is_lower_or_equal val_1*, val_2* {
+  enter val_1, val_2
+
+  call is_lower_or_equal
+
+  return
+}
+
+macro is_greater_equal val_1*, val_2* {
+  enter val_1, val_2
+
+  call f_is_greater_equal
 
   return
 }

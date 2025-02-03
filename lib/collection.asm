@@ -495,11 +495,13 @@ f_collection_index:
 
   .while:
     is_equal rdx, r8
+    boolean_value rax
     cmp rax, 1
     je .end_while
 
     collection_get_link rbx, rdx
     is_equal rax, rcx
+    boolean_value rax
     cmp rax, 1
     je .return_index
 
@@ -611,6 +613,7 @@ f_collection_expand_links:
   .while:
 
     is_equal rdx, r8
+    boolean_value rax
     cmp rax, 1
     je .end_while
 

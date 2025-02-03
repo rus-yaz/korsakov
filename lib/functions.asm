@@ -56,6 +56,7 @@ f_is_equal:
 
     .list_while:
       is_equal r8, rdx
+      boolean_value rax
       cmp rax, 1
       je .list_end_while
 
@@ -65,6 +66,7 @@ f_is_equal:
       mov r10, rax
 
       is_equal r9, r10
+      boolean_value rax
       cmp rax, 1
       jne .return_false
 
@@ -95,6 +97,7 @@ f_is_equal:
 
     .string_while:
       is_equal r8, rdx
+      boolean_value rax
       cmp rax, 1
       je .string_end_while
 
@@ -107,6 +110,7 @@ f_is_equal:
       mov r10, [rax]
 
       is_equal r9, r10
+      boolean_value rax
       cmp rax, 1
       jne .return_false
 
@@ -154,69 +158,128 @@ f_is_equal:
   exit -1
 
   .return_true:
-    mov rax, 1
+    boolean 1
     ret
 
   .return_false:
-    mov rax, 0
+    boolean 0
     ret
 
-f_is_greater_or_equal:
-  get_arg 1
-  mov rbx, rax
+f_is_not_equal:
   get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
+
+  is_equal rbx, rcx
+  boolean_not rax
+  ret
+
+f_is_lower:
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
 
   ; Сохранение типов
-  mov rcx, [rax]
   mov rdx, [rbx]
+  mov r8, [rcx]
 
   ; Сравнение типов
-  cmp rcx, rdx
-  jne .return_false
+  cmp rdx, r8
+  jne .incorrect_type
 
-  cmp rcx, NULL
-  je .return_true
-
-  cmp rcx, INTEGER
+  cmp rdx, INTEGER
   jne .not_integer
-    mov rax, [rax + INTEGER_HEADER*8]
     mov rbx, [rbx + INTEGER_HEADER*8]
+    mov rcx, [rcx + INTEGER_HEADER*8]
 
-    cmp rax, rbx
-    jl .return_false
-
-    jmp .return_true
+    cmp rbx, rcx
+    jl .return_true
+    jmp .return_false
 
   .not_integer:
 
-  ; Выход с ошибкой при неизвестном типе
+  .incorrect_type:
 
-  string "is_greater_or_equal: Ожидался тип"
-  mov rcx, rax
-
-  list
+  string "Ожидался тип"
   mov rbx, rax
-
   type_to_string INTEGER
-  list_append rbx, rax
-  type_to_string STRING
-  list_append rbx, rax
-  type_to_string LIST
-  list_append rbx, rax
-  type_to_string DICTIONARY
-  list_append rbx, rax
-  join rax, ", "
-
   print <rcx, rax>
   exit -1
 
+  ret
+
   .return_true:
-    mov rax, 1
+    boolean 1
     ret
 
   .return_false:
-    mov rax, 0
+    boolean 0
     ret
+
+f_is_greater:
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
+
+  ; Сохранение типов
+  mov rdx, [rbx]
+  mov r8, [rcx]
+
+  ; Сравнение типов
+  cmp rdx, r8
+  jne .incorrect_type
+
+  cmp rdx, INTEGER
+  jne .not_integer
+    mov rbx, [rbx + INTEGER_HEADER*8]
+    mov rcx, [rcx + INTEGER_HEADER*8]
+
+    cmp rbx, rcx
+    jg .return_true
+    jmp .return_false
+
+  .not_integer:
+
+  .incorrect_type:
+
+  string "Ожидался тип"
+  mov rcx, rax
+  type_to_string INTEGER
+  print <rcx, rax>
+  exit -1
+
+  ret
+
+  .return_true:
+    boolean 1
+    ret
+
+  .return_false:
+    boolean 0
+    ret
+
+f_is_lower_or_equal:
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
+
+  is_greater rbx, rcx
+  boolean_not rax
+  ret
+
+f_is_greater_or_equal:
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
+
+  is_lower rbx, rcx
+  boolean_not rax
+  ret
 
 f_copy:
   get_arg 0

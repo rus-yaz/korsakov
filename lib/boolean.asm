@@ -87,4 +87,20 @@ f_boolean_copy:
   mem_mov [rax + 8*0], BOOLEAN
   mem_mov [rax + 8*1], [rbx + BOOLEAN_HEADER*8]
 
- ret
+  ret
+
+f_boolean_value:
+  get_arg 0
+  check_type rax, BOOLEAN
+
+  mov rax, [rax + BOOLEAN_HEADER*8]
+  ret
+
+f_boolean_not:
+  get_arg 0
+  check_type rax, BOOLEAN
+
+  mov rax, [rax + BOOLEAN_HEADER*8]
+  dec rax
+  boolean rax
+  ret

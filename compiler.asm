@@ -39,6 +39,7 @@ f_check_node_type:
   string "узел"
   dictionary_get rcx, rax
   is_equal rax, rbx
+  boolean_value rax
 
   ret
 
@@ -58,6 +59,7 @@ f_compiler:
     list_length [АСД]
     integer rax
     is_equal rax, [индекс]
+    boolean_value rax
     cmp rax, 1
     je .end_while
 
@@ -98,6 +100,7 @@ f_compile:
 
     .body_while:
       is_equal r9, r8
+      boolean_value rax
       cmp rax, 1
       je .body_end_while
 
@@ -126,6 +129,7 @@ f_compile:
 
     null
     is_equal rax, r8
+    boolean_value rax
     cmp rax, 1
     je .use_exists_value
       compile r8, rbx
@@ -211,14 +215,14 @@ f_compile:
     string "push rbx"
     list_append_link rdx, rax
 
-    string "левый_узел"
+    string "правый_узел"
     dictionary_get_link rcx, rax
     compile rax, rbx
     list_extend_links rdx, rax
     string "mov rbx, rax"
     list_append_link rdx, rax
 
-    string "правый_узел"
+    string "левый_узел"
     dictionary_get_link rcx, rax
     compile rax, rbx
     list_extend_links rdx, rax
@@ -228,59 +232,96 @@ f_compile:
     mov rcx, rax
     string "тип"
     dictionary_get_link rcx, rax
-    mov rcx, rax
+    mov r8, rax
 
-    is_equal rcx, [ТИП_СЛОЖЕНИЕ]
+    is_equal r8, [ТИП_СЛОЖЕНИЕ]
+    boolean_value rax
     cmp rax, 1
     jne .not_addition
-      string "addition rbx, rax"
-      list_append_link rdx, rax
-
+      string "addition rax, rbx"
       jmp .binary_operation_continue
-
     .not_addition:
 
-    is_equal rcx, [ТИП_ВЫЧИТАНИЕ]
+    is_equal r8, [ТИП_ВЫЧИТАНИЕ]
+    boolean_value rax
     cmp rax, 1
     jne .not_subtraction
-      string "subtraction rbx, rax"
-      list_append_link rdx, rax
-
+      string "subtraction rax, rbx"
       jmp .binary_operation_continue
-
     .not_subtraction:
 
-    is_equal rcx, [ТИП_УМНОЖЕНИЕ]
+    is_equal r8, [ТИП_УМНОЖЕНИЕ]
+    boolean_value rax
     cmp rax, 1
     jne .not_multiplication
-      string "multiplication rbx, rax"
-      list_append_link rdx, rax
-
+      string "multiplication rax, rbx"
       jmp .binary_operation_continue
-
     .not_multiplication:
 
-    is_equal rcx, [ТИП_ДЕЛЕНИЕ]
+    is_equal r8, [ТИП_ДЕЛЕНИЕ]
+    boolean_value rax
     cmp rax, 1
     jne .not_division
-      string "division rbx, rax"
-      list_append_link rdx, rax
-
+      string "division rax, rbx"
       jmp .binary_operation_continue
-
     .not_division:
+
+    is_equal r8, [ТИП_РАВНО]
+    boolean_value rax
+    cmp rax, 1
+    jne .not_equal
+      string "is_equal rax, rbx"
+      jmp .binary_operation_continue
+    .not_equal:
+
+    is_equal r8, [ТИП_НЕ_РАВНО]
+    boolean_value rax
+    cmp rax, 1
+    jne .not_not_equal
+      string "is_not_equal rax, rbx"
+      jmp .binary_operation_continue
+    .not_not_equal:
+
+    is_equal r8, [ТИП_МЕНЬШЕ]
+    boolean_value rax
+    cmp rax, 1
+    jne .not_lower
+      string "is_lower rax, rbx"
+      jmp .binary_operation_continue
+    .not_lower:
+
+    is_equal r8, [ТИП_БОЛЬШЕ]
+    boolean_value rax
+    cmp rax, 1
+    jne .not_greater
+      string "is_greater rax, rbx"
+      jmp .binary_operation_continue
+    .not_greater:
+
+    is_equal r8, [ТИП_МЕНЬШЕ_ИЛИ_РАВНО]
+    boolean_value rax
+    cmp rax, 1
+    jne .not_lower_or_equal
+      string "is_lower_or_equal rax, rbx"
+      jmp .binary_operation_continue
+    .not_lower_or_equal:
+
+    is_equal r8, [ТИП_БОЛЬШЕ_ИЛИ_РАВНО]
+    boolean_value rax
+    cmp rax, 1
+    jne .not_greater_or_equal
+      string "is_greater_or_equal rax, rbx"
+      jmp .binary_operation_continue
+    .not_greater_or_equal:
 
     string "Неизвестный оператор: "
     mov rbx, rax
-    string "оператор"
-    dictionary_get_link rcx, rax
-    mov rcx, rax
-    string "значение"
-    dictionary_get_link rcx, rax
-    print <rbx, rax>
+    print <rbx, rcx>
     exit -1
 
     .binary_operation_continue:
+
+    list_append_link rdx, rax
 
     string "pop rbx"
     list_append_link rdx, rax
@@ -300,6 +341,7 @@ f_compile:
     string "тип"
     dictionary_get_link rcx, rax
     is_equal rax, [ТИП_ЦЕЛОЕ_ЧИСЛО]
+    boolean_value rax
     cmp rax, 1
     je .correct_value
       string "Ожидалось целое число"
@@ -347,6 +389,7 @@ f_compile:
       list_length rcx
       integer rax
       is_equal rax, r8
+      boolean_value rax
       cmp rax, 1
       je .list_end_while
 
@@ -433,6 +476,7 @@ f_compile:
       list_length r8
       integer rax
       is_equal r9, rax
+      boolean_value rax
       cmp rax, 1
       je .if_end_while
 
@@ -449,14 +493,13 @@ f_compile:
 
       string "boolean rax"
       list_append_link rdx, rax
-      string "mov rax, [rax + BOOLEAN_HEADER*8]"
+      string "boolean_value rax"
       list_append_link rdx, rax
       string "cmp rax, 1"
       list_append_link rdx, rax
 
       string "jne .if_"
       mov r14, rax
-      list_append_link rdx, rax
       integer r13
       to_string rax
       string_extend_links r14, rax
@@ -556,7 +599,7 @@ f_compile:
 
     string "boolean rax"
     list_append_link rdx, rax
-    string "mov rax, [rax + BOOLEAN_HEADER*8]"
+    string "boolean_value rax"
     list_append_link rdx, rax
     string "cmp rax, 1"
     list_append_link rdx, rax
@@ -636,6 +679,7 @@ f_compile:
 
     null
     is_equal r10, rax
+    boolean_value rax
     cmp rax, 1
     je .loop_with_enter
 
@@ -649,6 +693,7 @@ f_compile:
       mov r11, rax
       null
       is_equal r11, rax
+      boolean_value rax
       cmp rax, 1
       je .default_step
         compile r11, rbx
@@ -755,6 +800,8 @@ f_compile:
       list_append_link rdx, rax
 
       string "is_equal rdx, rax"
+      list_append_link rdx, rax
+      string "boolean_value rax"
       list_append_link rdx, rax
       string "cmp rax, 1"
       list_append_link rdx, rax

@@ -520,6 +520,7 @@ f_expression:
         integer rax
 
         is_equal rax, r9
+        boolean_value rax
         cmp rax, 1
         je .list_end_while
 
@@ -1334,6 +1335,7 @@ f_list_expression:
       list_length r9
       integer rax
       is_equal r10, rax
+      boolean_value rax
       cmp rax, 1
       je .dictionary_end_while
 
@@ -1581,6 +1583,7 @@ f_check_expression:
       list_get_link r13, rax
       dictionary_get_link rax, [тип]
       is_equal rax, [ПРОПУСТИТЬ]
+      boolean_value rax
       cmp rax, 1
       jne .skip_continue_error
 
@@ -2228,12 +2231,14 @@ f_function_expression:
     list_get_link rdx, rax
     dictionary_get_link rax, [узел]
     is_equal rax, [УЗЕЛ_ПРИСВАИВАНИЯ_ПЕРЕМЕННОЙ]
+    boolean_value rax
     cmp rax, 1
 
     jne .correct_argument
 
     dictionary_get_link r8, [узел]
     is_equal rax, [УЗЕЛ_ПРИСВАИВАНИЯ_ПЕРЕМЕННОЙ]
+    boolean_value rax
     cmp rax, 1
 
     jne .correct_argument
@@ -2744,6 +2749,7 @@ f_statement:
 
     null
     is_equal rcx, rax
+    boolean_value rax
     cmp rax, 1
     jne .return_value
 
