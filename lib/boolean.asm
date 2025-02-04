@@ -102,5 +102,6 @@ f_boolean_not:
 
   mov rax, [rax + BOOLEAN_HEADER*8]
   dec rax
+  neg rax
   boolean rax
   ret
