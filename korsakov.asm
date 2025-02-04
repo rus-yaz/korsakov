@@ -249,105 +249,105 @@ start:
   mov [ТИП_КОНЕЦ_КОНСТРУКЦИИ], rax
 
   list
-  list_append rax, [ТИП_РАВНО]
-  list_append rax, [ТИП_НЕ_РАВНО]
-  list_append rax, [ТИП_БОЛЬШЕ]
-  list_append rax, [ТИП_МЕНЬШЕ]
-  list_append rax, [ТИП_БОЛЬШЕ_ИЛИ_РАВНО]
-  list_append rax, [ТИП_МЕНЬШЕ_ИЛИ_РАВНО]
+  list_append_link rax, [ТИП_РАВНО]
+  list_append_link rax, [ТИП_НЕ_РАВНО]
+  list_append_link rax, [ТИП_БОЛЬШЕ]
+  list_append_link rax, [ТИП_МЕНЬШЕ]
+  list_append_link rax, [ТИП_БОЛЬШЕ_ИЛИ_РАВНО]
+  list_append_link rax, [ТИП_МЕНЬШЕ_ИЛИ_РАВНО]
   mov [СРАВНЕНИЯ], rax
 
   dictionary
   mov [типы], rax
 
-  dictionary_set [типы], [ОТКРЫВАЮЩАЯ_СКОБКА], [ТИП_ОТКРЫВАЮЩАЯ_СКОБКА]
-  dictionary_set [типы], [ЗАКРЫВАЮЩАЯ_СКОБКА], [ТИП_ЗАКРЫВАЮЩАЯ_СКОБКА]
-  dictionary_set [типы], [ДВОЕТОЧИЕ], [ТИП_ДВОЕТОЧИЕ]
-  dictionary_set [типы], [ТОЧКА_С_ЗАПЯТОЙ], [ТИП_ТОЧКА_С_ЗАПЯТОЙ]
-  dictionary_set [типы], [ТОЧКА], [ТИП_ТОЧКА]
-  dictionary_set [типы], [ВОСКЛИЦАТЕЛЬНЫЙ_ЗНАК], [ТИП_ВОСКЛИЦАТЕЛЬНЫЙ_ЗНАК]
-  dictionary_set [типы], [РАВНО], [ТИП_ПРИСВАИВАНИЕ]
-  dictionary_set [типы], [ПЛЮС], [ТИП_СЛОЖЕНИЕ]
-  dictionary_set [типы], [МИНУС], [ТИП_ВЫЧИТАНИЕ]
-  dictionary_set [типы], [ЗВЁЗДОЧКА], [ТИП_УМНОЖЕНИЕ]
-  dictionary_set [типы], [КОСАЯ_ЧЕРТА], [ТИП_ДЕЛЕНИЕ]
-  dictionary_set [типы], [ОБРАТНАЯ_КОСАЯ_ЧЕРТА], [ТИП_ОБРАТНАЯ_КОСАЯ_ЧЕРТА]
-  dictionary_set [типы], [ПЕРЕНОС_СТРОКИ], [ТИП_ПЕРЕНОС_СТРОКИ]
-  dictionary_set [типы], [ТАБУЛЯЦИЯ], [ТИП_ТАБУЛЯЦИЯ]
-  dictionary_set [типы], [ПРОБЕЛ], [ТИП_ПРОБЕЛ]
+  dictionary_set_link [типы], [ОТКРЫВАЮЩАЯ_СКОБКА], [ТИП_ОТКРЫВАЮЩАЯ_СКОБКА]
+  dictionary_set_link [типы], [ЗАКРЫВАЮЩАЯ_СКОБКА], [ТИП_ЗАКРЫВАЮЩАЯ_СКОБКА]
+  dictionary_set_link [типы], [ДВОЕТОЧИЕ], [ТИП_ДВОЕТОЧИЕ]
+  dictionary_set_link [типы], [ТОЧКА_С_ЗАПЯТОЙ], [ТИП_ТОЧКА_С_ЗАПЯТОЙ]
+  dictionary_set_link [типы], [ТОЧКА], [ТИП_ТОЧКА]
+  dictionary_set_link [типы], [ВОСКЛИЦАТЕЛЬНЫЙ_ЗНАК], [ТИП_ВОСКЛИЦАТЕЛЬНЫЙ_ЗНАК]
+  dictionary_set_link [типы], [РАВНО], [ТИП_ПРИСВАИВАНИЕ]
+  dictionary_set_link [типы], [ПЛЮС], [ТИП_СЛОЖЕНИЕ]
+  dictionary_set_link [типы], [МИНУС], [ТИП_ВЫЧИТАНИЕ]
+  dictionary_set_link [типы], [ЗВЁЗДОЧКА], [ТИП_УМНОЖЕНИЕ]
+  dictionary_set_link [типы], [КОСАЯ_ЧЕРТА], [ТИП_ДЕЛЕНИЕ]
+  dictionary_set_link [типы], [ОБРАТНАЯ_КОСАЯ_ЧЕРТА], [ТИП_ОБРАТНАЯ_КОСАЯ_ЧЕРТА]
+  dictionary_set_link [типы], [ПЕРЕНОС_СТРОКИ], [ТИП_ПЕРЕНОС_СТРОКИ]
+  dictionary_set_link [типы], [ТАБУЛЯЦИЯ], [ТИП_ТАБУЛЯЦИЯ]
+  dictionary_set_link [типы], [ПРОБЕЛ], [ТИП_ПРОБЕЛ]
 
   list
   mov [ключевые_слова], rax
 
   string "и"
   mov [И], rax
-  list_append [ключевые_слова], rax
+  list_append_link [ключевые_слова], rax
   string "из"
   mov [ИЗ], rax
-  list_append [ключевые_слова], rax
+  list_append_link [ключевые_слова], rax
   string "от"
   mov [ОТ], rax
-  list_append [ключевые_слова], rax
+  list_append_link [ключевые_слова], rax
   string "до"
   mov [ДО], rax
-  list_append [ключевые_слова], rax
+  list_append_link [ключевые_слова], rax
   string "не"
   mov [НЕ], rax
-  list_append [ключевые_слова], rax
+  list_append_link [ключевые_слова], rax
   string "то"
   mov [ТО], rax
-  list_append [ключевые_слова], rax
+  list_append_link [ключевые_слова], rax
   string "или"
   mov [ИЛИ], rax
-  list_append [ключевые_слова], rax
+  list_append_link [ключевые_слова], rax
   string "при"
   mov [ПРИ], rax
-  list_append [ключевые_слова], rax
+  list_append_link [ключевые_слова], rax
   string "для"
   mov [ДЛЯ], rax
-  list_append [ключевые_слова], rax
+  list_append_link [ключевые_слова], rax
   string "если"
   mov [ЕСЛИ], rax
-  list_append [ключевые_слова], rax
+  list_append_link [ключевые_слова], rax
   string "ложь"
   mov [ЛОЖЬ], rax
-  list_append [ключевые_слова], rax
+  list_append_link [ключевые_слова], rax
   string "пока"
   mov [ПОКА], rax
-  list_append [ключевые_слова], rax
+  list_append_link [ключевые_слова], rax
   string "через"
   mov [ЧЕРЕЗ], rax
-  list_append [ключевые_слова], rax
+  list_append_link [ключевые_слова], rax
   string "класс"
   mov [КЛАСС], rax
-  list_append [ключевые_слова], rax
+  list_append_link [ключевые_слова], rax
   string "иначе"
   mov [ИНАЧЕ], rax
-  list_append [ключевые_слова], rax
+  list_append_link [ключевые_слова], rax
   string "истина"
   mov [ИСТИНА], rax
-  list_append [ключевые_слова], rax
+  list_append_link [ключевые_слова], rax
   string "вернуть"
   mov [ВЕРНУТЬ], rax
-  list_append [ключевые_слова], rax
+  list_append_link [ключевые_слова], rax
   string "удалить"
   mov [УДАЛИТЬ], rax
-  list_append [ключевые_слова], rax
+  list_append_link [ключевые_слова], rax
   string "функция"
   mov [ФУНКЦИЯ], rax
-  list_append [ключевые_слова], rax
+  list_append_link [ключевые_слова], rax
   string "прервать"
   mov [ПРЕРВАТЬ], rax
-  list_append [ключевые_слова], rax
+  list_append_link [ключевые_слова], rax
   string "включить"
   mov [ВКЛЮЧИТЬ], rax
-  list_append [ключевые_слова], rax
+  list_append_link [ключевые_слова], rax
   string "проверить"
   mov [ПРОВЕРИТЬ], rax
-  list_append [ключевые_слова], rax
+  list_append_link [ключевые_слова], rax
   string "пропустить"
   mov [ПРОПУСТИТЬ], rax
-  list_append [ключевые_слова], rax
+  list_append_link [ключевые_слова], rax
 
   string "тип"
   mov [тип], rax
@@ -501,12 +501,12 @@ start:
   mov rcx, rax
 
   string <"section 'start' executable", 10, "start:", 10>
-  string_extend rcx, rax
+  string_extend_links rcx, rax
 
-  string_extend rcx, rbx
+  string_extend_links rcx, rbx
 
   string "exit 0"
-  string_extend rcx, rax
+  string_extend_links rcx, rax
 
   integer 1
   list_get_link [ARGUMENTS], rax
