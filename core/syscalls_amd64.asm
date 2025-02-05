@@ -1,3 +1,6 @@
+; Копирайт © 2025 ООО «РУС.ЯЗ»
+; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
+
 section "syscalls_amd64" writable
   ; Системные вызовы
   define SYS_READ   0

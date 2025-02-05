@@ -1,3 +1,6 @@
+; Копирайт © 2025 ООО «РУС.ЯЗ»
+; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
+
 f_buffer_length:
   get_arg 0
   mov rcx, 0 ; Счётчик

@@ -1,3 +1,6 @@
+; Копирайт © 2025 ООО «РУС.ЯЗ»
+; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
+
 section "compiler" executable
 
 macro check_node_type node*, type* {
