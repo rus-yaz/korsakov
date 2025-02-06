@@ -23,6 +23,16 @@ f_integer_copy:
 
   ret
 
+f_integer_neg:
+  get_arg 0
+  check_type rax, INTEGER
+
+  mov rax, [rax + INTEGER_HEADER * 8]
+  neg rax
+  integer rax
+
+  ret
+
 f_integer_inc:
   get_arg 0
   check_type rax, INTEGER

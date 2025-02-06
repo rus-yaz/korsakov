@@ -128,7 +128,7 @@ f_tokenizer:
     jne .not_string
       .while_string:
         integer_inc [индекс]
-        list_get_link [символы], [индекс]
+        list_get_link [символы], rax
         mov rbx, rax
         string_extend_links [токен], rax
 
@@ -144,6 +144,93 @@ f_tokenizer:
       jmp .add_token
 
     .not_string:
+
+    string "!"
+    is_equal [токен], rax
+    boolean_value rax
+    cmp rax, 1
+    jne .not_exclamation_mark
+
+      integer_copy [индекс]
+      integer_inc rax
+      list_get_link [символы], rax
+      string_extend_links [токен], rax
+
+      string "!!"
+      is_equal [токен], rax
+      boolean_value rax
+      cmp rax, 1
+      jne .not_oneline_comment
+
+        string 10
+        mov rbx, rax
+
+        .while_oneline_comment:
+
+          integer_inc [индекс]
+          list_get_link [символы], rax
+          is_equal rbx, rax
+          boolean_value rax
+          cmp rax, 1
+          jne .while_oneline_comment
+
+          jmp .continue
+
+      .not_oneline_comment:
+
+      string "!*"
+      is_equal [токен], rax
+      boolean_value rax
+      cmp rax, 1
+      jne .not_multiline_comment
+
+        string "*"
+        mov r8, rax
+
+        string "!"
+        mov r9, rax
+
+        .while_multiline_comment:
+          integer_inc [индекс]
+          list_get_link [символы], rax
+
+          is_equal r8, rax
+          boolean_value rax
+          cmp rax, 1
+          jne .while_multiline_comment
+
+          integer_inc [индекс]
+          list_get_link [символы], rax
+
+          is_equal r9, rax
+          boolean_value rax
+          cmp rax, 1
+          jne .while_multiline_comment
+
+          jmp .continue
+
+      .not_multiline_comment:
+
+      string "!="
+      is_equal [токен], rax
+      boolean_value rax
+      cmp rax, 1
+      jne .not_not_equal
+
+        integer_inc [индекс]
+
+        integer_copy [ТИП_НЕ_РАВНО]
+        mov [тип_токена], rax
+
+        jmp .add_token
+
+      .not_not_equal:
+
+      buffer_to_string UNEXPECTED_TOKEN_ERROR
+      print <rax, [токен]>
+      exit -1
+
+    .not_exclamation_mark:
 
     string "%"
     is_equal [токен], rax
@@ -376,8 +463,8 @@ f_tokenizer:
         mov rdx, rax
 
         list_length [токены]
-        cmp rax, 1
-        jne .not_pre_increment
+        cmp rax, 0
+        je .not_pre_increment
 
         integer -1
         list_get_link [токены], rax
@@ -385,12 +472,14 @@ f_tokenizer:
         cmp rax, 1
         jne .not_pre_increment
 
-          list_pop [токены]
+          list_pop_link [токены]
           mov rcx, rax
           boolean 1
           mov rdx, rax
 
         .not_pre_increment:
+
+        ; Значение истинно, когда операция имеет низший приоритет
 
         dictionary
         mov rbx, rax
@@ -463,8 +552,8 @@ f_tokenizer:
         mov rdx, rax
 
         list_length [токены]
-        cmp rax, 1
-        jne .not_pre_decrement
+        cmp rax, 0
+        je .not_pre_decrement
 
         integer -1
         list_get_link [токены], rax
@@ -472,12 +561,14 @@ f_tokenizer:
         cmp rax, 1
         jne .not_pre_decrement
 
-          list_pop [токены]
+          list_pop_link [токены]
           mov rcx, rax
           boolean 1
           mov rdx, rax
 
         .not_pre_decrement:
+
+        ; Значение истинно, когда операция имеет низший приоритет
 
         dictionary
         mov rbx, rax

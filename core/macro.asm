@@ -538,6 +538,13 @@ macro integer value* {
 
   return
 }
+macro integer_neg int* {
+  enter int
+
+  call f_integer_neg
+
+  return
+}
 
 macro integer_copy int* {
   enter int

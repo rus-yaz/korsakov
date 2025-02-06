@@ -63,6 +63,16 @@ macro compile_access node*, context* {
   debug_end "compile_access"
 }
 
+macro compile_unary_operation node*, context* {
+  debug_start "compile_unary_operation"
+  enter node, context
+
+  call f_compile_unary_operation
+
+  return
+  debug_end "compile_unary_operation"
+}
+
 macro compile_binary_operation node*, context* {
   debug_start "compile_binary_operation"
   enter node, context
@@ -237,6 +247,13 @@ f_compile:
     compile_access rbx, rcx
     ret
   .not_access:
+
+  check_node_type rcx, [УЗЕЛ_УНАРНОЙ_ОПЕРАЦИИ]
+  cmp rax, 1
+  jne .not_unary_operation
+    compile_unary_operation rbx, rcx
+    ret
+  .not_unary_operation:
 
   check_node_type rcx, [УЗЕЛ_БИНАРНОЙ_ОПЕРАЦИИ]
   cmp rax, 1
@@ -442,6 +459,160 @@ f_compile_access:
 
   string "pop rbx, rcx"
   list_append_link rdx, rax
+
+  mov rax, rdx
+  ret
+
+f_compile_unary_operation:
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
+
+  list
+  mov rdx, rax
+
+  string "операнд"
+  dictionary_get_link rcx, rax
+  compile rax, rbx
+  list_extend_links rdx, rax
+
+  null
+  mov r8, rax
+
+  string "оператор"
+  dictionary_get_link rcx, rax
+  mov r9, rax
+
+  token_check_type r9, [ТИП_ИНКРЕМЕНТАЦИЯ]
+  cmp rax, 1
+  jne .not_increment
+
+    string "push rbx, rcx"
+    list_append_link rdx, rax
+    string "mov rcx, rax"
+    list_append_link rdx, rax
+
+    string "integer_copy rax"
+    list_append_link rdx, rax
+    string "mov rbx, rax"
+    list_append_link rdx, rax
+
+    string "integer_inc rcx"
+    list_append_link rdx, rax
+
+    string "операнд"
+    dictionary_get_link rcx, rax
+    mov r11, rax
+
+    check_node_type r11, [ТИП_ИДЕНТИФИКАТОР]
+    cmp rax, 1
+    je .correct_identifier_increment
+
+      string "Ожидался идентификатор, но получен "
+      print <rax, r11>
+      exit -1
+
+    .correct_identifier_increment:
+
+    string "переменная"
+    dictionary_get_link r11, rax
+    mov r12, rax
+    string "ключи"
+    dictionary_get_link r11, rax
+    assign_node r12, rax, r8
+    compile rax, rbx
+    list_extend_links rdx, rax
+
+    string "значение"
+    dictionary_get_link r9, rax
+    boolean_value rax
+    cmp rax, 1
+    je .not_pre_increment
+      string "integer_inc rbx"
+      list_append_link rdx, rax
+      jmp .continue_increment
+
+    .not_pre_increment:
+      string "mov rax, rbx"
+      list_append_link rdx, rax
+
+    .continue_increment:
+
+    string "pop rcx, rbx"
+    list_append_link rdx, rax
+
+    jmp .continue
+
+  .not_increment:
+
+  token_check_type r9, [ТИП_ДЕКРЕМЕНТАЦИЯ]
+  cmp rax, 1
+  jne .not_decrement
+
+    string "push rbx, rcx"
+    list_append_link rdx, rax
+    string "mov rcx, rax"
+    list_append_link rdx, rax
+
+    string "integer_copy rax"
+    list_append_link rdx, rax
+    string "mov rbx, rax"
+    list_append_link rdx, rax
+
+    string "integer_dec rcx"
+    list_append_link rdx, rax
+
+    string "операнд"
+    dictionary_get_link rcx, rax
+    mov r11, rax
+    string "переменная"
+    dictionary_get_link r11, rax
+    mov r12, rax
+    string "ключи"
+    dictionary_get_link r11, rax
+    assign_node r12, rax, r8
+    compile rax, rbx
+    list_extend_links rdx, rax
+
+    string "значение"
+    dictionary_get_link r9, rax
+    boolean_value rax
+    cmp rax, 1
+    je .not_pre_decrement
+      string "integer_dec rbx"
+      list_append_link rdx, rax
+      jmp .continue_decrement
+
+    .not_pre_decrement:
+      string "mov rax, rbx"
+      list_append_link rdx, rax
+
+    .continue_decrement:
+
+    string "pop rcx, rbx"
+    list_append_link rdx, rax
+
+    jmp .continue
+
+  .not_decrement:
+
+  token_check_type r9, [ТИП_ВЫЧИТАНИЕ]
+  cmp rax, 1
+  jne .not_negate
+
+    string "integer_neg rax"
+    list_append_link rdx, rax
+    jmp .continue
+
+  .not_negate:
+
+  string "Неизвестный оператор: "
+  mov rbx, rax
+  print <rbx, rcx>
+  exit -1
+
+  .continue:
 
   mov rax, rdx
   ret
@@ -853,6 +1024,11 @@ f_compile_while:
 
   mov r13, [rax + INTEGER_HEADER*8]
 
+  string "push rbx"
+  list_append_link rdx, rax
+  string "mov rbx, 0"
+  list_append_link rdx, rax
+
   string ".loop_start_"
   mov r14, rax
   integer r13
@@ -881,6 +1057,9 @@ f_compile_while:
   string_extend_links r14, rax
   list_append_link rdx, rax
 
+  string "mov rbx, 1"
+  list_append_link rdx, rax
+
   string "тело"
   dictionary_get_link rcx, rax
   compile rax, rbx
@@ -900,6 +1079,31 @@ f_compile_while:
   string_extend_links r14, rax
   string ":"
   string_extend_links r14, rax
+  list_append_link rdx, rax
+
+  string "cmp rbx, 1"
+  string "je .loop_else_skip_"
+  mov r14, rax
+  integer r13
+  to_string rax
+  string_extend_links r14, rax
+  list_append_link rdx, rax
+
+  string "случай_иначе"
+  dictionary_get_link rcx, rax
+  compile rax, rbx
+  list_extend_links rdx, rax
+
+  string ".loop_else_skip_"
+  mov r14, rax
+  integer r13
+  to_string rax
+  string_extend_links r14, rax
+  string ":"
+  string_extend_links r14, rax
+  list_append_link rdx, rax
+
+  string "pop rbx"
   list_append_link rdx, rax
 
   string "СЧЁТЧИК_ВЛОЖЕННОСТИ"
