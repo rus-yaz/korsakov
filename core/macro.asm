@@ -245,6 +245,22 @@ macro boolean_not boolean {
   return
 }
 
+macro boolean_and boolean_1, boolean_2 {
+  enter boolean_1, boolean_2
+
+  call f_boolean_and
+
+  return
+}
+
+macro boolean_or boolean_1, boolean_2 {
+  enter boolean_1, boolean_2
+
+  call f_boolean_or
+
+  return
+}
+
 section "delete" executable
 
 macro delete [variable*] {

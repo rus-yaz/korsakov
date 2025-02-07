@@ -597,6 +597,17 @@ f_compile_unary_operation:
 
   .not_decrement:
 
+  string "не"
+  token_check_keyword r9, rax
+  cmp rax, 1
+  jne .not_not
+
+    string "boolean_not rax"
+    list_append_link rdx, rax
+    jmp .continue
+
+  .not_not:
+
   token_check_type r9, [ТИП_ВЫЧИТАНИЕ]
   cmp rax, 1
   jne .not_negate
@@ -644,6 +655,23 @@ f_compile_binary_operation:
   string "оператор"
   dictionary_get_link rcx, rax
   mov rcx, rax
+
+  string "и"
+  token_check_keyword rcx, rax
+  cmp rax, 1
+  jne .not_and
+    string "boolean_and rax, rbx"
+    jmp .binary_operation_continue
+  .not_and:
+
+  string "или"
+  cmp rax, 1
+  token_check_keyword rcx, rax
+  jne .not_or
+    string "boolean_or rax, rbx"
+    jmp .binary_operation_continue
+  .not_or:
+
   string "тип"
   dictionary_get_link rcx, rax
   mov r8, rax

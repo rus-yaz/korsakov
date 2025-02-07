@@ -101,10 +101,60 @@ f_boolean_value:
 
 f_boolean_not:
   get_arg 0
-  check_type rax, BOOLEAN
 
+  boolean rax
   mov rax, [rax + BOOLEAN_HEADER*8]
+
   dec rax
   neg rax
   boolean rax
+
+  ret
+
+f_boolean_and:
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
+
+  boolean rbx
+  mov rax, [rax + BOOLEAN_HEADER*8]
+  cmp rax, 1
+  jne .return_false
+
+  boolean rcx
+  mov rax, [rax + BOOLEAN_HEADER*8]
+  cmp rax, 1
+  jne .return_false
+
+  boolean 1
+  ret
+
+  .return_false:
+
+  boolean 0
+  ret
+
+f_boolean_or:
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
+
+  boolean rbx
+  mov rax, [rax + BOOLEAN_HEADER*8]
+  cmp rax, 1
+  je .return_true
+
+  boolean rcx
+  mov rax, [rax + BOOLEAN_HEADER*8]
+  cmp rax, 1
+  je .return_true
+
+  boolean 0
+  ret
+
+  .return_true:
+
+  boolean 1
   ret
