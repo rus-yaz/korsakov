@@ -82,7 +82,7 @@ f_dictionary_from_items:
 
   check_type rbx, LIST
 
-  list_length rcx
+  list_length rbx
   integer rax
   mov rcx, rax
 
