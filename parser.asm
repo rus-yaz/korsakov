@@ -55,6 +55,16 @@ macro next {
   debug_end "next"
 }
 
+macro skip_newline {
+  debug_start "skip_newline"
+  enter
+
+  call f_skip_newline
+
+  return
+  debug_end "skip_newline"
+}
+
 macro reverse amount = 0 {
   debug_start "reverse"
   enter amount
@@ -323,6 +333,15 @@ f_next:
   integer_inc [индекс]
 
   mov rax, [индекс]
+  ret
+
+f_skip_newline:
+  token_check_type [токен], [ТИП_ПЕРЕНОС_СТРОКИ]
+  cmp rax, 1
+  jne @f
+    next
+  @@:
+
   ret
 
 f_reverse:
@@ -977,12 +996,7 @@ f_call_expression:
   list
   mov rcx, rax
 
-  token_check_type [токен], [ТИП_ПЕРЕНОС_СТРОКИ]
-  cmp rax, 1
-  jne .skip_newline_1
-    next
-
-  .skip_newline_1:
+  skip_newline
 
   token_check_type [токен], [ТИП_ЗАКРЫВАЮЩАЯ_СКОБКА]
   cmp rax, 1
@@ -998,18 +1012,13 @@ f_call_expression:
   list_append_link rcx, rax
 
   .while:
-    token_check_type [токен], [ТИП_ПРОБЕЛ]
+    token_check_type [токен], [ТИП_ЗАКРЫВАЮЩАЯ_СКОБКА]
     cmp rax, 1
-    jne .end_while
+    je .end_while
 
     next
 
-    token_check_type [токен], [ТИП_ПЕРЕНОС_СТРОКИ]
-    cmp rax, 1
-    jne .skip_newline_2
-      next
-
-    .skip_newline_2:
+    skip_newline
 
     expression
     list_append_link rcx, rax
@@ -1017,13 +1026,6 @@ f_call_expression:
     jmp .while
 
   .end_while:
-
-  token_check_type [токен], [ТИП_ПЕРЕНОС_СТРОКИ]
-  cmp rax, 1
-  jne .skip_newline_3
-    next
-
-  .skip_newline_3:
 
   token_check_type [токен], [ТИП_ЗАКРЫВАЮЩАЯ_СКОБКА]
   cmp rax, 1
@@ -1126,17 +1128,9 @@ f_arithmetical_expression:
   ret
 
 f_list_expression:
-  ; RBX — value
-  ; RCX — is_dictionary
-
-  dictionary
-  mov rbx, rax
-
-  mov rcx, 0
-
   token_check_type [токен], [ТИП_ОТКРЫВАЮЩАЯ_СКОБКА_СПИСКА]
   cmp rax, 1
-  je .correct_token
+  je .correct_start
 
     cmp [try], 1
     jne @f
@@ -1150,85 +1144,26 @@ f_list_expression:
     string "Ожидалось"
     list_append_link rbx, rax
     buffer_to_string OPEN_LIST_PAREN
+    list_append_link rbx, rax
+    join rbx
     print rax
     exit -1
 
-  .correct_token:
+  .correct_start:
 
   next
-
-  token_check_type [токен], [ТИП_ПЕРЕНОС_СТРОКИ]
-  cmp rax, 1
-  jne .skip_newline_1
-    next
-
-  .skip_newline_1:
-
-  token_check_type [токен], [ТИП_ЗАКРЫВАЮЩАЯ_СКОБКА]
-  cmp rax, 1
-  jne .not_empty
-
-    next
-
-    list
-    list_node rax
-
-    ret
-
-  .not_empty:
-
-  ; RDX — key_node
-
-  expression
-  mov rdx, rax
-
-  null
-  mov r8, rax
+  skip_newline
 
   token_check_type [токен], [ТИП_ДВОЕТОЧИЕ]
   cmp rax, 1
-  jne .not_dictionary
-    mov rcx, 1
+  jne .not_empty_dictionary
 
     next
+    skip_newline
 
-    ; R8  — value_node
-
-    expression
-    mov r8, rax
-
-  .not_dictionary:
-
-  ; R9 — value
-
-  dictionary
-  dictionary_set_link rax, rdx, r8
-  mov r9, rax
-
-  .while:
     token_check_type [токен], [ТИП_ЗАКРЫВАЮЩАЯ_СКОБКА]
     cmp rax, 1
-    je .end_while
-
-    token_check_type [токен], [ТИП_ПЕРЕНОС_СТРОКИ]
-    cmp rax, 1
-    jne .skip_newline_2
-      next
-
-    .skip_newline_2:
-
-    expression
-    mov rdx, rax
-
-    null
-    mov r8, rax
-
-    cmp rcx, 1
-    je .skip_dictionary_append_error
-
-    token_check_type [токен], [ТИП_ДВОЕТОЧИЕ]
-    cmp rax, 1
-    jne .skip_dictionary_append_error
+    je .correct_empty_dictionary
 
       cmp [try], 1
       jne @f
@@ -1241,20 +1176,69 @@ f_list_expression:
       mov rbx, rax
       string "Ожидалось"
       list_append_link rbx, rax
-      buffer_to_string SPACE
+      buffer_to_string CLOSED_PAREN
       list_append_link rbx, rax
       join rbx
       print rax
       exit -1
 
-    .skip_dictionary_append_error:
+    .correct_empty_dictionary:
 
-    cmp rcx, 1
-    jne .skip_dictionary_append
+    list
+    dictionary_node rax
+    ret
+
+  .not_empty_dictionary:
+
+  token_check_type [токен], [ТИП_ЗАКРЫВАЮЩАЯ_СКОБКА]
+  cmp rax, 1
+  jne .not_empty_list
+
+    list
+    list_node rax
+    ret
+
+  .not_empty_list:
+
+  expression
+  mov rbx, rax
+
+  skip_newline
+
+  token_check_type [токен], [ТИП_ДВОЕТОЧИЕ]
+  cmp rax, 1
+  jne .not_dictionary
+
+    next
+    skip_newline
+
+    expression
+    mov rcx, rax
+
+    list
+    mov rdx, rax
+
+    list
+    list_append_link rax, rbx
+    list_append_link rax, rcx
+
+    list_node rax
+    list_append_link rdx, rax
+
+    .while_dictionary:
+
+      token_check_type [токен], [ТИП_ЗАКРЫВАЮЩАЯ_СКОБКА]
+      cmp rax, 1
+      je .end_while_dictionary
+
+      expression
+      mov rbx, rax
+
+      skip_newline
 
       token_check_type [токен], [ТИП_ДВОЕТОЧИЕ]
       cmp rax, 1
-      je .skip_colon_error
+      je .correct_colon
 
         cmp [try], 1
         jne @f
@@ -1273,94 +1257,57 @@ f_list_expression:
         print rax
         exit -1
 
-      .skip_colon_error:
+      .correct_colon:
 
       next
+      skip_newline
 
       expression
-      mov r8, rax
+      mov rcx, rax
 
-    .skip_dictionary_append:
+      skip_newline
 
-    dictionary_set_link r9, rdx, r8
+      list
+      list_append_link rax, rbx
+      list_append_link rax, rcx
 
-    jmp .while
+      list_node rax
+      list_append_link rdx, rax
 
-  .end_while:
+      jmp .while_dictionary
 
-  token_check_type [токен], [ТИП_ПЕРЕНОС_СТРОКИ]
-  cmp rax, 1
-  jne .skip_newline_3
+    .end_while_dictionary:
+
     next
 
-  .skip_newline_3:
+    list_node rdx
+    dictionary_node rax
+    ret
 
-  token_check_type [токен], [ТИП_ЗАКРЫВАЮЩАЯ_СКОБКА]
-  cmp rax, 1
-  je .skip_closed_paren_error
+  .not_dictionary:
 
-    cmp [try], 1
-    jne @f
-      null
-      ret
+  list
+  mov rcx, rax
 
-    @@:
+  list_append_link rcx, rbx
 
-    list
-    mov rbx, rax
-    string "Ожидались ` ` или `)`"
-    list_append_link rbx, rax
-    buffer_to_string SPACE
-    list_append_link rbx, rax
-    buffer_to_string CLOSED_PAREN
-    list_append_link rbx, rax
-    join rbx
-    print rax
-    exit -1
+  .while_list:
 
-  .skip_closed_paren_error:
+    token_check_type [токен], [ТИП_ЗАКРЫВАЮЩАЯ_СКОБКА]
+    cmp rax, 1
+    je .end_while_list
+
+    expression
+    list_append_link rcx, rax
+    skip_newline
+
+    jmp .while_list
+
+  .end_while_list:
 
   next
 
-  cmp rcx, 1
-  jne .skip_dictionary_return
-    dictionary_items r9
-    delete r9
-    mov r9, rax
-
-    integer 0
-    mov r10, rax
-
-    list
-    mov r11, rax
-
-    .dictionary_while:
-      list_length r9
-      integer rax
-      is_equal r10, rax
-      boolean_value rax
-      cmp rax, 1
-      je .dictionary_end_while
-
-      list_get_link r9, r10
-      list_node rax
-      list_append_link r11, rax
-
-      integer_inc r10
-      jmp .dictionary_while
-
-    .dictionary_end_while:
-
-    list_node r11
-    dictionary_node rax
-
-    ret
-
-  .skip_dictionary_return:
-
-  dictionary_keys_links r9
-  list_node rax
-
+  list_node rcx
   ret
 
 f_check_expression:
@@ -1440,7 +1387,7 @@ f_check_expression:
 
     token_check_type [токен], [ПЕРЕНОС_СТРОКИ]
     cmp rax, 1
-    jne .skip_newline_error_2
+    jne .skip_newline_error_1
 
       cmp [try], 1
       jne @f
@@ -2461,13 +2408,7 @@ f_class_expression:
       list_append_link rcx, rax
 
       next
-
-      token_check_type [токен], [ТИП_ПЕРЕНОС_СТРОКИ]
-      cmp rax, 1
-      jne .no_newline_1
-        next
-
-      .no_newline_1:
+      skip_newline
 
       list
       list_append_link rax, [ТИП_ПРОБЕЛ]
