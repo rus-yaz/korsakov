@@ -71,7 +71,7 @@ macro syscall number*, arg_1 = 0, arg_2 = 0, arg_3 = 0, arg_4 = 0, arg_5 = 0, ar
   mov rax, number
   syscall
 
-  pop r9, r8, r10, rdx, rsi, rdi
+  pop rdi, rsi, rdx, r10, r8, r9
 }
 
 macro sys_read file_descriptor*, buffer_ptr*, size* {

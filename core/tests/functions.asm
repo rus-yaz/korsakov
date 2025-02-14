@@ -11,11 +11,9 @@ integer 2
 mov rcx, rax
 
 is_equal rbx, rbx
-integer rax
 print rax
 
 is_equal rbx, rcx
-integer rax
 print rax
 
 string "Проверка 123"
@@ -25,11 +23,9 @@ string "321 акреворП"
 mov rcx, rax
 
 is_equal rbx, rbx
-integer rax
 print rax
 
 is_equal rbx, rcx
-integer rax
 print rax
 
 list
@@ -55,9 +51,7 @@ integer 1
 list_append rcx, rax
 
 is_equal rbx, rbx
-integer rax
 print rax
 
 is_equal rbx, rcx
-integer rax
 print rax

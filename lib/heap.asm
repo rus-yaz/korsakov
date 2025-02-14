@@ -77,8 +77,6 @@ f_delete_block:
     mem_mov [rax + 8*2], 0
     mem_mov [rax + 8*3], 0
 
-    mov [LAST_USED_HEAP_BLOCK], r8
-
   .skip_current_and_next_blocks_merging:
 
   ; Нахождение предыдущего блока
@@ -107,8 +105,6 @@ f_delete_block:
 
     add rcx, HEAP_BLOCK_HEADER*8
     mov [rax + 8*1], rcx
-
-    mov [LAST_USED_HEAP_BLOCK], rax
 
     ; Удаление заголовка удаляемого блока
     mem_mov [r8 + 8*0], 0
@@ -146,6 +142,11 @@ f_delete_block:
     mem_mov [rcx + 8*2], [r8 + 8*1]
 
   .skip_next_next_block_modifying:
+
+  cmp r8, [LAST_USED_HEAP_BLOCK]
+  jge .skip
+    mov [LAST_USED_HEAP_BLOCK], r8
+  .skip:
 
   ret
 
@@ -212,8 +213,8 @@ f_create_block:
 
       ; Проверка состояния блока
       mov rcx, [rbx + 8*3]          ; Получение статуса нового блока
-      test rcx, 1                   ; Проверка, используется ли блок
-      jnz .find_new_block           ; Если блок используется, искать новый блок
+      cmp rcx, 0                    ; Проверка, используется ли блок
+      jne .find_new_block           ; Если блок используется, искать новый блок
 
   mem_mov [rax + 8*3], 1 ; Изменение состояния текущего блока на используемое
 

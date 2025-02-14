@@ -17,6 +17,8 @@ f_delete:
   je .collection
   cmp rcx, STRING
   je .collection
+  cmp rcx, DICTIONARY
+  je .collection
 
     ; Если прыжка не произошло, переменная не является коллекцией
     delete_block rbx

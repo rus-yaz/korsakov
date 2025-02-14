@@ -4,32 +4,32 @@
 string "Работа со строками"
 print rax
 
-buffer_to_string string.буфер
-mov [string.строка], rax
+string "Строка"
+mov rbx, rax
 
 ; Взятие символа по индексу
 integer -2
-mov [string.индекс], rax
+mov rcx, rax
 
-string_get [string.строка], [string.индекс]
-mov [string.символ], rax
+string_get rbx, rcx
+mov rdx, rax
 
 string "Символ по индексу:"
-print <rax, [string.символ]>
+print <rax, rdx>
 
-string_add [string.строка], [string.символ]
+string_add rbx, rdx
 print rax
 
-string_extend [string.строка], [string.символ]
-print [string.строка]
+string_extend rbx, rdx
+print rbx
 
 list
-list_append rax, [string.строка]
-list_append rax, [string.символ]
+list_append rax, rbx
+list_append rax, rdx
 
 print rax
 
-split [string.строка], " "
+split rbx, " "
 print rax
 
 join rax, " "

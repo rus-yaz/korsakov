@@ -4,6 +4,16 @@
 string "Выполнение команд"
 print rax
 
-run exec.команда_1, exec.аргументы_1, exec.переменные_среды
+list
+mov rbx, rax
+string "/bin/echo"
+list_append_link rbx, rax
+string "Hello"
+list_append_link rbx, rax
+run rbx, [ENVIRONMENT_VARIABLES]
 
-run exec.команда_2, exec.аргументы_2, exec.переменные_среды
+list
+mov rbx, rax
+string "/bin/ls"
+list_append_link rbx, rax
+run rbx, [ENVIRONMENT_VARIABLES]

@@ -5,14 +5,15 @@ string "Работа с файлами"
 print rax
 
 ; Получение размера файла
-get_file_size file.имя_файла_для_чтения
+string "Привет"
+get_file_size rax
 integer rax
 mov rbx, rax
 string "Размер файла:"
 print <rax, rbx>
 
 ; Открытие файла
-buffer_to_string file.имя_файла_для_чтения
+string "Привет"
 open_file rax
 mov rbx, rax
 
@@ -38,7 +39,7 @@ print <rax, rcx>
 ; Тест записи файла
 
 ; Открытие файла в режиме записи
-buffer_to_string file.имя_файла_для_записи
+string "Пока"
 open_file rax, O_WRONLY + O_CREAT + O_TRUNC, 644o
 mov r8, rax
 
@@ -49,7 +50,7 @@ write_file r8, rcx
 close_file r8
 
 ; Открытие файла
-buffer_to_string file.имя_файла_для_записи
+string "Пока"
 open_file rax
 mov r8, rax
 

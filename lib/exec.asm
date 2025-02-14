@@ -1,7 +1,6 @@
 ; Копирайт © 2025 ООО «РУС.ЯЗ»
 ; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
 
-section "" executable
 f_run:
   get_arg 0
   mov rbx, rax
@@ -84,7 +83,7 @@ f_run:
 
   .main_process:
 
-  cmp rcx, 0
+  cmp rdx, 0
   je .dont_wait
     sys_wait4 rax
 

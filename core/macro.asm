@@ -411,7 +411,7 @@ macro dictionary_set dictionary*, key*, value* {
 
 section "exec" executable
 
-macro run command, env, wait = 1 {
+macro run command*, env*, wait = 1 {
   enter command, env, wait
 
   call f_run
