@@ -23,6 +23,15 @@ f_run:
   return
 
   cmp rax, 0
+  jge .fork_success
+
+    string "run: Не удалось создать процесс"
+    print rax
+    exit -1
+
+  .fork_success:
+
+  cmp rax, 0
   jne .main_process
 
     integer 0
