@@ -213,7 +213,7 @@ macro division first*, second* {
 
 section "boolean" executable
 
-macro boolean value {
+macro boolean value* {
   enter value
 
   call f_boolean
@@ -221,7 +221,7 @@ macro boolean value {
   return
 }
 
-macro boolean_copy boolean {
+macro boolean_copy boolean* {
   enter boolean
 
   call f_boolean_copy
@@ -229,7 +229,7 @@ macro boolean_copy boolean {
   return
 }
 
-macro boolean_value boolean {
+macro boolean_value boolean* {
   enter boolean
 
   call f_boolean_value
@@ -245,7 +245,7 @@ macro boolean_not boolean {
   return
 }
 
-macro boolean_and boolean_1, boolean_2 {
+macro boolean_and boolean_1*, boolean_2* {
   enter boolean_1, boolean_2
 
   call f_boolean_and
@@ -253,7 +253,7 @@ macro boolean_and boolean_1, boolean_2 {
   return
 }
 
-macro boolean_or boolean_1, boolean_2 {
+macro boolean_or boolean_1*, boolean_2* {
   enter boolean_1, boolean_2
 
   call f_boolean_or
@@ -955,7 +955,7 @@ macro null {
 section "print" executable
 
 macro print arguments*, separator = 0, end_of_string = 0 {
-  enter arguments, 0, separator, end_of_string
+  enter arguments, separator, end_of_string
 
   call f_print
 

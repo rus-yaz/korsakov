@@ -15,6 +15,9 @@ macro debug_start function_name* {
   string " "
   multiplication rbx, rax
   mov rbx, rax
+  list
+  list_append_link rax, rbx
+  mov rbx, rax
   string ""
   print rbx, "", rax
 
@@ -39,8 +42,10 @@ macro debug_start function_name* {
 
   list_append_link [DEBUG_TIME], rbx
 
-  print <rcx, rdx>
-  delete rcx, rdx
+  list
+  list_append_link rax, rcx
+  list_append_link rax, rdx
+  print rax
 
   leave
   end if
@@ -56,6 +61,9 @@ macro debug_end function_name* {
   mov rbx, rax
   string " "
   multiplication rbx, rax
+  mov rbx, rax
+  list
+  list_append_link rax, rbx
   mov rbx, rax
   string ""
   print rbx, "", rax
@@ -92,8 +100,12 @@ macro debug_end function_name* {
   mov r9, rax
   pop rcx
 
-  print <rcx, rdx, r8, r9>
-  delete rbx, rcx, rdx, r8, r9
+  list
+  list_append_link rax, rcx
+  list_append_link rax, rdx
+  list_append_link rax, r8
+  list_append_link rax, r9
+  print rax
 
   leave
   end if

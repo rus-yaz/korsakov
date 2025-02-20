@@ -202,6 +202,11 @@ f_to_string:
   .not_dictionary:
 
   type_to_string rbx
+  mov rbx, rax
   string "to_string: Не поддерживается тип"
-  print <rax, rbx>
+  mov rcx, rax
+  list
+  list_append_link rax, rcx
+  list_append_link rax, rbx
+  print rax
   exit -1

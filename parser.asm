@@ -29,7 +29,7 @@ section "data" writable
   THEN                 db "`то`", 0
   TO                   db "`до`", 0
   OF                   db "`из`", 0
-  FUNCTION             db "`функция`", 0
+  FUNCTION_KEYWORD     db "`функция`", 0
   DELETE               db "`удалить`", 0
   INCLUDE_KEYWORD      db "`включить`", 0
 
@@ -296,6 +296,7 @@ f_parser:
   mov [индекс], rax
 
   next
+  skip_newline
 
   ; self.parse
   list
@@ -338,9 +339,9 @@ f_next:
 f_skip_newline:
   token_check_type [токен], [ТИП_ПЕРЕНОС_СТРОКИ]
   cmp rax, 1
-  jne @f
+  jne .no_newline
     next
-  @@:
+  .no_newline:
 
   ret
 
@@ -967,8 +968,14 @@ f_atom:
     mov rbx, rax
 
     string ". Получено"
+    string_extend_links rbx, rax
+    mov rbx, rax
 
-    print <rcx, rbx, rax, [токен]>
+    list
+    list_append_link rax, rcx
+    list_append_link rax, rbx
+    list_append_link rax, [токен]
+    print rax
 
     exit -1
 
@@ -991,34 +998,16 @@ f_call_expression:
   .call:
 
   next
+  skip_newline
 
   ; RCX — argument_nodes
   list
   mov rcx, rax
 
-  skip_newline
-
-  token_check_type [токен], [ТИП_ЗАКРЫВАЮЩАЯ_СКОБКА]
-  cmp rax, 1
-  jne .parse_arguments
-    next
-
-    call_node rbx, rcx
-    ret
-
-  .parse_arguments:
-
-  expression
-  list_append_link rcx, rax
-
   .while:
     token_check_type [токен], [ТИП_ЗАКРЫВАЮЩАЯ_СКОБКА]
     cmp rax, 1
     je .end_while
-
-    next
-
-    skip_newline
 
     expression
     list_append_link rcx, rax
@@ -1067,7 +1056,6 @@ f_power_root:
 f_factor:
   ; RBX — token
   mov rbx, [токен]
-
 
   list
   list_append_link rax, [ТИП_ВЫЧИТАНИЕ]

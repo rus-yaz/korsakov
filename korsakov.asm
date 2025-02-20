@@ -129,6 +129,7 @@ section "data" writable
   УЗЕЛ_БИНАРНОЙ_ОПЕРАЦИИ       rq 1
   УЗЕЛ_ПРИСВАИВАНИЯ_ПЕРЕМЕННОЙ rq 1
   УЗЕЛ_СПИСКА                  rq 1
+  УЗЕЛ_НУЛЬ                    rq 1
   УЗЕЛ_ЧИСЛА                   rq 1
   УЗЕЛ_СТРОКИ                  rq 1
   УЗЕЛ_ВЫЗОВА                  rq 1
@@ -412,38 +413,40 @@ start:
   integer 4
   mov [УЗЕЛ_СПИСКА], rax
   integer 5
-  mov [УЗЕЛ_ЧИСЛА], rax
+  mov [УЗЕЛ_НУЛЬ], rax
   integer 6
-  mov [УЗЕЛ_СТРОКИ], rax
+  mov [УЗЕЛ_ЧИСЛА], rax
   integer 7
-  mov [УЗЕЛ_ВЫЗОВА], rax
+  mov [УЗЕЛ_СТРОКИ], rax
   integer 8
-  mov [УЗЕЛ_УНАРНОЙ_ОПЕРАЦИИ], rax
+  mov [УЗЕЛ_ВЫЗОВА], rax
   integer 9
-  mov [УЗЕЛ_СЛОВАРЯ], rax
+  mov [УЗЕЛ_УНАРНОЙ_ОПЕРАЦИИ], rax
   integer 10
-  mov [УЗЕЛ_ПРОВЕРКИ], rax
+  mov [УЗЕЛ_СЛОВАРЯ], rax
   integer 11
-  mov [УЗЕЛ_ЕСЛИ], rax
+  mov [УЗЕЛ_ПРОВЕРКИ], rax
   integer 12
-  mov [УЗЕЛ_ДЛЯ], rax
+  mov [УЗЕЛ_ЕСЛИ], rax
   integer 13
-  mov [УЗЕЛ_ПОКА], rax
+  mov [УЗЕЛ_ДЛЯ], rax
   integer 14
-  mov [УЗЕЛ_МЕТОДА], rax
+  mov [УЗЕЛ_ПОКА], rax
   integer 15
-  mov [УЗЕЛ_ФУНКЦИИ], rax
+  mov [УЗЕЛ_МЕТОДА], rax
   integer 16
-  mov [УЗЕЛ_КЛАССА], rax
+  mov [УЗЕЛ_ФУНКЦИИ], rax
   integer 17
-  mov [УЗЕЛ_УДАЛЕНИЯ], rax
+  mov [УЗЕЛ_КЛАССА], rax
   integer 18
-  mov [УЗЕЛ_ВКЛЮЧЕНИЯ], rax
+  mov [УЗЕЛ_УДАЛЕНИЯ], rax
   integer 19
-  mov [УЗЕЛ_ВОЗВРАЩЕНИЯ], rax
+  mov [УЗЕЛ_ВКЛЮЧЕНИЯ], rax
   integer 20
-  mov [УЗЕЛ_ПРОПУСКА], rax
+  mov [УЗЕЛ_ВОЗВРАЩЕНИЯ], rax
   integer 21
+  mov [УЗЕЛ_ПРОПУСКА], rax
+  integer 22
   mov [УЗЕЛ_ПРЕРЫВАНИЯ], rax
 
   string "СЧЁТЧИК_ЕСЛИ"
@@ -472,9 +475,10 @@ start:
   boolean_value rax
   cmp rax, 1
   je .continue
-    string "Использование:"
-    print rax
-    string "  korsakov <file.kors>"
+    string <"Использование:", 10, "  korsakov <file.kors>">
+    mov rbx, rax
+    list
+    list_append_link rax, rbx
     print rax
     exit -1
 
@@ -484,21 +488,31 @@ start:
   list_get_link [ARGUMENTS], rax
   tokenizer rax
   mov [токены], rax
-  ;print [токены]
+  ;list
+  ;list_append_link rax, [токены]
+  ;print rax
 
   ;string ""
+  ;mov rbx, rax
+  ;list_append_link rax, rbx
   ;print rax
 
   parser [токены]
   mov [АСД], rax
-  ;print [АСД]
+  ;list
+  ;list_append_link rax, [АСД]
+  ;print rax
 
   ;string ""
+  ;mov rbx, rax
+  ;list_append_link rax, rbx
   ;print rax
 
   compiler [АСД], [GLOBAL_CONTEXT]
   mov rbx, rax
-  ;print rbx
+  ;list
+  ;list_append_link rax, rbx
+  ;print rax
 
   string <"include 'core/korsakov.asm'", 10>
   mov rcx, rax

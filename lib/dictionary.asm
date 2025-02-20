@@ -41,6 +41,9 @@ f_dictionary_from_lists:
   cmp rdx, rax
   je .continue
     string "dictionary_from_lists: Длина списков должна быть равна"
+    mov rbx, rax
+    list
+    list_append_link rax, rbx
     print rax
     exit -1
 
@@ -108,6 +111,9 @@ f_dictionary_from_items:
     cmp rax, 2
     je .correct_length
       string "dictionary_from_lists: Длины внутренних списков должны равняться двум"
+      mov rbx, rax
+      list
+      list_append_link rax, rbx
       print rax
       exit -1
 
@@ -306,7 +312,12 @@ f_dictionary_get_link:
       string "Ключ не найден:"
       mov rdx, rax
       to_string rcx
-      print <rdx, rax, rbx>
+      mov rcx, rax
+      list
+      list_append_link rax, rdx
+      list_append_link rax, rcx
+      list_append_link rax, rbx
+      print rax
       exit -1
 
     .return_default:
@@ -317,7 +328,7 @@ f_dictionary_get_link:
   .no_key:
 
   dictionary_values_links rbx
-  list_get rax, r8
+  list_get_link rax, r8
 
   ret
 

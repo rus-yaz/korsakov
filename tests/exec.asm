@@ -2,6 +2,9 @@
 ; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
 
 string "Выполнение команд"
+mov rbx, rax
+list
+list_append_link rax, rbx
 print rax
 
 list

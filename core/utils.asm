@@ -72,7 +72,7 @@ f_type_to_string:
 
   cmp rax, NULL
   jne .not_null
-    string "НУЛЬ"
+    string "Нуль"
     ret
   .not_null:
 
@@ -134,7 +134,11 @@ f_type_to_string:
   to_string rax
   mov rbx, rax
   string "type_to_string: Нет строкового обозначения для типа"
-  print <rax, rbx>
+  mov rcx, rax
+  list
+  list_append_link rax, rcx
+  list_append_link rax, rbx
+  print rax
   exit -1
 
 f_type_full_size:
@@ -179,7 +183,11 @@ f_type_full_size:
   type_to_string rax
   mov rbx, rax
   string "type_full_size: Не определён размер заголовка для типа"
-  print <rax, rbx>
+  mov rcx, rax
+  list
+  list_append_link rax, rcx
+  list_append_link rax, rbx
+  print rax
   exit -1
 
 f_check_type:
@@ -197,5 +205,9 @@ f_check_type:
   type_to_string r9
   mov rbx, rax
   string "check_type: Ожидался тип"
-  print <rax, rbx>
+  mov rcx, rax
+  list
+  list_append_link rax, rcx
+  list_append_link rax, rbx
+  print rax
   exit -1

@@ -35,6 +35,14 @@ macro list_node elements* {
   return
 }
 
+macro null_node {
+  enter
+
+  call f_null_node
+
+  return
+}
+
 macro number_node token* {
   enter token
 
@@ -221,6 +229,14 @@ f_list_node:
 
   ret
 
+f_null_node:
+  dictionary
+  mov rbx, rax
+
+  dictionary_set_link rbx, [узел], [УЗЕЛ_НУЛЬ]
+
+  ret
+
 f_number_node:
   dictionary
   mov rbx, rax
@@ -384,6 +400,7 @@ f_function_node:
   get_arg 2
   dictionary_set_link rbx, [тело], rax
   get_arg 3
+  integer rax
   dictionary_set_link rbx, [автовозвращение], rax ; Уточнить название
 
   ret

@@ -6,6 +6,9 @@ include "core/korsakov.asm"
 section "start" executable
 start:
   string ""
+  mov rbx, rax
+  list
+  list_append_link rax, rbx
   mov r15, rax
   include "tests/arithmetical.asm"
   print r15

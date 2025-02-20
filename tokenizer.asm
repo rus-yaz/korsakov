@@ -227,7 +227,12 @@ f_tokenizer:
       .not_not_equal:
 
       buffer_to_string UNEXPECTED_TOKEN_ERROR
-      print <rax, [токен]>
+      mov rbx, rax
+
+      list
+      list_append_link rax, rbx
+      list_append_link rax, [токен]
+      print rax
       exit -1
 
     .not_exclamation_mark:
@@ -259,7 +264,12 @@ f_tokenizer:
       .not_open_list_paren:
 
       buffer_to_string UNEXPECTED_TOKEN_ERROR
-      print <rax, [токен]>
+      mov rbx, rax
+
+      list
+      list_append_link rax, rbx
+      list_append_link rax, [токен]
+      print rax
       exit -1
 
     .not_percent:
@@ -311,7 +321,12 @@ f_tokenizer:
       .not_lower:
 
       buffer_to_string UNEXPECTED_TOKEN_ERROR
-      print <rax, [токен]>
+      mov rbx, rax
+
+      list
+      list_append_link rax, rbx
+      list_append_link rax, [токен]
+      print rax
       exit -1
 
     .not_backslash:
@@ -662,7 +677,12 @@ f_tokenizer:
     jne .add_token
 
     buffer_to_string UNEXPECTED_TOKEN_ERROR
-    print <rax, [токен]>
+    mov rbx, rax
+
+    list
+    list_append_link rax, rbx
+    list_append_link rax, [токен]
+    print rax
     exit -1
 
     .add_token:

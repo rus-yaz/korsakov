@@ -156,8 +156,14 @@ f_is_equal:
   type_to_string DICTIONARY
   list_append rdx, rax
   join rax, ", "
+  mov rdx, rax
 
-  print <r8, rax, rbx, rcx>
+  list
+  list_append_link rax, r8
+  list_append_link rax, rdx
+  list_append_link rax, rbx
+  list_append_link rax, rcx
+  print rax
   exit -1
 
   .return_true:
@@ -208,10 +214,13 @@ f_is_lower:
   string "Ожидался тип"
   mov rbx, rax
   type_to_string INTEGER
-  print <rcx, rax>
-  exit -1
+  mov rcx, rax
 
-  ret
+  list
+  list_append_link rax, rbx
+  list_append_link rax, rcx
+  print rax
+  exit -1
 
   .return_true:
     boolean 1
@@ -249,12 +258,15 @@ f_is_greater:
   .incorrect_type:
 
   string "Ожидался тип"
-  mov rcx, rax
+  mov rbx, rax
   type_to_string INTEGER
-  print <rcx, rax>
-  exit -1
+  mov rcx, rax
 
-  ret
+  list
+  list_append_link rax, rbx
+  list_append_link rax, rcx
+  print rax
+  exit -1
 
   .return_true:
     boolean 1
@@ -333,6 +345,11 @@ f_copy:
   type_to_string rbx
   mov rbx, rax
   string "copy: Нет функции копирования для типа"
-  print <rax, rbx>
+  mov rcx, rax
+
+  list
+  list_append_link rax, rcx
+  list_append_link rax, rbx
+  print rax
 
   exit -1

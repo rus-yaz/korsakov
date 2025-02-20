@@ -2,19 +2,29 @@
 ; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
 
 string "Тест отображения"
+mov r9, rax
+list
+list_append rax, r9
 print rax
 
+; Проверка строк
 string "Привет, мир!"
 mov r8, rax
-
-; Проверка строк (строки, помещённые в кучу)
+list
+list_append rax, r8
 print r8
 
 ; Проверка чисел
 integer 1024
-print <rax>
+mov r9, rax
+list
+list_append rax, r9
+print rax
 
 list
+mov r9, rax
+list
+list_append rax, r9
 print rax
 
 list
@@ -27,6 +37,9 @@ list_append rbx, rax
 integer 2
 list_append rbx, rax
 
+mov r9, rax
+list
+list_append rax, r9
 print rax
 
 list
@@ -55,13 +68,21 @@ list_append rdx, rax
 list_append rcx, rdx
 
 dictionary rbx, rcx
+mov r9, rax
+list
+list_append rax, r9
 print rax
 
 ; Проверка множественного отображения
 integer 1024
 mov rbx, rax
 string "Содержимое строки:"
-print <rbx, rax, r8>
+mov r9, rax
+list
+list_append rax, rbx
+list_append rax, r9
+list_append rax, r8
+print rax
 
 ; Проверка замены разделителя и конца стрки
 
@@ -72,7 +93,11 @@ mov rdx, rax
 integer 1024
 mov rbx, rax
 mov rcx, rax
+mov rdx, rax
 
-print <rax, rbx, rcx>, "?"
-
-print <rax, rbx, rcx>, "_", rdx
+list
+list_append rax, rbx
+list_append rax, rcx
+list_append rax, rdx
+print rax, "?"
+print rax, "_", rdx

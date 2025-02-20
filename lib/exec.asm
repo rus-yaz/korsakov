@@ -13,6 +13,9 @@ f_run:
   cmp rax, 1
   jge .correct
     string "run: Должна быть передана хотя бы одна строка"
+    mov rbx, rax
+    list
+    list_append_link rax, rbx
     print rax
     exit -1
 
@@ -26,6 +29,9 @@ f_run:
   jge .fork_success
 
     string "run: Не удалось создать процесс"
+    mov rbx, rax
+    list
+    list_append_link rax, rbx
     print rax
     exit -1
 

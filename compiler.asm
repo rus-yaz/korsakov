@@ -83,6 +83,16 @@ macro compile_binary_operation node*, context* {
   debug_end "compile_binary_operation"
 }
 
+macro compile_null node*, context* {
+  debug_start "compile_null"
+  enter node, context
+
+  call f_compile_null
+
+  return
+  debug_end "compile_null"
+}
+
 macro compile_number node*, context* {
   debug_start "compile_number"
   enter node, context
@@ -262,6 +272,13 @@ f_compile:
     ret
   .not_binary_operation:
 
+  check_node_type rcx, [УЗЕЛ_НУЛЬ]
+  cmp rax, 1
+  jne .not_null
+    compile_null rbx, rcx
+    ret
+  .not_null:
+
   check_node_type rcx, [УЗЕЛ_ЧИСЛА]
   cmp rax, 1
   jne .not_number
@@ -326,7 +343,11 @@ f_compile:
   .not_break:
 
   string "Неизвестный узел: "
-  print <rax, rcx>
+  mov rbx, rax
+  list
+  list_append_link rax, rbx
+  list_append_link rax, rcx
+  print rax
   exit -1
 
 f_compile_body:
@@ -510,7 +531,10 @@ f_compile_unary_operation:
     je .correct_identifier_increment
 
       string "Ожидался идентификатор, но получен "
-      print <rax, r11>
+      mov rbx, rax
+      list_append_link rax, rbx
+      list_append_link rax, r11
+      print rax
       exit -1
 
     .correct_identifier_increment:
@@ -620,7 +644,10 @@ f_compile_unary_operation:
 
   string "Неизвестный оператор: "
   mov rbx, rax
-  print <rbx, rcx>
+  list
+  list_append_link rax, rbx
+  list_append_link rax, rcx
+  print rax
   exit -1
 
   .continue:
@@ -758,7 +785,10 @@ f_compile_binary_operation:
 
   string "Неизвестный оператор: "
   mov rbx, rax
-  print <rbx, rcx>
+  list
+  list_append_link rax, rbx
+  list_append_link rax, rcx
+  print rax
   exit -1
 
   .binary_operation_continue:
@@ -766,6 +796,21 @@ f_compile_binary_operation:
   list_append_link rdx, rax
 
   string "pop rbx"
+  list_append_link rdx, rax
+
+  mov rax, rdx
+  ret
+
+f_compile_null:
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
+
+  list
+  mov rdx, rax
+
+  string "null"
   list_append_link rdx, rax
 
   mov rax, rdx
@@ -791,6 +836,9 @@ f_compile_number:
   cmp rax, 1
   je .correct_value
     string "Ожидалось целое число"
+    mov rbx, rax
+    list
+    list_append_link rax, rbx
     print rax
     exit -1
 

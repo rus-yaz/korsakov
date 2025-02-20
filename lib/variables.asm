@@ -16,6 +16,10 @@ f_assign:
   ; RDX — context
   ; R8  — variable
 
+  check_type r8, STRING
+  check_type rbx, LIST
+  check_type rdx, DICTIONARY
+
   list_length rbx
   cmp rax, 0
   je .empty_keys
@@ -26,10 +30,12 @@ f_assign:
     cmp r9, 0
     jne .correct_variable
       string "Переменная `"
-      string_extend rax, r8
+      string_extend_links rax, r8
       mov rbx, rax
       string "` не найдена"
-      string_extend rbx, rax
+      string_extend_links rbx, rax
+      list
+      list_append_link rax, rbx
       print rax
       exit -1
 
@@ -92,10 +98,12 @@ f_assign:
         type_to_string rax
         mov rbx, rax
         string "Тип `"
-        string_extend rax, rbx
+        string_extend_links rax, rbx
         mov rbx, rax
         string "` не является коллекцией"
-        string_extend rbx, rax
+        string_extend_links rbx, rax
+        list
+        list_append_link rax, rbx
         print rax
         exit -1
 
@@ -170,10 +178,12 @@ f_assign:
         type_to_string rax
         mov rbx, rax
         string "Тип `"
-        string_extend rax, rbx
+        string_extend_links rax, rbx
         mov rbx, rax
         string "` не является коллекцией"
-        string_extend rbx, rax
+        string_extend_links rbx, rax
+        list
+        list_append_link rax, rbx
         print rax
         exit -1
 
@@ -217,10 +227,12 @@ f_access:
   cmp rax, 1
   je .correct_variable
     string "Переменная `"
-    string_extend rax, rdx
+    string_extend_links rax, rdx
     mov rbx, rax
     string "` не найдена"
-    string_extend rbx, rax
+    string_extend_links rbx, rax
+    list
+    list_append_link rax, rbx
     print rax
     exit -1
 
@@ -251,9 +263,11 @@ f_access:
         string "Тип `"
         mov rbx, rax
         type_to_string r8
-        string_extend rbx, rax
+        string_extend_links rbx, rax
         string "` не является коллекцией"
-        string_extend rbx, rax
+        string_extend_links rbx, rax
+        list
+        list_append_link rax, rbx
         print rax
         exit -1
 
@@ -274,10 +288,12 @@ f_access:
       cmp rax, DICTIONARY
       je .dictionary
 
-        type_to_string rax
-        mov rbx, rax
         string "Не поддерживаемый тип: "
-        string_extend rax, rbx
+        mov rbx, rax
+        type_to_string rax
+        string_extend_links rbx, rax
+        list
+        list_append_link rax, rbx
         print rax
         exit -1
 

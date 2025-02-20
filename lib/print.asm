@@ -2,66 +2,65 @@
 ; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
 
 f_print:
-  mov rbx, 0
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
+  get_arg 2
+  mov rdx, rax
+
+  check_type rbx, LIST
+
+  cmp rcx, 0
+  jne .not_default_separator
+    mov rcx, " "
+  .not_default_separator:
+
+  cmp rdx, 0
+  jne .not_default_end_of_string
+    string 10
+    mov rdx, rax
+  .not_default_end_of_string:
 
   list
-  mov rcx, rax
+  mov r8, rax
+
+  integer 0
+  mov r9, rax
+
+  list_length rbx
+  integer rax
+  mov r10, rax
 
   .while:
-    get_arg rbx
-    cmp rax, 0
+
+    is_equal r9, r10
+    boolean_value rax
+    cmp rax, 1
     je .end_while
 
-    mov rdx, [rax]
-    cmp rdx, STRING
+    list_get_link rbx, r9
+    mov r11, [rax]
+    cmp r11, STRING
     je .string
       to_string rax
-
     .string:
 
-    list_append_link rcx, rax
+    list_append_link r8, rax
 
-    inc rbx
+    integer_inc r9
     jmp .while
 
   .end_while:
 
-  inc rbx
-  get_arg rbx
+  join r8, rcx
+  string_extend_links rax, rdx
+  string_to_binary rax
+  mov rbx, rax
 
-  cmp rax, 0
-  jne .not_default_separator
-
-    mov rax, " "
-
-  .not_default_separator:
-
-  join rcx, rax
-  delete_block [rcx + 8*3], rcx
-  mov rcx, rax
-
-  inc rbx
-  get_arg rbx
-
-  cmp rax, 0
-  jne .not_default_end_of_string
-
-    string 10
-
-  .not_default_end_of_string:
-
-  string_extend_links rcx, rax
-  mov rdx, rax
-
-  string_to_binary rcx
-  mov rcx, rax
-
-  binary_length rcx
-
-  mov rbx, rcx
-  add rbx, 8*2
+  binary_length rbx
+  add rbx, BINARY_HEADER*8
 
   sys_print rbx, rax
-  delete rcx, rdx
 
   ret
