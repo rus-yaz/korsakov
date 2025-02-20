@@ -203,6 +203,11 @@ macro compile_call node*, context* {
   debug_end "compile_call"
 }
 
+macro add_code [code*] {
+  string code
+  list_append_link rdx, rax
+}
+
 f_check_node_type:
   get_arg 1
   mov rbx, rax
@@ -427,8 +432,7 @@ f_compile_assign:
   list
   mov rdx, rax
 
-  string "push rdx, rcx, rbx"
-  list_append_link rdx, rax
+  add_code "push rdx, rcx, rbx"
 
   string "значение"
   dictionary_get_link rcx, rax
@@ -444,15 +448,13 @@ f_compile_assign:
 
   .use_exists_value:
 
-  string "mov rdx, rax"
-  list_append_link rdx, rax
+  add_code "mov rdx, rax"
 
   string "ключи"
   dictionary_get_link rcx, rax
   compile rax, rbx
   list_extend_links rdx, rax
-  string "mov rcx, rax"
-  list_append_link rdx, rax
+  add_code "mov rcx, rax"
 
   string "string "
   mov r8, rax
@@ -465,14 +467,9 @@ f_compile_assign:
   string_extend_links r8, rax
   list_append_link rdx, rax
 
-  string "mov rbx, rax"
-  list_append_link rdx, rax
-
-  string "assign rbx, rcx, rdx"
-  list_append_link rdx, rax
-
-  string "pop rbx, rcx, rdx"
-  list_append_link rdx, rax
+  add_code "mov rbx, rax",\
+           "assign rbx, rcx, rdx",\
+           "pop rbx, rcx, rdx"
 
   mov rax, rdx
   ret
@@ -486,15 +483,13 @@ f_compile_access:
   list
   mov rdx, rax
 
-  string "push rcx, rbx"
-  list_append_link rdx, rax
+  add_code "push rcx, rbx"
 
   string "ключи"
   dictionary_get_link rcx, rax
   compile rax, rbx
   list_extend_links rdx, rax
-  string "mov rcx, rax"
-  list_append_link rdx, rax
+  add_code "mov rcx, rax"
 
   string "string "
   mov r8, rax
@@ -506,14 +501,10 @@ f_compile_access:
   to_string rax
   string_extend_links r8, rax
   list_append_link rdx, rax
-  string "mov rbx, rax"
-  list_append_link rdx, rax
 
-  string "access rbx, rcx"
-  list_append_link rdx, rax
-
-  string "pop rbx, rcx"
-  list_append_link rdx, rax
+  add_code "mov rbx, rax",\
+           "access rbx, rcx",\
+           "pop rbx, rcx"
 
   mov rax, rdx
   ret
@@ -543,18 +534,11 @@ f_compile_unary_operation:
   cmp rax, 1
   jne .not_increment
 
-    string "push rbx, rcx"
-    list_append_link rdx, rax
-    string "mov rcx, rax"
-    list_append_link rdx, rax
-
-    string "integer_copy rax"
-    list_append_link rdx, rax
-    string "mov rbx, rax"
-    list_append_link rdx, rax
-
-    string "integer_inc rcx"
-    list_append_link rdx, rax
+    add_code "push rbx, rcx",\
+             "mov rcx, rax",\
+             "integer_copy rax",\
+             "mov rbx, rax",\
+             "integer_inc rcx"
 
     string "операнд"
     dictionary_get_link rcx, rax
@@ -587,18 +571,15 @@ f_compile_unary_operation:
     boolean_value rax
     cmp rax, 1
     je .not_pre_increment
-      string "integer_inc rbx"
-      list_append_link rdx, rax
+      add_code "integer_inc rbx"
       jmp .continue_increment
 
     .not_pre_increment:
-      string "mov rax, rbx"
-      list_append_link rdx, rax
+      add_code "mov rax, rbx"
 
     .continue_increment:
 
-    string "pop rcx, rbx"
-    list_append_link rdx, rax
+    add_code "pop rcx, rbx"
 
     jmp .continue
 
@@ -608,18 +589,11 @@ f_compile_unary_operation:
   cmp rax, 1
   jne .not_decrement
 
-    string "push rbx, rcx"
-    list_append_link rdx, rax
-    string "mov rcx, rax"
-    list_append_link rdx, rax
-
-    string "integer_copy rax"
-    list_append_link rdx, rax
-    string "mov rbx, rax"
-    list_append_link rdx, rax
-
-    string "integer_dec rcx"
-    list_append_link rdx, rax
+    add_code "push rbx, rcx",\
+             "mov rcx, rax",\
+             "integer_copy rax",\
+             "mov rbx, rax",\
+             "integer_dec rcx"
 
     string "операнд"
     dictionary_get_link rcx, rax
@@ -638,18 +612,15 @@ f_compile_unary_operation:
     boolean_value rax
     cmp rax, 1
     je .not_pre_decrement
-      string "integer_dec rbx"
-      list_append_link rdx, rax
+      add_code "integer_dec rbx"
       jmp .continue_decrement
 
     .not_pre_decrement:
-      string "mov rax, rbx"
-      list_append_link rdx, rax
+      add_code "mov rax, rbx"
 
     .continue_decrement:
 
-    string "pop rcx, rbx"
-    list_append_link rdx, rax
+    add_code "pop rcx, rbx"
 
     jmp .continue
 
@@ -660,8 +631,7 @@ f_compile_unary_operation:
   cmp rax, 1
   jne .not_not
 
-    string "boolean_not rax"
-    list_append_link rdx, rax
+    add_code "boolean_not rax"
     jmp .continue
 
   .not_not:
@@ -670,8 +640,7 @@ f_compile_unary_operation:
   cmp rax, 1
   jne .not_negate
 
-    string "integer_neg rax"
-    list_append_link rdx, rax
+    add_code "integer_neg rax"
     jmp .continue
 
   .not_negate:
@@ -698,15 +667,13 @@ f_compile_binary_operation:
   list
   mov rdx, rax
 
-  string "push rbx"
-  list_append_link rdx, rax
+  add_code "push rbx"
 
   string "правый_узел"
   dictionary_get_link rcx, rax
   compile rax, rbx
   list_extend_links rdx, rax
-  string "mov rbx, rax"
-  list_append_link rdx, rax
+  add_code "mov rbx, rax"
 
   string "левый_узел"
   dictionary_get_link rcx, rax
@@ -829,8 +796,7 @@ f_compile_binary_operation:
 
   list_append_link rdx, rax
 
-  string "pop rbx"
-  list_append_link rdx, rax
+  add_code "pop rbx"
 
   mov rax, rdx
   ret
@@ -844,8 +810,7 @@ f_compile_null:
   list
   mov rdx, rax
 
-  string "null"
-  list_append_link rdx, rax
+  add_code "null"
 
   mov rax, rdx
   ret
@@ -902,8 +867,7 @@ f_compile_list:
   dictionary_get rcx, rax
   mov rcx, rax
 
-  string "list"
-  list_append_link rdx, rax
+  add_code "list"
 
   list_length rcx
   cmp rax, 0
@@ -912,10 +876,8 @@ f_compile_list:
     ret
   .not_empty:
 
-  string "push rbx"
-  list_append_link rdx, rax
-  string "mov rbx, rax"
-  list_append_link rdx, rax
+  add_code "push rbx",\
+           "mov rbx, rax"
 
   integer 0
   mov r8, rax
@@ -931,18 +893,15 @@ f_compile_list:
     list_get rcx, r8
     compile rax, rbx
     list_extend_links rdx, rax
-    string "list_append rbx, rax"
-    list_append_link rdx, rax
+    add_code "list_append rbx, rax"
 
     integer_inc r8
     jmp .list_while
 
   .list_end_while:
 
-  string "mov rax, rbx"
-  list_append_link rdx, rax
-  string "pop rbx"
-  list_append_link rdx, rax
+  add_code "mov rax, rbx",\
+           "pop rbx"
 
   mov rax, rdx
   ret
@@ -978,15 +937,13 @@ f_compile_dictionary:
   list
   mov rdx, rax
 
-  string "push rbx"
-  list_append_link rdx, rax
+  add_code "push rbx"
 
   string "элементы"
   dictionary_get_link rcx, rax
   compile rax, rbx
   list_extend_links rdx, rax
-  string "dictionary rax"
-  list_append_link rdx, rax
+  add_code "dictionary rax"
 
   mov rax, rdx
   ret
@@ -1038,12 +995,9 @@ f_compile_if:
     compile rax, rbx
     list_extend_links rdx, rax
 
-    string "boolean rax"
-    list_append_link rdx, rax
-    string "boolean_value rax"
-    list_append_link rdx, rax
-    string "cmp rax, 1"
-    list_append_link rdx, rax
+    add_code "boolean rax",\
+             "boolean_value rax",\
+             "cmp rax, 1"
 
     string "jne .if_"
     mov r14, rax
@@ -1134,10 +1088,8 @@ f_compile_while:
 
   mov r13, [rax + INTEGER_HEADER*8]
 
-  string "push rbx"
-  list_append_link rdx, rax
-  string "mov rbx, 0"
-  list_append_link rdx, rax
+  add_code "push rbx",\
+           "mov rbx, 0"
 
   string ".loop_start_"
   mov r14, rax
@@ -1153,12 +1105,9 @@ f_compile_while:
   compile rax, rbx
   list_extend_links rdx, rax
 
-  string "boolean rax"
-  list_append_link rdx, rax
-  string "boolean_value rax"
-  list_append_link rdx, rax
-  string "cmp rax, 1"
-  list_append_link rdx, rax
+  add_code "boolean rax",\
+           "boolean_value rax",\
+           "cmp rax, 1"
 
   string "jne .loop_end_"
   mov r14, rax
@@ -1167,8 +1116,7 @@ f_compile_while:
   string_extend_links r14, rax
   list_append_link rdx, rax
 
-  string "mov rbx, 1"
-  list_append_link rdx, rax
+  add_code "mov rbx, 1"
 
   string "тело"
   dictionary_get_link rcx, rax
@@ -1213,8 +1161,7 @@ f_compile_while:
   string_extend_links r14, rax
   list_append_link rdx, rax
 
-  string "pop rbx"
-  list_append_link rdx, rax
+  add_code "pop rbx"
 
   string "СЧЁТЧИК_ВЛОЖЕННОСТИ"
   mov r8, rax
@@ -1254,8 +1201,7 @@ f_compile_for:
 
   mov r8, [rax + INTEGER_HEADER*8]
 
-  string "push rbx, rcx, rdx"
-  list_append_link rdx, rax
+  add_code "push rbx, rcx, rdx"
 
   string "переменная"
   dictionary_get_link rcx, rax
@@ -1273,8 +1219,7 @@ f_compile_for:
 
     compile r10, rbx
     list_extend_links rdx, rax
-    string "mov rbx, rax"
-    list_append_link rdx, rax
+    add_code "mov rbx, rax"
 
     string "шаг"
     dictionary_get_link rcx, rax
@@ -1286,17 +1231,14 @@ f_compile_for:
     je .default_step
       compile r11, rbx
       list_extend_links rdx, rax
-      string "mov rcx, rax"
-      list_append_link rdx, rax
+      add_code "mov rcx, rax"
 
       jmp .after_step
 
     .default_step:
 
-      string "integer 1"
-      list_append_link rdx, rax
-      string "mov rcx, rax"
-      list_append_link rdx, rax
+      add_code "integer 1",\
+               "mov rcx, rax"
 
     .after_step:
 
@@ -1314,15 +1256,10 @@ f_compile_for:
     string_extend_links r14, rax
     list_append_link rdx, rax
 
-    string "mov rdx, rax"
-    list_append_link rdx, rax
-
-    string "is_greater_or_equal rdx, rbx"
-    list_append_link rdx, rax
-    string "boolean_value rax"
-    list_append_link rdx, rax
-    string "cmp rax, 1"
-    list_append_link rdx, rax
+    add_code "mov rdx, rax",\
+             "is_greater_or_equal rdx, rbx",\
+             "boolean_value rax",\
+             "cmp rax, 1"
 
     string "je .loop_end_"
     mov r14, rax
@@ -1331,8 +1268,7 @@ f_compile_for:
     string_extend_links r14, rax
     list_append_link rdx, rax
 
-    string "mov rax, rdx"
-    list_append_link rdx, rax
+    add_code "mov rax, rdx"
     null
     mov r10, rax
     list
@@ -1355,8 +1291,7 @@ f_compile_for:
     string_extend_links r14, rax
     list_append_link rdx, rax
 
-    string "integer_add rdx, rcx"
-    list_append_link rdx, rax
+    add_code "integer_add rdx, rcx"
 
     jmp .for_end
 
@@ -1366,11 +1301,9 @@ f_compile_for:
     dictionary_get_link rcx, rax
     compile rax, rbx
     list_extend_links rdx, rax
-    string "mov rbx, rax"
-    list_append_link rdx, rax
 
-    string "integer 0"
-    list_append_link rdx, rax
+    add_code "mov rbx, rax",\
+             "integer 0"
 
     string ".loop_start_"
     mov r14, rax
@@ -1381,20 +1314,12 @@ f_compile_for:
     string_extend_links r14, rax
     list_append_link rdx, rax
 
-    string "mov rdx, rax"
-    list_append_link rdx, rax
-
-    string "list_length rbx"
-    list_append_link rdx, rax
-    string "integer rax"
-    list_append_link rdx, rax
-
-    string "is_equal rdx, rax"
-    list_append_link rdx, rax
-    string "boolean_value rax"
-    list_append_link rdx, rax
-    string "cmp rax, 1"
-    list_append_link rdx, rax
+    add_code "mov rdx, rax",\
+             "list_length rbx",\
+             "integer rax",\
+             "is_equal rdx, rax",\
+             "boolean_value rax",\
+             "cmp rax, 1"
 
     string "je .loop_end_"
     mov r14, rax
@@ -1403,8 +1328,7 @@ f_compile_for:
     string_extend_links r14, rax
     list_append_link rdx, rax
 
-    string "list_get rbx, rdx"
-    list_append_link rdx, rax
+    add_code "list_get rbx, rdx"
     null
     mov r10, rax
     list
@@ -1545,8 +1469,7 @@ f_compile_function:
   compile rax, rbx
   list_extend_links rdx, rax
 
-  string "ret"
-  list_append_link rdx, rax
+  add_code "ret"
 
   string ".skip_function_"
   string_extend_links rax, r8
@@ -1555,8 +1478,7 @@ f_compile_function:
   string_extend_links r9, rax
   list_append_link rdx, rax
 
-  string "push r9, r8, rdx, rcx, rbx"
-  list_append_link rdx, rax
+  add_code "push r9, r8, rdx, rcx, rbx"
 
   string "переменная"
   dictionary_get_link rcx, rax
@@ -1571,8 +1493,7 @@ f_compile_function:
   string '"'
   string_extend_links r9, rax
   list_append_link rdx, rax
-  string "mov rbx, rax"
-  list_append_link rdx, rax
+  add_code "mov rbx, rax"
 
   string "mov rcx, "
   mov r9, rax
@@ -1581,15 +1502,10 @@ f_compile_function:
   string_extend_links rax, r8
   list_append_link rdx, rax
 
-  string "list"
-  list_append_link rdx, rax
-  string "mov rdx, rax"
-  list_append_link rdx, rax
-
-  string "dictionary"
-  list_append_link rdx, rax
-  string "mov r8, rax"
-  list_append_link rdx, rax
+  add_code "list",\
+           "mov rdx, rax",\
+           "dictionary",\
+           "mov r8, rax"
 
   integer 0
   mov r8, rax
@@ -1673,8 +1589,7 @@ f_compile_function:
       string_extend_links r13, rax
       list_append_link rdx, rax
 
-      string "list_append_link rdx, rax"
-      list_append_link rdx, rax
+      add_code "list_append_link rdx, rax"
 
       jmp .continue
 
@@ -1704,17 +1619,13 @@ f_compile_function:
       string_extend_links r13, rax
       list_append_link rdx, rax
 
-      string "mov r9, rax"
-      list_append_link rdx, rax
-
-      string "list_append_link rdx, r9"
-      list_append_link rdx, rax
+      add_code "mov r9, rax",\
+               "list_append_link rdx, r9"
 
       compile r14, rbx
       list_extend_links rdx, rax
 
-      string "dictionary_set_link r8, r9, rax"
-      list_append_link rdx, rax
+      add_code "dictionary_set_link r8, r9, rax"
 
       jmp .continue
 
@@ -1734,17 +1645,11 @@ f_compile_function:
 
   .end_while:
 
-  string "function rbx, rcx, rdx, r8"
-  list_append_link rdx, rax
-  string "mov rcx, rax"
-  list_append_link rdx, rax
-  string "list"
-  list_append_link rdx, rax
-  string "assign rbx, rax, rcx"
-  list_append_link rdx, rax
-
-  string "pop rbx, rcx, rdx, r8, r9"
-  list_append_link rdx, rax
+  add_code "function rbx, rcx, rdx, r8",\
+           "mov rcx, rax",\
+           "list",\
+           "assign rbx, rax, rcx",\
+           "pop rbx, rcx, rdx, r8, r9"
 
   mov rax, rdx
   ret
@@ -1768,81 +1673,80 @@ f_compile_call:
   assign r8, r9, rax
   mov r8, rax
 
-  string "push rbp, rax, rbx, rcx, rdx, rsi, rdi, r8, r9, r10, r11, r12, r13, r14, r15"
-  list_append_link rdx, rax
-
-  string "mov r15, [GLOBAL_CONTEXT]"
-  list_append_link rdx, rax
-  string "dictionary_copy_links r15"
-  list_append_link rdx, rax
-  string "mov [GLOBAL_CONTEXT], rax"
-  list_append_link rdx, rax
+  add_code "push rbp, rax, rbx, rcx, rdx, rsi, rdi, r8, r9, r10, r11, r12, r13, r14, r15",\
+           "mov r15, [GLOBAL_CONTEXT]",\
+           "dictionary_copy_links r15",\
+           "mov [GLOBAL_CONTEXT], rax"
 
   string "переменная"
   dictionary_get_link rcx, rax
   compile rax, rbx
   list_extend_links rdx, rax
-  string "mov rbx, [rax + 8*2]"
-  list_append_link rdx, rax
-  string "mov rcx, [rax + 8*3]" ; Имена аргументов
-  list_append_link rdx, rax
+
+  add_code "mov rbx, [rax + 8*2]",\ ; Указатель на функцию
+           "mov rcx, [rax + 8*3]",\ ; Имена аргументов
+           "mov rdx, [rax + 8*4]"   ; Именованные аргументы
 
   string "аргументы"
   dictionary_get_link rcx, rax
   list_node rax
   compile rax, rbx
   list_extend_links rdx, rax
-  string "mov rdx, rax"
+
+  add_code "mov r8, rax",\
+           "list_length rcx",\
+           "integer rax",\
+           "mov r9, rax",\
+           "list_length r8",\
+           "integer rax",\
+           "mov r10, rax",\
+           "is_lower r9, r10",\
+           "boolean_value rax",\
+           "cmp rax, 1"
+
+  string "je .incorrect_argumenst_count_"
+  mov r9, rax
+  to_string r8
+  string_extend_links r9, rax
   list_append_link rdx, rax
 
-  string "list_length rcx"
-  list_append_link rdx, rax
-  string "integer rax"
-  list_append_link rdx, rax
-  string "mov r8, rax"
-  list_append_link rdx, rax
-  string "list_length rdx"
-  list_append_link rdx, rax
-  string "integer rax"
-  list_append_link rdx, rax
-  string "mov r9, rax"
-  list_append_link rdx, rax
+  add_code "dictionary_length rdx",\
+           "integer rax",\
+           "integer_sub r9, rax",\
+           "mov r9, rax",\
+           "is_lower_or_equal r9, r10",\
+           "boolean_value rax",\
+           "cmp rax, 1"
 
-  string "is_equal r8, r9"
-  list_append_link rdx, rax
-  string "boolean_value rax"
-  list_append_link rdx, rax
-  string "cmp rax, 1"
-  list_append_link rdx, rax
   string "je .correct_argumenst_count_"
   mov r9, rax
   to_string r8
   string_extend_links r9, rax
   list_append_link rdx, rax
-  string "list"
+
+  string ".incorrect_argumenst_count_"
+  mov r9, rax
+  to_string r8
+  string_extend_links r9, rax
+  mov r9, rax
+  string ":"
+  string_extend_links r9, rax
   list_append_link rdx, rax
-  string "mov rbx, rax"
-  list_append_link rdx, rax
-  string 'string "Ожидалось —"'
-  list_append_link rdx, rax
-  string "list_append_link rbx, rax"
-  list_append_link rdx, rax
-  string "to_string r8"
-  list_append_link rdx, rax
-  string "list_append_link rbx, rax"
-  list_append_link rdx, rax
-  string 'string "аргументов, получено —"'
-  list_append_link rdx, rax
-  string "list_append_link rbx, rax"
-  list_append_link rdx, rax
-  string "to_string r9"
-  list_append_link rdx, rax
-  string "list_append_link rbx, rax"
-  list_append_link rdx, rax
-  string "print rax"
-  list_append_link rdx, rax
-  string "exit -1"
-  list_append_link rdx, rax
+
+  add_code "list",\
+           "mov rbx, rax",\
+           'string "Ожидаемое количество аргументов —"',\
+           "list_append_link rbx, rax",\
+           "to_string r9",\
+           "mov rcx, rax",\
+           'string ", получено —"',\
+           "string_extend_links rcx, rax",\
+           "list_append_link rbx, rax",\
+           "to_string r10",\
+           "list_append_link rbx, rax",\
+           "print rax",\
+           "exit -1"
+
   string ".correct_argumenst_count_"
   mov r9, rax
   to_string r8
@@ -1852,10 +1756,14 @@ f_compile_call:
   string_extend_links r9, rax
   list_append_link rdx, rax
 
-  string "integer 0"
-  list_append_link rdx, rax
-  string "mov r8, rax"
-  list_append_link rdx, rax
+  add_code "integer 0",\
+           "mov r9, rax",\
+           "list_length rcx",\
+           "integer rax",\
+           "mov r10, rax",\
+           "list_length r8",\
+           "integer rax",\
+           "mov r11, rax"
 
   string ".call_"
   mov r9, rax
@@ -1866,33 +1774,60 @@ f_compile_call:
   string_extend_links r9, rax
   list_append_link rdx, rax
 
-  string "is_equal r8, r9"
-  list_append_link rdx, rax
-  string "boolean_value rax"
-  list_append_link rdx, rax
-  string "cmp rax, 1"
-  list_append_link rdx, rax
+  add_code "is_equal r9, r10",\
+           "boolean_value rax",\
+           "cmp rax, 1"
+
   string "je .end_call_"
   mov r9, rax
   to_string r8
   string_extend_links r9, rax
   list_append_link rdx, rax
 
-  string "list_get_link rcx, r8"
-  list_append_link rdx, rax
-  string "mov r10, rax"
-  list_append_link rdx, rax
-  string "list_get_link rdx, r8"
-  list_append_link rdx, rax
-  string "mov r11, rax"
-  list_append_link rdx, rax
-  string "list"
-  list_append_link rdx, rax
-  string "assign r10, rax, r11"
+  add_code "list_get_link rcx, r9",\
+           "mov r12, rax",\
+           "is_greater_or_equal r9, r11",\
+           "boolean_value rax",\
+           "cmp rax, 1"
+
+  string "je .default_value_"
+  mov r9, rax
+  to_string r8
+  string_extend_links r9, rax
   list_append_link rdx, rax
 
-  string "integer_inc r8"
+  add_code "list_get r8, r9"
+
+  string "jmp .arguments_continue_"
+  mov r9, rax
+  to_string r8
+  string_extend_links r9, rax
   list_append_link rdx, rax
+
+  string ".default_value_"
+  mov r9, rax
+  to_string r8
+  string_extend_links r9, rax
+  string ":"
+  string_extend_links r9, rax
+  list_append_link rdx, rax
+
+  add_code "list_get_link rcx, r9",\
+           "dictionary_get rdx, rax"
+
+  string ".arguments_continue_"
+  mov r9, rax
+  to_string r8
+  string_extend_links r9, rax
+  string ":"
+  string_extend_links r9, rax
+  list_append_link rdx, rax
+
+  add_code "mov r13, rax",\
+           "list",\
+           "assign r12, rax, r13",\
+           "integer_inc r9"
+
   string "jmp .call_"
   mov r9, rax
   to_string r8
@@ -1908,14 +1843,9 @@ f_compile_call:
   string_extend_links r9, rax
   list_append_link rdx, rax
 
-  string "call rbx"
-  list_append_link rdx, rax
-
-  string "mov [GLOBAL_CONTEXT], r15"
-  list_append_link rdx, rax
-
-  string "return"
-  list_append_link rdx, rax
+  add_code "call rbx",\
+           "mov [GLOBAL_CONTEXT], r15",\
+           "return"
 
   mov rax, rdx
   ret
