@@ -35,14 +35,14 @@ macro get_arg index {
   cmp rax, 0
   jge @f
 
-    exit -1
+    exit 1
   @@:
 
   mov rax, [rbp]
   cmp rax, index
   jg @f
 
-    exit -1
+    exit 1
   @@:
 
   mov rax, index
@@ -498,7 +498,7 @@ macro is_greater val_1*, val_2* {
 macro is_lower_or_equal val_1*, val_2* {
   enter val_1, val_2
 
-  call is_lower_or_equal
+  call f_is_lower_or_equal
 
   return
 }
