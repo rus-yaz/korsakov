@@ -183,6 +183,26 @@ macro compile_break node*, context* {
   debug_end "compile_break"
 }
 
+macro compile_function node*, context* {
+  debug_start "compile_function"
+  enter node, context
+
+  call f_compile_function
+
+  return
+  debug_end "compile_function"
+}
+
+macro compile_call node*, context* {
+  debug_start "compile_call"
+  enter node, context
+
+  call f_compile_call
+
+  return
+  debug_end "compile_call"
+}
+
 f_check_node_type:
   get_arg 1
   mov rbx, rax
@@ -341,6 +361,20 @@ f_compile:
     compile_break rbx, rcx
     ret
   .not_break:
+
+  check_node_type rcx, [УЗЕЛ_ФУНКЦИИ]
+  cmp rax, 1
+  jne .not_function
+    compile_function rbx, rcx
+    ret
+  .not_function:
+
+  check_node_type rcx, [УЗЕЛ_ВЫЗОВА]
+  cmp rax, 1
+  jne .not_call
+    compile_call rbx, rcx
+    ret
+  .not_call:
 
   string "Неизвестный узел: "
   mov rbx, rax
@@ -1471,6 +1505,416 @@ f_compile_break:
   mov r9, rax
   to_string r8
   string_extend_links r9, rax
+  list_append_link rdx, rax
+
+  mov rax, rdx
+  ret
+
+f_compile_function:
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
+
+  list
+  mov rdx, rax
+
+  string "СЧЁТЧИК_ФУНКЦИЙ"
+  mov r8, rax
+  list
+  mov r9, rax
+  access r8, r9
+  integer_inc rax
+  assign r8, r9, rax
+  to_string rax
+  mov r8, rax
+
+  string "jmp .skip_function_"
+  string_extend_links rax, r8
+  list_append_link rdx, rax
+
+  string ".function_"
+  string_extend rax, r8
+  mov r9, rax
+  string ":"
+  string_extend_links r9, rax
+  list_append_link rdx, rax
+
+  string "тело"
+  dictionary_get_link rcx, rax
+  compile rax, rbx
+  list_extend_links rdx, rax
+
+  string "ret"
+  list_append_link rdx, rax
+
+  string ".skip_function_"
+  string_extend_links rax, r8
+  mov r9, rax
+  string ":"
+  string_extend_links r9, rax
+  list_append_link rdx, rax
+
+  string "push r9, r8, rdx, rcx, rbx"
+  list_append_link rdx, rax
+
+  string "переменная"
+  dictionary_get_link rcx, rax
+  mov r9, rax
+  string "значение"
+  dictionary_get_link r9, rax
+  mov r9, rax
+
+  string 'string "'
+  string_extend_links rax, r9
+  mov r9, rax
+  string '"'
+  string_extend_links r9, rax
+  list_append_link rdx, rax
+  string "mov rbx, rax"
+  list_append_link rdx, rax
+
+  string "mov rcx, "
+  mov r9, rax
+  string ".function_"
+  string_extend_links r9, rax
+  string_extend_links rax, r8
+  list_append_link rdx, rax
+
+  string "list"
+  list_append_link rdx, rax
+  string "mov rdx, rax"
+  list_append_link rdx, rax
+
+  string "dictionary"
+  list_append_link rdx, rax
+  string "mov r8, rax"
+  list_append_link rdx, rax
+
+  integer 0
+  mov r8, rax
+
+  string "аргументы"
+  dictionary_get_link rcx, rax
+  mov r9, rax
+
+  integer 0
+  mov r10, rax
+
+  list_length r9
+  integer rax
+  mov r11, rax
+
+  ; Был ли встречен именованный аргумент
+  mov r12, 0
+
+  .while:
+
+    is_equal r10, r11
+    boolean_value rax
+    cmp rax, 1
+    je .end_while
+
+    list_get_link r9, r10
+    mov r13, rax
+
+    string "ключи"
+    dictionary_get_link r13, rax
+    mov r14, rax
+    string "элементы"
+    dictionary_get_link r14, rax
+    list_length rax
+    cmp rax, 0
+    je .correct_argument_name
+
+      string "Ожидалось имя без ключей"
+      mov rbx, rax
+      list
+      list_append rax, rbx
+      print rax
+      exit -1
+
+    .correct_argument_name:
+
+    check_node_type r13, [УЗЕЛ_ДОСТУПА_К_ПЕРЕМЕННОЙ]
+    cmp rax, 1
+    jne .not_access
+
+      cmp r12, 0
+      je .correct_argument_sequence
+
+        string "Ожидался позиционный аргумент, но встречен именованный:"
+        mov rbx, rax
+        string "переменная"
+        dictionary_get_link r13, rax
+        mov rcx, rax
+        string "значение"
+        dictionary_get_link rcx, rax
+        mov rcx, rax
+        list
+        list_append_link rax, rbx
+        list_append_link rax, rcx
+        print rax
+        exit -1
+
+      .correct_argument_sequence:
+
+      string "переменная"
+      dictionary_get_link r13, rax
+      mov r13, rax
+      string "значение"
+      dictionary_get_link r13, rax
+      mov r13, rax
+
+      string 'string "'
+      string_extend_links rax, r13
+      mov r13, rax
+      string '"'
+      string_extend_links r13, rax
+      list_append_link rdx, rax
+
+      string "list_append_link rdx, rax"
+      list_append_link rdx, rax
+
+      jmp .continue
+
+    .not_access:
+
+    check_node_type r13, [УЗЕЛ_ПРИСВАИВАНИЯ_ПЕРЕМЕННОЙ]
+    cmp rax, 1
+    jne .not_assign
+
+      mov r12, 1
+
+      string "значение"
+      dictionary_get_link r13, rax
+      mov r14, rax
+
+      string "переменная"
+      dictionary_get_link r13, rax
+      mov r13, rax
+      string "значение"
+      dictionary_get_link r13, rax
+      mov r13, rax
+
+      string 'string "'
+      string_extend_links rax, r13
+      mov r13, rax
+      string '"'
+      string_extend_links r13, rax
+      list_append_link rdx, rax
+
+      string "mov r9, rax"
+      list_append_link rdx, rax
+
+      string "list_append_link rdx, r9"
+      list_append_link rdx, rax
+
+      compile r14, rbx
+      list_extend_links rdx, rax
+
+      string "dictionary_set_link r8, r9, rax"
+      list_append_link rdx, rax
+
+      jmp .continue
+
+    .not_assign:
+
+      string "Ожидался позиционный или именованный аргумент"
+      mov rbx, rax
+      list
+      list_append rax, rbx
+      print rax
+      exit -1
+
+    .continue:
+
+    integer_inc r10
+    jmp .while
+
+  .end_while:
+
+  string "function rbx, rcx, rdx, r8"
+  list_append_link rdx, rax
+  string "mov rcx, rax"
+  list_append_link rdx, rax
+  string "list"
+  list_append_link rdx, rax
+  string "assign rbx, rax, rcx"
+  list_append_link rdx, rax
+
+  string "pop rbx, rcx, rdx, r8, r9"
+  list_append_link rdx, rax
+
+  mov rax, rdx
+  ret
+
+f_compile_call:
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
+
+  list
+  mov rdx, rax
+
+  string "СЧЁТЧИК_ВЫЗОВОВ"
+  mov r8, rax
+  list
+  mov r9, rax
+  access r8, r9
+  integer_inc rax
+
+  assign r8, r9, rax
+  mov r8, rax
+
+  string "push rbp, rax, rbx, rcx, rdx, rsi, rdi, r8, r9, r10, r11, r12, r13, r14, r15"
+  list_append_link rdx, rax
+
+  string "mov r15, [GLOBAL_CONTEXT]"
+  list_append_link rdx, rax
+  string "dictionary_copy_links r15"
+  list_append_link rdx, rax
+  string "mov [GLOBAL_CONTEXT], rax"
+  list_append_link rdx, rax
+
+  string "переменная"
+  dictionary_get_link rcx, rax
+  compile rax, rbx
+  list_extend_links rdx, rax
+  string "mov rbx, [rax + 8*2]"
+  list_append_link rdx, rax
+  string "mov rcx, [rax + 8*3]" ; Имена аргументов
+  list_append_link rdx, rax
+
+  string "аргументы"
+  dictionary_get_link rcx, rax
+  list_node rax
+  compile rax, rbx
+  list_extend_links rdx, rax
+  string "mov rdx, rax"
+  list_append_link rdx, rax
+
+  string "list_length rcx"
+  list_append_link rdx, rax
+  string "integer rax"
+  list_append_link rdx, rax
+  string "mov r8, rax"
+  list_append_link rdx, rax
+  string "list_length rdx"
+  list_append_link rdx, rax
+  string "integer rax"
+  list_append_link rdx, rax
+  string "mov r9, rax"
+  list_append_link rdx, rax
+
+  string "is_equal r8, r9"
+  list_append_link rdx, rax
+  string "boolean_value rax"
+  list_append_link rdx, rax
+  string "cmp rax, 1"
+  list_append_link rdx, rax
+  string "je .correct_argumenst_count_"
+  mov r9, rax
+  to_string r8
+  string_extend_links r9, rax
+  list_append_link rdx, rax
+  string "list"
+  list_append_link rdx, rax
+  string "mov rbx, rax"
+  list_append_link rdx, rax
+  string 'string "Ожидалось —"'
+  list_append_link rdx, rax
+  string "list_append_link rbx, rax"
+  list_append_link rdx, rax
+  string "to_string r8"
+  list_append_link rdx, rax
+  string "list_append_link rbx, rax"
+  list_append_link rdx, rax
+  string 'string "аргументов, получено —"'
+  list_append_link rdx, rax
+  string "list_append_link rbx, rax"
+  list_append_link rdx, rax
+  string "to_string r9"
+  list_append_link rdx, rax
+  string "list_append_link rbx, rax"
+  list_append_link rdx, rax
+  string "print rax"
+  list_append_link rdx, rax
+  string "exit -1"
+  list_append_link rdx, rax
+  string ".correct_argumenst_count_"
+  mov r9, rax
+  to_string r8
+  string_extend_links r9, rax
+  mov r9, rax
+  string ":"
+  string_extend_links r9, rax
+  list_append_link rdx, rax
+
+  string "integer 0"
+  list_append_link rdx, rax
+  string "mov r8, rax"
+  list_append_link rdx, rax
+
+  string ".call_"
+  mov r9, rax
+  to_string r8
+  string_extend_links r9, rax
+  mov r9, rax
+  string ":"
+  string_extend_links r9, rax
+  list_append_link rdx, rax
+
+  string "is_equal r8, r9"
+  list_append_link rdx, rax
+  string "boolean_value rax"
+  list_append_link rdx, rax
+  string "cmp rax, 1"
+  list_append_link rdx, rax
+  string "je .end_call_"
+  mov r9, rax
+  to_string r8
+  string_extend_links r9, rax
+  list_append_link rdx, rax
+
+  string "list_get_link rcx, r8"
+  list_append_link rdx, rax
+  string "mov r10, rax"
+  list_append_link rdx, rax
+  string "list_get_link rdx, r8"
+  list_append_link rdx, rax
+  string "mov r11, rax"
+  list_append_link rdx, rax
+  string "list"
+  list_append_link rdx, rax
+  string "assign r10, rax, r11"
+  list_append_link rdx, rax
+
+  string "integer_inc r8"
+  list_append_link rdx, rax
+  string "jmp .call_"
+  mov r9, rax
+  to_string r8
+  string_extend_links r9, rax
+  list_append_link rdx, rax
+
+  string ".end_call_"
+  mov r9, rax
+  to_string r8
+  string_extend_links r9, rax
+  mov r9, rax
+  string ":"
+  string_extend_links r9, rax
+  list_append_link rdx, rax
+
+  string "call rbx"
+  list_append_link rdx, rax
+
+  string "mov [GLOBAL_CONTEXT], r15"
+  list_append_link rdx, rax
+
+  string "return"
   list_append_link rdx, rax
 
   mov rax, rdx

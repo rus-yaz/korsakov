@@ -2129,7 +2129,7 @@ f_function_expression:
 
   .unnamed_function:
 
-  token_check_type [токен], [ОТКРЫВАЮЩАЯ_СКОБКА]
+  token_check_type [токен], [ТИП_ОТКРЫВАЮЩАЯ_СКОБКА]
   cmp rax, 1
   je .correct_open_paren
 
@@ -2207,7 +2207,7 @@ f_function_expression:
 
   .end_while:
 
-  token_check_type [токен], [ЗАКРЫВАЮЩАЯ_СКОБКА]
+  token_check_type [токен], [ТИП_ЗАКРЫВАЮЩАЯ_СКОБКА]
   cmp rax, 1
   je .correct_closed_paren
 
@@ -2226,7 +2226,7 @@ f_function_expression:
 
   next
 
-  token_check_type [токен], [ПЕРЕНОС_СТРОКИ]
+  token_check_type [токен], [ТИП_ПЕРЕНОС_СТРОКИ]
   cmp rax, 1
   jne .make_oneline
     next
@@ -2236,22 +2236,34 @@ f_function_expression:
     list
     mov r9, rax
 
-    token_check_type [токен], [ТИП_КОНЕЦ_КОНСТРУКЦИИ]
-    cmp rax, 1
-    je .correct_end_construction
+    .while_body:
+      token_check_type [токен], [ТИП_КОНЕЦ_КОНСТРУКЦИИ]
+      cmp rax, 1
+      je .end_while_body
 
-      cmp [try], 1
-      jne @f
-        null
-        ret
+      token_check_type [токен], [ТИП_КОНЕЦ_ФАЙЛА]
+      jne .not_end_of_file
 
-      @@:
+        cmp [try], 1
+        jne @f
+          null
+          ret
 
-      string "Ожидался конец конструкции"
-      print rax
-      exit -1
+        @@:
 
-    .correct_end_construction:
+        string "Ожидался конец конструкции"
+        print rax
+        exit -1
+
+      .not_end_of_file:
+
+      statement
+      list_append_link r9, rax
+
+      next
+      jmp .while_body
+
+    .end_while_body:
 
     next
 
@@ -2267,7 +2279,7 @@ f_function_expression:
 
   .make_oneline:
 
-  token_check_type [токен], [ДВОЕТОЧИЕ]
+  token_check_type [токен], [ТИП_ДВОЕТОЧИЕ]
   cmp rax, 1
   je .correct_colon
 

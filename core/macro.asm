@@ -1191,3 +1191,21 @@ macro access variable*, keys*, context = [GLOBAL_CONTEXT] {
 
   return
 }
+
+section "function" executable
+
+macro function name*, link*, arguments*, named_arguments* {
+  enter name, link, arguments, named_arguments
+
+  call f_function
+
+  return
+}
+
+macro function_copy function {
+  enter function
+
+  call f_function_copy
+
+  return
+}

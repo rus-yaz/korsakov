@@ -342,6 +342,12 @@ f_copy:
     ret
   .not_dictionary:
 
+  cmp rbx, FUNCTION
+  jne .not_function
+    function_copy rax
+    ret
+  .not_function:
+
   type_to_string rbx
   mov rbx, rax
   string "copy: Нет функции копирования для типа"

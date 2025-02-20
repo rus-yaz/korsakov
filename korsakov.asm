@@ -470,6 +470,20 @@ start:
   integer 0
   assign rcx, rbx, rax
 
+  string "СЧЁТЧИК_ФУНКЦИЙ"
+  mov rcx, rax
+  list
+  mov rbx, rax
+  integer 0
+  assign rcx, rbx, rax
+
+  string "СЧЁТЧИК_ВЫЗОВОВ"
+  mov rcx, rax
+  list
+  mov rbx, rax
+  integer 0
+  assign rcx, rbx, rax
+
   integer 2
   is_equal [ARGUMENTS_COUNT], rax
   boolean_value rax

@@ -201,6 +201,18 @@ f_to_string:
 
   .not_dictionary:
 
+  cmp rbx, FUNCTION
+  jne .not_function
+
+    copy [rax + 8*1]
+    mov rbx, rax
+    string "()"
+    string_extend rbx, rax
+
+    ret
+
+  .not_function:
+
   type_to_string rbx
   mov rbx, rax
   string "to_string: Не поддерживается тип"

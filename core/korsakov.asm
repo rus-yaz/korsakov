@@ -16,6 +16,7 @@ section "data" writable
   define STRING      6
   define BINARY      7
   define DICTIONARY  8
+  define FUNCTION    9
   define CLASS       10
   define FILE        11
 
@@ -24,6 +25,7 @@ section "data" writable
   define BOOLEAN_HEADER    1
   define INTEGER_HEADER    1
   define BINARY_HEADER     2
+  define FUNCTION_HEADER   5
   define COLLECTION_HEADER 4
   define LIST_HEADER       4
   define STRING_HEADER     4
@@ -69,20 +71,21 @@ include "./utils.asm"
 
 include "../lib/arithmetical.asm"
 include "../lib/boolean.asm"
+include "../lib/collection.asm"
 include "../lib/delete.asm"
 include "../lib/dictionary.asm"
 include "../lib/exec.asm"
 include "../lib/file.asm"
+include "../lib/function.asm"
 include "../lib/functions.asm"
 include "../lib/heap.asm"
 include "../lib/integer.asm"
-include "../lib/collection.asm"
 include "../lib/list.asm"
+include "../lib/null.asm"
 include "../lib/print.asm"
 include "../lib/string.asm"
 include "../lib/to_string.asm"
 include "../lib/variables.asm"
-include "../lib/null.asm"
 
 section "_start" executable
 _start:
@@ -142,6 +145,33 @@ _start:
 
   dictionary
   mov [GLOBAL_CONTEXT], rax
+
+  list
+  mov rdx, rax
+  string "*args"
+  list_append_link rdx, rax
+  string "separator"
+  list_append_link rdx, rax
+  string "end_of_string"
+  list_append_link rdx, rax
+
+  dictionary
+  mov rcx, rax
+  string "separator"
+  mov rbx, rax
+  string " "
+  dictionary_set_link rcx, rbx, rax
+  string "end_of_string"
+  mov rbx, rax
+  string 10
+  dictionary_set_link rcx, rbx, rax
+
+  string "print"
+  mov rbx, rax
+  function rbx, f_print, rdx, rcx
+  mov rcx, rax
+  list
+  assign rbx, rax, rcx
 
   list
   mov [DEBUG_TIME], rax

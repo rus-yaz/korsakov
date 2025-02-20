@@ -118,6 +118,12 @@ f_type_to_string:
     ret
   .not_dictionary:
 
+  cmp rax, FUNCTION
+  jne .not_function
+    string "Функция"
+    ret
+  .not_function:
+
   cmp rax, CLASS
   jne .not_class
     string "Класс"
