@@ -12,7 +12,7 @@ string "Привет, мир!"
 mov r8, rax
 list
 list_append rax, r8
-print r8
+print rax
 
 ; Проверка чисел
 integer 1024
@@ -86,18 +86,18 @@ print rax
 
 ; Проверка замены разделителя и конца стрки
 
-
-string <"*", 10>
-mov rdx, rax
-
 integer 1024
 mov rbx, rax
 mov rcx, rax
 mov rdx, rax
 
+string <"*", 10>
+mov r8, rax
+
 list
 list_append rax, rbx
 list_append rax, rcx
 list_append rax, rdx
+
 print rax, "?"
-print rax, "_", rdx
+print rax, "_", r8

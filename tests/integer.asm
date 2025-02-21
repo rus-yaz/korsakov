@@ -2,14 +2,27 @@
 ; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
 
 string "Работа с целыми числами"
+mov rdx, rax
+list
+list_append_link rax, rdx
 print rax
 
 integer 1
 mov rbx, rax
-print rbx
-
-integer 2
+mov rdx, rax
+list
+list_append_link rax, rdx
 print rax
 
-integer_add rax, rbx
+integer 2
+mov rcx, rax
+mov rdx, rax
+list
+list_append_link rax, rdx
+print rax
+
+integer_add rcx, rbx
+mov rdx, rax
+list
+list_append_link rax, rdx
 print rax

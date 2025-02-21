@@ -2,6 +2,9 @@
 ; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
 
 string "Тест удаления различных типов данных"
+mov rdx, rax
+list
+list_append_link rax, rdx
 print rax
 
 integer 0

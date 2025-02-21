@@ -2,6 +2,9 @@
 ; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
 
 string "Работа со строками"
+mov rbx, rax
+list
+list_append_link rax, rbx
 print rax
 
 string "Строка"
@@ -15,29 +18,51 @@ string_get rbx, rcx
 mov rdx, rax
 
 string "Символ по индексу:"
-print <rax, rdx>
+mov r8, rax
+list
+list_append_link rax, r8
+list_append_link rax, rdx
+print rax
 
 string_add rbx, rdx
+mov r8, rax
+list
+list_append_link rax, r8
 print rax
 
 string_extend rbx, rdx
-print rbx
+mov r8, rax
+list
+list_append_link rax, rbx
+print rax
 
 list
 list_append rax, rbx
 list_append rax, rdx
 
+mov r8, rax
+list
+list_append_link rax, r8
 print rax
 
 split rbx, " "
+mov r8, rax
+list
+list_append_link rax, r8
 print rax
 
-join rax, " "
+join r8, " "
+mov r8, rax
+list
+list_append_link rax, r8
 print rax
 
 string "Привет, мир!"
 mov rcx, rax
-print rcx
+mov r8, rax
+list
+list_append_link rax, rcx
+print rax
 
 integer 6
 mov rbx, rax
@@ -47,4 +72,7 @@ integer 8
 mov rbx, rax
 string "М"
 string_set rcx, rbx, rax
-print rcx
+mov r8, rax
+list
+list_append_link rax, rcx
+print rax

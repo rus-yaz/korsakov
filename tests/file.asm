@@ -2,6 +2,9 @@
 ; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
 
 string "Работа с файлами"
+mov rdx, rax
+list
+list_append_link rax, rdx
 print rax
 
 ; Получение размера файла
@@ -10,7 +13,11 @@ get_file_size rax
 integer rax
 mov rbx, rax
 string "Размер файла:"
-print <rax, rbx>
+mov rdx, rax
+list
+list_append_link rax, rdx
+list_append_link rax, rbx
+print rax
 
 ; Открытие файла
 string "Привет"
@@ -29,11 +36,19 @@ string_length rcx
 integer rax
 mov rbx, rax
 string  "Размер строки:"
-print <rax, rbx>
+mov rdx, rax
+list
+list_append_link rax, rdx
+list_append_link rax, rbx
+print rax
 
 ; Вывод содержимого файла
 string "Содержимое строки:"
-print <rax, rcx>
+mov rdx, rax
+list
+list_append_link rax, rdx
+list_append_link rax, rcx
+print rax
 
 ; ---------
 ; Тест записи файла
@@ -63,4 +78,8 @@ close_file r8
 
 ; Вывод содержимого файла
 string "Содержимое строки:"
-print <rax, rcx>
+mov rdx, rax
+list
+list_append_link rax, rdx
+list_append_link rax, rcx
+print rax

@@ -2,32 +2,67 @@
 ; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
 
 string "Арифметические операции"
+mov rcx, rax
+list
+list_append_link rax, rcx
 print rax
 
 integer 0
 mov rbx, rax
 integer 0
-print <rbx, rax>
-addition rax, rbx
+mov rcx, rax
+list
+list_append_link rax, rbx
+list_append_link rax, rcx
+print rax
+
+addition rbx, rcx
+mov rcx, rax
+list
+list_append_link rax, rcx
 print rax
 
 integer 2
 mov rbx, rax
 integer 3
-print <rbx, rax>
-addition rax, rbx
+mov rcx, rax
+list
+list_append_link rax, rbx
+list_append_link rax, rcx
+print rax
+
+addition rbx, rcx
+mov rcx, rax
+list
+list_append_link rax, rcx
 print rax
 
 integer -2
 mov rbx, rax
 integer 1
-print <rbx, rax>
-addition rax, rbx
+mov rcx, rax
+list
+list_append_link rax, rbx
+list_append_link rax, rcx
+print rax
+
+addition rbx, rcx
+mov rcx, rax
+list
+list_append_link rax, rcx
 print rax
 
 integer 2
 mov rbx, rax
 integer 1
-print <rbx, rax>
-subtraction rbx, rax
+mov rcx, rax
+list
+list_append_link rax, rbx
+list_append_link rax, rcx
+print rax
+
+subtraction rbx, rcx
+mov rcx, rax
+list
+list_append_link rax, rcx
 print rax
