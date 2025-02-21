@@ -93,7 +93,7 @@ f_run:
     mov rax, r9
     mov rbx, r10
 
-    sys_execve r11, rax, r10
+    sys_execve r11, rax, rbx
     exit -1, EXECVE_WAS_NOT_EXECUTED
 
   .main_process:
