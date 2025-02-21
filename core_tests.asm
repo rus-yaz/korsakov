@@ -12,6 +12,8 @@ start:
   mov r15, rax
   include "tests/arithmetical.asm"
   print r15
+  include "tests/comparisons.asm"
+  print r15
   include "tests/delete.asm"
   print r15
   include "tests/dictionary.asm"
@@ -19,8 +21,6 @@ start:
   include "tests/exec.asm"
   print r15
   include "tests/file.asm"
-  print r15
-  include "tests/functions.asm"
   print r15
   include "tests/heap.asm"
   print r15

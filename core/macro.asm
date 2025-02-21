@@ -461,7 +461,7 @@ macro write_file file*, string* {
   leave
 }
 
-section "functions" executable
+section "comparisons" executable
 
 macro is_equal val_1*, val_2* {
   enter val_1, val_2
@@ -510,6 +510,8 @@ macro is_greater_or_equal val_1*, val_2* {
 
   return
 }
+
+section "copy" executable
 
 macro copy value {
   enter value

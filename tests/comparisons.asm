@@ -1,7 +1,7 @@
 ; Копирайт © 2025 ООО «РУС.ЯЗ»
 ; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
 
-string "Подготовленные функции"
+string "Функции сравнения"
 print rax
 
 integer 1
