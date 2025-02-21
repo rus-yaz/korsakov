@@ -1211,3 +1211,11 @@ macro function_copy function {
 
   return
 }
+
+macro function_call function*, args* {
+  enter function, args
+
+  call f_function_call
+
+  return
+}

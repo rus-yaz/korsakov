@@ -1663,29 +1663,11 @@ f_compile_call:
   list
   mov rdx, rax
 
-  string "СЧЁТЧИК_ВЫЗОВОВ"
-  mov r8, rax
-  list
-  mov r9, rax
-  access r8, r9
-  integer_inc rax
-
-  assign r8, r9, rax
-  mov r8, rax
-
-  add_code "push rbp, rax, rbx, rcx, rdx, rsi, rdi, r8, r9, r10, r11, r12, r13, r14, r15",\
-           "mov r15, [GLOBAL_CONTEXT]",\
-           "dictionary_copy_links r15",\
-           "mov [GLOBAL_CONTEXT], rax"
-
   string "переменная"
   dictionary_get_link rcx, rax
   compile rax, rbx
   list_extend_links rdx, rax
-
-  add_code "mov rbx, [rax + 8*2]",\ ; Указатель на функцию
-           "mov rcx, [rax + 8*3]",\ ; Имена аргументов
-           "mov rdx, [rax + 8*4]"   ; Именованные аргументы
+  add_code "mov rbx, rax"
 
   string "аргументы"
   dictionary_get_link rcx, rax
@@ -1693,159 +1675,7 @@ f_compile_call:
   compile rax, rbx
   list_extend_links rdx, rax
 
-  add_code "mov r8, rax",\
-           "list_length rcx",\
-           "integer rax",\
-           "mov r9, rax",\
-           "list_length r8",\
-           "integer rax",\
-           "mov r10, rax",\
-           "is_lower r9, r10",\
-           "boolean_value rax",\
-           "cmp rax, 1"
-
-  string "je .incorrect_argumenst_count_"
-  mov r9, rax
-  to_string r8
-  string_extend_links r9, rax
-  list_append_link rdx, rax
-
-  add_code "dictionary_length rdx",\
-           "integer rax",\
-           "integer_sub r9, rax",\
-           "mov r9, rax",\
-           "is_lower_or_equal r9, r10",\
-           "boolean_value rax",\
-           "cmp rax, 1"
-
-  string "je .correct_argumenst_count_"
-  mov r9, rax
-  to_string r8
-  string_extend_links r9, rax
-  list_append_link rdx, rax
-
-  string ".incorrect_argumenst_count_"
-  mov r9, rax
-  to_string r8
-  string_extend_links r9, rax
-  mov r9, rax
-  string ":"
-  string_extend_links r9, rax
-  list_append_link rdx, rax
-
-  add_code "list",\
-           "mov rbx, rax",\
-           'string "Ожидаемое количество аргументов —"',\
-           "list_append_link rbx, rax",\
-           "to_string r9",\
-           "mov rcx, rax",\
-           'string ", получено —"',\
-           "string_extend_links rcx, rax",\
-           "list_append_link rbx, rax",\
-           "to_string r10",\
-           "list_append_link rbx, rax",\
-           "print rax",\
-           "exit -1"
-
-  string ".correct_argumenst_count_"
-  mov r9, rax
-  to_string r8
-  string_extend_links r9, rax
-  mov r9, rax
-  string ":"
-  string_extend_links r9, rax
-  list_append_link rdx, rax
-
-  add_code "integer 0",\
-           "mov r9, rax",\
-           "list_length rcx",\
-           "integer rax",\
-           "mov r10, rax",\
-           "list_length r8",\
-           "integer rax",\
-           "mov r11, rax"
-
-  string ".call_"
-  mov r9, rax
-  to_string r8
-  string_extend_links r9, rax
-  mov r9, rax
-  string ":"
-  string_extend_links r9, rax
-  list_append_link rdx, rax
-
-  add_code "is_equal r9, r10",\
-           "boolean_value rax",\
-           "cmp rax, 1"
-
-  string "je .end_call_"
-  mov r9, rax
-  to_string r8
-  string_extend_links r9, rax
-  list_append_link rdx, rax
-
-  add_code "list_get_link rcx, r9",\
-           "mov r12, rax",\
-           "is_greater_or_equal r9, r11",\
-           "boolean_value rax",\
-           "cmp rax, 1"
-
-  string "je .default_value_"
-  mov r9, rax
-  to_string r8
-  string_extend_links r9, rax
-  list_append_link rdx, rax
-
-  add_code "list_get r8, r9"
-
-  string "jmp .arguments_continue_"
-  mov r9, rax
-  to_string r8
-  string_extend_links r9, rax
-  list_append_link rdx, rax
-
-  string ".default_value_"
-  mov r9, rax
-  to_string r8
-  string_extend_links r9, rax
-  string ":"
-  string_extend_links r9, rax
-  list_append_link rdx, rax
-
-  add_code "list_get_link rcx, r9",\
-           "dictionary_get rdx, rax"
-
-  string ".arguments_continue_"
-  mov r9, rax
-  to_string r8
-  string_extend_links r9, rax
-  string ":"
-  string_extend_links r9, rax
-  list_append_link rdx, rax
-
-  add_code "mov r13, rax",\
-           "list",\
-           "assign r12, rax, r13",\
-           "integer_inc r9"
-
-  string "jmp .call_"
-  mov r9, rax
-  to_string r8
-  string_extend_links r9, rax
-  list_append_link rdx, rax
-
-  string ".end_call_"
-  mov r9, rax
-  to_string r8
-  string_extend_links r9, rax
-  mov r9, rax
-  string ":"
-  string_extend_links r9, rax
-  list_append_link rdx, rax
-
-  add_code "call rbx",\
-           "mov [GLOBAL_CONTEXT], r15",\
-           "return"
+  add_code "function_call rbx, rax"
 
   mov rax, rdx
   ret
