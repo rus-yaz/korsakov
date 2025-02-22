@@ -5,8 +5,6 @@ section "data" writable
   результат rq 1
   try dq 0
 
-  INVALID_SYNTAX_ERROR db "Неверный синтаксис:", 0
-
   KEYWORD              db "ключевое слово", 0
   IDENTIFIER           db "идентификатор", 0
   INTEGER_TYPE_NAME    db "целое число", 0
@@ -508,23 +506,25 @@ f_expression:
 
         @@:
 
-        buffer_to_string INVALID_SYNTAX_ERROR
+        list
         mov rbx, rax
-        string "ожидаемая длина Списка — "
-        string_extend_links rbx, rax
+
+        string "Неверный синтаксис: ожидаемая длина Списка — "
+        list_append_link rbx, rax
 
         list_length rcx
         integer rax
         to_string rax
-        string_extend_links rbx, rax
+        mov rcx, rax
 
         string ", но получен Список с длиной "
-        string_extend_links rbx, rax
+        string_extend_links rcx, rax
+        list_append_link rbx, rax
 
         list_length rdx
         integer rax
         to_string rax
-        string_extend_links rbx, rax
+        list_append_link rbx, rax
 
         print rax
 
@@ -565,7 +565,6 @@ f_expression:
           list_append_link rbx, rax
           buffer_to_string IDENTIFIER
           list_append_link rbx, rax
-          join rbx
           print rax
           exit -1
 
@@ -798,7 +797,6 @@ f_atom:
       list_append_link rbx, rax
       buffer_to_string OPEN_PAREN
       list_append_link rbx, rax
-      join rbx
       print rax
       exit -1
 
@@ -840,7 +838,6 @@ f_atom:
       list_append_link rbx, rax
       buffer_to_string CLOSED_PAREN
       list_append_link rbx, rax
-      join rax
       print rax
       exit -1
 
@@ -1033,7 +1030,6 @@ f_call_expression:
     list_append_link rbx, rax
     buffer_to_string CLOSED_PAREN
     list_append_link rbx, rax
-    join rbx
     print rax
     exit -1
 
@@ -1133,7 +1129,6 @@ f_list_expression:
     list_append_link rbx, rax
     buffer_to_string OPEN_LIST_PAREN
     list_append_link rbx, rax
-    join rbx
     print rax
     exit -1
 
@@ -1166,7 +1161,6 @@ f_list_expression:
       list_append_link rbx, rax
       buffer_to_string CLOSED_PAREN
       list_append_link rbx, rax
-      join rbx
       print rax
       exit -1
 
@@ -1241,7 +1235,6 @@ f_list_expression:
         list_append_link rbx, rax
         buffer_to_string COLON
         list_append_link rbx, rax
-        join rbx
         print rax
         exit -1
 
@@ -1323,7 +1316,6 @@ f_check_expression:
     list_append_link rbx, rax
     buffer_to_string CHECK
     list_append_link rbx, rax
-    join rbx
     print rax
     exit -1
 
@@ -1361,7 +1353,6 @@ f_check_expression:
     list_append_link rbx, rax
     buffer_to_string NEWLINE
     list_append_link rbx, rax
-    join rbx
     print rax
     exit -1
 
@@ -1390,7 +1381,6 @@ f_check_expression:
       list_append_link rbx, rax
       buffer_to_string NEWLINE
       list_append_link rbx, rax
-      join rbx
       print rax
       exit -1
 
@@ -1417,7 +1407,6 @@ f_check_expression:
     list_append_link rbx, rax
     buffer_to_string ON_KEYWORD
     list_append_link rbx, rax
-    join rbx
     print rax
     exit -1
 
@@ -1492,7 +1481,6 @@ f_check_expression:
       list_append_link rbx, rax
       buffer_to_string NEWLINE
       list_append_link rbx, rax
-      join rbx
       print rax
       exit -1
 
@@ -1533,6 +1521,9 @@ f_check_expression:
         @@:
 
         string "Ключевое слово `продолжить` может использоваться только в цикле"
+        mov rbx, rax
+        list
+        list_append_link rax, rbx
         print rax
         exit -1
 
@@ -1594,6 +1585,9 @@ f_if_expression:
     @@:
 
     string "Ожидалось ключевое слово `если`"
+    mov rbx, rax
+    list
+    list_append_link rax, rbx
     print rax
     exit -1
 
@@ -1618,6 +1612,9 @@ f_if_expression:
       @@:
 
       string "Ожидалось ключевое слово `то`"
+      mov rbx, rax
+      list
+      list_append_link rax, rbx
       print rax
       exit -1
 
@@ -1637,6 +1634,9 @@ f_if_expression:
       @@:
 
       string "Ожидался перенос строки"
+      mov rbx, rax
+      list
+      list_append_link rax, rbx
       print rax
       exit -1
 
@@ -1705,6 +1705,9 @@ f_if_expression:
       @@:
 
       string "Ожидался конец конструкции"
+      mov rbx, rax
+      list
+      list_append_link rax, rbx
       print rax
       exit -1
 
@@ -1774,6 +1777,9 @@ f_else_expression:
       @@:
 
       string "Ожидался конец конструкции"
+      mov rbx, rax
+      list
+      list_append_link rax, rbx
       print rax
       exit -1
 
@@ -1809,6 +1815,9 @@ f_for_expression:
     @@:
 
     string "Ожидалось ключевое слово `для`"
+    mov rbx, rax
+    list
+    list_append_link rax, rbx
     print rax
     exit -1
 
@@ -1828,6 +1837,9 @@ f_for_expression:
     @@:
 
     string "Ожидался идентификатор"
+    mov rbx, rax
+    list
+    list_append_link rax, rbx
     print rax
     exit -1
 
@@ -1861,6 +1873,9 @@ f_for_expression:
       @@:
 
       string "Ожидалось ключевое слово `до`"
+      mov rbx, rax
+      list
+      list_append_link rax, rbx
       print rax
       exit -1
 
@@ -1918,6 +1933,9 @@ f_for_expression:
     @@:
 
     string "Ожидались ключевое слово `от` или `из`"
+    mov rbx, rax
+    list
+    list_append_link rax, rbx
     print rax
     exit -1
 
@@ -1928,6 +1946,9 @@ f_for_expression:
   je .correct_token
 
     string "Ожидался перенос строки"
+    mov rbx, rax
+    list
+    list_append_link rax, rbx
     print rax
     exit -1
 
@@ -1960,6 +1981,9 @@ f_for_expression:
       @@:
 
       string "Ожидался конец конструкции"
+      mov rbx, rax
+      list
+      list_append_link rax, rbx
       print rax
       exit -1
 
@@ -2008,6 +2032,9 @@ f_while_expression:
     @@:
 
     string "Ожидалось ключевое слово `пока`"
+    mov rbx, rax
+    list
+    list_append_link rax, rbx
     print rax
     exit -1
 
@@ -2032,6 +2059,9 @@ f_while_expression:
     @@:
 
     string "Ожидался перенос строки"
+    mov rbx, rax
+    list
+    list_append_link rax, rbx
     print rax
     exit -1
 
@@ -2062,6 +2092,9 @@ f_while_expression:
       @@:
 
       string "Ожидался конец конструкции"
+      mov rbx, rax
+      list
+      list_append_link rax, rbx
       print rax
       exit -1
 
@@ -2110,6 +2143,9 @@ f_function_expression:
     @@:
 
     string "Ожидалось ключевое слово `функция`"
+    mov rbx, rax
+    list
+    list_append_link rax, rbx
     print rax
     exit -1
 
@@ -2141,6 +2177,9 @@ f_function_expression:
     @@:
 
     string "Ожидалось `(`"
+    mov rbx, rax
+    list
+    list_append_link rax, rbx
     print rax
     exit -1
 
@@ -2189,6 +2228,9 @@ f_function_expression:
       @@:
 
       string "Ожидался именованный аргумент"
+      mov rbx, rax
+      list
+      list_append_link rax, rbx
       print rax
       exit -1
 
@@ -2219,6 +2261,9 @@ f_function_expression:
     @@:
 
     string "Ожидались Идентификатор или `)`"
+    mov rbx, rax
+    list
+    list_append_link rax, rbx
     print rax
     exit -1
 
@@ -2252,6 +2297,9 @@ f_function_expression:
         @@:
 
         string "Ожидался конец конструкции"
+        mov rbx, rax
+        list
+        list_append_link rax, rbx
         print rax
         exit -1
 
@@ -2291,6 +2339,9 @@ f_function_expression:
     @@:
 
     string "Ожидалось `:`"
+    mov rbx, rax
+    list
+    list_append_link rax, rbx
     print rax
     exit -1
 
@@ -2326,6 +2377,9 @@ f_class_expression:
     @@:
 
     string "Ожидалось ключевое слово `класс`"
+    mov rbx, rax
+    list
+    list_append_link rax, rbx
     print rax
     exit -1
 
@@ -2345,6 +2399,9 @@ f_class_expression:
     @@:
 
     string "Ожидался Идентификатор"
+    mov rbx, rax
+    list
+    list_append_link rax, rbx
     print rax
     exit -1
 
@@ -2366,6 +2423,9 @@ f_class_expression:
     @@:
 
     string "Ожидалось `(`"
+    mov rbx, rax
+    list
+    list_append_link rax, rbx
     print rax
     exit -1
 
@@ -2394,6 +2454,9 @@ f_class_expression:
       @@:
 
       string "Ожидались Идентификатор или `)`"
+      mov rbx, rax
+      list
+      list_append_link rax, rbx
       print rax
       exit -1
 
@@ -2425,6 +2488,9 @@ f_class_expression:
         @@:
 
         string "Ожидались ` ` или `)`"
+        mov rbx, rax
+        list
+        list_append_link rax, rbx
         print rax
         exit -1
 
@@ -2456,6 +2522,9 @@ f_class_expression:
       @@:
 
       string "Ожидались Идентификатор или `)`"
+      mov rbx, rax
+      list
+      list_append_link rax, rbx
       print rax
       exit -1
 
@@ -2475,6 +2544,9 @@ f_class_expression:
       @@:
 
       string "Ожидался перенос строки"
+      mov rbx, rax
+      list
+      list_append_link rax, rbx
       print rax
       exit -1
 
@@ -2500,6 +2572,9 @@ f_class_expression:
     @@:
 
     string "Ожидались ключевое слово `функция` или конец конструкции"
+    mov rbx, rax
+    list
+    list_append_link rax, rbx
     print rax
     exit -1
 
@@ -2531,6 +2606,9 @@ f_class_expression:
       @@:
 
       string "Метод должен иметь хотя бы один аргумент, в который будет помещён сам объект"
+      mov rbx, rax
+      list
+      list_append_link rax, rbx
       print rax
       exit -1
 
@@ -2565,6 +2643,9 @@ f_class_expression:
     @@:
 
     string "Ожидался конец конструкции"
+    mov rbx, rax
+    list
+    list_append_link rax, rbx
     print rax
     exit -1
 
@@ -2593,6 +2674,9 @@ f_delete_expression:
     @@:
 
     string "Ожидалось ключевое слово `удалить`"
+    mov rbx, rax
+    list
+    list_append_link rax, rbx
     print rax
     exit -1
 
@@ -2612,6 +2696,9 @@ f_delete_expression:
     @@:
 
     string "Ожидался Идентфикатор"
+    mov rbx, rax
+    list
+    list_append_link rax, rbx
     print rax
     exit -1
 
@@ -2639,6 +2726,9 @@ f_include_statement:
     @@:
 
     string "Ожидалось ключевое слово `включить`"
+    mov rbx, rax
+    list
+    list_append_link rax, rbx
     print rax
     exit -1
 
@@ -2658,6 +2748,9 @@ f_include_statement:
     @@:
 
     string "Ожидалось имя модуля (строка)"
+    mov rbx, rax
+    list
+    list_append_link rax, rbx
     print rax
     exit -1
 
