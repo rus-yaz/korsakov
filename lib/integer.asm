@@ -64,10 +64,7 @@ f_integer_add:
   mov rcx, [rax + INTEGER_HEADER*8]
   add rcx, [rbx + INTEGER_HEADER*8]
 
-  create_block INTEGER_SIZE*8
-
-  mem_mov [rax + 8*0], INTEGER
-  mem_mov [rax + 8*1], rcx
+  integer rcx
 
   ret
 
@@ -82,9 +79,36 @@ f_integer_sub:
   mov rcx, [rax + INTEGER_HEADER*8]
   sub rcx, [rbx + INTEGER_HEADER*8]
 
-  create_block INTEGER_SIZE*8
+  integer rcx
+  ret
 
-  mem_mov [rax + 8*0], INTEGER
-  mem_mov [rax + 8*1], rcx
+f_integer_mul:
+  get_arg 1
+  mov rbx, rax
+  get_arg 0
 
+  check_type rax, INTEGER
+  check_type rbx, INTEGER
+
+  mov rcx,  [rax + INTEGER_HEADER*8]
+  imul rcx, [rbx + INTEGER_HEADER*8]
+
+  integer rcx
+  ret
+
+f_integer_div:
+  get_arg 1
+  mov rbx, rax
+  get_arg 0
+
+  check_type rax, INTEGER
+  check_type rbx, INTEGER
+
+  mov rax, [rax + INTEGER_HEADER*8]
+  mov rbx, [rbx + INTEGER_HEADER*8]
+
+  mov rdx, 0
+  idiv rbx
+
+  integer rax
   ret

@@ -733,3 +733,43 @@ f_string_pop:
   string_copy rax
 
   ret
+
+f_string_mul:
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
+
+  check_type rbx, STRING
+  check_type rcx, INTEGER
+
+  mov rcx, [rcx + INTEGER_HEADER*8]
+  cmp rcx, 0
+  jge .correct
+
+    string "string_mul: Нельзя умножить Строку на отрицательное число"
+    mov rbx, rax
+    list
+    list_append_link rax, rbx
+    print rax
+    exit -1
+
+  .correct:
+
+  string ""
+  mov rdx, rax
+
+  .while:
+
+    cmp rcx, 0
+    je .end_while
+
+    string_extend_links rdx, rbx
+
+    dec rcx
+    jmp .while
+
+  .end_while:
+
+  copy rdx
+  ret

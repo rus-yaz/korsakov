@@ -51,6 +51,34 @@ f_list_append:
 
   ret
 
+f_list_add_links:
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
+
+  check_type rbx, LIST
+  check_type rcx, LIST
+
+  collection_add_links rbx, rcx
+  ret
+
+f_list_add:
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
+
+  check_type rbx, LIST
+  check_type rcx, LIST
+
+  copy rbx
+  mov rbx, rax
+  copy rcx
+
+  list_add_links rbx, rax
+  ret
+
 f_list_extend_links:
   get_arg 0
   mov rbx, rax
@@ -194,8 +222,7 @@ f_list_insert:
   mov rdx, rax
 
   check_type rbx, LIST
-  copy rcx
-  mov rcx, rax
+
   copy rdx
   list_insert_link rbx, rcx, rax
 
@@ -231,3 +258,43 @@ f_list_include:
   .return_false:
     boolean 0
     ret
+
+f_list_mul:
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
+
+  check_type rbx, LIST
+  check_type rcx, INTEGER
+
+  mov rcx, [rcx + INTEGER_HEADER*8]
+  cmp rcx, 0
+  jge .correct
+
+    string "list_mul: Нельзя умножить Список на отрицательное число"
+    mov rbx, rax
+    list
+    list_append_link rax, rbx
+    print rax
+    exit -1
+
+  .correct:
+
+  list
+  mov rdx, rax
+
+  .while:
+
+    cmp rcx, 0
+    je .end_while
+
+    list_extend_links rdx, rbx
+
+    dec rcx
+    jmp .while
+
+  .end_while:
+
+  copy rdx
+  ret

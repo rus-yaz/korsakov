@@ -604,6 +604,21 @@ macro integer_sub int_1*, int_2* {
   return
 }
 
+macro integer_mul int_1*, int_2* {
+  enter int_1, int_2
+
+  call f_integer_mul
+
+  return
+}
+macro integer_div int_1*, int_2* {
+  enter int_1, int_2
+
+  call f_integer_div
+
+  return
+}
+
 section "collection" executable
 
 macro collection capacity = 0 {
@@ -832,6 +847,22 @@ macro list_append list*, item* {
   return
 }
 
+macro list_add_links list_1*, list_2* {
+  enter list_1, list_2
+
+  call f_list_add_links
+
+  return
+}
+
+macro list_add list_1*, list_2* {
+  enter list_1, list_2
+
+  call f_list_add
+
+  return
+}
+
 macro list_extend_links list_1*, list_2* {
   enter list_1, list_2
 
@@ -940,6 +971,14 @@ macro list_insert list*, index*, item* {
   enter list, index, item
 
   call f_list_insert
+
+  return
+}
+
+macro list_mul list*, integer* {
+  enter list, integer
+
+  call f_list_mul
 
   return
 }
@@ -1162,6 +1201,14 @@ macro string_pop string*, integer = 0 {
   enter string, integer
 
   call f_string_pop
+
+  return
+}
+
+macro string_mul string*, integer* {
+  enter string, integer
+
+  call f_string_mul
 
   return
 }

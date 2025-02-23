@@ -11,13 +11,31 @@ f_addition:
   mov r8,  [rcx]
 
   cmp rdx, INTEGER
-  jne .first_not_integer
+  jne .not_integer
     cmp r8, INTEGER
-    jne .second_not_integer
+    jne .not_integer_to_integer
       integer_add rbx, rcx
       ret
-    .second_not_integer:
-  .first_not_integer:
+    .not_integer_to_integer:
+  .not_integer:
+
+  cmp rdx, LIST
+  jne .not_list
+    cmp r8, LIST
+    jne .not_list_to_list
+      list_add rbx, rcx
+      ret
+    .not_list_to_list:
+  .not_list:
+
+  cmp rdx, STRING
+  jne .not_string
+    cmp r8, STRING
+    jne .not_string_to_string
+      string_add rbx, rcx
+      ret
+    .not_string_to_string:
+  .not_string:
 
   string "Операция сложения не может быть проведена между типами"
   mov rbx, rax
@@ -41,13 +59,13 @@ f_subtraction:
   mov r8,  [rcx]
 
   cmp rdx, INTEGER
-  jne .first_not_integer
+  jne .not_integer
     cmp r8, INTEGER
-    jne .second_not_integer
+    jne .not_integer_to_integer
       integer_sub rbx, rcx
       ret
-    .second_not_integer:
-  .first_not_integer:
+    .not_integer_to_integer:
+  .not_integer:
 
   string "Операция вычитания не может быть проведена между типами"
   mov rbx, rax
@@ -71,39 +89,43 @@ f_multiplication:
   mov r8,  [rcx]
 
   cmp rdx, INTEGER
-  jne .first_not_integer
+  jne .not_integer
     cmp r8, INTEGER
-    jne .second_not_integer
-      mov rbx, [rbx + INTEGER_HEADER*8]
-      mov rcx, [rcx + INTEGER_HEADER*8]
-
-      mov rax, rcx
-      imul rbx
-      integer rax
-
+    jne .not_integer_to_integer
+      integer_mul rbx, rcx
       ret
-    .second_not_integer:
+    .not_integer_to_integer:
 
     cmp r8, STRING
-    jne .second_not_string
-      mov r9, [rbx + INTEGER_HEADER*8]
-
-      string ""
-      .string_while:
-        cmp r9, 0
-        je .string_end_while
-
-        string_extend_links rax, rcx
-
-        dec r9
-        jmp .string_while
-      .string_end_while:
-
-      copy rax
+    jne .not_integer_to_string
+      string_mul rcx, rbx
       ret
+    .not_integer_to_string:
 
-    .second_not_string:
-  .first_not_integer:
+    cmp r8, LIST
+    jne .not_integer_to_list
+      list_mul rcx, rbx
+      ret
+    .not_integer_to_list:
+  .not_integer:
+
+  cmp rdx, STRING
+  jne .not_string
+    cmp r8, INTEGER
+    jne .not_string_to_integer
+      string_mul rbx, rcx
+      ret
+    .not_string_to_integer:
+  .not_string:
+
+  cmp rdx, LIST
+  jne .not_list
+    cmp r8, INTEGER
+    jne .not_list_to_integer
+      list_mul rbx, rcx
+      ret
+    .not_list_to_integer:
+  .not_list:
 
   string "Операция умножения не может быть проведена между типами"
   mov rbx, rax
@@ -132,22 +154,13 @@ f_division:
   mov r8,  [rcx]
 
   cmp rdx, INTEGER
-  jne .first_not_integer
+  jne .not_integer
     cmp r8, INTEGER
-    jne .second_not_integer
-      mov rbx, [rbx + INTEGER_HEADER*8]
-      mov rcx, [rcx + INTEGER_HEADER*8]
-
-      mov rdx, 0
-      mov rax, rcx
-      idiv rbx
-      integer rax
-
-      jmp .continue
-
-    .second_not_integer:
-
-  .first_not_integer:
+    jne .not_integer_to_integer
+      integer_div rbx, rcx
+      ret
+    .not_integer_to_integer:
+  .not_integer:
 
   string "Операция деления не может быть проведена между типами"
   mov rbx, rax

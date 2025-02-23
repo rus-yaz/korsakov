@@ -7,62 +7,87 @@ list
 list_append_link rax, rcx
 print rax
 
-integer 0
-mov rbx, rax
-integer 0
-mov rcx, rax
-list
-list_append_link rax, rbx
-list_append_link rax, rcx
-print rax
-
-addition rbx, rcx
-mov rcx, rax
-list
-list_append_link rax, rcx
-print rax
-
 integer 2
-mov rbx, rax
+mov rcx, rax
 integer 3
-mov rcx, rax
-list
-list_append_link rax, rbx
-list_append_link rax, rcx
-print rax
+mov rdx, rax
 
-addition rbx, rcx
-mov rcx, rax
-list
-list_append_link rax, rcx
-print rax
-
-integer -2
+addition rcx, rdx
 mov rbx, rax
-integer 1
-mov rcx, rax
 list
 list_append_link rax, rbx
-list_append_link rax, rcx
-print rax
-
-addition rbx, rcx
-mov rcx, rax
-list
-list_append_link rax, rcx
-print rax
-
-integer 2
-mov rbx, rax
-integer 1
-mov rcx, rax
-list
-list_append_link rax, rbx
-list_append_link rax, rcx
 print rax
 
 subtraction rbx, rcx
-mov rcx, rax
+mov rbx, rax
 list
-list_append_link rax, rcx
+list_append_link rax, rbx
+print rax
+
+multiplication rbx, rcx
+mov rbx, rax
+list
+list_append_link rax, rbx
+print rax
+
+division rbx, rcx
+mov rbx, rax
+list
+list_append_link rax, rbx
+print rax
+
+list
+mov rcx, rax
+integer 0
+list_append_link rcx, rax
+string "Привет"
+list_append_link rcx, rax
+boolean 1
+list_append_link rcx, rax
+list
+list_append_link rcx, rax
+
+integer 3
+mov rdx, rax
+
+addition rcx, rcx
+mov rbx, rax
+list
+list_append_link rax, rbx
+print rax
+
+multiplication rcx, rdx
+mov rbx, rax
+list
+list_append_link rax, rbx
+print rax
+
+multiplication rdx, rcx
+mov rbx, rax
+list
+list_append_link rax, rbx
+print rax
+
+string "Привет"
+mov rcx, rax
+
+integer 3
+mov rdx, rax
+
+addition rcx, rcx
+mov rbx, rax
+list
+list_append_link rax, rbx
+print rax
+
+multiplication rcx, rdx
+mov rbx, rax
+list
+list_append_link rax, rbx
+print rax
+
+multiplication rdx, rcx
+mov rbx, rax
+list
+list_append_link rax, rbx
 print rax
