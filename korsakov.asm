@@ -463,6 +463,13 @@ start:
   integer 0
   assign rcx, rbx, rax
 
+  string "НОМЕР_ТЕКУЩЕГО_ЦИКЛА"
+  mov rcx, rax
+  list
+  mov rbx, rax
+  integer 0
+  assign rcx, rbx, rax
+
   string "СЧЁТЧИК_ВЛОЖЕННОСТИ"
   mov rcx, rax
   list

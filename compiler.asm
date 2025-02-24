@@ -1086,6 +1086,16 @@ f_compile_while:
   integer_inc rax
   assign r8, r9, rax
 
+  mov r13, rax
+
+  string "НОМЕР_ТЕКУЩЕГО_ЦИКЛА"
+  mov r8, rax
+  list
+  mov r9, rax
+  access r8, r9
+  mov r15, rax
+  assign r8, r9, r13
+
   mov r13, [rax + INTEGER_HEADER*8]
 
   add_code "push rbx",\
@@ -1163,6 +1173,12 @@ f_compile_while:
 
   add_code "pop rbx"
 
+  string "НОМЕР_ТЕКУЩЕГО_ЦИКЛА"
+  mov r8, rax
+  list
+  mov r9, rax
+  assign r8, r9, r15
+
   string "СЧЁТЧИК_ВЛОЖЕННОСТИ"
   mov r8, rax
   list
@@ -1198,6 +1214,16 @@ f_compile_for:
   access r8, r9
   integer_inc rax
   assign r8, r9, rax
+
+  mov r8, rax
+
+  string "НОМЕР_ТЕКУЩЕГО_ЦИКЛА"
+  mov r9, rax
+  list
+  mov r10, rax
+  access r9, r10
+  mov r15, rax
+  assign r9, r10, r8
 
   mov r8, [rax + INTEGER_HEADER*8]
 
@@ -1375,6 +1401,12 @@ f_compile_for:
   string <"pop rdx, rcx, rbx", 10>
   list_append_link rdx, rax
 
+  string "НОМЕР_ТЕКУЩЕГО_ЦИКЛА"
+  mov r8, rax
+  list
+  mov r9, rax
+  assign r8, r9, r15
+
   string "СЧЁТЧИК_ВЛОЖЕННОСТИ"
   mov r8, rax
   list
@@ -1395,11 +1427,26 @@ f_compile_skip:
   list
   mov rdx, rax
 
-  string "СЧЁТЧИК_ЦИКЛОВ"
+  string "НОМЕР_ТЕКУЩЕГО_ЦИКЛА"
   mov r8, rax
   list
   access r8, rax
   mov r8, rax
+
+  integer 0
+  is_equal r8, rax
+  boolean_value rax
+  cmp rax, 1
+  jne .in_loop
+
+    string "`пропустить` может использоваться только внутри операторов"
+    mov rbx, rax
+    list
+    list_append_link rax, rbx
+    print rax
+    exit -1
+
+  .in_loop:
 
   string "jmp .loop_iteration_"
   mov r9, rax
@@ -1419,11 +1466,26 @@ f_compile_break:
   list
   mov rdx, rax
 
-  string "СЧЁТЧИК_ЦИКЛОВ"
+  string "НОМЕР_ТЕКУЩЕГО_ЦИКЛА"
   mov r8, rax
   list
   access r8, rax
   mov r8, rax
+
+  integer 0
+  is_equal r8, rax
+  boolean_value rax
+  cmp rax, 1
+  jne .in_loop
+
+    string "`прервать` может использоваться только внутри операторов"
+    mov rbx, rax
+    list
+    list_append_link rax, rbx
+    print rax
+    exit -1
+
+  .in_loop:
 
   string "jmp .loop_end_"
   mov r9, rax
