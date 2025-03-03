@@ -122,6 +122,9 @@ f_read_file:
   .read:
 
   pop rax
+  repeat 1000
+    nop
+  end repeat
   binary_to_string rax
 
   ret

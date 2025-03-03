@@ -35,14 +35,14 @@ macro get_arg index {
   cmp rax, 0
   jge @f
 
-    exit 1
+    exit 100
   @@:
 
   mov rax, [rbp]
   cmp rax, index
   jg @f
 
-    exit 1
+    exit 100
   @@:
 
   mov rax, index
@@ -405,6 +405,22 @@ macro dictionary_set dictionary*, key*, value* {
   enter dictionary, key, value
 
   call f_dictionary_set
+
+  return
+}
+
+macro dictionary_add_links dictionary1*, dictionary2* {
+  enter  dictionary1, dictionary2
+
+  call f_dictionary_add_links
+
+  return
+}
+
+macro dictionary_add dictionary1*, dictionary2* {
+  enter  dictionary1, dictionary2
+
+  call f_dictionary_add
 
   return
 }
@@ -1141,7 +1157,7 @@ macro string_set string*, index*, value* {
   return
 }
 
-macro split string*, separator = " " {
+macro split string*, separator = 0 {
   enter string, separator
 
   call f_split
@@ -1149,7 +1165,7 @@ macro split string*, separator = " " {
   return
 }
 
-macro join_links list*, separator = " " {
+macro join_links list*, separator = 0 {
   enter list, separator
 
   call f_join_links
@@ -1157,7 +1173,7 @@ macro join_links list*, separator = " " {
   return
 }
 
-macro join list*, separator = " " {
+macro join list*, separator = 0 {
   enter list, separator
 
   call f_join
@@ -1243,8 +1259,8 @@ macro access variable*, keys*, context = [GLOBAL_CONTEXT] {
 
 section "function" executable
 
-macro function name*, link*, arguments*, named_arguments* {
-  enter name, link, arguments, named_arguments
+macro function name*, link*, arguments*, named_arguments*, accumulators = 0, is_internal = 0 {
+  enter name, link, arguments, named_arguments, accumulators, is_internal
 
   call f_function
 
@@ -1259,8 +1275,8 @@ macro function_copy function {
   return
 }
 
-macro function_call function*, args* {
-  enter function, args
+macro function_call function*, arguments*, named_arguments* {
+  enter function, arguments, named_arguments
 
   call f_function_call
 

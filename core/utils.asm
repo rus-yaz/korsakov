@@ -208,12 +208,11 @@ f_check_type:
 
   .continue:
 
-  type_to_string r9
-  mov rbx, rax
-  string "check_type: Ожидался тип"
-  mov rcx, rax
   list
-  list_append_link rax, rcx
-  list_append_link rax, rbx
+  mov rbx, rax
+  type_to_string r9
+  list_append_link rbx, rax
+  string "check_type: Ожидался тип"
+  list_append_link rbx, rax
   print rax
   exit -1

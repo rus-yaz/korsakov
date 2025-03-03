@@ -25,13 +25,13 @@ section "data" writable
   define BOOLEAN_HEADER    1
   define INTEGER_HEADER    1
   define BINARY_HEADER     2
-  define FUNCTION_HEADER   5
   define COLLECTION_HEADER 4
   define LIST_HEADER       4
   define STRING_HEADER     4
   define DICTIONARY_HEADER 4
   define FILE_HEADER       4
   define HEAP_BLOCK_HEADER 4
+  define FUNCTION_HEADER   7
 
   ; Полные размеры типа (для неизменяемых по длине)
   define NULL_SIZE    1
@@ -149,7 +149,7 @@ _start:
 
   list
   mov rdx, rax
-  string "*args"
+  string "args*"
   list_append_link rdx, rax
   string "separator"
   list_append_link rdx, rax
@@ -169,8 +169,14 @@ _start:
 
   string "print"
   mov rbx, rax
-  function rbx, f_print, rdx, rcx
+  function rbx, f_print, rdx, rcx, 1, 1
   mov rcx, rax
+  list
+  assign rbx, rax, rcx
+  mov rcx, rax
+
+  string "показать"
+  mov rbx, rax
   list
   assign rbx, rax, rcx
 

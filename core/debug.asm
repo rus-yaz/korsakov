@@ -19,7 +19,7 @@ macro debug_start function_name* {
   list_append_link rax, rbx
   mov rbx, rax
   string ""
-  print rbx, "", rax
+  print rbx, rax, rax
 
   string "начало"
   mov rcx, rax
@@ -66,7 +66,7 @@ macro debug_end function_name* {
   list_append_link rax, rbx
   mov rbx, rax
   string ""
-  print rbx, "", rax
+  print rbx, rax, rax
 
   string "конец "
   mov rcx, rax

@@ -98,6 +98,10 @@ list
 list_append rax, rbx
 list_append rax, rcx
 list_append rax, rdx
+mov rbx, rax
 
-print rax, "?"
-print rax, "_", r8
+string "?"
+print rbx, rax
+
+string "_"
+print rbx, rax, r8

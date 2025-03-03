@@ -59,8 +59,8 @@ macro string_node token* {
   return
 }
 
-macro call_node variable*, arguments* {
-  enter variable, arguments
+macro call_node variable*, arguments*, named_arguments* {
+  enter variable, arguments, named_arguments
 
   call f_call_node
 
@@ -266,6 +266,8 @@ f_call_node:
   dictionary_set_link rbx, [переменная], rax
   get_arg 1
   dictionary_set_link rbx, [аргументы], rax
+  get_arg 2
+  dictionary_set_link rbx, [именованные_аргументы], rax
 
   ret
 

@@ -45,13 +45,15 @@ list
 list_append_link rax, r8
 print rax
 
-split rbx, " "
+string " "
+split rbx, rax
 mov r8, rax
 list
 list_append_link rax, r8
 print rax
 
-join r8, " "
+string " "
+join r8, rax
 mov r8, rax
 list
 list_append_link rax, r8

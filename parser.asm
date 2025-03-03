@@ -5,31 +5,31 @@ section "data" writable
   результат rq 1
   try dq 0
 
-  KEYWORD              db "ключевое слово", 0
-  IDENTIFIER           db "идентификатор", 0
-  INTEGER_TYPE_NAME    db "целое число", 0
-  FLOAT_TYPE_NAME      db "вещественное число", 0
-  LIST_TYPE_NAME       db "список", 0
-  STRING_TYPE_NAME     db "строка", 0
-  COMPARISON_OPERATOR  db "оператор сравнения", 0
-  NEWLINE              db "перенос строки", 0
-  SPACE                db "` `", 0
+  CLOSED_PAREN         db "`)`", 0
   COLON                db "`:`", 0
   OPEN_PAREN           db "`(`", 0
-  CLOSED_PAREN         db "`)`", 0
-  OPEN_LIST_PAREN      db "`%(`", 0
-  CHECK                db "`проверить`", 0
-  ON_KEYWORD           db "`при`", 0
+  SPACE                db "` `", 0
   FROM_KEYWORD         db "`от`", 0
-  IF_KEYWORD           db "`если`", 0
-  FOR                  db "`для`", 0
-  WHILE_KEYWORD        db "`пока`", 0
+  OF                   db "`из`", 0
+  OPEN_LIST_PAREN      db "`%(`", 0
   THEN                 db "`то`", 0
   TO                   db "`до`", 0
-  OF                   db "`из`", 0
-  FUNCTION_KEYWORD     db "`функция`", 0
+  FOR                  db "`для`", 0
+  ON_KEYWORD           db "`при`", 0
+  IF_KEYWORD           db "`если`", 0
+  LIST_TYPE_NAME       db "список", 0
+  STRING_TYPE_NAME     db "строка", 0
+  WHILE_KEYWORD        db "`пока`", 0
   DELETE               db "`удалить`", 0
+  FUNCTION_KEYWORD     db "`функция`", 0
   INCLUDE_KEYWORD      db "`включить`", 0
+  CHECK                db "`проверить`", 0
+  INTEGER_TYPE_NAME    db "целое число", 0
+  IDENTIFIER           db "идентификатор", 0
+  KEYWORD              db "ключевое слово", 0
+  NEWLINE              db "перенос строки", 0
+  COMPARISON_OPERATOR  db "оператор сравнения", 0
+  FLOAT_TYPE_NAME      db "вещественное число", 0
 
 section "parser" executable
 
@@ -63,14 +63,14 @@ macro skip_newline {
   debug_end "skip_newline"
 }
 
-macro reverse amount = 0 {
-  debug_start "reverse"
+macro revert amount = 0 {
+  debug_start "revert"
   enter amount
 
-  call f_reverse
+  call f_revert
 
   return
-  debug_end "reverse"
+  debug_end "revert"
 }
 
 macro update_token {
@@ -343,7 +343,7 @@ f_skip_newline:
 
   ret
 
-f_reverse:
+f_revert:
   get_arg 0
   ; RAX — amount = 0
 
@@ -598,7 +598,7 @@ f_expression:
   .revert:
 
   integer_sub [индекс], rbx
-  reverse rax
+  revert rax
 
   list
   list_append_link rax, [И]
@@ -961,7 +961,9 @@ f_atom:
     list_append_link rbx, rax
     buffer_to_string LIST_TYPE_NAME
     list_append_link rbx, rax
-    join rbx, ", "
+
+    string ", "
+    join rbx, rax
     mov rbx, rax
 
     string ". Получено"
@@ -1000,6 +1002,10 @@ f_call_expression:
   ; RCX — argument_nodes
   list
   mov rcx, rax
+  list
+  mov rdx, rax
+
+  mov r8, 0
 
   .while:
     token_check_type [токен], [ТИП_ЗАКРЫВАЮЩАЯ_СКОБКА]
@@ -1007,7 +1013,68 @@ f_call_expression:
     je .end_while
 
     expression
-    list_append_link rcx, rax
+    mov r9, rax
+
+    dictionary_get_link r9, [узел]
+    is_equal rax, [УЗЕЛ_ПРИСВАИВАНИЯ_ПЕРЕМЕННОЙ]
+    boolean_value rax
+    cmp rax, 1
+    je .named_argument
+
+      cmp r8, 0
+      je .correct_sequence
+
+        string "Ожидался именованный аргумент"
+        mov rbx, rax
+        list
+        list_append_link rax, rbx
+        print rax
+        exit -1
+
+      .correct_sequence:
+
+      list_append_link rcx, r9
+      jmp .next_argument
+
+    .named_argument:
+
+      dictionary_get_link r9, [ключи]
+      dictionary_get_link rax, [элементы]
+      list_length rax
+      cmp rax, 0
+      je .not_keys
+
+        string "Именованный аргумент не может иметь ключей"
+        mov rbx, rax
+        list
+        list_append_link rax, rbx
+        print rax
+        exit -1
+
+      .not_keys:
+
+      dictionary_get_link r9, [переменная]
+      dictionary_get_link rax, [значение]
+      to_string rax
+      mov r10, rax
+
+      dictionary
+      dictionary_set_link rax, [тип], [ТИП_СТРОКА]
+      dictionary_set_link rax, [значение], r10
+      string_node rax
+      mov r10, rax
+
+      dictionary_get_link r9, [значение]
+      mov r11, rax
+
+      list
+      list_append_link rax, r10
+      list_append_link rax, r11
+      list_node rax
+      list_append_link rdx, rax
+      mov r8, 1
+
+    .next_argument:
 
     jmp .while
 
@@ -1037,7 +1104,7 @@ f_call_expression:
 
   next
 
-  call_node rbx, rcx
+  call_node rbx, rcx, rdx
   ret
 
 f_power_root:
@@ -1055,16 +1122,15 @@ f_factor:
 
   list
   list_append_link rax, [ТИП_ВЫЧИТАНИЕ]
-  list_append_link rax, [ТИП_ИЗВЛЕЧЕНИЕ_КОРНЯ]
   list_append_link rax, [ТИП_ИНКРЕМЕНТАЦИЯ]
   list_append_link rax, [ТИП_ДЕКРЕМЕНТАЦИЯ]
   token_check_type rbx, rax
   cmp rax, 1
-  je .pre_unary_operation
+  je .unary_operation
     power_root
     ret
 
-  .pre_unary_operation:
+  .unary_operation:
 
   next
 
@@ -1687,7 +1753,7 @@ f_if_expression:
       je .while
 
       integer 1
-      reverse rax
+      revert rax
 
       jmp .else_branch
 
@@ -2192,33 +2258,67 @@ f_function_expression:
   list
   mov rdx, rax
 
+  mov r8, 0
+
   .while:
     token_check_type [токен], [ТИП_ИДЕНТИФИКАТОР]
     cmp rax, 1
     jne .end_while
 
-    ; R8 — argument
+    integer_copy [индекс]
+    mov r10, rax
+
+    mov rax, [try]
+    push rax
+    mov [try], 1
+
+    ; R9 — argument
     expression
-    mov r8, rax
+    mov r9, rax
 
-    cmp r8, 0
-    jne .correct_argument
+    pop rax
+    mov [try], rax
 
-    integer -1
-    list_get_link rdx, rax
-    dictionary_get_link rax, [узел]
+    null
+    cmp r9, rax
+    jne .continue_check
+
+      token_check_type [токен], [ТИП_УМНОЖЕНИЕ]
+      cmp rax, 1
+      je .correct_argument
+      token_check_type [токен], [ТИП_ВОЗВЕДЕНИЕ_В_СТЕПЕНЬ]
+      cmp rax, 1
+      je .correct_argument
+
+      jmp .incorrect_argument
+
+    .continue_check:
+
+    dictionary_get_link r9, [узел]
     is_equal rax, [УЗЕЛ_ПРИСВАИВАНИЯ_ПЕРЕМЕННОЙ]
     boolean_value rax
     cmp rax, 1
+    je .correct_argument
 
-    jne .correct_argument
-
-    dictionary_get_link r8, [узел]
-    is_equal rax, [УЗЕЛ_ПРИСВАИВАНИЯ_ПЕРЕМЕННОЙ]
+    dictionary_get_link r9, [узел]
+    is_equal rax, [УЗЕЛ_ДОСТУПА_К_ПЕРЕМЕННОЙ]
     boolean_value rax
     cmp rax, 1
+    je .correct_argument
 
-    jne .correct_argument
+    integer_sub [индекс], r10
+    revert rax
+
+    atom
+    mov r9, rax
+
+    dictionary_get_link r9, [узел]
+    is_equal rax, [УЗЕЛ_ДОСТУПА_К_ПЕРЕМЕННОЙ]
+    boolean_value rax
+    cmp rax, 1
+    je .correct_argument
+
+    .incorrect_argument:
 
       cmp [try], 1
       jne @f
@@ -2227,7 +2327,7 @@ f_function_expression:
 
       @@:
 
-      string "Ожидался именованный аргумент"
+      string "Ожидался позиционный или именованный аргумент"
       mov rbx, rax
       list
       list_append_link rax, rbx
@@ -2236,14 +2336,43 @@ f_function_expression:
 
     .correct_argument:
 
-    list_append_link rdx, r8
-
-    token_check_type [токен], [ТИП_ПРОБЕЛ]
+    token_check_type [токен], [ТИП_УМНОЖЕНИЕ]
     cmp rax, 1
-    jne .correct_space
+    jne .not_positional
+
+      mov r8, 1
+      next
+      jmp .not_named
+
+    .not_positional:
+
+    token_check_type [токен], [ТИП_ВОЗВЕДЕНИЕ_В_СТЕПЕНЬ]
+    cmp rax, 1
+    jne .not_named
+
+      mov r8, 2
       next
 
-    .correct_space:
+    .not_named:
+
+    cmp r8, 0
+    je .not_accumulator
+
+      integer r8
+      mov r8, rax
+      string "*"
+      string_mul rax, r8
+      mov r8, rax
+
+      dictionary_get_link r9, [переменная]
+      dictionary_get_link rax, [значение]
+      string_extend_links rax, r8
+
+      mov r8, 0
+
+    .not_accumulator:
+
+    list_append_link rdx, r9
 
     jmp .while
 
@@ -2791,7 +2920,7 @@ f_statement:
     jne .return_value
 
       integer_sub [токен], rbx
-      reverse rax
+      revert rax
 
     .return_value:
 

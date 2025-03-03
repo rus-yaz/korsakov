@@ -47,6 +47,10 @@ list_append_link rcx, rax
 list
 list_append_link rcx, rax
 
+list
+list_append_link rax, rcx
+print rax
+
 integer 3
 mov rdx, rax
 

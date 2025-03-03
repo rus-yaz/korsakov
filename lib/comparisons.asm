@@ -155,7 +155,9 @@ f_is_equal:
   list_append rdx, rax
   type_to_string DICTIONARY
   list_append rdx, rax
-  join rax, ", "
+
+  string ", "
+  join rdx, rax
   mov rdx, rax
 
   list

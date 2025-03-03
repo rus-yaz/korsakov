@@ -455,11 +455,11 @@ f_split:
   get_arg 1
   mov rcx, rax
 
-  push 0, rcx
-  mov rax, rsp
-  buffer_to_string rax
-  mov rcx, rax
-  pop rax, rax
+  cmp rcx, 0
+  jne .not_default_separator
+    string " "
+    mov rcx, rax
+  .not_default_separator:
 
   list
   mov rdx, rax
@@ -516,11 +516,14 @@ f_join_links:
   get_arg 1
   mov rcx, rax
 
-  push 0, rcx
-  mov rax, rsp
-  buffer_to_string rax
-  mov rcx, rax
-  pop rax, rax
+  cmp rcx, 0
+  jne .not_default_separator
+    string " "
+    mov rcx, rax
+  .not_default_separator:
+
+  check_type rbx, LIST
+  check_type rcx, STRING
 
   string ""
   mov rdx, rax

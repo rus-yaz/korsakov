@@ -404,3 +404,56 @@ f_dictionary_set:
   dictionary_set_link rbx, rcx, rax
 
   ret
+
+f_dictionary_add_links:
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
+
+  dictionary_copy_links rbx
+  mov rbx, rax
+  dictionary_values_links rcx
+  mov rdx, rax
+  dictionary_keys_links rcx
+  mov rcx, rax
+
+  integer 0
+  mov r8, rax
+
+  list_length rdx
+  integer rax
+  mov r9, rax
+
+  .while:
+
+    is_equal r8, r9
+    boolean_value rax
+    cmp rax, 1
+    je .while_end
+
+    list_get_link rcx, r8
+    mov r10, rax
+    list_get_link rdx, r8
+    mov r11, rax
+
+    dictionary_set_link rbx, r10, r11
+
+    integer_inc r8
+    jmp .while
+
+  .while_end:
+
+  mov rax, rbx
+  ret
+
+f_dictionary_add:
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
+
+  dictionary_add_links rbx, rcx
+  copy rax
+
+  ret

@@ -9,11 +9,10 @@ f_print:
   get_arg 2
   mov rdx, rax
 
-  check_type rbx, LIST
-
   cmp rcx, 0
   jne .not_default_separator
-    mov rcx, " "
+    string " "
+    mov rcx, rax
   .not_default_separator:
 
   cmp rdx, 0
@@ -21,6 +20,10 @@ f_print:
     string 10
     mov rdx, rax
   .not_default_end_of_string:
+
+  check_type rbx, LIST
+  check_type rcx, STRING
+  check_type rdx, STRING
 
   list
   mov r8, rax
@@ -53,7 +56,7 @@ f_print:
 
   .end_while:
 
-  join r8, rcx
+  join_links r8, rcx
   string_extend_links rax, rdx
   string_to_binary rax
   mov rbx, rax
