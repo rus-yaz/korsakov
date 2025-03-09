@@ -9,6 +9,11 @@ f_run:
   get_arg 2
   mov rdx, rax
 
+  copy rbx
+  mov rbx, rax
+  copy rcx
+  mov rcx, rax
+
   list_length rbx
   cmp rax, 1
   jge .correct
