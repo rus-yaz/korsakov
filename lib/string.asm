@@ -612,9 +612,9 @@ f_is_alpha:
 
     .check_cyrillic:
 
-    cmp rax, 53392
+    cmp rax, 53377
     jl .return_false
-    cmp rax, 53647
+    cmp rax, 53649
     jg .return_false
 
     .continue:

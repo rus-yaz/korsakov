@@ -210,9 +210,9 @@ f_check_type:
 
   list
   mov rbx, rax
-  type_to_string r9
-  list_append_link rbx, rax
   string "check_type: Ожидался тип"
+  list_append_link rbx, rax
+  type_to_string r9
   list_append_link rbx, rax
   print rax
   exit -1

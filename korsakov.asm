@@ -17,7 +17,6 @@ section "data" writable
   МИНУС                     rq 1
   РАВНО                     rq 1
   ТОЧКА                     rq 1
-  ПРОБЕЛ                    rq 1
   ДВОЕТОЧИЕ                 rq 1
   ЗВЁЗДОЧКА                 rq 1
   ТАБУЛЯЦИЯ                 rq 1
@@ -95,7 +94,6 @@ section "data" writable
   ТИП_ТОЧКА                     rq 1
   ТИП_БОЛЬШЕ                    rq 1
   ТИП_МЕНЬШЕ                    rq 1
-  ТИП_ПРОБЕЛ                    rq 1
   ТИП_СТРОКА                    rq 1
   ТИП_ДЕЛЕНИЕ                   rq 1
   ТИП_НЕ_РАВНО                  rq 1
@@ -159,8 +157,6 @@ start:
   mov [РАВНО], rax
   string "."
   mov [ТОЧКА], rax
-  string " "
-  mov [ПРОБЕЛ], rax
   string 9
   mov [ДВОЕТОЧИЕ], rax
   string ":"
@@ -198,9 +194,6 @@ start:
   integer_copy rax
   integer_inc rax
   mov [ТИП_МЕНЬШЕ], rax
-  integer_copy rax
-  integer_inc rax
-  mov [ТИП_ПРОБЕЛ], rax
   integer_copy rax
   integer_inc rax
   mov [ТИП_СТРОКА], rax
@@ -299,7 +292,6 @@ start:
   mov [типы], rax
 
   dictionary_set_link [типы], [ТОЧКА],                [ТИП_ТОЧКА]
-  dictionary_set_link [типы], [ПРОБЕЛ],               [ТИП_ПРОБЕЛ]
   dictionary_set_link [типы], [КОСАЯ_ЧЕРТА],          [ТИП_ДЕЛЕНИЕ]
   dictionary_set_link [типы], [ПЛЮС],                 [ТИП_СЛОЖЕНИЕ]
   dictionary_set_link [типы], [ДВОЕТОЧИЕ],            [ТИП_ДВОЕТОЧИЕ]

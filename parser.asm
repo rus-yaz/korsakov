@@ -2602,10 +2602,7 @@ f_class_expression:
       next
       skip_newline
 
-      list
-      list_append_link rax, [ТИП_ПРОБЕЛ]
-      list_append_link rax, [ТИП_ЗАКРЫВАЮЩАЯ_СКОБКА]
-      token_check_type [токен], rax
+      token_check_type [токен], [ТИП_ЗАКРЫВАЮЩАЯ_СКОБКА]
       cmp rax, 1
       je .correct_space_closed_paren_2
 

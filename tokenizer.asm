@@ -91,7 +91,7 @@ f_tokenizer:
         je .continue_identifier
 
         string "_"
-        is_equal [токен], rax
+        is_equal rbx, rax
         boolean_value rax
         cmp rax, 1
         jne .end_while_identifier
