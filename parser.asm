@@ -1150,7 +1150,7 @@ f_term:
   ret
 
 f_comparison_expression:
-  token_check_type [токен], [НЕ]
+  token_check_keyword [токен], [НЕ]
   cmp rax, 1
   jne .not_unary
     mov rbx, [токен]

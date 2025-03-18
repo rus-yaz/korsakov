@@ -42,6 +42,55 @@ f_tokenizer:
     list_get_link [символы], [индекс]
     string_extend_links [токен], rax
 
+    mov rbx, 0
+    .new_token_while:
+
+      string " "
+      is_equal [токен], rax
+      boolean_value rax
+      cmp rax, 1
+      je .find_new_token
+
+      string 10
+      is_equal [токен], rax
+      boolean_value rax
+      cmp rax, 1
+      jne .new_token_while_end
+
+      mov rbx, 1
+
+      .find_new_token:
+
+      integer_inc [индекс]
+
+      list_length [символы]
+      integer rax
+      is_equal [индекс], rax
+      boolean_value rax
+      cmp rax, 1
+      je .new_token_while_end
+
+      list_get_link [символы], [индекс]
+      mov [токен], rax
+
+      jmp .new_token_while
+
+    .new_token_while_end:
+
+    cmp rbx, 1
+    jne .not_newline
+
+      integer_dec [индекс]
+
+      string 10
+      mov [токен], rax
+      integer_copy [ТИП_ПЕРЕНОС_СТРОКИ]
+      mov [тип_токена], rax
+
+      jmp .write_token
+
+    .not_newline:
+
     is_digit [токен]
     cmp rax, 1
     jne .not_digit
@@ -66,7 +115,7 @@ f_tokenizer:
       integer_copy [ТИП_ЦЕЛОЕ_ЧИСЛО]
       mov [тип_токена], rax
 
-      jmp .add_token
+      jmp .write_token
 
     .not_digit:
 
@@ -105,19 +154,19 @@ f_tokenizer:
       .end_while_identifier:
 
       list_include [ключевые_слова], [токен]
-      mov rax, [rax + BOOLEAN_HEADER*8]
+      boolean_value rax
       cmp rax, 1
       jne .not_keyword
 
         integer_copy [ТИП_КЛЮЧЕВОЕ_СЛОВО]
         mov [тип_токена], rax
-        jmp .add_token
+        jmp .write_token
 
       .not_keyword:
 
       integer_copy [ТИП_ИДЕНТИФИКАТОР]
       mov [тип_токена], rax
-      jmp .add_token
+      jmp .write_token
 
     .not_identifier:
 
@@ -141,7 +190,7 @@ f_tokenizer:
       integer_copy [ТИП_СТРОКА]
       mov [тип_токена], rax
 
-      jmp .add_token
+      jmp .write_token
 
     .not_string:
 
@@ -222,7 +271,7 @@ f_tokenizer:
         integer_copy [ТИП_НЕ_РАВНО]
         mov [тип_токена], rax
 
-        jmp .add_token
+        jmp .write_token
 
       .not_not_equal:
 
@@ -259,7 +308,7 @@ f_tokenizer:
         integer_copy [ТИП_ОТКРЫВАЮЩАЯ_СКОБКА_СПИСКА]
         mov [тип_токена], rax
 
-        jmp .add_token
+        jmp .write_token
 
       .not_open_list_paren:
 
@@ -308,7 +357,7 @@ f_tokenizer:
 
           integer_copy [ТИП_МЕНЬШЕ_ИЛИ_РАВНО]
           mov [тип_токена], rax
-          jmp .add_token
+          jmp .write_token
 
         .not_lower_or_equal:
 
@@ -316,7 +365,7 @@ f_tokenizer:
 
         integer_copy [ТИП_МЕНЬШЕ]
         mov [тип_токена], rax
-        jmp .add_token
+        jmp .write_token
 
       .not_lower:
 
@@ -365,7 +414,7 @@ f_tokenizer:
 
           integer_copy [ТИП_БОЛЬШЕ_ИЛИ_РАВНО]
           mov [тип_токена], rax
-          jmp .add_token
+          jmp .write_token
 
         .not_greater_or_equal:
 
@@ -373,7 +422,7 @@ f_tokenizer:
 
         integer_copy [ТИП_БОЛЬШЕ]
         mov [тип_токена], rax
-        jmp .add_token
+        jmp .write_token
 
       .not_greater:
 
@@ -400,7 +449,7 @@ f_tokenizer:
 
           integer_copy [ТИП_ИЗВЛЕЧЕНИЕ_КОРНЯ]
           mov [тип_токена], rax
-          jmp .add_token
+          jmp .write_token
 
         .not_rooting:
 
@@ -408,7 +457,7 @@ f_tokenizer:
 
         integer_copy [ТИП_ЦЕЛОЧИСЛЕННОЕ_ДЕЛЕНИЕ]
         mov [тип_токена], rax
-        jmp .add_token
+        jmp .write_token
 
       .not_integer_divison:
 
@@ -416,7 +465,7 @@ f_tokenizer:
 
       integer_copy [ТИП_ДЕЛЕНИЕ]
       mov [тип_токена], rax
-      jmp .add_token
+      jmp .write_token
 
     .not_slash:
 
@@ -441,7 +490,7 @@ f_tokenizer:
 
         integer_copy [ТИП_ВОЗВЕДЕНИЕ_В_СТЕПЕНЬ]
         mov [тип_токена], rax
-        jmp .add_token
+        jmp .write_token
 
       .not_exponentiation:
 
@@ -449,7 +498,7 @@ f_tokenizer:
 
       integer_copy [ТИП_УМНОЖЕНИЕ]
       mov [тип_токена], rax
-      jmp .add_token
+      jmp .write_token
 
     .not_star:
 
@@ -519,7 +568,7 @@ f_tokenizer:
 
       integer_copy [ТИП_СЛОЖЕНИЕ]
       mov [тип_токена], rax
-      jmp .add_token
+      jmp .write_token
 
     .not_plus:
 
@@ -557,7 +606,7 @@ f_tokenizer:
 
           integer_copy [ТИП_КОНЕЦ_КОНСТРУКЦИИ]
           mov [тип_токена], rax
-          jmp .add_token
+          jmp .write_token
 
         .not_end_of_construction_1:
 
@@ -608,7 +657,7 @@ f_tokenizer:
 
       integer_copy [ТИП_ВЫЧИТАНИЕ]
       mov [тип_токена], rax
-      jmp .add_token
+      jmp .write_token
 
     .not_minus:
 
@@ -646,7 +695,7 @@ f_tokenizer:
 
           integer_copy [ТИП_КОНЕЦ_КОНСТРУКЦИИ]
           mov [тип_токена], rax
-          jmp .add_token
+          jmp .write_token
 
         .not_end_of_construction_2:
 
@@ -654,7 +703,7 @@ f_tokenizer:
 
         integer_copy [ТИП_РАВНО]
         mov [тип_токена], rax
-        jmp .add_token
+        jmp .write_token
 
       .not_equal:
 
@@ -662,7 +711,7 @@ f_tokenizer:
 
       integer_copy [ТИП_ПРИСВАИВАНИЕ]
       mov [тип_токена], rax
-      jmp .add_token
+      jmp .write_token
 
     .not_assign:
 
@@ -674,7 +723,7 @@ f_tokenizer:
     is_equal rax, [тип_токена]
     boolean_value rax
     cmp rax, 1
-    jne .add_token
+    jne .write_token
 
     buffer_to_string UNEXPECTED_TOKEN_ERROR
     mov rbx, rax
@@ -685,69 +734,12 @@ f_tokenizer:
     print rax
     exit -1
 
-    .add_token:
-      .space_while:
-        is_equal [токен], [ПРОБЕЛ]
-        boolean_value rax
-        cmp rax, 1
-        jne .space_end_while
+    .write_token:
 
-        integer 1
-        integer_add [индекс], rax
-        mov rbx, rax
-
-        list_length [символы]
-        integer rax
-        is_equal rbx, rax
-        boolean_value rax
-        cmp rax, 1
-        je .write_token
-
-        list_get_link [символы], rbx
-        is_equal rax, [ПРОБЕЛ]
-        boolean_value rax
-        cmp rax, 1
-        jne .continue
-
-        integer_inc [индекс]
-        jmp .space_while
-
-      .space_end_while:
-
-      .newline_while:
-        is_equal [токен], [ПЕРЕНОС_СТРОКИ]
-        boolean_value rax
-        cmp rax, 1
-        jne .newline_end_while
-
-        integer 1
-        integer_add [индекс], rax
-        mov rbx, rax
-
-        list_length [символы]
-        integer rax
-        is_equal rbx, rax
-        boolean_value rax
-        cmp rax, 1
-        je .write_token
-
-        list_get_link [символы], rbx
-        is_equal rax, [ПЕРЕНОС_СТРОКИ]
-        boolean_value rax
-        cmp rax, 1
-        jne .newline_end_while
-
-        integer_inc [индекс]
-        jmp .newline_while
-
-      .newline_end_while:
-
-      .write_token:
-
-      dictionary
-      dictionary_set_link rax, [тип], [тип_токена]
-      dictionary_set_link rax, [значение], [токен]
-      list_append_link [токены], rax
+    dictionary
+    dictionary_set_link rax, [тип], [тип_токена]
+    dictionary_set_link rax, [значение], [токен]
+    list_append_link [токены], rax
 
     .continue:
 
@@ -761,7 +753,6 @@ f_tokenizer:
     integer rax
     is_equal rax, [индекс]
     boolean_value rax
-
     cmp rax, 1
     jne .while
 

@@ -593,7 +593,7 @@ start:
 
   string_extend_links rcx, rbx
 
-  string "exit 0"
+  string <10, "exit 0">
   string_extend_links rcx, rax
 
   integer 1

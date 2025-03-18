@@ -148,6 +148,9 @@ _start:
   mov [GLOBAL_CONTEXT], rax
 
   list
+  mov [DEBUG_TIME], rax
+
+  list
   mov rdx, rax
   string "args*"
   list_append_link rdx, rax
@@ -175,12 +178,54 @@ _start:
   assign rbx, rax, rcx
   mov rcx, rax
 
+  list
+  mov rdx, rax
+  string "аргументы*"
+  list_append_link rdx, rax
+  string "разделитель"
+  list_append_link rdx, rax
+  string "конец_строки"
+  list_append_link rdx, rax
+
+  dictionary
+  mov rcx, rax
+  string "разделитель"
+  mov rbx, rax
+  string " "
+  dictionary_set_link rcx, rbx, rax
+  string "конец_строки"
+  mov rbx, rax
+  string 10
+  dictionary_set_link rcx, rbx, rax
+
   string "показать"
   mov rbx, rax
+  function rbx, f_print, rdx, rcx, 1, 1
+  mov rcx, rax
   list
   assign rbx, rax, rcx
+  mov rcx, rax
 
   list
-  mov [DEBUG_TIME], rax
+  mov rdx, rax
+  string "список*"
+  list_append_link rdx, rax
+  string "объединитель"
+  list_append_link rdx, rax
+
+  dictionary
+  mov rcx, rax
+  string "объединитель"
+  mov rbx, rax
+  string " "
+  dictionary_set_link rcx, rbx, rax
+
+  string "объединить"
+  mov rbx, rax
+  function rbx, f_print, rdx, rcx, 1, 1
+  mov rcx, rax
+  list
+  assign rbx, rax, rcx
+  mov rcx, rax
 
   call start
