@@ -535,17 +535,14 @@ f_compile_unary_operation:
   cmp rax, 1
   jne .not_increment
 
-    add_code "push rbx, rcx",\
-             "mov rcx, rax",\
-             "integer_copy rax",\
-             "mov rbx, rax",\
-             "integer_inc rcx"
-
     string "операнд"
     dictionary_get_link rcx, rax
     mov r11, rax
+    string "переменная"
+    dictionary_get_link r11, rax
+    mov r12, rax
 
-    check_node_type r11, [ТИП_ИДЕНТИФИКАТОР]
+    token_check_type r12, [ТИП_ИДЕНТИФИКАТОР]
     cmp rax, 1
     je .correct_identifier_increment
 
@@ -558,9 +555,12 @@ f_compile_unary_operation:
 
     .correct_identifier_increment:
 
-    string "переменная"
-    dictionary_get_link r11, rax
-    mov r12, rax
+    add_code "push rbx, rcx",\
+             "mov rcx, rax",\
+             "integer_copy rax",\
+             "mov rbx, rax",\
+             "integer_inc rcx"
+
     string "ключи"
     dictionary_get_link r11, rax
     assign_node r12, rax, r8
@@ -581,7 +581,6 @@ f_compile_unary_operation:
     .continue_increment:
 
     add_code "pop rcx, rbx"
-
     jmp .continue
 
   .not_increment:
@@ -590,18 +589,32 @@ f_compile_unary_operation:
   cmp rax, 1
   jne .not_decrement
 
-    add_code "push rbx, rcx",\
-             "mov rcx, rax",\
-             "integer_copy rax",\
-             "mov rbx, rax",\
-             "integer_dec rcx"
-
     string "операнд"
     dictionary_get_link rcx, rax
     mov r11, rax
     string "переменная"
     dictionary_get_link r11, rax
     mov r12, rax
+
+    token_check_type r12, [ТИП_ИДЕНТИФИКАТОР]
+    cmp rax, 1
+    je .correct_identifier_decrement
+
+      string "Ожидался идентификатор, но получен "
+      mov rbx, rax
+      list_append_link rax, rbx
+      list_append_link rax, r11
+      print rax
+      exit -1
+
+    .correct_identifier_decrement:
+
+    add_code "push rbx, rcx",\
+             "mov rcx, rax",\
+             "integer_copy rax",\
+             "mov rbx, rax",\
+             "integer_dec rcx"
+
     string "ключи"
     dictionary_get_link r11, rax
     assign_node r12, rax, r8
@@ -622,7 +635,6 @@ f_compile_unary_operation:
     .continue_decrement:
 
     add_code "pop rcx, rbx"
-
     jmp .continue
 
   .not_decrement:
