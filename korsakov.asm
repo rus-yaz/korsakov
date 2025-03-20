@@ -158,11 +158,11 @@ start:
   string "."
   mov [ТОЧКА], rax
   string 9
-  mov [ДВОЕТОЧИЕ], rax
-  string ":"
-  mov [ЗВЁЗДОЧКА], rax
-  string "*"
   mov [ТАБУЛЯЦИЯ], rax
+  string ":"
+  mov [ДВОЕТОЧИЕ], rax
+  string "*"
+  mov [ЗВЁЗДОЧКА], rax
   string "/"
   mov [КОСАЯ_ЧЕРТА], rax
   string 10
