@@ -3,6 +3,16 @@
 
 section "nodes" executable
 
+macro check_node_type node*, type* {
+  debug_start "check_node_type"
+  enter node, type
+
+  call f_check_node_type
+
+  return
+  debug_end "check_node_type"
+}
+
 macro access_node variable*, keys* {
   enter variable, keys
 
@@ -178,6 +188,19 @@ macro break_node {
 
   return
 }
+
+f_check_node_type:
+  get_arg 1
+  mov rbx, rax
+  get_arg 0
+  mov rcx, rax
+
+  string "узел"
+  dictionary_get rcx, rax
+  is_equal rax, rbx
+  boolean_value rax
+
+  ret
 
 f_access_node:
   dictionary

@@ -3,16 +3,6 @@
 
 section "compiler" executable
 
-macro check_node_type node*, type* {
-  debug_start "check_node_type"
-  enter node, type
-
-  call f_check_node_type
-
-  return
-  debug_end "check_node_type"
-}
-
 macro compiler ast*, context* {
   debug_start "compiler"
   enter ast, context
@@ -207,19 +197,6 @@ macro add_code [code*] {
   string code
   list_append_link rdx, rax
 }
-
-f_check_node_type:
-  get_arg 1
-  mov rbx, rax
-  get_arg 0
-  mov rcx, rax
-
-  string "узел"
-  dictionary_get rcx, rax
-  is_equal rax, rbx
-  boolean_value rax
-
-  ret
 
 f_compiler:
   get_arg 0
