@@ -927,13 +927,11 @@ f_compile_dictionary:
   list
   mov rdx, rax
 
-  add_code "push rbx"
-
   string "элементы"
   dictionary_get_link rcx, rax
   compile rax, rbx
   list_extend_links rdx, rax
-  add_code "dictionary rax"
+  add_code "dictionary_from_items rax"
 
   mov rax, rdx
   ret
