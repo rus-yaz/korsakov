@@ -1232,6 +1232,8 @@ f_list_expression:
 
     .correct_empty_dictionary:
 
+    next
+
     list
     dictionary_node rax
     ret
@@ -1241,6 +1243,8 @@ f_list_expression:
   token_check_type [токен], [ТИП_ЗАКРЫВАЮЩАЯ_СКОБКА]
   cmp rax, 1
   jne .not_empty_list
+
+    next
 
     list
     list_node rax
