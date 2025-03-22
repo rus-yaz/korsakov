@@ -57,6 +57,7 @@ f_function_copy:
   ret
 
 f_function_call:
+  push rax
   mov r15, [GLOBAL_CONTEXT]
   dictionary_copy_links r15
   mov [GLOBAL_CONTEXT], rax
@@ -374,5 +375,16 @@ f_function_call:
 
   mov [GLOBAL_CONTEXT], r15
   return
+
+  mov rbx, rax
+  pop rax
+
+  cmp rax, rbx
+  jne @f
+    null
+    ret
+  @@:
+
+  mov rax, rbx
 
   ret

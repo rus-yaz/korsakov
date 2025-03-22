@@ -1,7 +1,7 @@
 ; Копирайт © 2025 ООО «РУС.ЯЗ»
 ; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
 
-f_assign:
+f_assign_link:
   get_arg 0
   mov r8, rax
   get_arg 1
@@ -25,7 +25,7 @@ f_assign:
   je .empty_keys
 
     ; R9 — item
-    dictionary_get rdx, r8, 0
+    dictionary_get_link rdx, r8, 0
     mov r9, rax
     cmp r9, 0
     jne .correct_variable
@@ -44,7 +44,7 @@ f_assign:
     ; R10 — items
     list
     mov r10, rax
-    list_append r10, r9
+    list_append_link r10, r9
 
     ; R11 — key_index
     integer 0
@@ -61,12 +61,12 @@ f_assign:
       je .get_end_while
 
       ; R12 — key
-      list_get rbx, r11
+      list_get_link rbx, r11
       mov r12, rax
 
       ; R13 — item
       integer 0
-      list_get r10, rax
+      list_get_link r10, rax
       mov r13, rax
 
       mov rax, [r13]
@@ -74,7 +74,7 @@ f_assign:
       cmp rax, LIST
       jne .get_not_list
 
-        list_get r13, r12
+        list_get_link r13, r12
         jmp .get_continue
 
       .get_not_list:
@@ -82,7 +82,7 @@ f_assign:
       cmp rax, STRING
       jne .get_not_string
 
-        string_get r13, r12
+        string_get_link r13, r12
         jmp .get_continue
 
       .get_not_string:
@@ -90,7 +90,7 @@ f_assign:
       cmp rax, DICTIONARY
       jne .get_not_dictionary
 
-        dictionary_get r13, r12
+        dictionary_get_link r13, r12
         jmp .get_continue
 
       .get_not_dictionary:
@@ -112,7 +112,7 @@ f_assign:
       mov r13, rax
 
       integer 0
-      list_insert r10, rax, r13
+      list_insert_link r10, rax, r13
 
       integer_inc r11
       jmp .get_while
@@ -120,7 +120,7 @@ f_assign:
     .get_end_while:
 
     integer 0
-    list_insert r10, rax, rcx
+    list_insert_link r10, rax, rcx
 
     ; R11 — key_index
     list_length rbx
@@ -137,16 +137,16 @@ f_assign:
       integer_dec r11
 
       integer 0
-      list_pop r10, rax
+      list_pop_link r10, rax
       mov rcx, rax
 
       ; R12 — item
       integer 0
-      list_get r10, rax
+      list_get_link r10, rax
       mov r12, rax
 
       ; R13 — key
-      list_get rbx, r11
+      list_get_link rbx, r11
       mov r13, rax
 
       mov rax, [r12]
@@ -154,7 +154,7 @@ f_assign:
       cmp rax, LIST
       jne .set_not_list
 
-        list_set r12, r13, rcx
+        list_set_link r12, r13, rcx
         jmp .set_continue
 
       .set_not_list:
@@ -162,7 +162,7 @@ f_assign:
       cmp rax, STRING
       jne .set_not_string
 
-        string_set r12, r13, rcx
+        string_set_link r12, r13, rcx
         jmp .set_continue
 
       .set_not_string:
@@ -170,7 +170,7 @@ f_assign:
       cmp rax, DICTIONARY
       jne .set_not_dictionary
 
-        dictionary_set r12, r13, rcx
+        dictionary_set_link r12, r13, rcx
         jmp .set_continue
 
       .set_not_dictionary:
@@ -192,24 +192,48 @@ f_assign:
       mov rcx, rax
 
       integer 0
-      list_set r10, rax, rcx
+      list_set_link r10, rax, rcx
 
       jmp .set_while
 
     .set_end_while:
 
     integer 0
-    list_get r10, rax
+    list_get_link r10, rax
     mov rcx, rax
 
   .empty_keys:
 
-  dictionary_set rdx, r8, rcx
+  dictionary_set_link rdx, r8, rcx
   mov rax, rcx
 
   ret
 
-f_access:
+f_assign:
+  get_arg 0
+  mov r8, rax
+  get_arg 1
+  mov rbx, rax
+  get_arg 2
+  mov rcx, rax
+  get_arg 3
+  mov rdx, rax
+
+  ; RBX — keys
+  ; RCX — value
+  ; RDX — context
+  ; R8  — variable
+
+  check_type r8, STRING
+  check_type rbx, LIST
+  check_type rdx, DICTIONARY
+
+  copy rcx
+  assign_link r8, rbx, rax, rdx
+
+  ret
+
+f_access_link:
   get_arg 0
   mov rdx, rax
   get_arg 1
@@ -220,6 +244,10 @@ f_access:
   ; RBX — keys
   ; RCX — context
   ; RDX — variable
+
+  check_type rbx, LIST
+  check_type rcx, DICTIONARY
+  check_type rdx, STRING
 
   dictionary_keys_links rcx
   list_include rax, rdx
@@ -238,7 +266,7 @@ f_access:
 
   .correct_variable:
 
-  dictionary_get rcx, rdx
+  dictionary_get_link rcx, rdx
   mov rdx, rax
 
   list_length rbx
@@ -274,7 +302,7 @@ f_access:
       .correct_type:
 
       integer 0
-      list_pop rbx, rax
+      list_pop_link rbx, rax
       mov r8, rax
 
       mov rax, [rdx]
@@ -298,27 +326,45 @@ f_access:
         exit -1
 
       .list:
-        list_get rdx, r8
+        list_get_link rdx, r8
         jmp .continue
 
       .string:
-        string_get rdx, r8
+        string_get_link rdx, r8
         jmp .continue
 
       .dictionary:
-        dictionary_get rdx, r8
+        dictionary_get_link rdx, r8
         jmp .continue
 
       .continue:
 
       mov rdx, rax
-
       jmp .while
 
     .end_while:
-
   .empty_keys:
 
   mov rax, rdx
+  ret
+
+f_access:
+  get_arg 0
+  mov rdx, rax
+  get_arg 1
+  mov rbx, rax
+  get_arg 2
+  mov rcx, rax
+
+  ; RBX — keys
+  ; RCX — context
+  ; RDX — variable
+
+  check_type rbx, LIST
+  check_type rcx, DICTIONARY
+  check_type rdx, STRING
+
+  access_link rdx, rbx, rcx
+  copy rax
 
   ret

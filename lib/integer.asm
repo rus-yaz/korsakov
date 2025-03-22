@@ -12,6 +12,77 @@ f_integer:
 
   ret
 
+f_string_to_integer:
+  get_arg 0
+  check_type rax, STRING
+  mov rbx, rax
+
+  string_length rbx
+  cmp rax, 0
+  jne .valid_length
+
+    string "string_to_integer: Длина строки должна быть больше нуля"
+    mov rbx, rax
+    list
+    list_append_link rax, rbx
+    print rax
+    exit -1
+
+  .valid_length:
+
+  string_copy rbx
+  mov rbx, rax
+  mem_mov [rbx + 8*0], LIST
+
+  mov rdx, 0
+
+  integer 0
+  mov r8, rax
+
+  list_length rbx
+  integer rax
+  mov r9, rax
+
+  integer 0
+  list_get_link rbx, rax
+  mov rcx, rax
+  integer "-"
+  is_equal rax, rcx
+  boolean_value rax
+  cmp rax, 1
+  jne @f
+    integer_inc r8
+    mov rcx, 0
+  @@:
+
+  .while:
+    is_equal r8, r9
+    boolean_value rax
+    cmp rax, 1
+    je .end_while
+
+    imul rdx, 10
+
+    list_get_link rbx, r8
+    mov rax, [rax + INTEGER_HEADER*8]
+    sub rax, "0"
+    add rdx, rax
+
+    integer_inc r8
+    jmp .while
+
+  .end_while:
+
+  integer rdx
+  mov rdx, rax
+
+  cmp rcx, 0
+  jne @f
+    integer_neg rdx
+  @@:
+
+  ret
+
 f_integer_copy:
   get_arg 0
   check_type rax, INTEGER

@@ -8,6 +8,7 @@ include "./nodes.asm"
 include "./tokenizer.asm"
 include "./parser.asm"
 include "./compiler.asm"
+include "./interpreter.asm"
 
 section "data" writable
   АСД                rq 1
@@ -124,28 +125,33 @@ section "data" writable
   ТИП_ЦЕЛОЧИСЛЕННОЕ_ДЕЛЕНИЕ     rq 1
   ТИП_ОТКРЫВАЮЩАЯ_СКОБКА_СПИСКА rq 1
 
-  УЗЕЛ_ДЛЯ                     rq 1
-  УЗЕЛ_ЕСЛИ                    rq 1
-  УЗЕЛ_НУЛЬ                    rq 1
-  УЗЕЛ_ПОКА                    rq 1
-  УЗЕЛ_ЧИСЛА                   rq 1
-  УЗЕЛ_ВЫЗОВА                  rq 1
-  УЗЕЛ_КЛАССА                  rq 1
-  УЗЕЛ_МЕТОДА                  rq 1
-  УЗЕЛ_СПИСКА                  rq 1
-  УЗЕЛ_СТРОКИ                  rq 1
-  УЗЕЛ_СЛОВАРЯ                 rq 1
-  УЗЕЛ_ФУНКЦИИ                 rq 1
-  УЗЕЛ_ПРОВЕРКИ                rq 1
-  УЗЕЛ_ПРОПУСКА                rq 1
-  УЗЕЛ_УДАЛЕНИЯ                rq 1
-  УЗЕЛ_ВКЛЮЧЕНИЯ               rq 1
-  УЗЕЛ_ПРЕРЫВАНИЯ              rq 1
-  УЗЕЛ_ВОЗВРАЩЕНИЯ             rq 1
-  УЗЕЛ_УНАРНОЙ_ОПЕРАЦИИ        rq 1
-  УЗЕЛ_БИНАРНОЙ_ОПЕРАЦИИ       rq 1
-  УЗЕЛ_ДОСТУПА_К_ПЕРЕМЕННОЙ    rq 1
-  УЗЕЛ_ПРИСВАИВАНИЯ_ПЕРЕМЕННОЙ rq 1
+  УЗЕЛ_ДЛЯ                            rq 1
+  УЗЕЛ_ЕСЛИ                           rq 1
+  УЗЕЛ_НУЛЬ                           rq 1
+  УЗЕЛ_ПОКА                           rq 1
+  УЗЕЛ_ЧИСЛА                          rq 1
+  УЗЕЛ_ВЫЗОВА                         rq 1
+  УЗЕЛ_КЛАССА                         rq 1
+  УЗЕЛ_МЕТОДА                         rq 1
+  УЗЕЛ_СПИСКА                         rq 1
+  УЗЕЛ_СТРОКИ                         rq 1
+  УЗЕЛ_СЛОВАРЯ                        rq 1
+  УЗЕЛ_ФУНКЦИИ                        rq 1
+  УЗЕЛ_ПРОВЕРКИ                       rq 1
+  УЗЕЛ_ПРОПУСКА                       rq 1
+  УЗЕЛ_УДАЛЕНИЯ                       rq 1
+  УЗЕЛ_ВКЛЮЧЕНИЯ                      rq 1
+  УЗЕЛ_ПРЕРЫВАНИЯ                     rq 1
+  УЗЕЛ_ВОЗВРАЩЕНИЯ                    rq 1
+  УЗЕЛ_УНАРНОЙ_ОПЕРАЦИИ               rq 1
+  УЗЕЛ_БИНАРНОЙ_ОПЕРАЦИИ              rq 1
+  УЗЕЛ_ДОСТУПА_К_ПЕРЕМЕННОЙ           rq 1
+  УЗЕЛ_ПРИСВАИВАНИЯ_ПЕРЕМЕННОЙ        rq 1
+  УЗЕЛ_ДОСТУПА_К_ССЫЛКЕ_ПЕРЕМЕННОЙ    rq 1
+  УЗЕЛ_ПРИСВАИВАНИЯ_ССЫЛКИ_ПЕРЕМЕННОЙ rq 1
+
+  СИГНАЛ_ПРОПУСКА   rq 1
+  СИГНАЛ_ПРЕРЫВАНИЯ rq 1
 
 section "start" executable
 start:
@@ -497,6 +503,25 @@ start:
   integer_copy rax
   integer_inc rax
   mov [УЗЕЛ_ПРИСВАИВАНИЯ_ПЕРЕМЕННОЙ], rax
+  integer_copy rax
+  integer_inc rax
+  mov [УЗЕЛ_ДОСТУПА_К_ССЫЛКЕ_ПЕРЕМЕННОЙ], rax
+  integer_copy rax
+  integer_inc rax
+  mov [УЗЕЛ_ПРИСВАИВАНИЯ_ССЫЛКИ_ПЕРЕМЕННОЙ], rax
+
+  integer 0
+  mov [СИГНАЛ_ПРЕРЫВАНИЯ], rax
+  integer 1
+  mov [СИГНАЛ_ПРОПУСКА], rax
+  ; СИГНАЛ_ВОЗВРАТА: тип(СИГНАЛ) == Список
+
+  string "СИГНАЛ"
+  mov rcx, rax
+  list
+  mov rbx, rax
+  null
+  assign rcx, rbx, rax
 
   string "СЧЁТЧИК_ЕСЛИ"
   mov rcx, rax
@@ -578,6 +603,10 @@ start:
   ;mov rbx, rax
   ;list_append_link rax, rbx
   ;print rax
+
+  interpreter [АСД], [GLOBAL_CONTEXT]
+
+  exit 0
 
   compiler [АСД], [GLOBAL_CONTEXT]
   mov rbx, rax

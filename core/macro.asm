@@ -572,6 +572,15 @@ macro integer value* {
 
   return
 }
+
+macro string_to_integer integer* {
+  enter integer
+
+  call f_string_to_integer
+
+  return
+}
+
 macro integer_neg int* {
   enter int
 
@@ -1241,10 +1250,26 @@ macro to_string value* {
 
 section "variables" executable
 
+macro assign_link variable*, keys*, value*, context = [GLOBAL_CONTEXT] {
+  enter variable, keys, value, context
+
+  call f_assign_link
+
+  return
+}
+
 macro assign variable*, keys*, value*, context = [GLOBAL_CONTEXT] {
   enter variable, keys, value, context
 
   call f_assign
+
+  return
+}
+
+macro access_link variable*, keys*, context = [GLOBAL_CONTEXT] {
+  enter variable, keys, context
+
+  call f_access_link
 
   return
 }
