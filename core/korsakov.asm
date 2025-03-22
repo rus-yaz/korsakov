@@ -222,7 +222,7 @@ _start:
 
   string "объединить"
   mov rbx, rax
-  function rbx, f_print, rdx, rcx, 1, 1
+  function rbx, f_join, rdx, rcx, 1, 1
   mov rcx, rax
   list
   assign rbx, rax, rcx
