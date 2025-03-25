@@ -449,11 +449,13 @@ f_string_set:
 
   ret
 
-f_split:
+f_split_links:
   get_arg 0
   mov rbx, rax
   get_arg 1
   mov rcx, rax
+  get_arg 2
+  mov rdx, rax
 
   cmp rcx, 0
   jne .not_default_separator
@@ -461,53 +463,99 @@ f_split:
     mov rcx, rax
   .not_default_separator:
 
+  cmp rdx, 0
+  jne .not_default_parts_count
+    integer -1
+    mov rdx, rax
+  .not_default_parts_count:
+
+  check_type rbx, STRING
+  check_type rcx, STRING
+  check_type rdx, INTEGER
+
   list
-  mov rdx, rax
+  mov r8, rax
 
   integer 0
-  mov r8, rax
+  mov r9, rax
 
   string_length rbx
   integer rax
-  mov r9, rax
-
-  string ""
   mov r10, rax
 
+  string ""
+  mov r11, rax
+
   .while:
-    is_equal r8, r9
+    is_equal r9, r10
     boolean_value rax
     cmp rax, 1
     je .end_while
 
-    string_get rbx, r8
-    mov r11, rax
+    string_get_link rbx, r9
+    mov r12, rax
 
-    is_equal r11, rcx
+    list_length r8
+    integer rax
+    is_equal rax, rdx
+    boolean_value rax
+    cmp rax, 1
+    je .join
+
+    is_equal r12, rcx
     boolean_value rax
     cmp rax, 1
     je .split
 
-      string_extend r10, r11
+    .join:
+
+      string_extend_links r11, r12
 
       jmp .continue
 
     .split:
-      list_append rdx, r10
+      list_append_link r8, r11
 
       string ""
-      mov r10, rax
+      mov r11, rax
 
     .continue:
 
-    integer_inc r8
+    integer_inc r9
     jmp .while
 
   .end_while:
-  list_append rdx, r10
+  list_append_link r8, r11
 
-  mov rax, rdx
+  mov rax, r8
+  ret
 
+f_split:
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
+  get_arg 2
+  mov rdx, rax
+
+  cmp rcx, 0
+  jne .not_default_separator
+    string " "
+    mov rcx, rax
+  .not_default_separator:
+
+  cmp rdx, 0
+  jne .not_default_parts_count
+    integer -1
+    mov rdx, rax
+  .not_default_parts_count:
+
+  check_type rbx, STRING
+  check_type rcx, STRING
+  check_type rdx, INTEGER
+
+  split_links rbx, rcx, rdx
+  copy rax
   ret
 
 f_join_links:

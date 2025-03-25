@@ -1166,8 +1166,16 @@ macro string_set string*, index*, value* {
   return
 }
 
-macro split string*, separator = 0 {
-  enter string, separator
+macro split_links string*, separator = 0, parts_count = 0 {
+  enter string, separator, parts_count
+
+  call f_split_links
+
+  return
+}
+
+macro split string*, separator = 0, parts_count = 0 {
+  enter string, separator, parts_count
 
   call f_split
 
@@ -1304,6 +1312,16 @@ macro function_call function*, arguments*, named_arguments* {
   enter function, arguments, named_arguments
 
   call f_function_call
+
+  return
+}
+
+section "getcwd" executable
+
+macro getcwd {
+  enter
+
+  call f_getcwd
 
   return
 }

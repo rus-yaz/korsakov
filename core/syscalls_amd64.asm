@@ -14,6 +14,7 @@ section "syscalls_amd64" writable
   define SYS_EXECVE 59
   define SYS_EXIT   60
   define SYS_WAIT4  61
+  define SYS_GETCWD 79
 
   ; Стандартные файловые дескрипторы
   define STDIN  0
@@ -56,6 +57,9 @@ section "syscalls_amd64" writable
   define MAP_GROWSDOWN 0x0100
   define MAP_GROWSUP   0x0200
   define MAP_HUGETLB   0x4000
+
+  ; SYS_GETCWD
+  define MAX_PATH_LENGTH 0x1000
 
 section "syscall" executable
 
@@ -143,4 +147,10 @@ macro sys_execve command*, args*, env* {
 macro sys_wait4 pid* {
   syscall SYS_WAIT4,\
           pid  ; Идентификатор процесса
+}
+
+macro sys_getcwd buffer*, size* {
+  syscall SYS_GETCWD,\
+          buffer,\ ; Буфер, куда будет помещён путь
+          size     ; Размер буфера
 }

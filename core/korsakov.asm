@@ -87,6 +87,7 @@ include "../lib/print.asm"
 include "../lib/string.asm"
 include "../lib/to_string.asm"
 include "../lib/variables.asm"
+include "../lib/getcwd.asm"
 
 section "_start" executable
 _start:
@@ -223,6 +224,34 @@ _start:
   string "объединить"
   mov rbx, rax
   function rbx, f_join, rdx, rcx, 1, 1
+  mov rcx, rax
+  list
+  assign rbx, rax, rcx
+  mov rcx, rax
+
+  list
+  mov rdx, rax
+  string "строка"
+  list_append_link rdx, rax
+  string "разделитель"
+  list_append_link rdx, rax
+  string "количество_частей"
+  list_append_link rdx, rax
+
+  dictionary
+  mov rcx, rax
+  string "разделитель"
+  mov rbx, rax
+  string " "
+  dictionary_set_link rcx, rbx, rax
+  string "количество_частей"
+  mov rbx, rax
+  integer -1
+  dictionary_set_link rcx, rbx, rax
+
+  string "разделить"
+  mov rbx, rax
+  function rbx, f_split, rdx, rcx, 0, 1
   mov rcx, rax
   list
   assign rbx, rax, rcx
