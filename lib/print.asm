@@ -66,4 +66,5 @@ f_print:
 
   sys_print rbx, rax
 
+  null
   ret
