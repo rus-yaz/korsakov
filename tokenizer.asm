@@ -82,6 +82,23 @@ f_tokenizer:
 
       integer_dec [индекс]
 
+      list_length [токены]
+      cmp rax, 0
+      je .continue_newline_check
+
+      integer -1
+      list_get_link [токены], rax
+      mov rbx, rax
+      string "тип"
+      dictionary_get_link rbx, rax
+
+      is_equal rax, [ТИП_ПЕРЕНОС_СТРОКИ]
+      boolean_value rax
+      cmp rax, 1
+      je .continue
+
+      .continue_newline_check:
+
       string 10
       mov [токен], rax
       integer_copy [ТИП_ПЕРЕНОС_СТРОКИ]
@@ -223,7 +240,7 @@ f_tokenizer:
           cmp rax, 1
           jne .while_oneline_comment
 
-          jmp .continue
+        jmp .continue
 
       .not_oneline_comment:
 
@@ -256,7 +273,7 @@ f_tokenizer:
           cmp rax, 1
           jne .while_multiline_comment
 
-          jmp .continue
+        jmp .continue
 
       .not_multiline_comment:
 
