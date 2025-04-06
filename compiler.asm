@@ -1867,6 +1867,8 @@ f_compile_call:
   get_arg 1
   mov rcx, rax
 
+  add_code "push rbx, rcx"
+
   list
   mov rdx, rax
 
@@ -1890,6 +1892,8 @@ f_compile_call:
   list_extend_links rdx, rax
 
   add_code "function_call rcx, rbx, rax"
+
+  add_code "pop rcx, rbx"
 
   mov rax, rdx
   ret
