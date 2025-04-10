@@ -1325,3 +1325,13 @@ macro getcwd {
 
   return
 }
+
+section "getrandom" executable
+
+macro getrandom start = 0, end = 0 {
+  enter start, end
+
+  call f_getrandom
+
+  return
+}

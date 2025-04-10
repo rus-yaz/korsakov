@@ -3,18 +3,19 @@
 
 section "syscalls_amd64" writable
   ; Системные вызовы
-  define SYS_READ   0
-  define SYS_WRITE  1
-  define SYS_OPEN   2
-  define SYS_CLOSE  3
-  define SYS_STAT   4
-  define SYS_MMAP   9
-  define SYS_MUNMAP 11
-  define SYS_FORK   57
-  define SYS_EXECVE 59
-  define SYS_EXIT   60
-  define SYS_WAIT4  61
-  define SYS_GETCWD 79
+  define SYS_READ      0
+  define SYS_WRITE     1
+  define SYS_OPEN      2
+  define SYS_CLOSE     3
+  define SYS_STAT      4
+  define SYS_MMAP      9
+  define SYS_MUNMAP    11
+  define SYS_FORK      57
+  define SYS_EXECVE    59
+  define SYS_EXIT      60
+  define SYS_WAIT4     61
+  define SYS_GETCWD    79
+  define SYS_GETRANDOM 318
 
   ; Стандартные файловые дескрипторы
   define STDIN  0
@@ -60,6 +61,10 @@ section "syscalls_amd64" writable
 
   ; SYS_GETCWD
   define MAX_PATH_LENGTH 0x1000
+
+  ; SYS_GETRANDOM
+  define GRND_NONBLOCK 1 ; Попытка немедленного получения без накопления энтропии
+  define GRND_RANDOM   2 ; Попытка вернуть число, используя максимальную энтропию
 
 section "syscall" executable
 
@@ -153,4 +158,11 @@ macro sys_getcwd buffer*, size* {
   syscall SYS_GETCWD,\
           buffer,\ ; Буфер, куда будет помещён путь
           size     ; Размер буфера
+}
+
+macro sys_getrandom buffer*, size*, flags = 0 {
+  syscall SYS_GETRANDOM,\
+          buffer,\ ; Буфер, куда будет помещено число
+          size,\   ; Размер буфера
+          flags    ; GRND_NONBLOCK | GRND_RANDOM
 }

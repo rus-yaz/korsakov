@@ -88,6 +88,7 @@ include "../lib/string.asm"
 include "../lib/to_string.asm"
 include "../lib/variables.asm"
 include "../lib/getcwd.asm"
+include "../lib/getrandom.asm"
 
 section "_start" executable
 _start:
@@ -252,6 +253,38 @@ _start:
   string "разделить"
   mov rbx, rax
   function rbx, f_split, rdx, rcx, 0, 1
+  mov rcx, rax
+  list
+  assign rbx, rax, rcx
+  mov rcx, rax
+
+  list
+  mov rdx, rax
+  string "нижний_порог"
+  list_append_link rdx, rax
+  string "верхний_порог"
+  list_append_link rdx, rax
+
+  dictionary
+  mov rcx, rax
+  string "нижний_порог"
+  mov rbx, rax
+  integer 0
+  dictionary_set_link rcx, rbx, rax
+  string "верхний_порог"
+  mov rbx, rax
+  push rbx, rdx
+  mov rax, -1
+  mov rbx, 2
+  mov rdx, 0
+  idiv rbx
+  integer rax
+  pop rdx, rbx
+  dictionary_set_link rcx, rbx, rax
+
+  string "получить_случайное_число"
+  mov rbx, rax
+  function rbx, f_getrandom, rdx, rcx, 1, 1
   mov rcx, rax
   list
   assign rbx, rax, rcx
