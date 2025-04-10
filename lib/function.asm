@@ -359,7 +359,7 @@ f_function_call:
       .not_accumulator:
 
       list
-      access r9, rax
+      access_link r9, rax
       push rax
 
       jmp .while

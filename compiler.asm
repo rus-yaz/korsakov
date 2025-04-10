@@ -193,6 +193,16 @@ macro compile_call node*, context* {
   debug_end "compile_call"
 }
 
+macro compile_return node*, context* {
+  debug_start "compile_return"
+  enter node, context
+
+  call f_compile_return
+
+  return
+  debug_end "compile_return"
+}
+
 macro add_code [code*] {
   string code
   list_append_link rdx, rax
@@ -358,6 +368,13 @@ f_compile:
     compile_call rbx, rcx
     ret
   .not_call:
+
+  check_node_type rcx, [УЗЕЛ_ВОЗВРАЩЕНИЯ]
+  cmp rax, 1
+  jne .not_return
+    compile_return rbx, rcx
+    ret
+  .not_return:
 
   string "Неизвестный узел: "
   mov rbx, rax
@@ -883,7 +900,7 @@ f_compile_list:
     list_get rcx, r8
     compile rax, rbx
     list_extend_links rdx, rax
-    add_code "list_append rbx, rax"
+    add_code "list_append_link rbx, rax"
 
     integer_inc r8
     jmp .list_while
@@ -1342,7 +1359,7 @@ f_compile_for:
     string_extend_links r14, rax
     list_append_link rdx, rax
 
-    add_code "list_get rbx, rdx"
+    add_code "list_get_link rbx, rdx"
     null
     mov r10, rax
     list
@@ -1867,10 +1884,10 @@ f_compile_call:
   get_arg 1
   mov rcx, rax
 
-  add_code "push rbx, rcx"
-
   list
   mov rdx, rax
+
+  add_code "push rbx, rcx"
 
   string "переменная"
   dictionary_get_link rcx, rax
@@ -1891,9 +1908,27 @@ f_compile_call:
   compile rax, rbx
   list_extend_links rdx, rax
 
-  add_code "function_call rcx, rbx, rax"
+  add_code "function_call rcx, rbx, rax",\
+           "pop rcx, rbx"
 
-  add_code "pop rcx, rbx"
+  mov rax, rdx
+  ret
+
+f_compile_return:
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
+
+  list
+  mov rdx, rax
+
+  string "значение"
+  dictionary_get_link rcx, rax
+  compile rax, rbx
+  list_extend_links rdx, rax
+
+  add_code "ret"
 
   mov rax, rdx
   ret

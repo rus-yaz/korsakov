@@ -468,7 +468,7 @@ f_return_node:
   dictionary
   mov rbx, rax
 
-  dictionary_set_link rbx, [узел], [УЗЕЛ_УДАЛЕНИЯ]
+  dictionary_set_link rbx, [узел], [УЗЕЛ_ВОЗВРАЩЕНИЯ]
   get_arg 0
   dictionary_set_link rbx, [значение], rax
 

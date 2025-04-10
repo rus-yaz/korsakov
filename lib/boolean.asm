@@ -103,11 +103,12 @@ f_boolean_not:
   get_arg 0
 
   boolean rax
-  mov rax, [rax + BOOLEAN_HEADER*8]
+  mov rbx, [rax + BOOLEAN_HEADER*8]
+  delete rax
 
-  dec rax
-  neg rax
-  boolean rax
+  dec rbx
+  neg rbx
+  boolean rbx
 
   ret
 
@@ -118,13 +119,15 @@ f_boolean_and:
   mov rcx, rax
 
   boolean rbx
-  mov rax, [rax + BOOLEAN_HEADER*8]
-  cmp rax, 1
+  mov rbx, [rax + BOOLEAN_HEADER*8]
+  delete rax
+  cmp rbx, 1
   jne .return_false
 
   boolean rcx
-  mov rax, [rax + BOOLEAN_HEADER*8]
-  cmp rax, 1
+  mov rbx, [rax + BOOLEAN_HEADER*8]
+  delete rax
+  cmp rbx, 1
   jne .return_false
 
   boolean 1
@@ -142,13 +145,15 @@ f_boolean_or:
   mov rcx, rax
 
   boolean rbx
-  mov rax, [rax + BOOLEAN_HEADER*8]
-  cmp rax, 1
+  mov rbx, [rax + BOOLEAN_HEADER*8]
+  delete rax
+  cmp rbx, 1
   je .return_true
 
   boolean rcx
-  mov rax, [rax + BOOLEAN_HEADER*8]
-  cmp rax, 1
+  mov rbx, [rax + BOOLEAN_HEADER*8]
+  delete rax
+  cmp rbx, 1
   je .return_true
 
   boolean 0

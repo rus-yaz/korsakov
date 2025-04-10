@@ -498,7 +498,9 @@ f_collection_index:
 
   .while:
     is_equal rdx, r8
+    mov r9, rax
     boolean_value rax
+    delete r9
     cmp rax, 1
     je .end_while
 
@@ -513,10 +515,12 @@ f_collection_index:
 
   .end_while:
 
+  delete r8, rdx
   integer -1
   ret
 
   .return_index:
+  delete r8
   mov rax, rdx
 
   ret
@@ -530,10 +534,11 @@ f_collection_include:
   is_collection rbx
 
   collection_index rbx, rcx
-  mov rax, [rax + INTEGER_HEADER*8]
+  mov rbx, [rax + INTEGER_HEADER*8]
+  delete rax
 
-  inc rax ; -1 -> 0, index -> >0
-  boolean rcx
+  inc rbx ; -1 -> 0, index -> >0
+  boolean rbx
 
   ret
 
@@ -571,6 +576,7 @@ f_collection_add_links:
 
   .end_while:
 
+  delete rdx
   mov rax, rbx
 
   ret
@@ -627,6 +633,8 @@ f_collection_expand_links:
     jmp .while
 
   .end_while:
+
+  delete r8
 
   mov rax, rbx
   ret
