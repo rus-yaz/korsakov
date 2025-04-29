@@ -14,7 +14,7 @@ f_addition:
   jne .not_integer
     cmp r8, INTEGER
     jne .not_integer_to_integer
-      integer_add rbx, rcx
+      integer_addition rbx, rcx
       ret
     .not_integer_to_integer:
   .not_integer:
@@ -23,7 +23,7 @@ f_addition:
   jne .not_list
     cmp r8, LIST
     jne .not_list_to_list
-      list_add rbx, rcx
+      list_addition rbx, rcx
       ret
     .not_list_to_list:
   .not_list:
@@ -32,7 +32,7 @@ f_addition:
   jne .not_string
     cmp r8, STRING
     jne .not_string_to_string
-      string_add rbx, rcx
+      string_addition rbx, rcx
       ret
     .not_string_to_string:
   .not_string:
@@ -92,19 +92,19 @@ f_multiplication:
   jne .not_integer
     cmp r8, INTEGER
     jne .not_integer_to_integer
-      integer_mul rbx, rcx
+      integer_multiplication rbx, rcx
       ret
     .not_integer_to_integer:
 
     cmp r8, STRING
     jne .not_integer_to_string
-      string_mul rcx, rbx
+      string_multiplication rcx, rbx
       ret
     .not_integer_to_string:
 
     cmp r8, LIST
     jne .not_integer_to_list
-      list_mul rcx, rbx
+      list_multiplication rcx, rbx
       ret
     .not_integer_to_list:
   .not_integer:
@@ -113,7 +113,7 @@ f_multiplication:
   jne .not_string
     cmp r8, INTEGER
     jne .not_string_to_integer
-      string_mul rbx, rcx
+      string_multiplication rbx, rcx
       ret
     .not_string_to_integer:
   .not_string:
@@ -122,7 +122,7 @@ f_multiplication:
   jne .not_list
     cmp r8, INTEGER
     jne .not_list_to_integer
-      list_mul rbx, rcx
+      list_multiplication rbx, rcx
       ret
     .not_list_to_integer:
   .not_list:
@@ -157,7 +157,7 @@ f_division:
   jne .not_integer
     cmp r8, INTEGER
     jne .not_integer_to_integer
-      integer_div rbx, rcx
+      integer_division rbx, rcx
       ret
     .not_integer_to_integer:
   .not_integer:

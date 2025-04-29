@@ -114,7 +114,7 @@ f_tokenizer:
 
       .while_digit:
         integer 1
-        integer_add [индекс], rax
+        integer_addition [индекс], rax
 
         list_get_link [символы], rax
         mov rbx, rax
@@ -147,7 +147,7 @@ f_tokenizer:
 
       .while_identifier:
         integer 1
-        integer_add [индекс], rax
+        integer_addition [индекс], rax
 
         list_get_link [символы], rax
         mov rbx, rax

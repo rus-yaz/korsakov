@@ -447,7 +447,7 @@ f_dictionary_add_links:
   mov rax, rbx
   ret
 
-f_dictionary_add:
+f_dictionary_addition:
   get_arg 0
   mov rbx, rax
   get_arg 1

@@ -124,7 +124,7 @@ f_integer_dec:
 
   ret
 
-f_integer_add:
+f_integer_addition:
   get_arg 1
   mov rbx, rax
   get_arg 0
@@ -153,7 +153,7 @@ f_integer_sub:
   integer rcx
   ret
 
-f_integer_mul:
+f_integer_multiplication:
   get_arg 1
   mov rbx, rax
   get_arg 0
@@ -167,7 +167,7 @@ f_integer_mul:
   integer rcx
   ret
 
-f_integer_div:
+f_integer_division:
   get_arg 1
   mov rbx, rax
   get_arg 0

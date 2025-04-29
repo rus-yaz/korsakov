@@ -153,6 +153,8 @@ section "data" writable
   СИГНАЛ_ПРОПУСКА   rq 1
   СИГНАЛ_ПРЕРЫВАНИЯ rq 1
 
+  ПРЕПРОЦЕССОР rq 1
+
 section "start" executable
 start:
   string "+"
@@ -516,6 +518,9 @@ start:
   mov [СИГНАЛ_ПРОПУСКА], rax
   ; СИГНАЛ_ВОЗВРАТА: тип(СИГНАЛ) == Список
 
+  list
+  mov [ПРЕПРОЦЕССОР], rax
+
   string "СИГНАЛ"
   mov rcx, rax
   list
@@ -595,18 +600,18 @@ start:
 
   parser [токены]
   mov [АСД], rax
-  ;list
-  ;list_append_link rax, [АСД]
-  ;print rax
+  ; list
+  ; list_append_link rax, [АСД]
+  ; print rax
 
   ;string ""
   ;mov rbx, rax
   ;list_append_link rax, rbx
   ;print rax
 
-  interpreter [АСД], [GLOBAL_CONTEXT]
-
-  exit 0
+  ; interpreter [АСД], [GLOBAL_CONTEXT]
+  ;
+  ; exit 0
 
   compiler [АСД], [GLOBAL_CONTEXT]
   mov rbx, rax
@@ -617,7 +622,10 @@ start:
   string <"include 'core/korsakov.asm'", 10>
   mov rcx, rax
 
-  string <"section 'start' executable", 10, "start:", 10>
+  join_links [ПРЕПРОЦЕССОР]
+  string_extend_links rcx, rax
+
+  string <"section 'start' executable", 10, "start:", 10, "include 'modules/init.asm'", 10>
   string_extend_links rcx, rax
 
   string_extend_links rcx, rbx

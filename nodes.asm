@@ -160,7 +160,7 @@ macro delete_node variable* {
 macro include_node path* {
   enter path
 
-  call f_delete_node
+  call f_include_node
 
   return
 }

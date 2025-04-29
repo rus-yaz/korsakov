@@ -581,7 +581,7 @@ f_collection_add_links:
 
   ret
 
-f_collection_add:
+f_collection_addition:
   get_arg 0
   mov rbx, rax
   get_arg 1

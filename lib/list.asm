@@ -63,7 +63,7 @@ f_list_add_links:
   collection_add_links rbx, rcx
   ret
 
-f_list_add:
+f_list_addition:
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -259,7 +259,7 @@ f_list_include:
     boolean 0
     ret
 
-f_list_mul:
+f_list_multiplication:
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -272,7 +272,7 @@ f_list_mul:
   cmp rcx, 0
   jge .correct
 
-    string "list_mul: Нельзя умножить Список на отрицательное число"
+    string "list_multiplication: Нельзя умножить Список на отрицательное число"
     mov rbx, rax
     list
     list_append_link rax, rbx

@@ -203,6 +203,16 @@ macro compile_return node*, context* {
   debug_end "compile_return"
 }
 
+macro compile_include node*, context* {
+  debug_start "compile_include"
+  enter node, context
+
+  call f_compile_include
+
+  return
+  debug_end "compile_include"
+}
+
 macro add_code [code*] {
   string code
   list_append_link rdx, rax
@@ -375,6 +385,13 @@ f_compile:
     compile_return rbx, rcx
     ret
   .not_return:
+
+  check_node_type rcx, [УЗЕЛ_ВКЛЮЧЕНИЯ]
+  cmp rax, 1
+  jne .not_include
+    compile_include rbx, rcx
+    ret
+  .not_include:
 
   string "Неизвестный узел: "
   mov rbx, rax
@@ -1322,7 +1339,7 @@ f_compile_for:
     string_extend_links r14, rax
     list_append_link rdx, rax
 
-    add_code "integer_add rdx, rcx"
+    add_code "integer_addition rdx, rcx"
 
     jmp .for_end
 
@@ -1929,6 +1946,29 @@ f_compile_return:
   list_extend_links rdx, rax
 
   add_code "ret"
+
+  mov rax, rdx
+  ret
+
+f_compile_include:
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
+
+  list
+  mov rdx, rax
+
+  string "путь"
+  dictionary_get_link rcx, rax
+  mov r8, rax
+  string "значение"
+  dictionary_get_link r8, rax
+  mov r8, rax
+
+  string "include "
+  string_extend_links rax, r8
+  list_append_link rdx, rax
 
   mov rax, rdx
   ret

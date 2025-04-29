@@ -21,7 +21,7 @@ list
 list_append_link rax, rdx
 print rax
 
-integer_add rcx, rbx
+integer_addition rcx, rbx
 mov rdx, rax
 list
 list_append_link rax, rdx

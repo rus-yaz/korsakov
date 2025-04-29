@@ -24,7 +24,7 @@ list_append_link rax, r8
 list_append_link rax, rdx
 print rax
 
-string_add rbx, rdx
+string_addition rbx, rdx
 mov r8, rax
 list
 list_append_link rax, r8

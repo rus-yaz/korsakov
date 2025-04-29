@@ -2365,7 +2365,7 @@ f_function_expression:
       integer r8
       mov r8, rax
       string "*"
-      string_mul rax, r8
+      string_multiplication rax, r8
       mov r8, rax
 
       dictionary_get_link r9, [переменная]

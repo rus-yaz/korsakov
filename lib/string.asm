@@ -330,7 +330,7 @@ f_string_add_links:
 
   ret
 
-f_string_add:
+f_string_addition:
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -785,7 +785,7 @@ f_string_pop:
 
   ret
 
-f_string_mul:
+f_string_links_multiplication:
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -798,7 +798,7 @@ f_string_mul:
   cmp rcx, 0
   jge .correct
 
-    string "string_mul: Нельзя умножить Строку на отрицательное число"
+    string "string_multiplication: Нельзя умножить Строку на отрицательное число"
     mov rbx, rax
     list
     list_append_link rax, rbx
@@ -822,5 +822,16 @@ f_string_mul:
 
   .end_while:
 
-  copy rdx
+  mov rax, rdx
+  ret
+
+f_string_multiplication:
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
+
+  string_links_multiplication rbx, rcx
+  copy rax
+
   ret

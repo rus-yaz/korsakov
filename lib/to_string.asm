@@ -125,7 +125,7 @@ f_to_string:
     string '"'
     mov rcx, rax
 
-    string_add rcx, rbx
+    string_addition rcx, rbx
     string_extend_links rax, rcx
 
     ret

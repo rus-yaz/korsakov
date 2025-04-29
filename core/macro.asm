@@ -417,10 +417,10 @@ macro dictionary_add_links dictionary1*, dictionary2* {
   return
 }
 
-macro dictionary_add dictionary1*, dictionary2* {
+macro dictionary_addition dictionary1*, dictionary2* {
   enter  dictionary1, dictionary2
 
-  call f_dictionary_add
+  call f_dictionary_addition
 
   return
 }
@@ -613,10 +613,10 @@ macro integer_dec int* {
   return
 }
 
-macro integer_add int_1*, int_2* {
+macro integer_addition int_1*, int_2* {
   enter int_1, int_2
 
-  call f_integer_add
+  call f_integer_addition
 
   return
 }
@@ -629,17 +629,17 @@ macro integer_sub int_1*, int_2* {
   return
 }
 
-macro integer_mul int_1*, int_2* {
+macro integer_multiplication int_1*, int_2* {
   enter int_1, int_2
 
-  call f_integer_mul
+  call f_integer_multiplication
 
   return
 }
-macro integer_div int_1*, int_2* {
+macro integer_division int_1*, int_2* {
   enter int_1, int_2
 
-  call f_integer_div
+  call f_integer_division
 
   return
 }
@@ -814,10 +814,10 @@ macro collection_add_links collection_1*, collection_2* {
   return
 }
 
-macro collection_add collection_1*, collection_2* {
+macro collection_addition collection_1*, collection_2* {
   enter collection_1, collection_1
 
-  call f_collection_add
+  call f_collection_addition
 
   return
 }
@@ -880,10 +880,10 @@ macro list_add_links list_1*, list_2* {
   return
 }
 
-macro list_add list_1*, list_2* {
+macro list_addition list_1*, list_2* {
   enter list_1, list_2
 
-  call f_list_add
+  call f_list_addition
 
   return
 }
@@ -1000,10 +1000,10 @@ macro list_insert list*, index*, item* {
   return
 }
 
-macro list_mul list*, integer* {
+macro list_multiplication list*, integer* {
   enter list, integer
 
-  call f_list_mul
+  call f_list_multiplication
 
   return
 }
@@ -1110,10 +1110,10 @@ macro string_add_links string_1*, string_2* {
   return
 }
 
-macro string_add string_1*, string_2* {
+macro string_addition string_1*, string_2* {
   enter string_1, string_2
 
-  call f_string_add
+  call f_string_addition
 
   return
 }
@@ -1238,10 +1238,10 @@ macro string_pop string*, integer = 0 {
   return
 }
 
-macro string_mul string*, integer* {
+macro string_multiplication string*, integer* {
   enter string, integer
 
-  call f_string_mul
+  call f_string_multiplication
 
   return
 }
