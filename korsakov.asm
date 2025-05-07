@@ -186,19 +186,24 @@ start:
   .not_help:
 
   string "--compile"
-  list_include [ARGUMENTS], rax
+  list_index [ARGUMENTS], rax
+  mov rbx, rax
+  boolean rax
   boolean_value rax
   cmp rax, 1
   je .compile
 
   string "-c"
-  list_include [ARGUMENTS], rax
+  list_index [ARGUMENTS], rax
+  mov rbx, rax
+  boolean rax
   boolean_value rax
   cmp rax, 1
   jne .not_compile
 
   .compile:
 
+    list_pop_link [ARGUMENTS], rbx
     integer_dec [ARGUMENTS_COUNT]
     mov [КОМПИЛЯЦИЯ], 1
 
