@@ -153,8 +153,68 @@ section "data" writable
   СИГНАЛ_ПРОПУСКА   rq 1
   СИГНАЛ_ПРЕРЫВАНИЯ rq 1
 
+  КОМПИЛЯЦИЯ dq 0
+
+macro print_help {
+  enter
+
+  call f_print_help
+
+  leave
+}
+
 section "start" executable
 start:
+
+  string "--help"
+  list_include [ARGUMENTS], rax
+  boolean_value rax
+  cmp rax, 1
+  je .help
+
+  string "-h"
+  list_include [ARGUMENTS], rax
+  boolean_value rax
+  cmp rax, 1
+  jne .not_help
+
+  .help:
+
+    print_help
+    exit 0
+
+  .not_help:
+
+  string "--compile"
+  list_include [ARGUMENTS], rax
+  boolean_value rax
+  cmp rax, 1
+  je .compile
+
+  string "-c"
+  list_include [ARGUMENTS], rax
+  boolean_value rax
+  cmp rax, 1
+  jne .not_compile
+
+  .compile:
+
+    integer_dec [ARGUMENTS_COUNT]
+    mov [КОМПИЛЯЦИЯ], 1
+
+  .not_compile:
+
+  integer 2
+  is_equal [ARGUMENTS_COUNT], rax
+  boolean_value rax
+  cmp rax, 1
+  je .start
+
+    print_help
+    exit -1
+
+  .start:
+
   string "+"
   mov [ПЛЮС], rax
   string "-"
@@ -565,21 +625,6 @@ start:
   integer 0
   assign rcx, rbx, rax
 
-  integer 2
-  is_equal [ARGUMENTS_COUNT], rax
-  boolean_value rax
-  cmp rax, 1
-  je .continue
-
-    string <"Использование:", 10, "  korsakov <file.kors>">
-    mov rbx, rax
-    list
-    list_append_link rax, rbx
-    print rax
-    exit -1
-
-  .continue:
-
   integer 1
   list_get_link [ARGUMENTS], rax
   tokenizer rax
@@ -604,9 +649,13 @@ start:
   ;list_append_link rax, rbx
   ;print rax
 
-  interpreter [АСД], [GLOBAL_CONTEXT]
+  cmp [КОМПИЛЯЦИЯ], 1
+  je .compile_code
 
-  exit 0
+    interpreter [АСД], [GLOBAL_CONTEXT]
+    exit 0
+
+  .compile_code:
 
   compiler [АСД], [GLOBAL_CONTEXT]
   mov rbx, rax
@@ -663,3 +712,16 @@ start:
   run rcx, [ENVIRONMENT_VARIABLES]
 
   exit 0
+
+f_print_help:
+  string <"Использование:", 10, "  korsakov <file.kors> [--compile|-c] [--help|-h]">
+  mov rbx, rax
+
+  list
+  list_append_link rax, rbx
+
+  print rax
+
+  delete rax
+
+  ret
