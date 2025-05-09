@@ -7,10 +7,6 @@ f_getrandom:
   get_arg 1
   mov rcx, rax
 
-  repeat 1000
-    nop
-  end repeat
-
   cmp rbx, 0
   jne @f
     mov rax, -1
