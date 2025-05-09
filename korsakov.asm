@@ -734,7 +734,7 @@ f_print_help:
   integer 0
   list_get_link [ARGUMENTS], rax
   string_extend_links rcx, rax
-  string "<file.kors> [--compile|-c] [--help|-h]"
+  string " <file.kors> [--compile|-c] [--help|-h]"
   string_extend_links rcx, rax
   list_append_link rbx, rax
 
