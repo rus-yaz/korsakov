@@ -30,7 +30,7 @@ section "data" writable
   define STRING_HEADER     4
   define DICTIONARY_HEADER 4
   define FILE_HEADER       4
-  define HEAP_BLOCK_HEADER 4
+  define HEAP_BLOCK_HEADER 5
   define FUNCTION_HEADER   7
 
   ; Полные размеры типа (для неизменяемых по длине)
@@ -52,10 +52,10 @@ section "data" writable
   KEY_DOESNT_EXISTS             db "Ключа не существует",                           0
   INVALID_INDENTIFIER           db "Неизвестный идентификатор",                     0
 
-  PAGE_SIZE            dq 0x1000             ; Начальный размер кучи
-  HEAP_START           rq 1                  ; Указатель на начало кучи
-  HEAP_END             rq 1                  ; Указатель на конец кучи
-  LAST_USED_HEAP_BLOCK rq 1
+  PAGE_SIZE             dq 0x1000 ; Начальный размер кучи
+  HEAP_START            rq 1      ; Указатель на начало кучи
+  HEAP_END              rq 1      ; Указатель на конец кучи
+  FIRST_FREE_HEAP_BLOCK rq 1      ; Указатель на первый в цепочке свободный блок
 
   ENVIRONMENT_VARIABLES rq 1
   ARGUMENTS_COUNT       rq 1

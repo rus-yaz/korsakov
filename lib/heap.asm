@@ -16,137 +16,180 @@ f_allocate_heap:
   mov rbx, [PAGE_SIZE]                    ; Запись размера кучи
   sub rbx, HEAP_BLOCK_HEADER*8            ; Учёт размера заголовка блока
 
-  mem_mov [rax + 8*0], HEAP_BLOCK
-  mem_mov [rax + 8*1], rbx
-  mem_mov [rax + 8*2], 0
-  mem_mov [rax + 8*3], 0
+  mem_mov [rax + 8*0], HEAP_BLOCK ; Идентификатор
+  mem_mov [rax + 8*1], 0          ; Размер предыдущего блока (0 — крайний блок, другое — размер)
+  mem_mov [rax + 8*2], rbx        ; Размер текущего блока
+  mem_mov [rax + 8*3], 0          ; Ссылка на предыдущий свободный блок (0 — крайний блок, 1 — занят, другое — указатель)
+  mem_mov [rax + 8*4], 0          ; Ссылка на следующий свободный блок (0 — крайний блок, 1 — занят, другое — указатель)
 
   cmp [HEAP_START], 0
   jne .allocated
 
-    push rax
-    mov [LAST_USED_HEAP_BLOCK], rax
+    ; Если куча аллоцирована впервые
+    mov rbx, rax
+    add rbx, [PAGE_SIZE]             ; Смещение на размер страницы памяти
+    mov [HEAP_END], rbx              ; Сохранение указателя на конец кучи
 
-    add rax, [PAGE_SIZE]  ; Смещение на размер страницы памяти
-    mov [HEAP_END], rax   ; Сохранение указателя на конец кучи
-
-    pop rax
+    jmp @f
 
   .allocated:
 
-  ; Сохранение указателя на начало кучи
-  mov [HEAP_START], rax
+    mov rbx, rax
+    add rbx, HEAP_BLOCK_HEADER*8
+    delete_block rbx
+
+  @@:
+
+  mov [HEAP_START], rax            ; Сохранение указателя на начало кучи
+  mov [FIRST_FREE_HEAP_BLOCK], rax ; Сохранение указателя на первый свободный блок
+
+  ret
+
+f_free_block:
+  get_arg 0
+  check_type rax, HEAP_BLOCK ; Проверка, что указатель ссылается на заголовок блока кучи
+
+  cmp [FIRST_FREE_HEAP_BLOCK], rax
+  jne @f
+    ret
+  @@:
+
+  mov rbx, [rax + 8*3]
+  cmp rbx, 1
+  je .not_empty
+
+    ; Перезапись ссылок в свободных блоках, на которые указывают ссылки
+    mov rcx, [rax + 8*3]
+    mov rdx, [rax + 8*4]
+
+    cmp rcx, 0
+    je @f
+      mem_mov [rcx + 8*4], rdx
+    @@:
+
+    cmp rdx, 0
+    je @f
+      mem_mov [rdx + 8*3], rcx
+    @@:
+
+  .not_empty:
+
+  ; Обновление указателя на первый свободный блок
+  mov rbx, [FIRST_FREE_HEAP_BLOCK]
+  mov [FIRST_FREE_HEAP_BLOCK], rax
+
+  ; Обновление нового первого свободного блока
+  mem_mov [rax + 8*3], 0   ; Установка указателя на предыдущий свободный блок (0 — крайний блок)
+  mem_mov [rax + 8*4], rbx ; Установка указателя на следущий свободный блок
+
+  ; Обновление предыдущего первого свободного блока
+  mem_mov [rbx + 8*3], rax ; Установка указателя на предыдущий свободный блок
+
+  ret
+
+f_merge_blocks:
+  get_arg 1
+  mov rbx, rax
+  get_arg 0
+
+  ; Проверка, что указатели ссылаются на заголовки блоков кучи
+  check_type rax, HEAP_BLOCK
+  check_type rbx, HEAP_BLOCK
+
+  ; Вычисление размера нового блока
+  mov rcx, [rax + 8*2]
+  mov rdx, [rbx + 8*2]
+
+  add rcx, rdx
+  add rcx, HEAP_BLOCK_HEADER*8
+
+  mov [rax + 8*2], rcx
+
+  ; Перезапись ссылок в свободных блоках, на которые указывают ссылки
+  mov rcx, [rbx + 8*3]
+  mov rdx, [rbx + 8*4]
+
+  cmp rcx, 0
+  je @f
+    mem_mov [rcx + 8*4], rdx
+  @@:
+
+  cmp rdx, 0
+  je @f
+    mem_mov [rdx + 8*3], rcx
+  @@:
+
+  cmp rbx, [FIRST_FREE_HEAP_BLOCK]
+  jne @f
+    mov [FIRST_FREE_HEAP_BLOCK], rdx
+  @@:
+
+  ; Удаление заголовка текущего блока
+  mem_mov [rbx + 8*0], 0
+  mem_mov [rbx + 8*1], 0
+  mem_mov [rbx + 8*2], 0
+  mem_mov [rbx + 8*3], 0
+  mem_mov [rbx + 8*4], 0
 
   ret
 
 f_delete_block:
   get_arg 0
   sub rax, HEAP_BLOCK_HEADER*8
+  check_type rax, HEAP_BLOCK ; Проверка, что указатель ссылается на заголовок блока кучи
 
-  ; Если заголовок не найден, выйти с ошибкой
-  check_type rax, HEAP_BLOCK
+  free_block rax ; Освобождение текущего блока
 
-  ; Объединение текущего блока и следующего, если он не используется
+  ; Смещение до заголовка предыдущего блока
+  mov rbx, rax
+  sub rbx, [rax + 8*1]
+  sub rbx, HEAP_BLOCK_HEADER*8
 
-  ; Нахождение следующего блока
-  mov r8, rax
-  add rax, HEAP_BLOCK_HEADER*8
-  add rax, [r8 + 8*1]
+  ; Проверка выхода за пределы
+  cmp rbx, [HEAP_START]
+  jl @f
 
-  ; Если заголовок не найден (блока не существует), пропустить изменение блоков
-  mov rbx, [rax]
-  mov rcx, HEAP_BLOCK
-  cmp rbx, rcx
-  jne .skip_current_and_next_blocks_merging
+  ; Проверка состояния предыдущего блока
+  mov rcx, [rbx + 8*3]
+  cmp rcx, 1
+  je @f
 
-  ; Если следующий блок используется, пропустить изменение блоков
-  mov rbx, [rax + 8*3]
-  test rbx, 1
-  jne .skip_current_and_next_blocks_merging
+    merge_blocks rbx, rax
+    mov rax, rbx
 
-    ; Увеличение размера текущего блока на размер удаляемого блока
-    mov rcx, [r8 + 8*1]
-    add rcx, [rax + 8*1]
+  @@:
 
-    add rcx, HEAP_BLOCK_HEADER*8
-    mov [r8 + 8*1], rcx
+  ; Смещение до заголовка следующего блока
+  mov rbx, rax
+  add rbx, [rax + 8*2]
+  add rbx, HEAP_BLOCK_HEADER*8
 
-    ; Удаление заголовка удаляемого блока
-    mem_mov [rax + 8*0], 0
-    mem_mov [rax + 8*1], 0
-    mem_mov [rax + 8*2], 0
-    mem_mov [rax + 8*3], 0
+  ; Проверка выхода за пределы
+  cmp rbx, [HEAP_END]
+  jge @f
 
-  .skip_current_and_next_blocks_merging:
+  ; Проверка состояния следующего блока
+  mov rcx, [rbx + 8*3]
+  cmp rcx, 1
+  je @f
 
-  ; Нахождение предыдущего блока
-  mov rax, r8
-  sub rax, [r8 + 8*2]
-  sub rax, HEAP_BLOCK_HEADER*8
+    merge_blocks rax, rbx
 
-  ; Проверка нахождения блока внутри кучи
-  cmp rax, [HEAP_START]
-  jl .skip_previous_and_current_blocks_merging
+  @@:
 
-  ; Если заголовок не найден (блока не существует), пропустить изменение блоков
-  mov rbx, [rax]
-  mov rcx, HEAP_BLOCK
-  cmp rbx, rcx
-  jne .skip_previous_and_current_blocks_merging
+  ; Смещение до заголовка следующего блока
+  mov rbx, rax
+  add rbx, [rax + 8*2]
+  add rbx, HEAP_BLOCK_HEADER*8
 
-  ; Если следующий блок используется, пропустить изменение блоков
-  mov rbx, [rax + 8*3]
-  test rbx, 1
-  jne .skip_previous_and_current_blocks_merging
+  ; Проверка выхода за пределы
+  cmp rbx, [HEAP_END]
+  jge @f
 
-    ; Увеличение размера предыдущего блока на размер удаляемого блока
-    mov rcx, [r8 + 8*1]
-    add rcx, [rax + 8*1]
+    ; Обновление поля «Размер предыдущего блока» для следующего блока
+    mem_mov [rbx + 8*1], [rax + 8*2]
 
-    add rcx, HEAP_BLOCK_HEADER*8
-    mov [rax + 8*1], rcx
-
-    ; Удаление заголовка удаляемого блока
-    mem_mov [r8 + 8*0], 0
-    mem_mov [r8 + 8*1], 0
-    mem_mov [r8 + 8*2], 0
-    mem_mov [r8 + 8*3], 0
-
-    mov r8, rax
-
-  .skip_previous_and_current_blocks_merging:
-
-  ; Изменение состояния текущего блока
-  mov rax, [r8 + 8*3]
-  test rax, 1
-  jz .all_is_done
-    mem_mov [r8 + 8*3], 0
-  .all_is_done:
-
-  ; Нахождение дальше идущего блока
-  mov rcx, r8
-  add rcx, [r8 + 8*1]
-  add rcx, HEAP_BLOCK_HEADER*8
-
-  ; Проверка нахождения блока внутри кучи
-  cmp rcx, [HEAP_END]
-  jge .skip_next_next_block_modifying
-
-  ; Если заголовок не найден (блока не существует), пропустить изменение блоков
-  mov rax, [rcx]
-  mov rbx, HEAP_BLOCK
-  cmp rax, rbx
-  jne .skip_next_next_block_modifying
-
-    ; Изменение PREV_SIZE для дальше идущего блока
-    mem_mov [rcx + 8*2], [r8 + 8*1]
-
-  .skip_next_next_block_modifying:
-
-  cmp r8, [LAST_USED_HEAP_BLOCK]
-  jge .skip
-    mov [LAST_USED_HEAP_BLOCK], r8
-  .skip:
+  @@:
 
   ret
 
@@ -167,78 +210,125 @@ f_create_block:
     add rax, 8
   .skip:
 
-  mov r8, rax           ; Сохранение размера создаваемого блока
-  mov rax, [LAST_USED_HEAP_BLOCK] ; Запись указателя на начало кучи в RAX
+  mov r8, rax                      ; Сохранение размера создаваемого блока
+  mov rax, [FIRST_FREE_HEAP_BLOCK] ; Запись указателя на первый свободный блок
 
   ; Цикл для нахождения подходящего блока
-  .do:
-    mov rdx, [HEAP_END]
-    cmp rax, rdx
-    jl .continue
+  .loop:
+    cmp rax, 0
+    jne .next
 
-      allocate_heap
-      mov rax, [HEAP_START]
+      ; Если блок является последним свободным блоком
+      allocate_heap                    ; Аллокация новой кучи
+      mov rax, [FIRST_FREE_HEAP_BLOCK]
 
-      add rax, HEAP_BLOCK_HEADER * 8
-      delete_block rax
+    .next:
 
-      mov rax, [HEAP_START]
-    .continue:
+    check_type rax, HEAP_BLOCK ; Проверка, что проверямый указатель является блоком
 
-    check_type rax, HEAP_BLOCK
+    mov rbx, [rax + 8*2]         ; Взятие размера текущего блока
+    cmp rbx, r8
+    jne .not_enough
 
-    ; Получение информации о блоке
-    mov rdx, [rax + 8*3]          ; Получение статуса использования блока
-    cmp rdx, 0
-    jne .find_new_block           ; Если блок используется, искать новый блок
+      ; Перезапись ссылок в свободных блоках, на которые указывают ссылки
+      mov rcx, [rax + 8*3]
+      mov rdx, [rax + 8*4]
 
-    ; Сравнение выделенного размера и размера блока
-    mov rdx, [rax + 8*1]           ; Получение размера блока
-    sub rdx, HEAP_BLOCK_HEADER * 8 ; Учёт следующего блока, который будет создан
+      cmp rcx, 0
+      je @f
+        mem_mov [rcx + 8*4], rdx
+      @@:
 
-    cmp rdx, r8                    ; Сравнение с требуемым размером
-    jg .found_block                ; Если блок достаточно большой, перейти к .found_block
+      cmp rdx, 0
+      je @f
+        mem_mov [rdx + 8*3], rcx
+      @@:
 
-    .find_new_block:
-      ; Смещение адреса на размер блока и заголовка
-      add rax, [rax + 8*1]           ; Смещение на размер блока
-      add rax, HEAP_BLOCK_HEADER * 8 ; Смещение на размер заголовка
-      jmp .do                        ; Переход к началу цикла
+      ; Установка статуса созданного блока на «занят»
+      mem_mov [rax + 8*3], 1
+      mem_mov [rax + 8*4], 1
 
-    .found_block:
-      ; Вычисление адреса нового блока
-      mov rbx, rax
-      add rbx, HEAP_BLOCK_HEADER * 8 ; Смещение на заголовок
-      add rbx, r8                    ; Смещение на размер нового блока
+      ; Проверка, что обработанный блок был первым свободным
+      cmp rcx, 0
+      jne @f
+        mov [FIRST_FREE_HEAP_BLOCK], rdx
+      @@:
 
-      ; Проверка состояния блока
-      mov rcx, [rbx + 8*3]          ; Получение статуса нового блока
-      cmp rcx, 0                    ; Проверка, используется ли блок
-      jne .find_new_block           ; Если блок используется, искать новый блок
+      jmp .continue
 
-  mem_mov [rax + 8*3], 1 ; Изменение состояния текущего блока на используемое
+    .not_enough:
 
-  mov rcx, [rax + 8*1]    ; Сохранение размера текущего блока в RCX
-  sub rcx, r8             ; Вычисление размера текущего блока в RCX
+    sub rbx, HEAP_BLOCK_HEADER*8 ; Учёт заголовка создаваемого блока
 
-  sub rcx, HEAP_BLOCK_HEADER*8            ; Учёт размера заголовка
-  mem_mov [rax + 8*1], r8 ; Изменение SIZE у предыдущего блока
+    ; Сравнение размеров проверяемого и создаваемого блоков
+    cmp rbx, r8
+    jl .too_little_size
 
-  mem_mov [rbx + 8*0], HEAP_BLOCK ; KEY
-  mem_mov [rbx + 8*1], rcx        ; SIZE
-  mem_mov [rbx + 8*2], r8         ; PREV_SIZE
-  mem_mov [rbx + 8*3], 0          ; STATE
+      ; Если размер подходит, то занять текущий
 
-  add rbx, rcx
-  add rbx, HEAP_BLOCK_HEADER*8
+      mov rcx, rax
+      add rcx, HEAP_BLOCK_HEADER*8
+      add rcx, r8
 
-  mov r8, HEAP_BLOCK
-  cmp [rbx], r8
-  jne .end
-    mov [rbx + 8*2], rcx
+      ; Вычисление размера остающегося блока
+      sub rbx, r8
+
+      ; Запись нового размера созданного блока
+      mem_mov [rax + 8*2], r8
+
+      mem_mov [rcx + 8*0], HEAP_BLOCK  ; Идентификатор
+      mem_mov [rcx + 8*1], [rax + 8*2] ; Размер предыдущего блока (0 — крайний блок, другое — размер)
+      mem_mov [rcx + 8*2], rbx         ; Размер текущего блока
+      mem_mov [rcx + 8*3], [rax + 8*3] ; Ссылка на предыдущий свободный блок (0 — крайний блок, 1 — занят, другое — указатель)
+      mem_mov [rcx + 8*4], [rax + 8*4] ; Ссылка на следующий свободный блок (0 — крайний блок, 1 — занят, другое — указатель)
+
+      ; Установка статуса созданного блока на «занят»
+      mem_mov [rax + 8*3], 1
+      mem_mov [rax + 8*4], 1
+
+      ; Перезапись ссылок в свободных блоках, на которые указывают ссылки
+      mov rdx, [rcx + 8*3]
+      cmp rdx, 0
+      je @f
+        mov [rdx + 8*4], rcx
+      @@:
+      mov rdx, [rcx + 8*4]
+      cmp rdx, 0
+      je @f
+        mov [rdx + 8*3], rcx
+      @@:
+
+      cmp [FIRST_FREE_HEAP_BLOCK], rax
+      jne @f
+        mov [FIRST_FREE_HEAP_BLOCK], rcx
+      @@:
+
+      jmp .continue
+
+    .too_little_size:
+
+    mov rax, [rax + 8*4]
+    jmp .loop
+
+  .continue:
+
+  push rax
+
+  repeat 2
+    mov rbx, [rax + 8*2]
+
+    add rax, rbx
+    add rax, HEAP_BLOCK_HEADER*8
+
+    cmp rax, [HEAP_END]
+    jge .end
+
+    mov [rax + 8*1], rbx
+  end repeat
+
   .end:
+  pop rax
 
-  mov [LAST_USED_HEAP_BLOCK], rax
   add rax, HEAP_BLOCK_HEADER*8
 
   ret

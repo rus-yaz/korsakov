@@ -547,6 +547,22 @@ macro allocate_heap {
   leave
 }
 
+macro free_block [block*] {
+  enter block
+
+  call f_free_block
+
+  leave
+}
+
+macro merge_blocks block_1, block_2 {
+  enter block_1, block_2
+
+  call f_merge_blocks
+
+  leave
+}
+
 macro delete_block [block*] {
   enter block
 

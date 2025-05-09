@@ -26,6 +26,58 @@ f_run:
 
   .correct:
 
+  mov r12, rsp
+
+  integer 0
+  list_get_link rbx, rax
+  string_to_binary rax
+  add rax, BINARY_HEADER*8
+  mov r11, rax
+
+  list_length rbx
+  dec rax
+  integer rax
+  mov r8, rax
+
+  push 0
+  @@:
+    mov rax, [r8 + INTEGER_HEADER*8]
+    cmp rax, -1
+    je @f
+
+    list_get_link rbx, r8
+    string_to_binary rax
+    add rax, BINARY_HEADER*8
+    push rax
+
+    integer_dec r8
+    jmp @b
+
+  @@:
+  mov r9, rsp
+
+  list_length rcx
+  dec rax
+  integer rax
+  mov r8, rax
+
+  push 0
+  @@:
+    mov rax, [r8 + INTEGER_HEADER*8]
+    cmp rax, -1
+    je @f
+
+    list_get_link rcx, r8
+    string_to_binary rax
+    add rax, BINARY_HEADER*8
+    push rax
+
+    integer_dec r8
+    jmp @b
+
+  @@:
+  mov r10, rsp
+
   enter
   sys_fork
   return
@@ -45,56 +97,7 @@ f_run:
   cmp rax, 0
   jne .main_process
 
-    integer 0
-    list_get_link rbx, rax
-    string_to_binary rax
-    add rax, BINARY_HEADER*8
-    mov r11, rax
-
-    list_length rbx
-    dec rax
-    integer rax
-    mov rdx, rax
-
-    push 0
-    .command_while:
-      mov rax, [rdx + INTEGER_HEADER*8]
-      cmp rax, -1
-      je .command_end_while
-
-      list_get_link rbx, rdx
-      string_to_binary rax
-      add rax, BINARY_HEADER*8
-      push rax
-
-      integer_dec rdx
-      jmp .command_while
-
-    .command_end_while:
-    mov r9, rsp
-
-    list_length rcx
-    dec rax
-    integer rax
-    mov rdx, rax
-
-    push 0
-    .environment_while:
-      mov rax, [rdx + INTEGER_HEADER*8]
-      cmp rax, -1
-      je .environment_end_while
-
-      list_get_link rcx, rdx
-      string_to_binary rax
-      add rax, BINARY_HEADER*8
-      push rax
-
-      integer_dec rdx
-      jmp .environment_while
-
-    .environment_end_while:
-    mov r10, rsp
-
+    ; Системный вызов использует регистры rax и rbx
     mov rax, r9
     mov rbx, r10
 
@@ -102,6 +105,8 @@ f_run:
     exit -1, EXECVE_WAS_NOT_EXECUTED
 
   .main_process:
+
+  mov rsp, r12
 
   cmp rdx, 0
   je .dont_wait
