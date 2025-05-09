@@ -188,6 +188,8 @@ start:
   string "--compile"
   list_index [ARGUMENTS], rax
   mov rbx, rax
+  integer 1
+  integer_add rbx, rax
   boolean rax
   boolean_value rax
   cmp rax, 1
@@ -196,6 +198,8 @@ start:
   string "-c"
   list_index [ARGUMENTS], rax
   mov rbx, rax
+  integer 1
+  integer_add rbx, rax
   boolean rax
   boolean_value rax
   cmp rax, 1
@@ -719,13 +723,32 @@ start:
   exit 0
 
 f_print_help:
-  string <"Использование:", 10, "  korsakov <file.kors> [--compile|-c] [--help|-h]">
+  list
   mov rbx, rax
 
-  list
-  list_append_link rax, rbx
+  string "Использование:"
+  list_append_link rbx, rax
 
-  print rax
+  string "  "
+  mov rcx, rax
+  integer 0
+  list_get_link [ARGUMENTS], rax
+  string_extend_links rcx, rax
+  string "<file.kors> [--compile|-c] [--help|-h]"
+  string_extend_links rcx, rax
+  list_append_link rbx, rax
+
+  string ""
+  list_append_link rbx, rax
+  string "Флаги:"
+  list_append_link rbx, rax
+  string "  --compile или -c    Компиляция в исполняемый файл с таким же именем, что и переданный"
+  list_append_link rbx, rax
+  string "  --help или -h       Показать эту справку"
+  list_append_link rbx, rax
+
+  string 10
+  print rbx, rax
 
   delete rax
 
