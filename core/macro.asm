@@ -1351,3 +1351,13 @@ macro getrandom start = 0, end = 0 {
 
   return
 }
+
+section "input" executable
+
+macro input string {
+  enter string
+
+  call f_input
+
+  return
+}

@@ -89,6 +89,7 @@ include "../lib/to_string.asm"
 include "../lib/variables.asm"
 include "../lib/getcwd.asm"
 include "../lib/getrandom.asm"
+include "../lib/input.asm"
 
 section "_start" executable
 _start:
@@ -203,6 +204,22 @@ _start:
   string "показать"
   mov rbx, rax
   function rbx, f_print, rdx, rcx, 1, 1
+  mov rcx, rax
+  list
+  assign rbx, rax, rcx
+  mov rcx, rax
+
+  list
+  mov rdx, rax
+  string "строка"
+  list_append_link rdx, rax
+
+  dictionary
+  mov rcx, rax
+
+  string "ввод"
+  mov rbx, rax
+  function rbx, f_input, rdx, rcx, 0, 1
   mov rcx, rax
   list
   assign rbx, rax, rcx
