@@ -102,6 +102,32 @@ macro string str {
   buffer_to_string a
 }
 
+macro init [module_name = ""] {
+  forward
+    if module_name eq ""
+    else
+      _include module_name
+    end if
+
+  common
+    section "start" executable
+    start:
+
+  forward
+    if module_name eq ""
+    else
+      _init module_name
+    end if
+}
+
+macro _include name {
+  include "modules/"#`name#".asm"
+}
+
+macro _init name {
+  init_#name
+}
+
 section "utils" executable
 
 macro buffer_length buffer_ptr* {
