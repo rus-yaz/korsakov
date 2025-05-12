@@ -12,17 +12,9 @@ macro tokenizer filename* {
 }
 
 f_tokenizer:
-  get_arg 0
-  open_file rax
-  mov rbx, rax
-
-  read_file rax
-  mov [код], rax
-
-  close_file rbx
-
   ; символы = Список(код)
-  string_to_list [код]
+  get_arg 0
+  string_to_list rax
   mov [символы], rax
 
   ; токен = ""
@@ -118,6 +110,15 @@ f_tokenizer:
 
         list_get_link [символы], rax
         mov rbx, rax
+
+        string "_"
+        is_equal rbx, rax
+        boolean_value rax
+        cmp rax, 1
+        jne .not_divider
+          integer_inc [индекс]
+          jmp .while_digit
+        .not_divider:
 
         is_digit rbx
         cmp rax, 1

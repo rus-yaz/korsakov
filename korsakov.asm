@@ -636,7 +636,16 @@ start:
 
   integer 1
   list_get_link [ARGUMENTS], rax
-  tokenizer rax
+
+  open_file rax
+  mov rbx, rax
+
+  read_file rax
+  mov [код], rax
+
+  close_file rbx
+
+  tokenizer [код]
   mov [токены], rax
   ;list
   ;list_append_link rax, [токены]
