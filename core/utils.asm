@@ -31,18 +31,6 @@ f_sys_print:
 
   ret
 
-f_print_buffer:
-  get_arg 0
-  mov rsi, rax
-
-  buffer_length rsi
-  mov rbx, rax
-
-  sys_print rsi,\      ; Указатель на буфер
-            rbx        ; Размер буфера
-
-  ret
-
 f_mem_copy:
   get_arg 0
   mov rsi, rax ; Источник

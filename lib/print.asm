@@ -1,6 +1,25 @@
 ; Копирайт © 2025 ООО «РУС.ЯЗ»
 ; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
 
+f_print_raw:
+  get_arg 0
+  mov rsi, rax
+
+  buffer_length rsi
+  mov rbx, rax
+
+  sys_print rsi,\      ; Указатель на буфер
+            rbx        ; Размер буфера
+
+  ret
+
+f_print_binary:
+  get_arg 0
+  add rax, BINARY_HEADER*8
+
+  print_raw rax
+  ret
+
 f_print:
   get_arg 0
   mov rbx, rax
@@ -58,13 +77,9 @@ f_print:
 
   join_links r8, rcx
   string_extend_links rax, rdx
+
   string_to_binary rax
-  mov rbx, rax
-
-  binary_length rbx
-  add rbx, BINARY_HEADER*8
-
-  sys_print rbx, rax
+  print_binary rax
 
   null
   ret

@@ -628,11 +628,15 @@ f_binary_operation:
 
   .not_default:
 
+  debug_start "binary_inner"
+
   enter rbx
   get_arg 0
   call rax
   return
   mov r8, rax
+
+  debug_end "binary_inner"
 
   .while:
     token_check_type [токен], rdx
@@ -649,11 +653,15 @@ f_binary_operation:
 
     next
 
+    debug_start "binary_inner"
+
     enter rcx
     get_arg 0
     call rax
     return
     mov r10, rax
+
+    debug_end "binary_inner"
 
     binary_operation_node r8, r9, r10
     mov r8, rax

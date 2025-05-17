@@ -81,7 +81,7 @@ macro exit code*, buffer = 0 {
   else
     push rax
 
-    print_buffer buffer
+    print_raw buffer
 
     push 10
     mov rax, rsp
@@ -94,12 +94,22 @@ macro exit code*, buffer = 0 {
   sys_exit code
 }
 
-macro string str {
+macro raw_string str {
   jmp @f
     a = $
     db str, 0
   @@:
-  buffer_to_string a
+  mov rax, a
+}
+
+macro binary_string str {
+  raw_string <str>
+  buffer_to_binary rax
+}
+
+macro string str {
+  raw_string <str>
+  buffer_to_string rax
 }
 
 macro init [module_name = ""] {
@@ -142,14 +152,6 @@ macro sys_print ptr*, size* {
   enter ptr, size
 
   call f_sys_print
-
-  leave
-}
-
-macro print_buffer buffer* {
-  enter buffer
-
-  call f_print_buffer
 
   leave
 }
@@ -1061,6 +1063,22 @@ macro null {
 }
 
 section "print" executable
+
+macro print_raw raw_string_link* {
+  enter raw_string_link
+
+  call f_print_raw
+
+  leave
+}
+
+macro print_binary binary_string_link* {
+  enter binary_string_link
+
+  call f_print_binary
+
+  leave
+}
 
 macro print arguments*, separator = 0, end_of_string = 0 {
   enter arguments, separator, end_of_string
