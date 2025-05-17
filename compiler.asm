@@ -210,37 +210,37 @@ macro add_code [code*] {
 
 f_compiler:
   get_arg 0
-  mov [АСД], rax
-  get_arg 1
   mov rbx, rax
+  get_arg 1
+  mov rcx, rax
 
   integer 0
-  mov [индекс], rax
+  mov rdx, rax
 
   list
-  mov [код], rax
+  mov r8, rax
 
   .while:
-    list_length [АСД]
+    list_length rbx
     integer rax
-    is_equal rax, [индекс]
+    is_equal rax, rdx
     boolean_value rax
     cmp rax, 1
     je .end_while
 
-    list_get_link [АСД], [индекс]
-    compile rax, rbx
-    list_extend_links [код], rax
+    list_get_link rbx, rdx
+    compile rax, rcx
+    list_extend_links r8, rax
     string ""
-    list_append_link [код], rax
+    list_append_link r8, rax
 
-    integer_inc [индекс]
+    integer_inc rdx
     jmp .while
 
   .end_while:
 
   string 10
-  join_links [код], rax
+  join_links r8, rax
 
   ret
 
@@ -922,15 +922,114 @@ f_compile_string:
   list
   mov rdx, rax
 
-  string "string "
-  mov r8, rax
   string "значение"
   dictionary_get_link rcx, rax
   mov rcx, rax
-  string "значение"
-  dictionary_get_link rcx, rax
-  string_extend_links r8, rax
-  list_append_link rdx, rax
+
+  integer 0
+  mov r8, rax
+
+  list_length rcx
+  integer rax
+  mov r9, rax
+
+  add_code "push rbx",\
+           'string ""',\
+           "mov rbx, rax"
+
+  .while_string_elements:
+
+    is_equal r8, r9
+    boolean_value rax
+    cmp rax, 1
+    je .while_string_elements_end
+
+    list_get_link rcx, r8
+    mov r10, rax
+
+    mov rax, [r10]
+    cmp rax, STRING
+    je .string
+
+      compile r10, rbx
+      list_extend_links rdx, rax
+
+      add_code "to_string rax"
+
+      jmp .continue
+
+    .string:
+
+      string ""
+      mov r11, rax
+
+      integer 0
+      mov r12, rax
+
+      string_length r10
+      integer rax
+      mov r13, rax
+
+      .while_string:
+
+        is_equal r12, r13
+        boolean_value rax
+        cmp rax, 1
+        je .while_string_end
+
+        string_get_link r10, r12
+        mov r14, rax
+
+        string 9
+        is_equal r14, rax
+        boolean_value rax
+        cmp rax, 1
+        jne .not_tab
+          string '", 9, "'
+          mov r14, rax
+          jmp .next_char
+
+        .not_tab:
+
+        string 10
+        is_equal r14, rax
+        boolean_value rax
+        cmp rax, 1
+        jne .not_newline
+          string '", 10, "'
+          mov r14, rax
+          jmp .next_char
+
+        .not_newline:
+
+        .next_char:
+
+        string_extend_links r11, r14
+
+        integer_inc r12
+        jmp .while_string
+
+      .while_string_end:
+
+      string 'string <"'
+      string_extend_links rax, r11
+      mov r10, rax
+      string '">'
+      string_extend_links r10, rax
+
+      list_append_link rdx, r10
+
+    .continue:
+
+    add_code "string_extend_links rbx, rax"
+
+    integer_inc r8
+    jmp .while_string_elements
+
+  .while_string_elements_end:
+
+  add_code "mov rax, rbx",\
+           "pop rbx"
 
   mov rax, rdx
   ret

@@ -125,8 +125,59 @@ f_to_string:
     string '"'
     mov rcx, rax
 
-    string_add rcx, rbx
-    string_extend_links rax, rcx
+    integer 0
+    mov rdx, rax
+
+    string_length rbx
+    integer rax
+    mov r8, rax
+
+    .while_string:
+
+      is_equal rdx, r8
+      boolean_value rax
+      cmp rax, 1
+      je .while_string_end
+
+      string_get_link rbx, rdx
+      mov r9, rax
+
+      string 9
+      is_equal r9, rax
+      boolean_value rax
+      cmp rax, 1
+      jne .not_tab
+
+        string "\т"
+        mov r9, rax
+
+        jmp .next_char
+
+      .not_tab:
+
+      string 10
+      is_equal r9, rax
+      boolean_value rax
+      cmp rax, 1
+      jne .not_newline
+
+        string "\н"
+        mov r9, rax
+
+        jmp .next_char
+
+      .not_newline:
+
+      .next_char:
+      string_extend_links rcx, r9
+
+      integer_inc rdx
+      jmp .while_string
+
+    .while_string_end:
+
+    string '"'
+    string_extend_links rcx, rax
 
     ret
 

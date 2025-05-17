@@ -193,17 +193,150 @@ f_tokenizer:
     boolean_value rax
     cmp rax, 1
     jne .not_string
+
+      string ""
+      mov [токен], rax
+
+      list
+      mov rcx, rax
+
       .while_string:
         integer_inc [индекс]
         list_get_link [символы], rax
         mov rbx, rax
-        string_extend_links [токен], rax
 
         string '"'
         is_equal rbx, rax
         boolean_value rax
         cmp rax, 1
-        jne .while_string
+        je .while_string_end
+
+        string '\'
+        is_equal rbx, rax
+        boolean_value rax
+        cmp rax, 1
+        jne .check_string_end
+
+          integer_inc [индекс]
+          list_get_link [символы], rax
+          mov rbx, rax
+
+          string "("
+          is_equal rbx, rax
+          boolean_value rax
+          cmp rax, 1
+          jne .not_expression
+
+            mov rdx, 1
+            integer_inc [индекс]
+
+            list_append_link rcx, [токен]
+
+            string ")"
+            mov r8, rax
+
+            string "("
+            mov r9, rax
+
+            string ""
+            mov r10, rax
+
+            .parse_expression:
+
+              list_get_link [символы], [индекс]
+              mov rbx, rax
+
+              is_equal rbx, r9
+              boolean_value rax
+              cmp rax, 1
+              jne .not_open_paren
+                inc rdx
+                jmp .parse_expression_continue
+              .not_open_paren:
+
+              is_equal rbx, r8
+              boolean_value rax
+              cmp rax, 1
+              jne .not_close_paren
+
+                dec rdx
+
+                cmp rdx, 0
+                jne .parse_expression_continue
+
+                push [индекс], [символы], [токены]
+
+                string 10
+                string_extend_links r10, rax
+
+                tokenizer r10
+                copy rax
+                mov r10, rax
+
+                pop rax
+                mov [токены], rax
+
+                pop rax
+                mov [символы], rax
+
+                pop rax
+                mov [индекс], rax
+
+                string ""
+                mov [токен], rax
+
+                list_append_link rcx, r10
+                jmp .while_string
+
+              .not_close_paren:
+
+              .parse_expression_continue:
+
+              string_extend_links r10, rbx
+              integer_inc [индекс]
+
+              jmp .parse_expression
+
+          .not_expression:
+
+          string "т"
+          is_equal rbx, rax
+          boolean_value rax
+          cmp rax, 1
+          jne .not_tab_code
+            string 9
+            jmp .end_escape_sequence
+          .not_tab_code:
+
+          string "н"
+          is_equal rbx, rax
+          boolean_value rax
+          cmp rax, 1
+          jne .not_newline_code
+            string 10
+            jmp .end_escape_sequence
+          .not_newline_code:
+
+          string 'Неизвестная управляющая последовательность: \'
+          string_extend_links rax, rbx
+          print rax
+          exit -1
+
+          .end_escape_sequence:
+
+          mov rbx, rax
+          string_extend_links [токен], rbx
+          jmp .while_string
+
+        .check_string_end:
+
+        string_extend_links [токен], rbx
+        jmp .while_string
+
+      .while_string_end:
+
+      list_append_link rcx, [токен]
+      mov [токен], rax
 
       integer_copy [ТИП_СТРОКА]
       mov [тип_токена], rax
@@ -341,7 +474,7 @@ f_tokenizer:
 
     .not_percent:
 
-    string "\"
+    string '\'
     is_equal [токен], rax
     boolean_value rax
     cmp rax, 1
@@ -409,7 +542,7 @@ f_tokenizer:
       list_get_link [символы], rax
       string_extend_links [токен], rax
 
-      string "/\"
+      string '/\'
       is_equal [токен], rax
       boolean_value rax
       cmp rax, 1

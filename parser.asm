@@ -2,7 +2,6 @@
 ; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
 
 section "data" writable
-  результат rq 1
   try dq 0
 
   CLOSED_PAREN         db "`)`", 0
@@ -298,7 +297,7 @@ f_parser:
 
   ; self.parse
   list
-  mov [результат], rax
+  mov rbx, rax
 
   .while:
     token_check_type [токен], [ТИП_КОНЕЦ_ФАЙЛА]
@@ -306,7 +305,7 @@ f_parser:
     je .end_while
 
     statement
-    list_append_link [результат], rax
+    list_append_link rbx, rax
 
     next
 
@@ -314,7 +313,7 @@ f_parser:
 
   .end_while:
 
-  mov rax, [результат]
+  mov rax, rbx
   ret
 
 f_next:
@@ -527,7 +526,6 @@ f_expression:
         list_append_link rbx, rax
 
         print rax
-
         exit -1
 
       .skip_length_error:
@@ -713,7 +711,62 @@ f_atom:
   jne .not_string
     next
 
-    string_node rbx
+    string "значение"
+    dictionary_get_link rbx, rax
+    mov rbx, rax
+
+    list
+    mov rcx, rax
+
+    integer 0
+    mov rdx, rax
+
+    list_length rbx
+    integer rax
+    mov r8, rax
+
+    .while_string:
+
+      is_equal rdx, r8
+      boolean_value rax
+      cmp rax, 1
+      je .while_string_end
+
+      list_get_link rbx, rdx
+      mov r9, rax
+
+      mov rax, [r9]
+      cmp rax, STRING
+      je .string
+
+        push [токен], [токены], [индекс]
+
+        parser r9
+        mov r9, rax
+
+        integer 0
+        list_pop_link r9, rax
+        mov r9, rax
+
+        pop rax
+        mov [индекс], rax
+
+        pop rax
+        mov [токены], rax
+
+        pop rax
+        mov [токен], rax
+
+      .string:
+
+      list_append_link rcx, r9
+
+      integer_inc rdx
+      jmp .while_string
+
+    .while_string_end:
+
+    string_node rcx
     ret
 
   .not_string:
@@ -1056,6 +1109,10 @@ f_call_expression:
       dictionary_get_link r9, [переменная]
       dictionary_get_link rax, [значение]
       to_string rax
+      mov r10, rax
+
+      list
+      list_append_link rax, r10
       mov r10, rax
 
       dictionary
@@ -2746,6 +2803,10 @@ f_class_expression:
 
     ; R9 — method_name
     list_get_link r8, [имя_переменной]
+    mov r9, rax
+
+    list
+    list_append_link rax, r9
     string_node rax
     mov r9, rax
 

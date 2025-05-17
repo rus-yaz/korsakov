@@ -220,34 +220,34 @@ macro add_code [code*] {
 
 f_interpreter:
   get_arg 0
-  mov [АСД], rax
-  get_arg 1
   mov rbx, rax
-
-  integer 0
-  mov [индекс], rax
-
-  list
+  get_arg 1
   mov rcx, rax
 
+  integer 0
+  mov rdx, rax
+
+  list
+  mov r8, rax
+
   .while:
-    list_length [АСД]
+    list_length rbx
     integer rax
-    is_equal rax, [индекс]
+    is_equal rax, rdx
     boolean_value rax
     cmp rax, 1
     je .end_while
 
-    list_get_link [АСД], [индекс]
-    interpret rax, rbx
-    list_append rcx, rax
+    list_get_link rbx, rdx
+    interpret rax, rcx
+    list_append_link r8, rax
 
-    integer_inc [индекс]
+    integer_inc rdx
     jmp .while
 
   .end_while:
 
-  mov rax, rcx
+  mov rax, r8
   ret
 
 f_interpret:
@@ -936,17 +936,60 @@ f_interpret_string:
   string "значение"
   dictionary_get_link rcx, rax
   mov rcx, rax
-  string "значение"
-  dictionary_get_link rcx, rax
 
-  string_copy rax
-  mov rcx, rax
+  string ""
+  mov rdx, rax
 
-  string_pop_link rcx
   integer 0
-  string_pop_link rcx, rax
+  mov r8, rax
 
-  mov rax, rcx
+  list_length rcx
+  integer rax
+  mov r9, rax
+
+  @@:
+
+    is_equal r8, r9
+    boolean_value rax
+    cmp rax, 1
+    je @f
+
+    list_get_link rcx, r8
+    mov r10, rax
+
+    mov rax, [r10]
+    cmp rax, STRING
+    je .continue
+
+      push [индекс], [АСД]
+      interpret r10, rbx
+      mov r10, rax
+
+      mov rax, [r10]
+      cmp rax, STRING
+      je .string
+
+        to_string r10
+        mov r10, rax
+
+      .string:
+
+      pop rax
+      mov [АСД], rax
+
+      pop rax
+      mov [индекс], rax
+
+    .continue:
+
+    string_extend_links rdx, r10
+
+    integer_inc r8
+    jmp @b
+
+  @@:
+
+  mov rax, rdx
   ret
 
 f_interpret_dictionary:

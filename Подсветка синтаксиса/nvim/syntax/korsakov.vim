@@ -1,12 +1,13 @@
-syn region Comment start="!!" end="$" contains=SpecialComment
+syn keyword SpecialComment СДЕЛАТЬ ЗАМЕТКА
+
+syn region Comment start="!!"  end="$"   contains=SpecialComment
 syn region Comment start="!\*" end="\*!" contains=SpecialComment
-syn keyword SpecialComment TODO NOTE XXX
 
 syn match Number /\d\+\(_\d\+\)*/
 syn match Float /\d\+\(_\d\+\)*,\d\+\(_\d\+\)*/
 
 syn region String start="\"" end="\"" contains=SpecialChar
-syn match SpecialChar /\\[tnvr"\\]/
+syn match  SpecialChar /\\[тн"\\]\|\\([^\)]*)/
 
 syn match Identifier /[A-Za-zА-Яа-яЁё_][A-Za-zА-Яа-яЁё0-9_]*/
 syn match Constant /[A-ZА-ЯЁ_][A-ZА-ЯЁ0-9_]*/
