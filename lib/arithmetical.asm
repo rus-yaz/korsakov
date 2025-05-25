@@ -171,7 +171,7 @@ f_division:
   list_append_link rax, rdx
   list_append_link rax, rcx
   list_append_link rax, r8
-  print rax
+  error rax
   exit -1
 
   .continue:

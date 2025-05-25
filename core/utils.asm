@@ -192,7 +192,7 @@ f_type_full_size:
   list
   list_append_link rax, rcx
   list_append_link rax, rbx
-  print rax
+  error rax
   exit -1
 
 f_check_type:
