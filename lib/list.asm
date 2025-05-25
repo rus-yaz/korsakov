@@ -276,7 +276,7 @@ f_list_mul:
     mov rbx, rax
     list
     list_append_link rax, rbx
-    print rax
+    error rax
     exit -1
 
   .correct:

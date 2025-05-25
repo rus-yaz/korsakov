@@ -394,7 +394,7 @@ f_interpret:
   list
   list_append_link rax, rbx
   list_append_link rax, rcx
-  print rax
+  error rax
   exit -1
 
 f_interpret_body:
@@ -486,7 +486,7 @@ f_interpret_assign_link:
     mov rbx, rax
     list
     list_append_link rax, rbx
-    print rax
+    error rax
     exit -1
 
   .use_exists_value:
@@ -531,7 +531,7 @@ f_interpret_assign:
     mov rbx, rax
     list
     list_append_link rax, rbx
-    print rax
+    error rax
     exit -1
 
   .use_exists_value:
@@ -650,7 +650,7 @@ f_interpret_unary_operation:
     list
     list_append_link rax, rbx
     list_append_link rax, rcx
-    print rax
+    error rax
     exit -1
 
   .correct_unary_operator:
@@ -667,7 +667,7 @@ f_interpret_unary_operation:
     mov rbx, rax
     list_append_link rax, rbx
     list_append_link rax, rdx
-    print rax
+    error rax
     exit -1
 
   .correct_identifier:
@@ -846,7 +846,7 @@ f_interpret_binary_operation:
   list
   list_append_link rax, rbx
   list_append_link rax, rcx
-  print rax
+  error rax
   exit -1
 
 f_interpret_null:
@@ -878,7 +878,7 @@ f_interpret_number:
     mov rbx, rax
     list
     list_append_link rax, rbx
-    print rax
+    error rax
     exit -1
 
   .correct_value:
@@ -1348,7 +1348,7 @@ f_interpret_for:
       mov rbx, rax
       list
       list_append_link rax, rbx
-      print rax
+      error rax
       exit -1
 
     .correct_type:
@@ -1494,7 +1494,7 @@ f_interpret_skip:
     mov rbx, rax
     list
     list_append_link rax, rbx
-    print rax
+    error rax
     exit -1
 
   .in_loop:
@@ -1532,7 +1532,7 @@ f_interpret_break:
     mov rbx, rax
     list
     list_append_link rax, rbx
-    print rax
+    error rax
     exit -1
 
   .in_loop:
@@ -1655,7 +1655,7 @@ f_interpret_function:
       mov rbx, rax
       list
       list_append_link rax, rbx
-      print rax
+      error rax
       exit -1
 
     .positional_argument:
@@ -1673,7 +1673,7 @@ f_interpret_function:
       mov rbx, rax
       list
       list_append_link rax, rbx
-      print rax
+      error rax
       exit -1
 
     .no_keys:
@@ -1725,7 +1725,7 @@ f_interpret_function:
       mov rbx, rax
       list
       list_append_link rax, rbx
-      print rax
+      error rax
       exit -1
 
     .correct_sequence:
@@ -1759,7 +1759,7 @@ f_interpret_function:
         mov rbx, rax
         list
         list_append_link rax, rbx
-        print rax
+        error rax
         exit -1
 
       .not_positional_accumulator_doublicate:
@@ -1772,7 +1772,7 @@ f_interpret_function:
         mov rbx, rax
         list
         list_append_link rax, rbx
-        print rax
+        error rax
         exit -1
 
       .correct_positional_accumulator:
@@ -1804,7 +1804,7 @@ f_interpret_function:
         mov rbx, rax
         list
         list_append_link rax, rbx
-        print rax
+        error rax
         exit -1
 
       .correct_named_argument:
@@ -1841,7 +1841,7 @@ f_interpret_function:
         mov rbx, rax
         list
         list_append_link rax, rbx
-        print rax
+        error rax
         exit -1
 
       .not_named_accumulator_doublicate:
@@ -1854,7 +1854,7 @@ f_interpret_function:
         mov rbx, rax
         list
         list_append_link rax, rbx
-        print rax
+        error rax
         exit -1
 
       .correct_named_accumulator:
@@ -1895,7 +1895,7 @@ f_interpret_function:
     mov rbx, rax
     list
     list_append_link rax, rbx
-    print rax
+    error rax
     exit -1
 
     .continue:

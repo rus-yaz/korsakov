@@ -71,6 +71,20 @@ include "./utils.asm"
 
 include "../lib/.asm"
 
+macro arguments [argument] {
+  common
+    push rbx
+    list
+    mov rbx, rax
+
+  forward
+    string argument
+    list_append_link rbx, rax
+
+  common
+    pop rbx
+}
+
 section "_start" executable
 _start:
   mov rbp, rsp
@@ -133,14 +147,8 @@ _start:
   list
   mov [DEBUG_TIME], rax
 
-  list
+  arguments "args*", "separator", "end_of_string"
   mov rdx, rax
-  string "args*"
-  list_append_link rdx, rax
-  string "separator"
-  list_append_link rdx, rax
-  string "end_of_string"
-  list_append_link rdx, rax
 
   dictionary
   mov rcx, rax
@@ -161,14 +169,8 @@ _start:
   assign rbx, rax, rcx
   mov rcx, rax
 
-  list
+  arguments "аргументы*", "разделитель", "конец_строки"
   mov rdx, rax
-  string "аргументы*"
-  list_append_link rdx, rax
-  string "разделитель"
-  list_append_link rdx, rax
-  string "конец_строки"
-  list_append_link rdx, rax
 
   dictionary
   mov rcx, rax
@@ -189,10 +191,52 @@ _start:
   assign rbx, rax, rcx
   mov rcx, rax
 
-  list
+  arguments "args*", "separator", "end_of_string"
   mov rdx, rax
-  string "строка"
-  list_append_link rdx, rax
+
+  dictionary
+  mov rcx, rax
+  string "separator"
+  mov rbx, rax
+  string " "
+  dictionary_set_link rcx, rbx, rax
+  string "end_of_string"
+  mov rbx, rax
+  string 10
+  dictionary_set_link rcx, rbx, rax
+
+  string "error"
+  mov rbx, rax
+  function rbx, f_error, rdx, rcx, 1, 1
+  mov rcx, rax
+  list
+  assign rbx, rax, rcx
+  mov rcx, rax
+
+  arguments "аргументы*", "разделитель", "конец_строки"
+  mov rdx, rax
+
+  dictionary
+  mov rcx, rax
+  string "разделитель"
+  mov rbx, rax
+  string " "
+  dictionary_set_link rcx, rbx, rax
+  string "конец_строки"
+  mov rbx, rax
+  string 10
+  dictionary_set_link rcx, rbx, rax
+
+  string "ошибка"
+  mov rbx, rax
+  function rbx, f_error, rdx, rcx, 1, 1
+  mov rcx, rax
+  list
+  assign rbx, rax, rcx
+  mov rcx, rax
+
+  arguments "строка"
+  mov rdx, rax
 
   dictionary
   mov rcx, rax
@@ -205,12 +249,8 @@ _start:
   assign rbx, rax, rcx
   mov rcx, rax
 
-  list
+  arguments "список*", "объединитель"
   mov rdx, rax
-  string "список*"
-  list_append_link rdx, rax
-  string "объединитель"
-  list_append_link rdx, rax
 
   dictionary
   mov rcx, rax
@@ -227,14 +267,8 @@ _start:
   assign rbx, rax, rcx
   mov rcx, rax
 
-  list
+  arguments "строка", "разделитель", "количество_частей"
   mov rdx, rax
-  string "строка"
-  list_append_link rdx, rax
-  string "разделитель"
-  list_append_link rdx, rax
-  string "количество_частей"
-  list_append_link rdx, rax
 
   dictionary
   mov rcx, rax
@@ -255,12 +289,8 @@ _start:
   assign rbx, rax, rcx
   mov rcx, rax
 
-  list
+  arguments "нижний_порог", "верхний порог"
   mov rdx, rax
-  string "нижний_порог"
-  list_append_link rdx, rax
-  string "верхний_порог"
-  list_append_link rdx, rax
 
   dictionary
   mov rcx, rax

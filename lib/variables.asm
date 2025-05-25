@@ -36,7 +36,7 @@ f_assign_link:
       string_extend_links rbx, rax
       list
       list_append_link rax, rbx
-      print rax
+      error rax
       exit -1
 
     .correct_variable:
@@ -104,7 +104,7 @@ f_assign_link:
         string_extend_links rbx, rax
         list
         list_append_link rax, rbx
-        print rax
+        error rax
         exit -1
 
       .get_continue:
@@ -184,7 +184,7 @@ f_assign_link:
         string_extend_links rbx, rax
         list
         list_append_link rax, rbx
-        print rax
+        error rax
         exit -1
 
       .set_continue:
@@ -261,7 +261,7 @@ f_access_link:
     string_extend_links rbx, rax
     list
     list_append_link rax, rbx
-    print rax
+    error rax
     exit -1
 
   .correct_variable:
@@ -296,7 +296,7 @@ f_access_link:
         string_extend_links rbx, rax
         list
         list_append_link rax, rbx
-        print rax
+        error rax
         exit -1
 
       .correct_type:
@@ -322,7 +322,7 @@ f_access_link:
         string_extend_links rbx, rax
         list
         list_append_link rax, rbx
-        print rax
+        error rax
         exit -1
 
       .list:

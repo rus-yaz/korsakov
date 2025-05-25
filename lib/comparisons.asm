@@ -165,7 +165,7 @@ f_is_equal:
   list_append_link rax, rdx
   list_append_link rax, rbx
   list_append_link rax, rcx
-  print rax
+  error rax
   exit -1
 
   .return_true:
@@ -221,7 +221,7 @@ f_is_lower:
   list
   list_append_link rax, rbx
   list_append_link rax, rcx
-  print rax
+  error rax
   exit -1
 
   .return_true:
@@ -267,7 +267,7 @@ f_is_greater:
   list
   list_append_link rax, rbx
   list_append_link rax, rcx
-  print rax
+  error rax
   exit -1
 
   .return_true:

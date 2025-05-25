@@ -525,7 +525,7 @@ f_expression:
         to_string rax
         list_append_link rbx, rax
 
-        print rax
+        error rax
         exit -1
 
       .skip_length_error:
@@ -563,7 +563,7 @@ f_expression:
           list_append_link rbx, rax
           buffer_to_string IDENTIFIER
           list_append_link rbx, rax
-          print rax
+          error rax
           exit -1
 
         .skip_access_error:
@@ -858,7 +858,7 @@ f_atom:
       list_append_link rbx, rax
       buffer_to_string OPEN_PAREN
       list_append_link rbx, rax
-      print rax
+      error rax
       exit -1
 
       .add_key:
@@ -899,7 +899,7 @@ f_atom:
       list_append_link rbx, rax
       buffer_to_string CLOSED_PAREN
       list_append_link rbx, rax
-      print rax
+      error rax
       exit -1
 
     .correct_token:
@@ -1035,8 +1035,7 @@ f_atom:
     list_append_link rax, rcx
     list_append_link rax, rbx
     list_append_link rax, [токен]
-    print rax
-
+    error rax
     exit -1
 
   .correct_expression:
@@ -1089,7 +1088,7 @@ f_call_expression:
         mov rbx, rax
         list
         list_append_link rax, rbx
-        print rax
+        error rax
         exit -1
 
       .correct_sequence:
@@ -1109,7 +1108,7 @@ f_call_expression:
         mov rbx, rax
         list
         list_append_link rax, rbx
-        print rax
+        error rax
         exit -1
 
       .not_keys:
@@ -1162,7 +1161,7 @@ f_call_expression:
     list_append_link rbx, rax
     buffer_to_string CLOSED_PAREN
     list_append_link rbx, rax
-    print rax
+    error rax
     exit -1
 
   .correct_token:
@@ -1260,7 +1259,7 @@ f_list_expression:
     list_append_link rbx, rax
     buffer_to_string OPEN_LIST_PAREN
     list_append_link rbx, rax
-    print rax
+    error rax
     exit -1
 
   .correct_start:
@@ -1292,7 +1291,7 @@ f_list_expression:
       list_append_link rbx, rax
       buffer_to_string CLOSED_PAREN
       list_append_link rbx, rax
-      print rax
+      error rax
       exit -1
 
     .correct_empty_dictionary:
@@ -1370,7 +1369,7 @@ f_list_expression:
         list_append_link rbx, rax
         buffer_to_string COLON
         list_append_link rbx, rax
-        print rax
+        error rax
         exit -1
 
       .correct_colon:
@@ -1451,7 +1450,7 @@ f_check_expression:
     list_append_link rbx, rax
     buffer_to_string CHECK
     list_append_link rbx, rax
-    print rax
+    error rax
     exit -1
 
   .correct_start:
@@ -1488,7 +1487,7 @@ f_check_expression:
     list_append_link rbx, rax
     buffer_to_string NEWLINE
     list_append_link rbx, rax
-    print rax
+    error rax
     exit -1
 
   .skip_condition_error:
@@ -1516,7 +1515,7 @@ f_check_expression:
       list_append_link rbx, rax
       buffer_to_string NEWLINE
       list_append_link rbx, rax
-      print rax
+      error rax
       exit -1
 
     .skip_newline_error_1:
@@ -1542,7 +1541,7 @@ f_check_expression:
     list_append_link rbx, rax
     buffer_to_string ON_KEYWORD
     list_append_link rbx, rax
-    print rax
+    error rax
     exit -1
 
   .correct_on:
@@ -1616,7 +1615,7 @@ f_check_expression:
       list_append_link rbx, rax
       buffer_to_string NEWLINE
       list_append_link rbx, rax
-      print rax
+      error rax
       exit -1
 
     .skip_newline_error_2:
@@ -1659,7 +1658,7 @@ f_check_expression:
         mov rbx, rax
         list
         list_append_link rax, rbx
-        print rax
+        error rax
         exit -1
 
       .skip_continue_error:
@@ -1723,7 +1722,7 @@ f_if_expression:
     mov rbx, rax
     list
     list_append_link rax, rbx
-    print rax
+    error rax
     exit -1
 
   .while:
@@ -1750,7 +1749,7 @@ f_if_expression:
       mov rbx, rax
       list
       list_append_link rax, rbx
-      print rax
+      error rax
       exit -1
 
     .correct_token_then:
@@ -1772,7 +1771,7 @@ f_if_expression:
       mov rbx, rax
       list
       list_append_link rax, rbx
-      print rax
+      error rax
       exit -1
 
     .correct_token_newline:
@@ -1843,7 +1842,7 @@ f_if_expression:
       mov rbx, rax
       list
       list_append_link rax, rbx
-      print rax
+      error rax
       exit -1
 
   .end_while:
@@ -1915,7 +1914,7 @@ f_else_expression:
       mov rbx, rax
       list
       list_append_link rax, rbx
-      print rax
+      error rax
       exit -1
 
     .continue:
@@ -1953,7 +1952,7 @@ f_for_expression:
     mov rbx, rax
     list
     list_append_link rax, rbx
-    print rax
+    error rax
     exit -1
 
   .correct_for:
@@ -1975,7 +1974,7 @@ f_for_expression:
     mov rbx, rax
     list
     list_append_link rax, rbx
-    print rax
+    error rax
     exit -1
 
   .correct_identifier:
@@ -2011,7 +2010,7 @@ f_for_expression:
       mov rbx, rax
       list
       list_append_link rax, rbx
-      print rax
+      error rax
       exit -1
 
     .correct_to:
@@ -2071,7 +2070,7 @@ f_for_expression:
     mov rbx, rax
     list
     list_append_link rax, rbx
-    print rax
+    error rax
     exit -1
 
   .if_end:
@@ -2084,7 +2083,7 @@ f_for_expression:
     mov rbx, rax
     list
     list_append_link rax, rbx
-    print rax
+    error rax
     exit -1
 
   .correct_token:
@@ -2119,7 +2118,7 @@ f_for_expression:
       mov rbx, rax
       list
       list_append_link rax, rbx
-      print rax
+      error rax
       exit -1
 
     .not_end_of_file:
@@ -2170,7 +2169,7 @@ f_while_expression:
     mov rbx, rax
     list
     list_append_link rax, rbx
-    print rax
+    error rax
     exit -1
 
   .correct_while:
@@ -2197,7 +2196,7 @@ f_while_expression:
     mov rbx, rax
     list
     list_append_link rax, rbx
-    print rax
+    error rax
     exit -1
 
   .correct_newline:
@@ -2230,7 +2229,7 @@ f_while_expression:
       mov rbx, rax
       list
       list_append_link rax, rbx
-      print rax
+      error rax
       exit -1
 
     .not_end_of_file:
@@ -2281,7 +2280,7 @@ f_function_expression:
     mov rbx, rax
     list
     list_append_link rax, rbx
-    print rax
+    error rax
     exit -1
 
   .correct_function:
@@ -2315,7 +2314,7 @@ f_function_expression:
     mov rbx, rax
     list
     list_append_link rax, rbx
-    print rax
+    error rax
     exit -1
 
   .correct_open_paren:
@@ -2400,7 +2399,7 @@ f_function_expression:
       mov rbx, rax
       list
       list_append_link rax, rbx
-      print rax
+      error rax
       exit -1
 
     .correct_argument:
@@ -2462,7 +2461,7 @@ f_function_expression:
     mov rbx, rax
     list
     list_append_link rax, rbx
-    print rax
+    error rax
     exit -1
 
   .correct_closed_paren:
@@ -2498,7 +2497,7 @@ f_function_expression:
         mov rbx, rax
         list
         list_append_link rax, rbx
-        print rax
+        error rax
         exit -1
 
       .not_end_of_file:
@@ -2540,7 +2539,7 @@ f_function_expression:
     mov rbx, rax
     list
     list_append_link rax, rbx
-    print rax
+    error rax
     exit -1
 
   .correct_colon:
@@ -2578,7 +2577,7 @@ f_class_expression:
     mov rbx, rax
     list
     list_append_link rax, rbx
-    print rax
+    error rax
     exit -1
 
   .correct_class:
@@ -2600,7 +2599,7 @@ f_class_expression:
     mov rbx, rax
     list
     list_append_link rax, rbx
-    print rax
+    error rax
     exit -1
 
   .correct_identifier:
@@ -2624,7 +2623,7 @@ f_class_expression:
     mov rbx, rax
     list
     list_append_link rax, rbx
-    print rax
+    error rax
     exit -1
 
   .correct_open_paren:
@@ -2655,7 +2654,7 @@ f_class_expression:
       mov rbx, rax
       list
       list_append_link rax, rbx
-      print rax
+      error rax
       exit -1
 
     .correct_identifier_closed_paren_1:
@@ -2686,7 +2685,7 @@ f_class_expression:
         mov rbx, rax
         list
         list_append_link rax, rbx
-        print rax
+        error rax
         exit -1
 
       .correct_space_closed_paren_2:
@@ -2720,7 +2719,7 @@ f_class_expression:
       mov rbx, rax
       list
       list_append_link rax, rbx
-      print rax
+      error rax
       exit -1
 
     .correct_identifier_closed_paren_3:
@@ -2742,7 +2741,7 @@ f_class_expression:
       mov rbx, rax
       list
       list_append_link rax, rbx
-      print rax
+      error rax
       exit -1
 
     .no_newline_2:
@@ -2770,7 +2769,7 @@ f_class_expression:
     mov rbx, rax
     list
     list_append_link rax, rbx
-    print rax
+    error rax
     exit -1
 
   .correct_function_end_of_construction:
@@ -2804,7 +2803,7 @@ f_class_expression:
       mov rbx, rax
       list
       list_append_link rax, rbx
-      print rax
+      error rax
       exit -1
 
     .correct_arguments:
@@ -2845,7 +2844,7 @@ f_class_expression:
     mov rbx, rax
     list
     list_append_link rax, rbx
-    print rax
+    error rax
     exit -1
 
   .correct_end_construction:
@@ -2876,7 +2875,7 @@ f_delete_expression:
     mov rbx, rax
     list
     list_append_link rax, rbx
-    print rax
+    error rax
     exit -1
 
   .correct_delete:
@@ -2898,7 +2897,7 @@ f_delete_expression:
     mov rbx, rax
     list
     list_append_link rax, rbx
-    print rax
+    error rax
     exit -1
 
   .correct_identifier:
@@ -2928,7 +2927,7 @@ f_include_statement:
     mov rbx, rax
     list
     list_append_link rax, rbx
-    print rax
+    error rax
     exit -1
 
   .correct_include:
@@ -2950,7 +2949,7 @@ f_include_statement:
     mov rbx, rax
     list
     list_append_link rax, rbx
-    print rax
+    error rax
     exit -1
 
   .correct_module:

@@ -79,16 +79,15 @@ macro mem_mov dst*, src* {
 macro exit code*, buffer = 0 {
   if buffer eq 0
   else
-    push rax
-
-    print_raw buffer
-
-    push 10
-    mov rax, rsp
-    sys_print rax, 8
-    pop rax
-
-    pop rax
+    if code eq 0
+      print_raw buffer
+      raw_string 10
+      print_raw rax
+    else
+      error_raw buffer
+      raw_string 10
+      error_raw rax
+    end if
   end if
 
   sys_exit code
@@ -152,6 +151,14 @@ macro sys_print ptr*, size* {
   enter ptr, size
 
   call f_sys_print
+
+  leave
+}
+
+macro sys_error ptr*, size* {
+  enter ptr, size
+
+  call f_sys_error
 
   leave
 }
@@ -1088,7 +1095,31 @@ macro print arguments*, separator = 0, end_of_string = 0 {
   leave
 }
 
-section "string" executable
+section "error" executable
+
+macro error_raw raw_string_link* {
+  enter raw_string_link
+
+  call f_error_raw
+
+  leave
+}
+
+macro error_binary binary_string_link* {
+  enter binary_string_link
+
+  call f_error_binary
+
+  leave
+}
+
+macro error arguments*, separator = 0, end_of_string = 0 {
+  enter arguments, separator, end_of_string
+
+  call f_error
+
+  leave
+}
 
 macro buffer_to_binary buffer_addr* {
   enter buffer_addr

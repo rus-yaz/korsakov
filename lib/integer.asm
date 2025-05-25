@@ -25,7 +25,7 @@ f_string_to_integer:
     mov rbx, rax
     list
     list_append_link rax, rbx
-    print rax
+    error rax
     exit -1
 
   .valid_length:

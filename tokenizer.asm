@@ -319,7 +319,7 @@ f_tokenizer:
 
           string 'Неизвестная управляющая последовательность: \'
           string_extend_links rax, rbx
-          print rax
+          error rax
           exit -1
 
           .end_escape_sequence:
@@ -432,7 +432,7 @@ f_tokenizer:
       list
       list_append_link rax, rbx
       list_append_link rax, [токен]
-      print rax
+      error rax
       exit -1
 
     .not_exclamation_mark:
@@ -469,7 +469,7 @@ f_tokenizer:
       list
       list_append_link rax, rbx
       list_append_link rax, [токен]
-      print rax
+      error rax
       exit -1
 
     .not_percent:
@@ -526,7 +526,7 @@ f_tokenizer:
       list
       list_append_link rax, rbx
       list_append_link rax, [токен]
-      print rax
+      error rax
       exit -1
 
     .not_backslash:
@@ -882,7 +882,7 @@ f_tokenizer:
     list
     list_append_link rax, rbx
     list_append_link rax, [токен]
-    print rax
+    error rax
     exit -1
 
     .write_token:

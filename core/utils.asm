@@ -31,6 +31,17 @@ f_sys_print:
 
   ret
 
+f_sys_error:
+  get_arg 1
+  mov rbx, rax
+  get_arg 0
+
+  sys_write STDERR,\
+            rax,\       ; Указатель на данные для вывода
+            rbx         ; Длина данных для вывода
+
+  ret
+
 f_mem_copy:
   get_arg 0
   mov rsi, rax ; Источник
@@ -132,7 +143,7 @@ f_type_to_string:
   list
   list_append_link rax, rcx
   list_append_link rax, rbx
-  print rax
+  error rax
   exit -1
 
 f_type_full_size:
@@ -202,5 +213,5 @@ f_check_type:
   list_append_link rbx, rax
   type_to_string r9
   list_append_link rbx, rax
-  print rax
+  error rax
   exit -1

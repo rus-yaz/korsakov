@@ -21,7 +21,7 @@ f_run:
     mov rbx, rax
     list
     list_append_link rax, rbx
-    print rax
+    error rax
     exit -1
 
   .correct:
@@ -89,7 +89,7 @@ f_run:
     mov rbx, rax
     list
     list_append_link rax, rbx
-    print rax
+    error rax
     exit -1
 
   .fork_success:

@@ -61,6 +61,5 @@ f_copy:
   list
   list_append_link rax, rcx
   list_append_link rax, rbx
-  print rax
-
+  error rax
   exit -1

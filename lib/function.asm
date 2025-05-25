@@ -127,7 +127,7 @@ f_function_call:
     to_string r12
     list_append_link rbx, rax
 
-    print rax
+    error rax
     exit -1
 
   .enough_arguments_count:
@@ -162,7 +162,7 @@ f_function_call:
     to_string r12
     list_append_link rbx, rax
 
-    print rax
+    error rax
     exit -1
 
   .correct_arguments_count:

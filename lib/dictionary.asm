@@ -44,7 +44,7 @@ f_dictionary_from_lists:
     mov rbx, rax
     list
     list_append_link rax, rbx
-    print rax
+    error rax
     exit -1
 
   .continue:
@@ -114,7 +114,7 @@ f_dictionary_from_items:
       mov rbx, rax
       list
       list_append_link rax, rbx
-      print rax
+      error rax
       exit -1
 
     .correct_length:
@@ -317,7 +317,7 @@ f_dictionary_get_link:
       list_append_link rax, rdx
       list_append_link rax, rcx
       list_append_link rax, rbx
-      print rax
+      error rax
       exit -1
 
     .return_default:
