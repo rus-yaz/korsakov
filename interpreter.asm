@@ -649,7 +649,7 @@ f_interpret_unary_operation:
     mov rbx, rax
     list
     list_append_link rax, rbx
-    list_append_link rax, rcx
+    list_append_link rax, r8
     error rax
     exit -1
 
@@ -1091,9 +1091,9 @@ f_interpret_while:
   je .loop
 
     string "НОМЕР_ТЕКУЩЕГО_ЦИКЛА"
-    mov rcx, rax
+    mov rdx, rax
     list
-    access_link rcx, rax
+    access_link rdx, rax
     integer_dec rax
 
     string "случай_иначе"
@@ -1112,13 +1112,6 @@ f_interpret_while:
   mov r9, rax
 
   .while:
-
-    interpret rdx, rbx
-    boolean rax
-    boolean_value rax
-    cmp rax, 1
-    jne .end_while
-
     interpret r8, rbx
     list_append_link r9, rax
 
@@ -1159,7 +1152,11 @@ f_interpret_while:
 
     .no_signal:
 
-    jmp .while
+  interpret rdx, rbx
+  boolean rax
+  boolean_value rax
+  cmp rax, 1
+  je .while
 
   .end_while:
 
