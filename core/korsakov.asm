@@ -64,6 +64,8 @@ section "data" writable
   GLOBAL_CONTEXT  rq 1
   DEBUG_TIME      rq 1
 
+  RANDOM_SEED  rq 1
+
 include "./debug.asm"
 include "./macro.asm"
 include "./syscalls_amd64.asm"
@@ -90,6 +92,7 @@ _start:
   mov rbp, rsp
 
   allocate_heap
+  reset_seed
 
   mov rcx, [rbp] ; Количество переданных аргументов
   integer rcx
@@ -311,7 +314,63 @@ _start:
 
   string "получить_случайное_число"
   mov rbx, rax
-  function rbx, f_getrandom, rdx, rcx, 1, 1
+  function rbx, f_get_random, rdx, rcx, 1, 1
+  mov rcx, rax
+  list
+  assign rbx, rax, rcx
+  mov rcx, rax
+
+  arguments "нижний_порог", "верхний порог"
+  mov rdx, rax
+
+  dictionary
+  mov rcx, rax
+  string "нижний_порог"
+  mov rbx, rax
+  integer 0
+  dictionary_set_link rcx, rbx, rax
+  string "верхний_порог"
+  mov rbx, rax
+  push rbx, rdx
+  mov rax, -1
+  mov rbx, 2
+  mov rdx, 0
+  idiv rbx
+  integer rax
+  pop rdx, rbx
+  dictionary_set_link rcx, rbx, rax
+
+  string "получить_псевдослучайное_число"
+  mov rbx, rax
+  function rbx, f_get_pseudorandom, rdx, rcx, 1, 1
+  mov rcx, rax
+  list
+  assign rbx, rax, rcx
+  mov rcx, rax
+
+  arguments "семя"
+  mov rdx, rax
+
+  dictionary
+  mov rcx, rax
+
+  string "установить_семя"
+  mov rbx, rax
+  function rbx, f_set_seed, rdx, rcx, 0, 1
+  mov rcx, rax
+  list
+  assign rbx, rax, rcx
+  mov rcx, rax
+
+  list
+  mov rdx, rax
+
+  dictionary
+  mov rcx, rax
+
+  string "сбросить_семя"
+  mov rbx, rax
+  function rbx, f_reset_seed, rdx, rcx, 0, 1
   mov rcx, rax
   list
   assign rbx, rax, rcx

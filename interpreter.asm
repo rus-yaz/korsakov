@@ -389,7 +389,7 @@ f_interpret:
     ret
   .not_call:
 
-  string "Неизвестный узел: "
+  string "Неизвестный узел:"
   mov rbx, rax
   list
   list_append_link rax, rbx

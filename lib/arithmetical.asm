@@ -13,28 +13,28 @@ f_addition:
   cmp rdx, INTEGER
   jne .not_integer
     cmp r8, INTEGER
-    jne .not_integer_to_integer
+    jne @f
       integer_add rbx, rcx
       ret
-    .not_integer_to_integer:
+    @@:
   .not_integer:
 
   cmp rdx, LIST
   jne .not_list
     cmp r8, LIST
-    jne .not_list_to_list
+    jne @f
       list_add rbx, rcx
       ret
-    .not_list_to_list:
+    @@:
   .not_list:
 
   cmp rdx, STRING
   jne .not_string
     cmp r8, STRING
-    jne .not_string_to_string
+    jne @f
       string_add rbx, rcx
       ret
-    .not_string_to_string:
+    @@:
   .not_string:
 
   string "Операция сложения не может быть проведена между типами"
@@ -61,10 +61,10 @@ f_subtraction:
   cmp rdx, INTEGER
   jne .not_integer
     cmp r8, INTEGER
-    jne .not_integer_to_integer
+    jne @f
       integer_sub rbx, rcx
       ret
-    .not_integer_to_integer:
+    @@:
   .not_integer:
 
   string "Операция вычитания не может быть проведена между типами"
@@ -91,40 +91,40 @@ f_multiplication:
   cmp rdx, INTEGER
   jne .not_integer
     cmp r8, INTEGER
-    jne .not_integer_to_integer
+    jne @f
       integer_mul rbx, rcx
       ret
-    .not_integer_to_integer:
+    @@:
 
     cmp r8, STRING
-    jne .not_integer_to_string
+    jne @f
       string_mul rcx, rbx
       ret
-    .not_integer_to_string:
+    @@:
 
     cmp r8, LIST
-    jne .not_integer_to_list
+    jne @f
       list_mul rcx, rbx
       ret
-    .not_integer_to_list:
+    @@:
   .not_integer:
 
   cmp rdx, STRING
   jne .not_string
     cmp r8, INTEGER
-    jne .not_string_to_integer
+    jne @f
       string_mul rbx, rcx
       ret
-    .not_string_to_integer:
+    @@:
   .not_string:
 
   cmp rdx, LIST
   jne .not_list
     cmp r8, INTEGER
-    jne .not_list_to_integer
+    jne @f
       list_mul rbx, rcx
       ret
-    .not_list_to_integer:
+    @@:
   .not_list:
 
   string "Операция умножения не может быть проведена между типами"
@@ -156,10 +156,10 @@ f_division:
   cmp rdx, INTEGER
   jne .not_integer
     cmp r8, INTEGER
-    jne .not_integer_to_integer
+    jne @f
       integer_div rbx, rcx
       ret
-    .not_integer_to_integer:
+    @@:
   .not_integer:
 
   string "Операция деления не может быть проведена между типами"

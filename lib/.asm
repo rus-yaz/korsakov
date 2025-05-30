@@ -1,3 +1,6 @@
+; Копирайт © 2025 ООО «РУС.ЯЗ»
+; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
+
 include "arithmetical.asm"
 include "boolean.asm"
 include "collection.asm"
@@ -18,5 +21,5 @@ include "string.asm"
 include "to_string.asm"
 include "variables.asm"
 include "getcwd.asm"
-include "getrandom.asm"
+include "random.asm"
 include "input.asm"

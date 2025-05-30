@@ -376,7 +376,7 @@ f_compile:
     ret
   .not_return:
 
-  string "Неизвестный узел: "
+  string "Неизвестный узел:"
   mov rbx, rax
   list
   list_append_link rax, rbx
@@ -2001,7 +2001,8 @@ f_compile_call:
   list_extend_links rdx, rax
   add_code "mov rbx, rax"
 
-  dictionary_get_link rcx, [именованные_аргументы]
+  string "именованные_аргументы"
+  dictionary_get_link rcx, rax
   list_node rax
   dictionary_node rax
   compile rax, rbx

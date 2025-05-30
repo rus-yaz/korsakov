@@ -30,7 +30,6 @@ macro enter [arg] {
 }
 
 macro get_arg index {
-
   mov rax, index
   cmp rax, 0
   jge @f
@@ -1417,19 +1416,43 @@ macro getcwd {
   return
 }
 
-section "getrandom" executable
+section "random" executable
 
-macro getrandom start = 0, end = 0 {
+macro get_random start = 0, end = 0 {
   enter start, end
 
-  call f_getrandom
+  call f_get_random
 
   return
 }
 
+macro get_pseudorandom start = 0, end = 0 {
+  enter start, end
+
+  call f_get_pseudorandom
+
+  return
+}
+
+macro set_seed seed* {
+  enter seed
+
+  call f_set_seed
+
+  leave
+}
+
+macro reset_seed {
+  enter
+
+  call f_reset_seed
+
+  leave
+}
+
 section "input" executable
 
-macro input string {
+macro input string = 0 {
   enter string
 
   call f_input
