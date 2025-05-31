@@ -99,10 +99,10 @@ f_float_div:
 
   movsd xmm0, [rbx + FLOAT_HEADER*8]
   movsd xmm1, [rcx + FLOAT_HEADER*8]
-  divsd xmm0, xmm1
+  divsd xmm1, xmm0
 
   float
-  movsd [rax + FLOAT_HEADER*8], xmm0
+  movsd [rax + FLOAT_HEADER*8], xmm1
 
   popsd 1, 0
 

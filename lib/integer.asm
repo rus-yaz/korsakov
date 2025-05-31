@@ -172,16 +172,20 @@ f_integer_div:
   mov rbx, rax
   get_arg 0
 
-  check_type rax, INTEGER
   check_type rbx, INTEGER
+  check_type rcx, INTEGER
 
-  mov rax, [rax + INTEGER_HEADER*8]
-  mov rbx, [rbx + INTEGER_HEADER*8]
+  pushsd 0, 1
+  cvtsi2sd xmm0, [rax + INTEGER_HEADER*8]
+  cvtsi2sd xmm1, [rbx + INTEGER_HEADER*8]
 
-  mov rdx, 0
-  idiv rbx
+  divsd xmm1, xmm0
 
-  integer rax
+  float
+  movsd [rax + FLOAT_HEADER*8], xmm1
+
+  popsd 1, 0
+
   ret
 
 f_float_to_integer:
