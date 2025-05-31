@@ -3,8 +3,6 @@
 
 section "debug" executable
 
-;define DEBUG
-
 macro debug_start function_name* {
   if DEBUG eqtype
   enter
@@ -21,17 +19,17 @@ macro debug_start function_name* {
   string ""
   print rbx, rax, rax
 
+  delete rbx, rax
+
   string "начало"
   mov rcx, rax
-  string function_name
-  mov rdx, rax
 
   push rcx
   create_block 2*8
   mov rcx, rax
-  push rcx, rdx
+  push rcx
   syscall 228, 0, rcx
-  pop rdx, r8, rcx
+  pop r8, rcx
 
   list
   mov rbx, rax
@@ -44,7 +42,15 @@ macro debug_start function_name* {
 
   list
   list_append_link rax, rcx
-  list_append_link rax, rdx
+  mov rbx, rax
+  string " "
+  print rbx, rax, rax
+  delete rbx, rax
+
+  raw_string function_name
+  print_raw rax
+
+  list
   print rax
 
   leave
@@ -67,6 +73,7 @@ macro debug_end function_name* {
   mov rbx, rax
   string ""
   print rbx, rax, rax
+  delete rbx, rax
 
   string "конец "
   mov rcx, rax
@@ -106,6 +113,7 @@ macro debug_end function_name* {
   list_append_link rax, r8
   list_append_link rax, r9
   print rax
+  delete rax
 
   leave
   end if

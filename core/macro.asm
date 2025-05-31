@@ -110,7 +110,13 @@ macro string str {
   buffer_to_string rax
 }
 
-macro init [module_name = ""] {
+macro init [module_name] {
+  common
+    if NOSTD eqtype
+    else
+      _include
+    end if
+
   forward
     if module_name eq ""
     else
@@ -120,11 +126,9 @@ macro init [module_name = ""] {
   common
     section "start" executable
     start:
-
-  forward
-    if module_name eq ""
+    if NOSTD eqtype
     else
-      _init module_name
+      _init
     end if
 }
 
@@ -134,6 +138,14 @@ macro _include name {
 
 macro _init name {
   init_#name
+}
+
+section "exit" executable
+
+macro program_exit code = 0 {
+  enter code
+
+  call f_program_exit
 }
 
 section "utils" executable

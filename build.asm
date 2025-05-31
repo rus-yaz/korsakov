@@ -2,6 +2,9 @@
 ; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
 
 include "core/korsakov.asm"
+
+define NOSTD
+
 init
 
 list
@@ -14,6 +17,18 @@ string "-m"
 list_append_link rbx, rax
 string "131072"
 list_append_link rbx, rax
+
+string "--debug"
+list_include [ARGUMENTS], rax
+boolean_value rax
+cmp rax, 1
+jne .no_debug
+  string "-d"
+  list_append_link rbx, rax
+  string "DEBUG="
+  list_append_link rbx, rax
+.no_debug:
+
 run rbx, [ENVIRONMENT_VARIABLES]
 
 list

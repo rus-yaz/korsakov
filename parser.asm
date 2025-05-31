@@ -2954,14 +2954,37 @@ f_include_statement:
 
   .correct_module:
 
-  ; RBX — module
-  mov rbx, [токен]
+  string "значение"
+  dictionary_get_link [токен], rax
+  mov rcx, rax
+
+  list_length rcx
+  cmp rax, 1
+  jne .incorrect_module
+
+  integer 0
+  list_get_link rcx, rax
+  mov rbx, rax
+
+  mov rax, [rbx]
+  cmp rax, STRING
+  jne .incorrect_module
 
   next
 
   include_node rbx
 
   ret
+
+  .incorrect_module:
+    list
+    mov rbx, rax
+
+    string "Должна быть передана обычная строка"
+    list_append_link rbx, rax
+
+    error rax
+    exit -1
 
 f_statement:
   token_check_keyword [токен], [ВЕРНУТЬ]

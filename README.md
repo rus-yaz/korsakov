@@ -14,7 +14,7 @@
 
 #### Arch Linux (AUR)
 
-```
+```sh
 yay -S cassette        # С ключами в Pacman-стиле
 pamac install cassette # Pamac
 ```
@@ -23,7 +23,7 @@ pamac install cassette # Pamac
 
 > Не забудьте установить `fasm`
 
-```bash
+```sh
 git clone https://gitverse.ru/x1z53/korsakov --depth=1
 cd korsakov
 fasm build.asm && ld build.o -o build && ./build
@@ -31,15 +31,34 @@ fasm build.asm && ld build.o -o build && ./build
 
 > В `build.asm` просто выполняется следующий код:
 >
-> ```
+> ```sh
 > fasm korsakov.asm -m 131072 && ld korsakov.o -o korsakov
 > ```
 
+#### Режим отладки
+
+Режим отладки позволяет увидеть промежуточные этапы работы компилятора/интерпретатора:
+
+- Токены
+- Работу парсера и итоговое абстрактное синтаксическое дерево
+- Работу компилятора (и итоговый код) или интерпретатора, в зависимости от режима исполнения
+
+```sh
+./build --debug
+# Или
+fasm korsakov.asm -m 131072 -d DEBUG= && ld korsakov.o -o korsakov
+```
+
 ### Использование
 
-```bash
-./korsakov <file.kors> [--compile|-c] [--help|-h]
+```sh
+./korsakov <file.kors> [--compile|-c] [--help|-h] [--nostd]
 ```
+
+Флаги:
+`--compile|-c` — Компиляция в исполняемый файл с таким же именем, что и переданный
+`--help|-h` — Показать эту справку
+`--nostd` — Компиляция без стандартной библиотеки
 
 > По умолчанию код выполняется в режиме интерпретации.
 >

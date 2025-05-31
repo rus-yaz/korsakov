@@ -153,7 +153,8 @@ section "data" writable
   СИГНАЛ_ПРОПУСКА   rq 1
   СИГНАЛ_ПРЕРЫВАНИЯ rq 1
 
-  КОМПИЛЯЦИЯ dq 0
+  КОМПИЛЯЦИЯ                        dq 0
+  ОТКЛЮЧЕНИЕ_СТАНДАРТНОЙ_БИБЛИОТЕКИ dq 0
 
 macro print_help {
   enter
@@ -163,6 +164,7 @@ macro print_help {
   leave
 }
 
+_include
 section "start" executable
 start:
 
@@ -212,6 +214,32 @@ start:
     mov [КОМПИЛЯЦИЯ], 1
 
   .not_compile:
+
+  string "--nostd"
+  list_index [ARGUMENTS], rax
+  mov rbx, rax
+  integer 1
+  integer_add rbx, rax
+  boolean rax
+  boolean_value rax
+  cmp rax, 1
+  jne .not_nostd
+
+    cmp [КОМПИЛЯЦИЯ], 1
+    je .compilation
+      string "Отключение стандартной библиотеки доступно только при компиляции"
+      mov rbx, rax
+      list
+      list_append_link rax, rbx
+      error rax
+      exit -1
+    .compilation:
+
+    list_pop_link [ARGUMENTS], rbx
+    integer_dec [ARGUMENTS_COUNT]
+    mov [ОТКЛЮЧЕНИЕ_СТАНДАРТНОЙ_БИБЛИОТЕКИ], 1
+
+  .not_nostd:
 
   integer 2
   is_equal [ARGUMENTS_COUNT], rax
@@ -647,44 +675,52 @@ start:
 
   tokenizer [код]
   mov [токены], rax
-  ;list
-  ;list_append_link rax, [токены]
-  ;print rax
-
-  ;string ""
-  ;mov rbx, rax
-  ;list_append_link rax, rbx
-  ;print rax
+  if DEBUG eqtype
+    list
+    list_append_link rax, [токены]
+    print rax
+  end if
 
   parser [токены]
   mov [АСД], rax
-  ;list
-  ;list_append_link rax, [АСД]
-  ;print rax
-
-  ;string ""
-  ;mov rbx, rax
-  ;list_append_link rax, rbx
-  ;print rax
+  if DEBUG eqtype
+    list
+    list_append_link rax, [АСД]
+    print rax
+  end if
 
   cmp [КОМПИЛЯЦИЯ], 1
   je .compile_code
+
+    init_
 
     interpreter [АСД], [GLOBAL_CONTEXT]
     exit 0
 
   .compile_code:
 
+  list
+  mov [КОМПИЛЯЦИЯ], rax
+
   compiler [АСД], [GLOBAL_CONTEXT]
   mov rbx, rax
-  ;list
-  ;list_append_link rax, rbx
-  ;print rax
+  if DEBUG eqtype
+    list
+    list_append_link rax, rbx
+    print rax
+  end if
 
   string <"include 'core/korsakov.asm'", 10>
   mov rcx, rax
 
-  string <"section 'start' executable", 10, "start:", 10>
+  string <"init ">
+  string_extend_links rcx, rax
+
+  string ", "
+  join [КОМПИЛЯЦИЯ], rax
+  string_extend_links rcx, rax
+
+  string 10
   string_extend_links rcx, rax
 
   string_extend_links rcx, rbx
@@ -715,6 +751,15 @@ start:
   string ".asm"
   string_add_links rbx, rax
   list_append_link rcx, rax
+
+  cmp [ОТКЛЮЧЕНИЕ_СТАНДАРТНОЙ_БИБЛИОТЕКИ], 1
+  jne .use_std
+    string "-d"
+    list_append_link rcx, rax
+    string "NOSTD="
+    list_append_link rcx, rax
+  .use_std:
+
   run rcx, [ENVIRONMENT_VARIABLES]
 
   list
@@ -743,7 +788,7 @@ f_print_help:
   integer 0
   list_get_link [ARGUMENTS], rax
   string_extend_links rcx, rax
-  string " <file.kors> [--compile|-c] [--help|-h]"
+  string " <file.kors> [--compile|-c] [--help|-h] [--nostd]"
   string_extend_links rcx, rax
   list_append_link rbx, rax
 
@@ -754,6 +799,8 @@ f_print_help:
   string "  --compile или -c    Компиляция в исполняемый файл с таким же именем, что и переданный"
   list_append_link rbx, rax
   string "  --help или -h       Показать эту справку"
+  list_append_link rbx, rax
+  string "  --nostd             Компиляция без стандартной библиотеки"
   list_append_link rbx, rax
 
   string 10
