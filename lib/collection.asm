@@ -181,9 +181,9 @@ f_collection_get_link:
 
   ; Проверка, входит ли индекс в список
   cmp rcx, rdx
-  check_error jge, INDEX_OUT_OF_LIST_ERROR
+  check_error jge, "Индекс выходит за пределы списка"
   cmp rcx, 0
-  check_error jl, INDEX_OUT_OF_LIST_ERROR
+  check_error jl, "Индекс выходит за пределы списка"
 
   imul rcx, 8
   mov rax, [rbx + 8*3]
@@ -285,9 +285,9 @@ f_collection_set_link:
 
   ; Проверка, входит ли индекс в список
   cmp rcx, r8
-  check_error jge, INDEX_OUT_OF_LIST_ERROR
+  check_error jge, "Индекс выходит за пределы списка"
   cmp rcx, 0
-  check_error jl, INDEX_OUT_OF_LIST_ERROR
+  check_error jl, "Индекс выходит за пределы списка"
 
   mov rax, rbx
   mov rbx, [rbx + 8*3]
@@ -344,9 +344,9 @@ f_collection_pop_link:
 
   ; Проверка, входит ли индекс в список
   cmp rcx, rdx
-  check_error jge, INDEX_OUT_OF_LIST_ERROR
+  check_error jge, "Индекс выходит за пределы списка"
   cmp rcx, 0
-  check_error jl, INDEX_OUT_OF_LIST_ERROR
+  check_error jl, "Индекс выходит за пределы списка"
 
   dec rdx
   mov [rbx + 8*1], rdx
@@ -427,9 +427,9 @@ f_collection_insert_link:
 
   ; Проверка, входит ли индекс в список
   cmp rcx, r8
-  check_error jge, INDEX_OUT_OF_LIST_ERROR
+  check_error jge, "Индекс выходит за пределы списка"
   cmp rcx, 0
-  check_error jl, INDEX_OUT_OF_LIST_ERROR
+  check_error jl, "Индекс выходит за пределы списка"
 
   inc r8
   mov [rbx + 8*1], r8

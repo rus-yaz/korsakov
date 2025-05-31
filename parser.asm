@@ -1,36 +1,10 @@
 ; Копирайт © 2025 ООО «РУС.ЯЗ»
 ; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
 
-section "data" writable
+section "parser_data" writable
   try dq 0
 
-  CLOSED_PAREN         db "`)`", 0
-  COLON                db "`:`", 0
-  OPEN_PAREN           db "`(`", 0
-  SPACE                db "` `", 0
-  FROM_KEYWORD         db "`от`", 0
-  OF                   db "`из`", 0
-  OPEN_LIST_PAREN      db "`%(`", 0
-  THEN                 db "`то`", 0
-  TO                   db "`до`", 0
-  FOR                  db "`для`", 0
-  ON_KEYWORD           db "`при`", 0
-  IF_KEYWORD           db "`если`", 0
-  LIST_TYPE_NAME       db "список", 0
-  STRING_TYPE_NAME     db "строка", 0
-  WHILE_KEYWORD        db "`пока`", 0
-  DELETE               db "`удалить`", 0
-  FUNCTION_KEYWORD     db "`функция`", 0
-  INCLUDE_KEYWORD      db "`включить`", 0
-  CHECK                db "`проверить`", 0
-  INTEGER_TYPE_NAME    db "целое число", 0
-  IDENTIFIER           db "идентификатор", 0
-  KEYWORD              db "ключевое слово", 0
-  NEWLINE              db "перенос строки", 0
-  COMPARISON_OPERATOR  db "оператор сравнения", 0
-  FLOAT_TYPE_NAME      db "вещественное число", 0
-
-section "parser" executable
+section "parser_code" executable
 
 macro parser tokens* {
   debug_start "parser"
@@ -557,13 +531,8 @@ f_expression:
 
           @@:
 
-          list
-          mov rbx, rax
-          string "Ожидался"
-          list_append_link rbx, rax
-          buffer_to_string IDENTIFIER
-          list_append_link rbx, rax
-          error rax
+          raw_string "Ожидался идентификатор"
+          error_raw rax
           exit -1
 
         .skip_access_error:
@@ -853,18 +822,25 @@ f_atom:
 
       @@:
 
+      string "Ожидались: "
+      mov rcx, rax
+
       list
       mov rbx, rax
-      string "Ожидались "
       list_append_link rbx, rax
-      buffer_to_string IDENTIFIER
+      string "идентификатор"
       list_append_link rbx, rax
-      buffer_to_string INTEGER_TYPE_NAME
+      type_to_string INTEGER
       list_append_link rbx, rax
-      buffer_to_string STRING_TYPE_NAME
+      type_to_string STRING
       list_append_link rbx, rax
-      buffer_to_string OPEN_PAREN
+      string "`(`"
       list_append_link rbx, rax
+
+      string ", "
+      join rbx, rax
+      string_extend_links rcx, rax
+
       error rax
       exit -1
 
@@ -900,13 +876,8 @@ f_atom:
 
       @@:
 
-      list
-      mov rbx, rax
-      string "atom: Ожидалось"
-      list_append_link rbx, rax
-      buffer_to_string CLOSED_PAREN
-      list_append_link rbx, rax
-      error rax
+      raw_string "atom: Ожидалось `)`"
+      error_raw rax
       exit -1
 
     .correct_token:
@@ -1017,30 +988,28 @@ f_atom:
 
     list
     mov rbx, rax
-    buffer_to_string KEYWORD
+    string "ключевое слово"
     list_append_link rbx, rax
-    buffer_to_string IDENTIFIER
+    string "идентификатор"
     list_append_link rbx, rax
-    buffer_to_string INTEGER_TYPE_NAME
+    type_to_string INTEGER
     list_append_link rbx, rax
-    buffer_to_string FLOAT_TYPE_NAME
+    type_to_string FLOAT
     list_append_link rbx, rax
-    buffer_to_string STRING_TYPE_NAME
+    type_to_string STRING
     list_append_link rbx, rax
-    buffer_to_string LIST_TYPE_NAME
+    type_to_string LIST
     list_append_link rbx, rax
 
     string ", "
     join rbx, rax
-    mov rbx, rax
+    string_extend_links rcx, rax
 
     string ". Получено"
-    string_extend_links rbx, rax
-    mov rbx, rax
+    string_extend_links rcx, rax
 
     list
     list_append_link rax, rcx
-    list_append_link rax, rbx
     list_append_link rax, [токен]
     error rax
     exit -1
@@ -1162,13 +1131,8 @@ f_call_expression:
 
     @@:
 
-    list
-    mov rbx, rax
-    string "Ожидалось"
-    list_append_link rbx, rax
-    buffer_to_string CLOSED_PAREN
-    list_append_link rbx, rax
-    error rax
+    raw_string "Ожидалось `)`"
+    error_raw rax
     exit -1
 
   .correct_token:
@@ -1260,13 +1224,8 @@ f_list_expression:
 
     @@:
 
-    list
-    mov rbx, rax
-    string "Ожидалось"
-    list_append_link rbx, rax
-    buffer_to_string OPEN_LIST_PAREN
-    list_append_link rbx, rax
-    error rax
+    raw_string "Ожидалось `%(`"
+    error_raw rax
     exit -1
 
   .correct_start:
@@ -1292,13 +1251,8 @@ f_list_expression:
 
       @@:
 
-      list
-      mov rbx, rax
-      string "Ожидалось"
-      list_append_link rbx, rax
-      buffer_to_string CLOSED_PAREN
-      list_append_link rbx, rax
-      error rax
+      raw_string "Ожидалось `)`"
+      error_raw rax
       exit -1
 
     .correct_empty_dictionary:
@@ -1370,13 +1324,8 @@ f_list_expression:
 
         @@:
 
-        list
-        mov rbx, rax
-        string "Ожидалось"
-        list_append_link rbx, rax
-        buffer_to_string COLON
-        list_append_link rbx, rax
-        error rax
+        raw_string "Ожидалось `:`"
+        error_raw rax
         exit -1
 
       .correct_colon:
@@ -1451,13 +1400,8 @@ f_check_expression:
 
     @@:
 
-    list
-    mov rbx, rax
-    string "Ожидалось"
-    list_append_link rbx, rax
-    buffer_to_string CHECK
-    list_append_link rbx, rax
-    error rax
+    raw_string "Ожидалось `проверить`"
+    error_raw rax
     exit -1
 
   .correct_start:
@@ -1486,15 +1430,8 @@ f_check_expression:
 
     @@:
 
-    list
-    mov rbx, rax
-    string "Ожидались оператор сравнения или перенос строки"
-    list_append_link rbx, rax
-    buffer_to_string COMPARISON_OPERATOR
-    list_append_link rbx, rax
-    buffer_to_string NEWLINE
-    list_append_link rbx, rax
-    error rax
+    raw_string "Ожидались оператор сравнения или перенос строки"
+    error_raw rax
     exit -1
 
   .skip_condition_error:
@@ -1516,13 +1453,8 @@ f_check_expression:
 
       @@:
 
-      list
-      mov rbx, rax
-      string "Ожидался"
-      list_append_link rbx, rax
-      buffer_to_string NEWLINE
-      list_append_link rbx, rax
-      error rax
+      raw_string "Ожидался перенос строки"
+      error_raw rax
       exit -1
 
     .skip_newline_error_1:
@@ -1542,13 +1474,8 @@ f_check_expression:
 
     @@:
 
-    list
-    mov rbx, rax
-    string "Ожидалось"
-    list_append_link rbx, rax
-    buffer_to_string ON_KEYWORD
-    list_append_link rbx, rax
-    error rax
+    raw_string "Ожидалось `при`"
+    error_raw rax
     exit -1
 
   .correct_on:
@@ -1616,13 +1543,8 @@ f_check_expression:
 
       @@:
 
-      list
-      mov rbx, rax
-      string "Ожидался"
-      list_append_link rbx, rax
-      buffer_to_string NEWLINE
-      list_append_link rbx, rax
-      error rax
+      raw_string "Ожидался перенос строки"
+      error_raw rax
       exit -1
 
     .skip_newline_error_2:

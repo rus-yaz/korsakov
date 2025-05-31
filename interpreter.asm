@@ -1,8 +1,6 @@
 ; Копирайт © 2025 ООО «РУС.ЯЗ»
 ; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
 
-section "interpreter" executable
-
 macro interpreter ast*, context* {
   debug_start "interpreter"
   enter ast, context
@@ -440,11 +438,7 @@ f_interpret_body:
     interpret rax, rbx
     mov r10, rax
 
-    string "СИГНАЛ"
-    mov r11, rax
-    list
-    access r11, rax
-    mov r11, rax
+    mov r11, [СИГНАЛ]
     null
     is_equal r11, rax
     boolean_value rax
@@ -460,14 +454,8 @@ f_interpret_body:
 
       .clear_signal:
 
-      push r10
-      string "СИГНАЛ"
-      mov r10, rax
       null
-      mov r11, rax
-      list
-      assign r10, rax, r11
-      pop r10
+      mov [СИГНАЛ], rax
 
       jmp .body_end_while
 
@@ -1162,11 +1150,7 @@ f_interpret_while:
     interpret r8, rbx
     list_append_link r9, rax
 
-    string "СИГНАЛ"
-    mov r11, rax
-    list
-    access r11, rax
-    mov r11, rax
+    mov r11, [СИГНАЛ]
     null
     is_equal r11, rax
     boolean_value rax
@@ -1186,14 +1170,8 @@ f_interpret_while:
 
       .clear_signal:
 
-      push r10
-      string "СИГНАЛ"
-      mov r10, rax
       null
-      mov r11, rax
-      list
-      assign r10, rax, r11
-      pop r10
+      mov [СИГНАЛ], rax
 
       jmp .end_while
 

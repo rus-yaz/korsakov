@@ -10,7 +10,8 @@ include "./parser.asm"
 include "./compiler.asm"
 include "./interpreter.asm"
 
-section "data" writable
+section "koraskov_data" writable
+
   АСД                rq 1
   СРАВНЕНИЯ          rq 1
 
@@ -151,11 +152,16 @@ section "data" writable
   УЗЕЛ_ДОСТУПА_К_ССЫЛКЕ_ПЕРЕМЕННОЙ    rq 1
   УЗЕЛ_ПРИСВАИВАНИЯ_ССЫЛКИ_ПЕРЕМЕННОЙ rq 1
 
+  СИГНАЛ            rq 1
   СИГНАЛ_ПРОПУСКА   rq 1
   СИГНАЛ_ПРЕРЫВАНИЯ rq 1
 
   КОМПИЛЯЦИЯ                        dq 0
   ОТКЛЮЧЕНИЕ_СТАНДАРТНОЙ_БИБЛИОТЕКИ dq 0
+
+section "korsakov_code" executable
+
+_include
 
 macro print_help {
   enter
@@ -165,10 +171,7 @@ macro print_help {
   leave
 }
 
-_include
-section "start" executable
 start:
-
   string "--help"
   list_include [ARGUMENTS], rax
   boolean_value rax
@@ -611,18 +614,12 @@ start:
   integer_inc rax
   mov [УЗЕЛ_ПРИСВАИВАНИЯ_ССЫЛКИ_ПЕРЕМЕННОЙ], rax
 
+  null
+  mov [СИГНАЛ], rax
   integer 0
   mov [СИГНАЛ_ПРЕРЫВАНИЯ], rax
   integer 1
   mov [СИГНАЛ_ПРОПУСКА], rax
-  ; СИГНАЛ_ВОЗВРАТА: тип(СИГНАЛ) == Список
-
-  string "СИГНАЛ"
-  mov rcx, rax
-  list
-  mov rbx, rax
-  null
-  assign rcx, rbx, rax
 
   string "СЧЁТЧИК_ЕСЛИ"
   mov rcx, rax

@@ -1,8 +1,6 @@
 ; Копирайт © 2025 ООО «РУС.ЯЗ»
 ; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
 
-section "nodes" executable
-
 macro check_node_type node*, type* {
   debug_start "check_node_type"
   enter node, type

@@ -1,8 +1,6 @@
 ; Копирайт © 2025 ООО «РУС.ЯЗ»
 ; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
 
-section "macro" executable
-
 macro push [arg] {
   push arg
 }
@@ -156,7 +154,6 @@ macro init [module_name] {
     end if
 
   common
-    section "start" executable
     start:
     if NOSTD eqtype
     else
@@ -172,15 +169,11 @@ macro _init name {
   init_#name
 }
 
-section "exit" executable
-
 macro program_exit code = 0 {
   enter code
 
   call f_program_exit
 }
-
-section "utils" executable
 
 macro buffer_length buffer_ptr* {
   enter buffer_ptr
@@ -217,7 +210,7 @@ macro mem_copy source*, destination*, size* {
 macro check_error operation*, message* {
   push rax
 
-  mov rax, message
+  raw_string message
   operation f_check_error
 
   pop rax
@@ -255,8 +248,6 @@ macro check_type variable_ptr*, type* {
   leave
 }
 
-section "arithmetical" executable
-
 macro addition first*, second* {
   enter first, second
 
@@ -288,8 +279,6 @@ macro division first*, second* {
 
   return
 }
-
-section "boolean" executable
 
 macro boolean value* {
   enter value
@@ -339,8 +328,6 @@ macro boolean_or boolean_1*, boolean_2* {
   return
 }
 
-section "delete" executable
-
 macro delete [variable*] {
   enter variable
 
@@ -348,8 +335,6 @@ macro delete [variable*] {
 
   leave
 }
-
-section "dictionary" executable
 
 macro dictionary keys = 0, values = 0 {
   enter keys, values
@@ -503,8 +488,6 @@ macro dictionary_add dictionary1*, dictionary2* {
   return
 }
 
-section "exec" executable
-
 macro run command*, env*, wait = 1 {
   enter command, env, wait
 
@@ -512,8 +495,6 @@ macro run command*, env*, wait = 1 {
 
   leave
 }
-
-section "file" executable
 
 macro get_file_size filename* {
   enter filename
@@ -554,8 +535,6 @@ macro write_file file*, string* {
 
   leave
 }
-
-section "comparisons" executable
 
 macro is_equal val_1*, val_2* {
   enter val_1, val_2
@@ -605,8 +584,6 @@ macro is_greater_or_equal val_1*, val_2* {
   return
 }
 
-section "copy" executable
-
 macro copy value {
   enter value
 
@@ -614,8 +591,6 @@ macro copy value {
 
   return
 }
-
-section "heap" executable
 
 macro allocate_heap {
   enter
@@ -656,8 +631,6 @@ macro create_block size* {
 
   return
 }
-
-section "integer" executable
 
 macro integer value* {
   enter value
@@ -746,8 +719,6 @@ macro float_to_integer float {
   return
 }
 
-section "float" executable
-
 macro buffer_to_float buffer {
   enter buffer
 
@@ -811,8 +782,6 @@ macro string_to_float string {
 
   return
 }
-
-section "collection" executable
 
 macro collection capacity = 0 {
   enter capacity
@@ -998,8 +967,6 @@ macro is_collection value* {
   return
 }
 
-section "list" executable
-
 macro list capacity = 0 {
   enter capacity
 
@@ -1176,8 +1143,6 @@ macro list_mul list*, integer* {
   return
 }
 
-section "null" executable
-
 macro null {
   enter
 
@@ -1185,8 +1150,6 @@ macro null {
 
   return
 }
-
-section "print" executable
 
 macro print_raw raw_string_link* {
   enter raw_string_link
@@ -1211,8 +1174,6 @@ macro print arguments*, separator = 0, end_of_string = 0 {
 
   leave
 }
-
-section "error" executable
 
 macro error_raw raw_string_link* {
   enter raw_string_link
@@ -1454,8 +1415,6 @@ macro string_mul string*, integer* {
   return
 }
 
-section "to_string" executable
-
 macro to_string value* {
   enter value
 
@@ -1463,8 +1422,6 @@ macro to_string value* {
 
   return
 }
-
-section "variables" executable
 
 macro assign_link variable*, keys*, value*, context = [GLOBAL_CONTEXT] {
   enter variable, keys, value, context
@@ -1498,8 +1455,6 @@ macro access variable*, keys*, context = [GLOBAL_CONTEXT] {
   return
 }
 
-section "function" executable
-
 macro function name*, link*, arguments*, named_arguments*, accumulators = 0, is_internal = 0 {
   enter name, link, arguments, named_arguments, accumulators, is_internal
 
@@ -1524,8 +1479,6 @@ macro function_call function*, arguments*, named_arguments* {
   return
 }
 
-section "getcwd" executable
-
 macro getcwd {
   enter
 
@@ -1533,8 +1486,6 @@ macro getcwd {
 
   return
 }
-
-section "random" executable
 
 macro get_random start = 0, end = 0 {
   enter start, end
@@ -1568,8 +1519,6 @@ macro reset_seed {
   leave
 }
 
-section "input" executable
-
 macro input string = 0 {
   enter string
 
@@ -1577,8 +1526,6 @@ macro input string = 0 {
 
   return
 }
-
-section "math" executable
 
 macro factorial integer* {
   enter integer

@@ -1,8 +1,6 @@
 ; Копирайт © 2025 ООО «РУС.ЯЗ»
 ; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
 
-section "tokenizer" executable
-
 macro tokenizer filename* {
   enter filename
 
@@ -106,11 +104,8 @@ f_tokenizer:
     cmp rax, 1
     jne .not_comma
 
-      string "Символ `,` может быть использован только в вещественных числах"
-      mov rbx, rax
-      list
-      list_append_link rax, rbx
-      error rax
+      raw_string "Символ `,` может быть использован только в вещественных числах"
+      error_raw rax
       exit -1
 
     .not_comma:
@@ -149,11 +144,8 @@ f_tokenizer:
 
           cmp rcx, 0
           je .correct_float_divider
-            string "Некорректное выражение: вторая запятая в вещественном числе"
-            mov rbx, rax
-            list
-            list_append_link rax, rbx
-            error rax
+            raw_string "Некорректное выражение: вторая запятая в вещественном числе"
+            error_raw rax
             exit -1
           .correct_float_divider:
 
@@ -181,11 +173,8 @@ f_tokenizer:
 
       cmp rdx, rcx
       je .correct_value
-        string "Незавершённое вещественное число"
-        mov rbx, rax
-        list
-        list_append_link rax, rbx
-        error rax
+        raw_string "Незавершённое вещественное число"
+        error_raw rax
         exit -1
       .correct_value:
 
@@ -373,9 +362,8 @@ f_tokenizer:
             jmp .end_escape_sequence
           .not_newline_code:
 
-          string 'Неизвестная управляющая последовательность: \'
-          string_extend_links rax, rbx
-          error rax
+          raw_string 'Неизвестная управляющая последовательность: \'
+          error_raw rax
           exit -1
 
           .end_escape_sequence:
@@ -482,12 +470,13 @@ f_tokenizer:
 
       .not_not_equal:
 
-      buffer_to_string UNEXPECTED_TOKEN_ERROR
+      list
       mov rbx, rax
 
-      list
-      list_append_link rax, rbx
-      list_append_link rax, [токен]
+      string "Неизвестный токен:"
+      list_append_link rbx, rax
+      list_append_link rbx, [токен]
+
       error rax
       exit -1
 
@@ -519,12 +508,13 @@ f_tokenizer:
 
       .not_open_list_paren:
 
-      buffer_to_string UNEXPECTED_TOKEN_ERROR
+      list
       mov rbx, rax
 
-      list
-      list_append_link rax, rbx
-      list_append_link rax, [токен]
+      string "Неизвестный токен:"
+      list_append_link rbx, rax
+      list_append_link rbx, [токен]
+
       error rax
       exit -1
 
@@ -576,12 +566,13 @@ f_tokenizer:
 
       .not_lower:
 
-      buffer_to_string UNEXPECTED_TOKEN_ERROR
+      list
       mov rbx, rax
 
-      list
-      list_append_link rax, rbx
-      list_append_link rax, [токен]
+      string "Неизвестный токен:"
+      list_append_link rbx, rax
+      list_append_link rbx, [токен]
+
       error rax
       exit -1
 
@@ -932,12 +923,13 @@ f_tokenizer:
     cmp rax, 1
     jne .write_token
 
-    buffer_to_string UNEXPECTED_TOKEN_ERROR
+    list
     mov rbx, rax
 
-    list
-    list_append_link rax, rbx
-    list_append_link rax, [токен]
+    string "Неизвестный токен:"
+    list_append_link rbx, rax
+    list_append_link rbx, [токен]
+
     error rax
     exit -1
 

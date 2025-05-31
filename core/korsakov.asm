@@ -4,60 +4,11 @@
 format ELF64
 public _start
 
-section "data" writable
-  ; Типы данных
-  define HEAP_BLOCK  0xFEDCBA9876543210
-  define NULL        0
-  define INTEGER     1
-  define FLOAT       2
-  define BOOLEAN     3
-  define COLLECTION  4
-  define LIST        5
-  define STRING      6
-  define BINARY      7
-  define DICTIONARY  8
-  define FUNCTION    9
-  define CLASS       10
-  define FILE        11
+section "" writable
 
-  ; Размер заголовка
-  define NULL_HEADER       1
-  define BOOLEAN_HEADER    1
-  define INTEGER_HEADER    1
-  define FLOAT_HEADER      1
-  define BINARY_HEADER     2
-  define COLLECTION_HEADER 4
-  define LIST_HEADER       4
-  define STRING_HEADER     4
-  define DICTIONARY_HEADER 4
-  define FILE_HEADER       4
-  define HEAP_BLOCK_HEADER 5
-  define FUNCTION_HEADER   7
-
-  ; Полные размеры типа (для неизменяемых по длине)
-  define NULL_SIZE    1
-  define INTEGER_SIZE 2
-  define FLOAT_SIZE   2
-  define BOOLEAN_SIZE 2
-  define FILE_SIZE    4
-
-  INDEX_OUT_OF_LIST_ERROR       db "Индекс выходит за пределы списка",              0
-  INDEX_OUT_OF_STRING_ERROR     db "Индекс выходит за пределы строки",              0
-  OPENING_FILE_ERROR            db "Не удалось открыть файл",                       0
-  FILE_WAS_NOT_READ_ERROR       db "Файл не был прочитан",                          0
-  UNEXPECTED_TYPE_ERROR         db "Неизвестный тип",                               0
-  UNEXPECTED_BIT_SEQUENCE_ERROR db "Неизвестная битовая последовательность",        0
-  UNEXPECTED_TOKEN_ERROR        db "Неизвестный токен: ",                           0
-  EXECVE_WAS_NOT_EXECUTED       db "Не удалось выполнить системный вызов `execve`", 0
-  HEAP_ALLOCATION_ERROR         db "Ошибка аллокации кучи",                         0
-  DIFFERENT_LISTS_LENGTH_ERROR  db "Списки имеют разную длину",                     0
-  KEY_DOESNT_EXISTS             db "Ключа не существует",                           0
-  INVALID_INDENTIFIER           db "Неизвестный идентификатор",                     0
-
-  PAGE_SIZE             dq 0x1000 ; Начальный размер кучи
-  HEAP_START            rq 1      ; Указатель на начало кучи
-  HEAP_END              rq 1      ; Указатель на конец кучи
-  FIRST_FREE_HEAP_BLOCK rq 1      ; Указатель на первый в цепочке свободный блок
+  HEAP_START            rq 1 ; Указатель на начало кучи
+  HEAP_END              rq 1 ; Указатель на конец кучи
+  FIRST_FREE_HEAP_BLOCK rq 1 ; Указатель на первый в цепочке свободный блок
 
   ENVIRONMENT_VARIABLES rq 1
   ARGUMENTS_COUNT       rq 1
@@ -69,7 +20,47 @@ section "data" writable
   RANDOM_SEED  rq 1
 
   EULER_NUMBER rq 1
-  E rq 1
+  E            rq 1
+
+section "" executable
+
+; Типы данных
+define HEAP_BLOCK  0xFEDCBA9876543210
+define NULL        0
+define INTEGER     1
+define FLOAT       2
+define BOOLEAN     3
+define COLLECTION  4
+define LIST        5
+define STRING      6
+define BINARY      7
+define DICTIONARY  8
+define FUNCTION    9
+define CLASS       10
+define FILE        11
+
+; Размер заголовка
+define NULL_HEADER       1
+define BOOLEAN_HEADER    1
+define INTEGER_HEADER    1
+define FLOAT_HEADER      1
+define BINARY_HEADER     2
+define COLLECTION_HEADER 4
+define LIST_HEADER       4
+define STRING_HEADER     4
+define DICTIONARY_HEADER 4
+define FILE_HEADER       4
+define HEAP_BLOCK_HEADER 5
+define FUNCTION_HEADER   7
+
+; Полные размеры типа (для неизменяемых по длине)
+define NULL_SIZE    1
+define INTEGER_SIZE 2
+define FLOAT_SIZE   2
+define BOOLEAN_SIZE 2
+define FILE_SIZE    4
+
+define PAGE_SIZE 0x1000 ; Начальный размер кучи
 
 include "./debug.asm"
 include "./macro.asm"
@@ -92,7 +83,6 @@ macro arguments [argument] {
     pop rbx
 }
 
-section "_start" executable
 _start:
   mov rbp, rsp
 

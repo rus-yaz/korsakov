@@ -102,7 +102,10 @@ f_run:
     mov rbx, r10
 
     sys_execve r11, rax, rbx
-    exit -1, EXECVE_WAS_NOT_EXECUTED
+
+    raw_string "Не удалось выполнить системный вызов `execve`"
+    error_raw rax
+    exit -1
 
   .main_process:
 

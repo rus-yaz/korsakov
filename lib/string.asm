@@ -59,7 +59,7 @@ f_binary_to_string:
     je .end_string_length
 
     cmp rdx, 248
-    check_error jge, UNEXPECTED_BIT_SEQUENCE_ERROR
+    check_error jge, "Неизвестная битовая последовательность"
 
     cmp rdx, 128
     jl .continue_string_length
@@ -110,7 +110,7 @@ f_binary_to_string:
 
     ; Часть другого символа, которого не должно быть в этом месте
     cmp rdx, 192
-    check_error jl, UNEXPECTED_BIT_SEQUENCE_ERROR
+    check_error jl, "Неизвестная битовая последовательность"
 
     ; Начало символа, занимающего 2 байта
     inc r8
@@ -126,7 +126,7 @@ f_binary_to_string:
 
     ; Маска первого байта 4-х байтового символа — 1110xxxx₂ (248₁₀)
     cmp rdx, 248
-    check_error jge, UNEXPECTED_BIT_SEQUENCE_ERROR
+    check_error jge, "Неизвестная битовая последовательность"
 
   .continue_chars:
     .while:

@@ -44,7 +44,7 @@ f_open_file:
 
   ; Проверка открытия файла
   cmp rax, 0
-  check_error jle, OPENING_FILE_ERROR
+  check_error jle, "Файл не был прочитан"
 
   ; Сохранение файлового дескриптора
   mov rcx, rax
@@ -117,7 +117,9 @@ f_read_file:
   cmp rax, 0
   jge .read
     close_file rbx
-    exit -1, FILE_WAS_NOT_READ_ERROR
+    raw_string "Файл не был прочитан"
+    error_raw rax
+    exit -1
 
   .read:
 

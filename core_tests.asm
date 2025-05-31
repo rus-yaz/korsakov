@@ -3,7 +3,6 @@
 
 include "core/korsakov.asm"
 
-section "start" executable
 start:
   string ""
   mov rbx, rax

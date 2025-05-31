@@ -1,8 +1,6 @@
 ; Копирайт © 2025 ООО «РУС.ЯЗ»
 ; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
 
-section "token" executable
-
 macro token_check_type token*, types* {
   debug_start "token_check_type"
   enter token, types

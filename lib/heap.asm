@@ -3,7 +3,7 @@
 
 f_allocate_heap:
   sys_mmap 0,\                                  ; Адрес (если 0, находится автоматически)
-           [PAGE_SIZE],\                        ; Количество памяти для аллокации
+           PAGE_SIZE,\                        ; Количество памяти для аллокации
            PROT_READ + PROT_WRITE + PROT_EXEC,\ ; Права (PROT_READ | PROT_WRITE)
            MAP_SHARED + MAP_ANONYMOUS,\         ; MAP_ANONYMOUS | MAP_PRIVATE
            0,\                                  ; Файл дескриптор (ввод)
@@ -11,9 +11,9 @@ f_allocate_heap:
 
   ; Проверка корректности выделения памяти
   test rax, rax
-  check_error js, HEAP_ALLOCATION_ERROR
+  check_error js, "Ошибка аллокации"
 
-  mov rbx, [PAGE_SIZE]                    ; Запись размера кучи
+  mov rbx, PAGE_SIZE                    ; Запись размера кучи
   sub rbx, HEAP_BLOCK_HEADER*8            ; Учёт размера заголовка блока
 
   mem_mov [rax + 8*0], HEAP_BLOCK ; Идентификатор
@@ -27,8 +27,8 @@ f_allocate_heap:
 
     ; Если куча аллоцирована впервые
     mov rbx, rax
-    add rbx, [PAGE_SIZE]             ; Смещение на размер страницы памяти
-    mov [HEAP_END], rbx              ; Сохранение указателя на конец кучи
+    add rbx, PAGE_SIZE  ; Смещение на размер страницы памяти
+    mov [HEAP_END], rbx ; Сохранение указателя на конец кучи
 
     jmp @f
 

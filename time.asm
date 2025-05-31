@@ -3,7 +3,6 @@
 
 include "core/korsakov.asm"
 
-section "start" executable
 start:
   create_block 2*8
   mov rbx, rax

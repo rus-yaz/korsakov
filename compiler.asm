@@ -1,8 +1,6 @@
 ; Копирайт © 2025 ООО «РУС.ЯЗ»
 ; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
 
-section "compiler" executable
-
 macro compiler ast*, context* {
   debug_start "compiler"
   enter ast, context
