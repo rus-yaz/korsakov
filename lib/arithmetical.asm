@@ -17,7 +17,30 @@ f_addition:
       integer_add rbx, rcx
       ret
     @@:
+
+    cmp r8, FLOAT
+    jne @f
+      integer_to_float rbx
+      float_add rax, rcx
+      ret
+    @@:
   .not_integer:
+
+  cmp rdx, FLOAT
+  jne .not_float
+    cmp r8, FLOAT
+    jne @f
+      float_add rbx, rcx
+      ret
+    @@:
+
+    cmp r8, INTEGER
+    jne @f
+      integer_to_float rcx
+      float_add rbx, rax
+      ret
+    @@:
+  .not_float:
 
   cmp rdx, LIST
   jne .not_list
@@ -65,7 +88,30 @@ f_subtraction:
       integer_sub rbx, rcx
       ret
     @@:
+
+    cmp r8, FLOAT
+    jne @f
+      integer_to_float rbx
+      float_sub rax, rcx
+      ret
+    @@:
   .not_integer:
+
+  cmp rdx, FLOAT
+  jne .not_float
+    cmp r8, FLOAT
+    jne @f
+      float_sub rbx, rcx
+      ret
+    @@:
+
+    cmp r8, INTEGER
+    jne @f
+      integer_to_float rcx
+      float_sub rbx, rax
+      ret
+    @@:
+  .not_float:
 
   string "Операция вычитания не может быть проведена между типами"
   mov rbx, rax
@@ -96,6 +142,13 @@ f_multiplication:
       ret
     @@:
 
+    cmp r8, FLOAT
+    jne @f
+      integer_to_float rbx
+      float_mul rax, rcx
+      ret
+    @@:
+
     cmp r8, STRING
     jne @f
       string_mul rcx, rbx
@@ -108,6 +161,22 @@ f_multiplication:
       ret
     @@:
   .not_integer:
+
+  cmp rdx, FLOAT
+  jne .not_float
+    cmp r8, FLOAT
+    jne @f
+      float_mul rbx, rcx
+      ret
+    @@:
+
+    cmp r8, INTEGER
+    jne @f
+      integer_to_float rcx
+      float_mul rbx, rax
+      ret
+    @@:
+  .not_float:
 
   cmp rdx, STRING
   jne .not_string
@@ -160,7 +229,30 @@ f_division:
       integer_div rbx, rcx
       ret
     @@:
+
+    cmp r8, FLOAT
+    jne @f
+      integer_to_float rbx
+      float_div rax, rcx
+      ret
+    @@:
   .not_integer:
+
+  cmp rdx, FLOAT
+  jne .not_float
+    cmp r8, FLOAT
+    jne @f
+      float_div rbx, rcx
+      ret
+    @@:
+
+    cmp r8, INTEGER
+    jne @f
+      integer_to_float rcx
+      integer_div rbx, rax
+      ret
+    @@:
+  .not_float:
 
   string "Операция деления не может быть проведена между типами"
   mov rbx, rax

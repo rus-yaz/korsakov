@@ -24,6 +24,7 @@ section "data" writable
   define NULL_HEADER       1
   define BOOLEAN_HEADER    1
   define INTEGER_HEADER    1
+  define FLOAT_HEADER      1
   define BINARY_HEADER     2
   define COLLECTION_HEADER 4
   define LIST_HEADER       4
@@ -36,6 +37,7 @@ section "data" writable
   ; Полные размеры типа (для неизменяемых по длине)
   define NULL_SIZE    1
   define INTEGER_SIZE 2
+  define FLOAT_SIZE   2
   define BOOLEAN_SIZE 2
   define FILE_SIZE    4
 
@@ -66,6 +68,9 @@ section "data" writable
 
   RANDOM_SEED  rq 1
 
+  EULER_NUMBER rq 1
+  E rq 1
+
 include "./debug.asm"
 include "./macro.asm"
 include "./syscalls_amd64.asm"
@@ -93,6 +98,10 @@ _start:
 
   allocate_heap
   reset_seed
+
+  float 2.718281828459045
+  mov [E], rax
+  mov [EULER_NUMBER], rax
 
   mov rcx, [rbp] ; Количество переданных аргументов
   integer rcx

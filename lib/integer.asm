@@ -183,3 +183,14 @@ f_integer_div:
 
   integer rax
   ret
+
+f_float_to_integer:
+  get_arg 0
+  check_type rax, FLOAT
+
+  cvttsd2si rbx, [rax + FLOAT_HEADER*8]
+
+  integer 0
+  mov [rax + INTEGER_HEADER*8], rbx
+
+  ret

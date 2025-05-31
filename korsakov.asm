@@ -129,7 +129,8 @@ section "data" writable
   УЗЕЛ_ЕСЛИ                           rq 1
   УЗЕЛ_НУЛЬ                           rq 1
   УЗЕЛ_ПОКА                           rq 1
-  УЗЕЛ_ЧИСЛА                          rq 1
+  УЗЕЛ_ЦЕЛОГО_ЧИСЛА                   rq 1
+  УЗЕЛ_ВЕЩЕСТВЕННОГО_ЧИСЛА            rq 1
   УЗЕЛ_ВЫЗОВА                         rq 1
   УЗЕЛ_КЛАССА                         rq 1
   УЗЕЛ_МЕТОДА                         rq 1
@@ -548,7 +549,10 @@ start:
   mov [УЗЕЛ_ПОКА], rax
   integer_copy rax
   integer_inc rax
-  mov [УЗЕЛ_ЧИСЛА], rax
+  mov [УЗЕЛ_ЦЕЛОГО_ЧИСЛА], rax
+  integer_copy rax
+  integer_inc rax
+  mov [УЗЕЛ_ВЕЩЕСТВЕННОГО_ЧИСЛА], rax
   integer_copy rax
   integer_inc rax
   mov [УЗЕЛ_ВЫЗОВА], rax

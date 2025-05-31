@@ -103,14 +103,24 @@ macro interpret_null node*, context* {
   debug_end "interpret_null"
 }
 
-macro interpret_number node*, context* {
-  debug_start "interpret_number"
+macro interpret_integer node*, context* {
+  debug_start "interpret_integer"
   enter node, context
 
-  call f_interpret_number
+  call f_interpret_integer
 
   return
-  debug_end "interpret_number"
+  debug_end "interpret_integer"
+}
+
+macro interpret_float node*, context* {
+  debug_start "interpret_float"
+  enter node, context
+
+  call f_interpret_float
+
+  return
+  debug_end "interpret_float"
 }
 
 macro interpret_list node*, context* {
@@ -312,12 +322,19 @@ f_interpret:
     ret
   .not_null:
 
-  check_node_type rbx, [УЗЕЛ_ЧИСЛА]
+  check_node_type rbx, [УЗЕЛ_ЦЕЛОГО_ЧИСЛА]
   cmp rax, 1
-  jne .not_number
-    interpret_number rcx, rbx
+  jne .not_integer
+    interpret_integer rcx, rbx
     ret
-  .not_number:
+  .not_integer:
+
+  check_node_type rbx, [УЗЕЛ_ВЕЩЕСТВЕННОГО_ЧИСЛА]
+  cmp rax, 1
+  jne .not_float
+    interpret_float rcx, rbx
+    ret
+  .not_float:
 
   check_node_type rbx, [УЗЕЛ_СПИСКА]
   cmp rax, 1
@@ -858,7 +875,7 @@ f_interpret_null:
   null
   ret
 
-f_interpret_number:
+f_interpret_integer:
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -886,6 +903,36 @@ f_interpret_number:
   string "значение"
   dictionary_get_link rcx, rax
   string_to_integer rax
+  ret
+
+f_interpret_float:
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
+
+  string "значение"
+  dictionary_get_link rcx, rax
+  mov rcx, rax
+
+  string "тип"
+  dictionary_get_link rcx, rax
+  is_equal rax, [ТИП_ВЕЩЕСТВЕННОЕ_ЧИСЛО]
+  boolean_value rax
+  cmp rax, 1
+  je .correct_value
+    string "Ожидалось вещественное число"
+    mov rbx, rax
+    list
+    list_append_link rax, rbx
+    error rax
+    exit -1
+
+  .correct_value:
+
+  string "значение"
+  dictionary_get_link rcx, rax
+  string_to_float rax
   ret
 
 f_interpret_list:

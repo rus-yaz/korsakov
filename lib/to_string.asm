@@ -61,6 +61,89 @@ f_to_string:
 
   .not_integer:
 
+  cmp rbx, FLOAT
+  jne .not_float
+
+    pushsd 0, 1, 2, 3
+
+    movsd xmm0, [rax + FLOAT_HEADER*8]
+    cvttsd2si rcx, xmm0
+
+    string ""
+    mov rbx, rax
+
+    raw_float 10.0
+    movsd xmm2, [rax]
+
+    raw_float 0.0
+    movsd xmm3, [rax]
+
+    comisd xmm0, xmm3
+    jae .skip_minus
+
+    raw_float -1.0
+    comisd xmm0, [rax]
+    jna .skip_minus
+
+      string "-"
+      string_extend_links rbx, rax
+
+    .skip_minus:
+
+    cvtsi2sd xmm1, rcx
+    subsd xmm0, xmm1
+
+    integer rcx
+    to_string rax
+    string_extend_links rbx, rax
+
+    string ","
+    string_extend_links rbx, rax
+
+    ucomisd xmm0, xmm3
+    jne .not_empty_mantissa
+      string "0"
+      string_extend_links rbx, rax
+
+      jmp .end
+    .not_empty_mantissa:
+
+    integer 0
+    mov rdx, rax
+    @@:
+      ucomisd xmm0, xmm3
+      je .end
+
+      mulsd xmm0, xmm2
+      cvttsd2si rax, xmm0
+
+      cvtsi2sd xmm1, rax
+      subsd xmm0, xmm1
+
+      integer rax
+      mov rcx, rax
+
+      is_greater rcx, rdx
+      boolean_value rax
+      cmp rax, 1
+      je .positive
+        integer_neg rcx
+        mov rcx, rax
+      .positive:
+
+      to_string rcx
+      string_extend_links rbx, rax
+
+      jmp @b
+    .end:
+
+    popsd 3, 2, 1, 0
+
+    mov rax, rbx
+    ret
+
+  .not_float:
+
   cmp rbx, BOOLEAN
   jne .not_boolean
     mov rax, [rax + BOOLEAN_HEADER*8]

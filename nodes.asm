@@ -53,10 +53,18 @@ macro null_node {
   return
 }
 
-macro number_node token* {
+macro integer_node token* {
   enter token
 
-  call f_number_node
+  call f_integer_node
+
+  return
+}
+
+macro float_node token* {
+  enter token
+
+  call f_float_node
 
   return
 }
@@ -160,7 +168,7 @@ macro delete_node variable* {
 macro include_node path* {
   enter path
 
-  call f_delete_node
+  call f_include_node
 
   return
 }
@@ -260,11 +268,21 @@ f_null_node:
 
   ret
 
-f_number_node:
+f_integer_node:
   dictionary
   mov rbx, rax
 
-  dictionary_set_link rbx, [узел], [УЗЕЛ_ЧИСЛА]
+  dictionary_set_link rbx, [узел], [УЗЕЛ_ЦЕЛОГО_ЧИСЛА]
+  get_arg 0
+  dictionary_set_link rbx, [значение], rax
+
+  ret
+
+f_float_node:
+  dictionary
+  mov rbx, rax
+
+  dictionary_set_link rbx, [узел], [УЗЕЛ_ВЕЩЕСТВЕННОГО_ЧИСЛА]
   get_arg 0
   dictionary_set_link rbx, [значение], rax
 

@@ -100,11 +100,32 @@ f_tokenizer:
 
     .not_newline:
 
+    string ","
+    is_equal [токен], rax
+    boolean_value rax
+    cmp rax, 1
+    jne .not_comma
+
+      string "Символ `,` может быть использован только в вещественных числах"
+      mov rbx, rax
+      list
+      list_append_link rax, rbx
+      error rax
+      exit -1
+
+    .not_comma:
+
     is_digit [токен]
     cmp rax, 1
     jne .not_digit
 
-      .while_digit:
+      integer_copy [ТИП_ЦЕЛОЕ_ЧИСЛО]
+      mov [тип_токена], rax
+
+      mov rcx, 0
+      mov rdx, 0
+
+      .while_number:
         integer 1
         integer_add [индекс], rax
 
@@ -117,21 +138,56 @@ f_tokenizer:
         cmp rax, 1
         jne .not_divider
           integer_inc [индекс]
-          jmp .while_digit
+          jmp .while_number
         .not_divider:
+
+        string ","
+        is_equal rbx, rax
+        boolean_value rax
+        cmp rax, 1
+        jne .not_float
+
+          cmp rcx, 0
+          je .correct_float_divider
+            string "Некорректное выражение: вторая запятая в вещественном числе"
+            mov rbx, rax
+            list
+            list_append_link rax, rbx
+            error rax
+            exit -1
+          .correct_float_divider:
+
+          integer_copy [ТИП_ВЕЩЕСТВЕННОЕ_ЧИСЛО]
+          mov [тип_токена], rax
+
+          mov rcx, 1
+          jmp .next_token
+
+        .not_float:
 
         is_digit rbx
         cmp rax, 1
-        jne .end_while_digit
+        jne .end_while_number
+
+        mov rdx, rcx
+
+        .next_token:
 
         string_extend_links [токен], rbx
         integer_inc [индекс]
-        jmp .while_digit
+        jmp .while_number
 
-      .end_while_digit:
+      .end_while_number:
 
-      integer_copy [ТИП_ЦЕЛОЕ_ЧИСЛО]
-      mov [тип_токена], rax
+      cmp rdx, rcx
+      je .correct_value
+        string "Незавершённое вещественное число"
+        mov rbx, rax
+        list
+        list_append_link rax, rbx
+        error rax
+        exit -1
+      .correct_value:
 
       jmp .write_token
 

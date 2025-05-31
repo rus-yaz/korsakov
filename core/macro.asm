@@ -7,8 +7,18 @@ macro push [arg] {
   push arg
 }
 
+macro pushsd [arg] {
+  sub rsp, 8
+  movsd [rsp], xmm#arg
+}
+
 macro pop [arg] {
   pop arg
+}
+
+macro popsd [arg] {
+  movsd xmm#arg, [rsp]
+  add rsp, 8
 }
 
 macro enter [arg] {
@@ -75,6 +85,15 @@ macro mem_mov dst*, src* {
   pop r15
 }
 
+macro mem_movsd dst*, src* {
+  pushsd 0
+
+  movsd xmm0, src
+  movsd dst, xmm0
+
+  popsd 0
+}
+
 macro exit code*, buffer = 0 {
   if buffer eq 0
   else
@@ -108,6 +127,19 @@ macro binary_string str {
 macro string str {
   raw_string <str>
   buffer_to_string rax
+}
+
+macro raw_float value = 0f {
+  jmp @f
+    a = $
+    dq value
+  @@:
+  mov rax, a
+}
+
+macro float value {
+  raw_float value
+  buffer_to_float rax
 }
 
 macro init [module_name] {
@@ -702,6 +734,80 @@ macro integer_div int_1*, int_2* {
   enter int_1, int_2
 
   call f_integer_div
+
+  return
+}
+
+macro float_to_integer float {
+  enter float
+
+  call f_float_to_integer
+
+  return
+}
+
+section "float" executable
+
+macro buffer_to_float buffer {
+  enter buffer
+
+  call f_buffer_to_float
+
+  return
+}
+
+macro float_copy float {
+  enter float
+
+  call f_float_copy
+
+  return
+}
+
+macro float_add float_1, float_2 {
+  enter float_1, float_2
+
+  call f_float_add
+
+  return
+}
+
+macro float_sub float_1, float_2 {
+  enter float_1, float_2
+
+  call f_float_sub
+
+  return
+}
+
+macro float_mul float_1, float_2 {
+  enter float_1, float_2
+
+  call f_float_mul
+
+  return
+}
+
+macro float_div float_1, float_2 {
+  enter float_1, float_2
+
+  call f_float_div
+
+  return
+}
+
+macro integer_to_float integer {
+  enter integer
+
+  call f_integer_to_float
+
+  return
+}
+
+macro string_to_float string {
+  enter string
+
+  call f_string_to_float
 
   return
 }
@@ -1468,6 +1574,32 @@ macro input string = 0 {
   enter string
 
   call f_input
+
+  return
+}
+
+section "math" executable
+
+macro factorial integer* {
+  enter integer
+
+  call f_factorial
+
+  return
+}
+
+macro euler_power_taylor exponent* {
+  enter exponent
+
+  call f_euler_power_taylor
+
+  return
+}
+
+macro euler_power exponent* {
+  enter exponent
+
+  call f_euler_power
 
   return
 }

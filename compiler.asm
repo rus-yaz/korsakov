@@ -83,14 +83,24 @@ macro compile_null node*, context* {
   debug_end "compile_null"
 }
 
-macro compile_number node*, context* {
-  debug_start "compile_number"
+macro compile_integer node*, context* {
+  debug_start "compile_integer"
   enter node, context
 
-  call f_compile_number
+  call f_compile_integer
 
   return
-  debug_end "compile_number"
+  debug_end "compile_integer"
+}
+
+macro compile_float node*, context* {
+  debug_start "compile_float"
+  enter node, context
+
+  call f_compile_float
+
+  return
+  debug_end "compile_float"
 }
 
 macro compile_list node*, context* {
@@ -292,12 +302,19 @@ f_compile:
     ret
   .not_null:
 
-  check_node_type rcx, [УЗЕЛ_ЧИСЛА]
+  check_node_type rcx, [УЗЕЛ_ЦЕЛОГО_ЧИСЛА]
   cmp rax, 1
-  jne .not_number
-    compile_number rbx, rcx
+  jne .not_integer
+    compile_integer rbx, rcx
     ret
-  .not_number:
+  .not_integer:
+
+  check_node_type rcx, [УЗЕЛ_ВЕЩЕСТВЕННОГО_ЧИСЛА]
+  cmp rax, 1
+  jne .not_float
+    compile_float rbx, rcx
+    ret
+  .not_float:
 
   check_node_type rcx, [УЗЕЛ_СПИСКА]
   cmp rax, 1
@@ -822,7 +839,7 @@ f_compile_null:
   mov rax, rdx
   ret
 
-f_compile_number:
+f_compile_integer:
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -856,6 +873,54 @@ f_compile_number:
 
   string "integer "
   string_extend_links rax, rcx
+  list_append_link rdx, rax
+
+  mov rax, rdx
+  ret
+
+f_compile_float:
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
+
+  list
+  mov rdx, rax
+
+  string "значение"
+  dictionary_get_link rcx, rax
+  mov rcx, rax
+
+  string "тип"
+  dictionary_get_link rcx, rax
+  is_equal rax, [ТИП_ВЕЩЕСТВЕННОЕ_ЧИСЛО]
+  boolean_value rax
+  cmp rax, 1
+  je .correct_value
+    string "Ожидалось вещественное число"
+    mov rbx, rax
+    list
+    list_append_link rax, rbx
+    error rax
+    exit -1
+
+  .correct_value:
+
+  string "значение"
+  dictionary_get_link rcx, rax
+  mov rcx, rax
+
+  string "float "
+  mov r8, rax
+
+  string ","
+  split_links rcx, rax
+  mov r9, rax
+
+  string "."
+  join_links r9, rax
+
+  string_extend_links r8, rax
   list_append_link rdx, rax
 
   mov rax, rdx

@@ -26,6 +26,17 @@ f_boolean:
 
   .not_integer:
 
+  cmp rax, FLOAT
+  jne .not_float
+    movsd xmm0, [rbx + FLOAT_HEADER*8]
+    movq rax, xmm0
+    cmp rax, 0
+
+    je .false
+    jmp .true
+
+  .not_float:
+
   cmp rax, BOOLEAN
   jne .not_boolean
     mov rax, [rbx + BOOLEAN_HEADER*8]

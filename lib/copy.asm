@@ -17,6 +17,12 @@ f_copy:
     ret
   .not_integer:
 
+  cmp rbx, FLOAT
+  jne .not_float
+    float_copy rax
+    ret
+  .not_float:
+
   cmp rbx, BOOLEAN
   jne .not_boolean
     boolean_copy rax

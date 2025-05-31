@@ -161,6 +161,12 @@ f_type_full_size:
     ret
   .not_integer:
 
+  cmp rax, FLOAT
+  jne .not_float
+    mov rax, FLOAT_SIZE
+    ret
+  .not_float:
+
   cmp rax, BOOLEAN
   jne .not_boolean
     mov rax, BOOLEAN_SIZE

@@ -701,18 +701,25 @@ f_atom:
   dictionary_copy [токен]
   mov rbx, rax
 
-  list
-  list_append_link rax, [ТИП_ЦЕЛОЕ_ЧИСЛО]
-  list_append_link rax, [ТИП_ВЕЩЕСТВЕННОЕ_ЧИСЛО]
-  token_check_type rbx, rax
+  token_check_type rbx, [ТИП_ЦЕЛОЕ_ЧИСЛО]
   cmp rax, 1
-  jne .not_number
+  jne .not_integer
     next
 
-    number_node rbx
+    integer_node rbx
     ret
 
-  .not_number:
+  .not_integer:
+
+  token_check_type rbx, [ТИП_ВЕЩЕСТВЕННОЕ_ЧИСЛО]
+  cmp rax, 1
+  jne .not_float
+    next
+
+    float_node rbx
+    ret
+
+  .not_float:
 
   token_check_type rbx, [ТИП_СТРОКА]
   cmp rax, 1
