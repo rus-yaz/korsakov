@@ -210,7 +210,7 @@ macro mem_copy source*, destination*, size* {
 macro check_error operation*, message* {
   push rax
 
-  raw_string message
+  raw_string <message, 10>
   operation f_check_error
 
   pop rax

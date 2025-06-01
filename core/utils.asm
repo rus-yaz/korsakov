@@ -55,7 +55,6 @@ f_mem_copy:
   ret
 
 f_check_error:
-  get_arg 0
   error_raw rax
   exit -1
 

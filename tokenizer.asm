@@ -202,6 +202,10 @@ f_tokenizer:
         cmp rax, 1
         je .continue_identifier
 
+        is_digit rbx
+        cmp rax, 1
+        je .continue_identifier
+
         string "_"
         is_equal rbx, rax
         boolean_value rax
