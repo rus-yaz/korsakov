@@ -99,12 +99,31 @@ f_float_div:
 
   movsd xmm0, [rbx + FLOAT_HEADER*8]
   movsd xmm1, [rcx + FLOAT_HEADER*8]
-  divsd xmm1, xmm0
+  divsd xmm0, xmm1
 
   float
-  movsd [rax + FLOAT_HEADER*8], xmm1
+  movsd [rax + FLOAT_HEADER*8], xmm0
 
   popsd 1, 0
+
+  ret
+
+f_float_neg:
+  get_arg 0
+  check_type rax, FLOAT
+
+  pushsd 0
+
+  movsd xmm0, [rax + FLOAT_HEADER * 8]
+  raw_float -1.0
+
+  movsd xmm1, [rax]
+  mulsd xmm0, xmm1
+
+  float
+  movsd [rax + FLOAT_HEADER*8], xmm0
+
+  popsd 0
 
   ret
 

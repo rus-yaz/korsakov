@@ -782,9 +782,10 @@ f_atom:
     list
     mov rcx, rax
 
-    token_check_type [токен], [ТИП_ТОЧКА]
-    cmp rax, 1
-    jne .end_while
+    .while:
+      token_check_type [токен], [ТИП_ТОЧКА]
+      cmp rax, 1
+      jne .end_while
       next
 
       list
@@ -847,6 +848,7 @@ f_atom:
       .add_key:
 
       list_append_link rcx, rax
+      jmp .while
 
     .end_while:
 
@@ -983,7 +985,7 @@ f_atom:
 
     @@:
 
-    string "atom: Ожидались:"
+    string "atom: Ожидались: "
     mov rcx, rax
 
     list

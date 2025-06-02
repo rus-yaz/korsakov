@@ -662,7 +662,7 @@ f_compile_unary_operation:
   cmp rax, 1
   jne .not_negate
 
-    add_code "integer_neg rax"
+    add_code "negate rax"
     jmp .continue
 
   .not_negate:

@@ -64,6 +64,11 @@ f_addition:
   mov rbx, rax
   string "и"
   mov rcx, rax
+  type_to_string rdx
+  mov rdx, rax
+  type_to_string r8
+  mov r8, rax
+
   list
   list_append_link rax, rbx
   list_append_link rax, rdx
@@ -117,6 +122,11 @@ f_subtraction:
   mov rbx, rax
   string "и"
   mov rcx, rax
+  type_to_string rdx
+  mov rdx, rax
+  type_to_string r8
+  mov r8, rax
+
   list
   list_append_link rax, rbx
   list_append_link rax, rdx
@@ -198,13 +208,13 @@ f_multiplication:
 
   string "Операция умножения не может быть проведена между типами"
   mov rbx, rax
+  string "и"
+  mov rcx, rax
   type_to_string rdx
   mov rdx, rax
   type_to_string r8
   mov r8, rax
 
-  string "и"
-  mov rcx, rax
   list
   list_append_link rax, rbx
   list_append_link rax, rdx
@@ -214,9 +224,9 @@ f_multiplication:
   exit -1
 
 f_division:
-  get_arg 1
-  mov rbx, rax
   get_arg 0
+  mov rbx, rax
+  get_arg 1
   mov rcx, rax
 
   mov rdx, [rbx]
@@ -249,7 +259,7 @@ f_division:
     cmp r8, INTEGER
     jne @f
       integer_to_float rcx
-      integer_div rbx, rax
+      float_div rbx, rax
       ret
     @@:
   .not_float:
@@ -258,6 +268,11 @@ f_division:
   mov rbx, rax
   string "и"
   mov rcx, rax
+  type_to_string rdx
+  mov rdx, rax
+  type_to_string r8
+  mov r8, rax
+
   list
   list_append_link rax, rbx
   list_append_link rax, rdx
@@ -266,6 +281,30 @@ f_division:
   error rax
   exit -1
 
-  .continue:
+f_negate:
+  get_arg 0
 
-  ret
+  mov rbx, [rax]
+  cmp rbx, INTEGER
+  jne @f
+    integer_neg rax
+    ret
+  @@:
+
+  mov rbx, [rax]
+  cmp rbx, FLOAT
+  jne @f
+    float_neg rax
+    ret
+  @@:
+
+  string "Операция негативизации не может быть проведена над типом "
+  mov rbx, rax
+  type_to_string rdx
+  mov rcx, rax
+
+  list
+  list_append_link rax, rbx
+  list_append_link rax, rcx
+  error rax
+  exit -1

@@ -634,7 +634,7 @@ f_interpret_unary_operation:
   cmp rax, 1
   jne .not_negate
     interpret rdx, rbx
-    integer_neg rax
+    negate rax
     ret
   .not_negate:
 

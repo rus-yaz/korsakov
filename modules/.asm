@@ -19,7 +19,6 @@ macro init_ {
   mov rcx, rax
   list
   assign rbx, rax, rcx
-  mov rcx, rax
 
   arguments "аргументы*", "разделитель", "конец_строки"
   mov rdx, rax
@@ -41,7 +40,6 @@ macro init_ {
   mov rcx, rax
   list
   assign rbx, rax, rcx
-  mov rcx, rax
 
   arguments "строка"
   mov rdx, rax
@@ -55,7 +53,6 @@ macro init_ {
   mov rcx, rax
   list
   assign rbx, rax, rcx
-  mov rcx, rax
 
   arguments "список*", "объединитель"
   mov rdx, rax
@@ -73,7 +70,6 @@ macro init_ {
   mov rcx, rax
   list
   assign rbx, rax, rcx
-  mov rcx, rax
 
   arguments "строка", "разделитель", "количество_частей"
   mov rdx, rax
@@ -95,7 +91,6 @@ macro init_ {
   mov rcx, rax
   list
   assign rbx, rax, rcx
-  mov rcx, rax
 
   arguments "нижний_порог", "верхний порог"
   mov rdx, rax
@@ -123,7 +118,6 @@ macro init_ {
   mov rcx, rax
   list
   assign rbx, rax, rcx
-  mov rcx, rax
 
   arguments "нижний_порог", "верхний порог"
   mov rdx, rax
@@ -151,7 +145,6 @@ macro init_ {
   mov rcx, rax
   list
   assign rbx, rax, rcx
-  mov rcx, rax
 
   arguments "семя"
   mov rdx, rax
@@ -165,7 +158,6 @@ macro init_ {
   mov rcx, rax
   list
   assign rbx, rax, rcx
-  mov rcx, rax
 
   list
   mov rdx, rax
@@ -179,5 +171,44 @@ macro init_ {
   mov rcx, rax
   list
   assign rbx, rax, rcx
+
+  arguments "число"
+  mov rdx, rax
+
+  dictionary
   mov rcx, rax
+
+  string "факториал"
+  mov rbx, rax
+  function rbx, f_factorial, rdx, rcx, 0, 1
+  mov rcx, rax
+  list
+  assign rbx, rax, rcx
+
+
+  arguments "степень"
+  mov rdx, rax
+
+  dictionary
+  mov rcx, rax
+
+  string "степень_эйлера_тейлор"
+  mov rbx, rax
+  function rbx, f_euler_power_taylor, rdx, rcx, 0, 1
+  mov rcx, rax
+  list
+  assign rbx, rax, rcx
+
+  arguments "степень"
+  mov rdx, rax
+
+  dictionary
+  mov rcx, rax
+
+  string "степень_эйлера"
+  mov rbx, rax
+  function rbx, f_euler_power, rdx, rcx, 0, 1
+  mov rcx, rax
+  list
+  assign rbx, rax, rcx
 }

@@ -61,14 +61,15 @@ f_euler_power_taylor:
 
   mov r10, 0
 
-  cvttsd2si rax, [rbx + FLOAT_HEADER*8]
-  cmp rax, 0
-  jge @f
+  movsd xmm0, [rbx + FLOAT_HEADER*8]
+  raw_float 0.0
+
+  comisd xmm0, [rax]
+  jae .above_zero
     mov r10, 1
-    float 0
-    float_sub rax, rbx
+    float_neg rbx
     mov rbx, rax
-  @@:
+  .above_zero:
 
   movsd xmm5, [rbx + FLOAT_HEADER*8]
   cvttsd2si rbx, xmm5

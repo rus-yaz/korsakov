@@ -7,6 +7,24 @@ f_is_equal:
   get_arg 1
   mov rcx, rax
 
+  cmp rdx, FLOAT
+  jne @f
+  cmp r8, INTEGER
+  jne @f
+    float_to_integer rbx
+    mov rbx, rax
+    mov rdx, [rax]
+  @@:
+
+  cmp r8, FLOAT
+  jne @f
+  cmp rdx, INTEGER
+  jne @f
+    float_to_integer rcx
+    mov rcx, rax
+    mov r8, [rax]
+  @@:
+
   mov rdx, [rbx]
   mov rax, [rcx]
   cmp rdx, rax
@@ -23,10 +41,21 @@ f_is_equal:
 
     cmp rbx, rcx
     je .return_true
-
     jmp .return_false
 
   .not_integer:
+
+  mov rdx, FLOAT
+  cmp rax, rdx
+  jne .not_float
+    movsd xmm0, [rbx + FLOAT_HEADER*8]
+    movsd xmm1, [rcx + FLOAT_HEADER*8]
+
+    comisd xmm0, xmm1
+    je .return_true
+    jmp .return_false
+
+  .not_float:
 
   mov rdx, BOOLEAN
   cmp rax, rdx
@@ -36,7 +65,6 @@ f_is_equal:
 
     cmp rbx, rcx
     je .return_true
-
     jmp .return_false
 
   .not_boolean:
@@ -138,7 +166,6 @@ f_is_equal:
 
   .not_dictionary:
 
-  ; Выход с ошибкой при неизвестном типе
   string "is_equal: Ожидался тип"
   mov r8, rax
 
@@ -146,6 +173,8 @@ f_is_equal:
   mov rdx, rax
 
   type_to_string INTEGER
+  list_append rdx, rax
+  type_to_string FLOAT
   list_append rdx, rax
   type_to_string BOOLEAN
   list_append rdx, rax
@@ -192,11 +221,27 @@ f_is_lower:
   get_arg 1
   mov rcx, rax
 
-  ; Сохранение типов
   mov rdx, [rbx]
-  mov r8, [rcx]
+  mov r8,  [rcx]
 
-  ; Сравнение типов
+  cmp rdx, FLOAT
+  jne @f
+  cmp r8, INTEGER
+  jne @f
+    float_to_integer rbx
+    mov rbx, rax
+    mov rdx, [rax]
+  @@:
+
+  cmp r8, FLOAT
+  jne @f
+  cmp rdx, INTEGER
+  jne @f
+    float_to_integer rcx
+    mov rcx, rax
+    mov r8, [rax]
+  @@:
+
   cmp rdx, r8
   jne .incorrect_type
 
@@ -211,17 +256,38 @@ f_is_lower:
 
   .not_integer:
 
+  cmp rdx, FLOAT
+  jne .not_float
+    movsd xmm0, [rbx + FLOAT_HEADER*8]
+    movsd xmm1, [rcx + FLOAT_HEADER*8]
+
+    comisd xmm0, xmm1
+    jb .return_true
+    jmp .return_false
+
+  .not_float:
+
   .incorrect_type:
 
-  string "Ожидался тип"
+  list
   mov rbx, rax
-  type_to_string INTEGER
-  mov rcx, rax
+
+  string "is_lower: Ожидался тип"
+  list_append_link rbx, rax
 
   list
-  list_append_link rax, rbx
-  list_append_link rax, rcx
-  error rax
+  mov rcx, rax
+
+  type_to_string INTEGER
+  list_append_link rcx, rax
+  type_to_string FLOAT
+  list_append_link rcx, rax
+
+  string ", "
+  join rcx, rax
+  list_append_link rbx, rax
+
+  error rbx
   exit -1
 
   .return_true:
@@ -238,11 +304,27 @@ f_is_greater:
   get_arg 1
   mov rcx, rax
 
-  ; Сохранение типов
   mov rdx, [rbx]
   mov r8, [rcx]
 
-  ; Сравнение типов
+  cmp rdx, FLOAT
+  jne @f
+  cmp r8, INTEGER
+  jne @f
+    float_to_integer rbx
+    mov rbx, rax
+    mov rdx, [rax]
+  @@:
+
+  cmp r8, FLOAT
+  jne @f
+  cmp rdx, INTEGER
+  jne @f
+    float_to_integer rcx
+    mov rcx, rax
+    mov r8, [rax]
+  @@:
+
   cmp rdx, r8
   jne .incorrect_type
 
@@ -257,17 +339,38 @@ f_is_greater:
 
   .not_integer:
 
+  cmp rdx, FLOAT
+  jne .not_float
+    movsd xmm0, [rbx + FLOAT_HEADER*8]
+    movsd xmm1, [rcx + FLOAT_HEADER*8]
+
+    comisd xmm0, xmm1
+    ja .return_true
+    jmp .return_false
+
+  .not_float:
+
   .incorrect_type:
 
-  string "Ожидался тип"
+  list
   mov rbx, rax
-  type_to_string INTEGER
-  mov rcx, rax
+
+  string "is_greater: Ожидался тип"
+  list_append_link rbx, rax
 
   list
-  list_append_link rax, rbx
-  list_append_link rax, rcx
-  error rax
+  mov rcx, rax
+
+  type_to_string INTEGER
+  list_append_link rcx, rax
+  type_to_string FLOAT
+  list_append_link rcx, rax
+
+  string ", "
+  join rcx, rax
+  list_append_link rbx, rax
+
+  error rbx
   exit -1
 
   .return_true:

@@ -179,10 +179,10 @@ f_integer_div:
   cvtsi2sd xmm0, [rax + INTEGER_HEADER*8]
   cvtsi2sd xmm1, [rbx + INTEGER_HEADER*8]
 
-  divsd xmm1, xmm0
+  divsd xmm0, xmm1
 
   float
-  movsd [rax + FLOAT_HEADER*8], xmm1
+  movsd [rax + FLOAT_HEADER*8], xmm0
 
   popsd 1, 0
 

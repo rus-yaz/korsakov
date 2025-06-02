@@ -280,6 +280,14 @@ macro division first*, second* {
   return
 }
 
+macro negate value* {
+  enter value
+
+  call f_negate
+
+  return
+}
+
 macro boolean value* {
   enter value
 
@@ -763,6 +771,14 @@ macro float_div float_1, float_2 {
   enter float_1, float_2
 
   call f_float_div
+
+  return
+}
+
+macro float_neg float {
+  enter float
+
+  call f_float_neg
 
   return
 }

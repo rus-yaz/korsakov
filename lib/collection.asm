@@ -173,11 +173,11 @@ f_collection_get_link:
   mov rdx, rax
 
   ; Если индекс меньше нуля, то увеличить его на длину списка
-  mov rcx, [rcx + 8*1]
+  mov rcx, [rcx + INTEGER_HEADER*8]
   cmp rcx, 0
-  jge .positive_index
+  jge @f
     add rcx, rdx
-  .positive_index:
+  @@:
 
   ; Проверка, входит ли индекс в список
   cmp rcx, rdx
