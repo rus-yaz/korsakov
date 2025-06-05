@@ -15,8 +15,8 @@
 #### Arch Linux (AUR)
 
 ```sh
-yay -S cassette        # С ключами в Pacman-стиле
-pamac install cassette # Pamac
+yay -S korsakov        # С ключами в Pacman-стиле
+pamac install korsakov # Pamac
 ```
 
 ### Установка из репозитория
