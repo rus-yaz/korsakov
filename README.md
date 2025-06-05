@@ -14,6 +14,16 @@
 
 #### Arch Linux (AUR)
 
+##### Ручная сборка
+
+```sh
+git clone https://aur.archlinux.org/packages/korsakov.git
+cd korsakov
+makepkg -si
+```
+
+##### Помощники
+
 ```sh
 yay -S korsakov        # С ключами в Pacman-стиле
 pamac install korsakov # Pamac
