@@ -16,14 +16,15 @@ f_collection:
   create_block rax ; Аллокация места для элементов
 
   mov rbx, rax
-  mov rcx, HEAP_BLOCK
+  mov ecx, HEAP_BLOCK
+  mov rdx, 0
 
   .while:
-    cmp [rbx], rcx
+    cmp [rbx], ecx
     je .end_while
 
-    mem_mov [rbx], 0
-    add rbx, 8
+    mov [rbx], edx
+    add rbx, 4
 
     jmp .while
 

@@ -6,8 +6,17 @@ f_delete:
   mov rbx, rax
 
   mov rcx, rbx
-  sub rcx, HEAP_BLOCK_HEADER*8
-  check_type rcx, HEAP_BLOCK
+  sub rcx, HEAP_BLOCK_HEADER*4
+
+  mov r8d, [rcx]
+  cmp r8d, HEAP_BLOCK
+  je .correct_block
+
+    raw_string "free_block: Ожидался блок кучи"
+    error_raw rax
+    exit -1
+
+  .correct_block:
 
   mov rcx, [rbx]
 
