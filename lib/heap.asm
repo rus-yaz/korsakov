@@ -3,7 +3,7 @@
 
 f_allocate_heap:
   sys_mmap 0,\                                  ; Адрес (если 0, находится автоматически)
-           PAGE_SIZE,\                        ; Количество памяти для аллокации
+           PAGE_SIZE,\                          ; Количество памяти для аллокации
            PROT_READ + PROT_WRITE + PROT_EXEC,\ ; Права (PROT_READ | PROT_WRITE)
            MAP_SHARED + MAP_ANONYMOUS,\         ; MAP_ANONYMOUS | MAP_PRIVATE
            0,\                                  ; Файл дескриптор (ввод)
@@ -13,7 +13,7 @@ f_allocate_heap:
   test rax, rax
   check_error js, "Ошибка аллокации"
 
-  mov rbx, PAGE_SIZE                    ; Запись размера кучи
+  mov rbx, PAGE_SIZE                      ; Запись размера кучи
   sub rbx, HEAP_BLOCK_HEADER*8            ; Учёт размера заголовка блока
 
   mem_mov [rax + 8*0], HEAP_BLOCK ; Идентификатор
@@ -41,7 +41,10 @@ f_allocate_heap:
   @@:
 
   mov [HEAP_START], rax            ; Сохранение указателя на начало кучи
-  mov [FIRST_FREE_HEAP_BLOCK], rax ; Сохранение указателя на первый свободный блок
+
+  mov rbx, [HEAP_END]
+  sub rbx, rax
+  mov [FIRST_FREE_HEAP_BLOCK], rbx ; Сохранение указателя на первый свободный блок
 
   ret
 
@@ -49,7 +52,10 @@ f_free_block:
   get_arg 0
   check_type rax, HEAP_BLOCK ; Проверка, что указатель ссылается на заголовок блока кучи
 
-  cmp [FIRST_FREE_HEAP_BLOCK], rax
+  mov r8, [HEAP_END]
+  sub r8, rax
+
+  cmp [FIRST_FREE_HEAP_BLOCK], r8
   jne @f
     ret
   @@:
@@ -64,19 +70,23 @@ f_free_block:
 
     cmp rcx, 0
     je @f
-      mem_mov [rcx + 8*4], rdx
+      mov r9, [HEAP_END]
+      sub r9, rcx
+      mem_mov [r9 + 8*4], rdx
     @@:
 
     cmp rdx, 0
     je @f
-      mem_mov [rdx + 8*3], rcx
+      mov r9, [HEAP_END]
+      sub r9, rdx
+      mem_mov [r9 + 8*3], rcx
     @@:
 
   .not_empty:
 
   ; Обновление указателя на первый свободный блок
   mov rbx, [FIRST_FREE_HEAP_BLOCK]
-  mov [FIRST_FREE_HEAP_BLOCK], rax
+  mov [FIRST_FREE_HEAP_BLOCK], r8
 
   ; Обновление нового первого свободного блока
   mem_mov [rax + 8*3], 0   ; Установка указателя на предыдущий свободный блок (0 — крайний блок)
@@ -85,7 +95,9 @@ f_free_block:
   ; Обновление предыдущего первого свободного блока
   cmp rbx, 0
   je @f
-    mem_mov [rbx + 8*3], rax ; Установка указателя на предыдущий свободный блок
+    mov r9, [HEAP_END]
+    sub r9, rbx
+    mem_mov [r9 + 8*3], r8 ; Установка указателя на предыдущий свободный блок
   @@:
 
   ret
@@ -114,15 +126,22 @@ f_merge_blocks:
 
   cmp rcx, 0
   je @f
-    mem_mov [rcx + 8*4], rdx
+    mov r8, [HEAP_END]
+    sub r8, rcx
+    mem_mov [r8 + 8*4], rdx
   @@:
 
   cmp rdx, 0
   je @f
-    mem_mov [rdx + 8*3], rcx
+    mov r8, [HEAP_END]
+    sub r8, rdx
+    mem_mov [r8 + 8*3], rcx
   @@:
 
-  cmp rbx, [FIRST_FREE_HEAP_BLOCK]
+  mov r8, [HEAP_END]
+  sub r8, rbx
+
+  cmp r8, [FIRST_FREE_HEAP_BLOCK]
   jne @f
     mov [FIRST_FREE_HEAP_BLOCK], rdx
   @@:
@@ -227,6 +246,10 @@ f_create_block:
 
     .next:
 
+    mov r9, [HEAP_END]
+    sub r9, rax
+
+    mov rax, r9
     check_type rax, HEAP_BLOCK ; Проверка, что проверямый указатель является блоком
 
     mov rbx, [rax + 8*2]         ; Взятие размера текущего блока
@@ -239,12 +262,16 @@ f_create_block:
 
       cmp rcx, 0
       je @f
-        mem_mov [rcx + 8*4], rdx
+        mov r9, [HEAP_END]
+        sub r9, rcx
+        mem_mov [r9 + 8*4], rdx
       @@:
 
       cmp rdx, 0
       je @f
-        mem_mov [rdx + 8*3], rcx
+        mov r9, [HEAP_END]
+        sub r9, rdx
+        mem_mov [r9 + 8*3], rcx
       @@:
 
       ; Установка статуса созданного блока на «занят»
@@ -289,21 +316,32 @@ f_create_block:
       mem_mov [rax + 8*3], 1
       mem_mov [rax + 8*4], 1
 
+      mov r10, [HEAP_END]
+      sub r10, rcx
+
       ; Перезапись ссылок в свободных блоках, на которые указывают ссылки
       mov rdx, [rcx + 8*3]
       cmp rdx, 0
       je @f
-        mov [rdx + 8*4], rcx
+        mov r9, [HEAP_END]
+        sub r9, rdx
+        mov [r9 + 8*4], r10
       @@:
+
       mov rdx, [rcx + 8*4]
       cmp rdx, 0
       je @f
-        mov [rdx + 8*3], rcx
+        mov r9, [HEAP_END]
+        sub r9, rdx
+        mov [r9 + 8*3], r10
       @@:
 
-      cmp [FIRST_FREE_HEAP_BLOCK], rax
+      mov r9, [HEAP_END]
+      sub r9, rax
+
+      cmp [FIRST_FREE_HEAP_BLOCK], r9
       jne @f
-        mov [FIRST_FREE_HEAP_BLOCK], rcx
+        mov [FIRST_FREE_HEAP_BLOCK], r10
       @@:
 
       jmp .continue

@@ -25,7 +25,7 @@ section "" writable
 section "" executable
 
 ; Типы данных
-define HEAP_BLOCK  0xFEDCBA9876543210
+define HEAP_BLOCK  "KORS"
 define NULL        0
 define INTEGER     1
 define FLOAT       2
