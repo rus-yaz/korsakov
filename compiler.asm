@@ -1124,16 +1124,10 @@ f_compile_if:
   list
   mov rdx, rax
 
-  string "СЧЁТЧИК_ЕСЛИ"
-  mov r8, rax
-  list
-  mov r9, rax
-  access r8, r9
+  mov rax, [СЧЁТЧИК_ЕСЛИ]
   integer_inc rax
 
-  assign r8, r9, rax
   mov r13, [rax + INTEGER_HEADER*8]
-
   mov r12, 0
 
   string "случаи"
@@ -1237,31 +1231,16 @@ f_compile_while:
   list
   mov rdx, rax
 
-  string "СЧЁТЧИК_ВЛОЖЕННОСТИ"
-  mov r8, rax
-  list
-  mov r9, rax
-  access r8, r9
+  mov rax, [СЧЁТЧИК_ВЛОЖЕННОСТИ]
   integer_inc rax
-  assign r8, r9, rax
 
-  string "СЧЁТЧИК_ЦИКЛОВ"
-  mov r8, rax
-  list
-  mov r9, rax
-  access r8, r9
-  integer_inc rax
-  assign r8, r9, rax
-
-  mov r13, rax
-
-  string "НОМЕР_ТЕКУЩЕГО_ЦИКЛА"
-  mov r8, rax
-  list
-  mov r9, rax
-  access r8, r9
+  copy [НОМЕР_ТЕКУЩЕГО_ЦИКЛА]
   mov r15, rax
-  assign r8, r9, r13
+
+  mov rax, [СЧЁТЧИК_ЦИКЛОВ]
+  integer_inc rax
+
+  mov [НОМЕР_ТЕКУЩЕГО_ЦИКЛА], rax
 
   mov r13, [rax + INTEGER_HEADER*8]
 
@@ -1340,21 +1319,12 @@ f_compile_while:
 
   add_code "pop rbx"
 
-  string "НОМЕР_ТЕКУЩЕГО_ЦИКЛА"
-  mov r8, rax
-  list
-  mov r9, rax
-  assign r8, r9, r15
+  mov [НОМЕР_ТЕКУЩЕГО_ЦИКЛА], r15
+  mov rax, [СЧЁТЧИК_ВЛОЖЕННОСТИ]
 
-  string "СЧЁТЧИК_ВЛОЖЕННОСТИ"
-  mov r8, rax
-  list
-  mov r9, rax
-  access r8, r9
   integer_dec rax
-  assign r8, r9, rax
-
   mov rax, rdx
+
   ret
 
 f_compile_for:
@@ -1366,34 +1336,17 @@ f_compile_for:
   list
   mov rdx, rax
 
-  string "СЧЁТЧИК_ВЛОЖЕННОСТИ"
-  mov r8, rax
-  list
-  mov r9, rax
-  access r8, r9
+  mov rax, [СЧЁТЧИК_ВЛОЖЕННОСТИ]
   integer_inc rax
-  assign r8, r9, rax
 
-  string "СЧЁТЧИК_ЦИКЛОВ"
-  mov r8, rax
-  list
-  mov r9, rax
-  access r8, r9
-  integer_inc rax
-  assign r8, r9, rax
-
-  mov r8, rax
-
-  string "НОМЕР_ТЕКУЩЕГО_ЦИКЛА"
-  mov r9, rax
-  list
-  mov r10, rax
-  access r9, r10
+  copy [НОМЕР_ТЕКУЩЕГО_ЦИКЛА]
   mov r15, rax
-  assign r9, r10, r8
+
+  mov rax, [СЧЁТЧИК_ЦИКЛОВ]
+  integer_inc rax
+  mov [НОМЕР_ТЕКУЩЕГО_ЦИКЛА], rax
 
   mov r8, [rax + INTEGER_HEADER*8]
-
   add_code "push rbx, rcx, rdx"
 
   string "переменная"
@@ -1568,21 +1521,12 @@ f_compile_for:
   string <"pop rdx, rcx, rbx", 10>
   list_append_link rdx, rax
 
-  string "НОМЕР_ТЕКУЩЕГО_ЦИКЛА"
-  mov r8, rax
-  list
-  mov r9, rax
-  assign r8, r9, r15
+  mov [НОМЕР_ТЕКУЩЕГО_ЦИКЛА], r15
+  mov rax, [СЧЁТЧИК_ВЛОЖЕННОСТИ]
 
-  string "СЧЁТЧИК_ВЛОЖЕННОСТИ"
-  mov r8, rax
-  list
-  mov r9, rax
-  access r8, r9
   integer_dec rax
-  assign r8, r9, rax
-
   mov rax, rdx
+
   ret
 
 f_compile_skip:
@@ -1594,13 +1538,9 @@ f_compile_skip:
   list
   mov rdx, rax
 
-  string "НОМЕР_ТЕКУЩЕГО_ЦИКЛА"
-  mov r8, rax
-  list
-  access r8, rax
-  mov r8, rax
-
+  mov r8, [НОМЕР_ТЕКУЩЕГО_ЦИКЛА]
   integer 0
+
   is_equal r8, rax
   boolean_value rax
   cmp rax, 1
@@ -1633,13 +1573,9 @@ f_compile_break:
   list
   mov rdx, rax
 
-  string "НОМЕР_ТЕКУЩЕГО_ЦИКЛА"
-  mov r8, rax
-  list
-  access r8, rax
-  mov r8, rax
-
+  mov r8, [НОМЕР_ТЕКУЩЕГО_ЦИКЛА]
   integer 0
+
   is_equal r8, rax
   boolean_value rax
   cmp rax, 1
@@ -1672,13 +1608,9 @@ f_compile_function:
   list
   mov rdx, rax
 
-  string "СЧЁТЧИК_ФУНКЦИЙ"
-  mov r8, rax
-  list
-  mov r9, rax
-  access r8, r9
+  mov rax, [СЧЁТЧИК_ФУНКЦИЙ]
   integer_inc rax
-  assign r8, r9, rax
+
   to_string rax
   mov r8, rax
 

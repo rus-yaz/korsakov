@@ -1107,13 +1107,8 @@ f_interpret_while:
   get_arg 1
   mov rcx, rax
 
-  push rcx
-  string "НОМЕР_ТЕКУЩЕГО_ЦИКЛА"
-  mov rcx, rax
-  list
-  access_link rcx, rax
+  mov rax, [НОМЕР_ТЕКУЩЕГО_ЦИКЛА]
   integer_inc rax
-  pop rcx
 
   string "условие"
   dictionary_get_link rcx, rax
@@ -1125,10 +1120,7 @@ f_interpret_while:
   cmp rax, 1
   je .loop
 
-    string "НОМЕР_ТЕКУЩЕГО_ЦИКЛА"
-    mov rdx, rax
-    list
-    access_link rdx, rax
+    mov rax, [НОМЕР_ТЕКУЩЕГО_ЦИКЛА]
     integer_dec rax
 
     string "случай_иначе"
@@ -1185,10 +1177,7 @@ f_interpret_while:
 
   .end_while:
 
-  string "НОМЕР_ТЕКУЩЕГО_ЦИКЛА"
-  mov rcx, rax
-  list
-  access_link rcx, rax
+  mov rax, [НОМЕР_ТЕКУЩЕГО_ЦИКЛА]
   integer_dec rax
 
   mov rax, r9
@@ -1200,13 +1189,8 @@ f_interpret_for:
   get_arg 1
   mov rcx, rax
 
-  push rcx
-  string "НОМЕР_ТЕКУЩЕГО_ЦИКЛА"
-  mov rcx, rax
-  list
-  access_link rcx, rax
+  mov rax, [НОМЕР_ТЕКУЩЕГО_ЦИКЛА]
   integer_inc rax
-  pop rcx
 
   string "переменная"
   dictionary_get_link rcx, rax
@@ -1294,11 +1278,7 @@ f_interpret_for:
       interpret r12, rbx
       list_append_link r11, rax
 
-      string "СИГНАЛ"
-      mov r14, rax
-      list
-      access r14, rax
-      mov r14, rax
+      mov r14, [СИГНАЛ]
       null
       is_equal r14, rax
       boolean_value rax
@@ -1318,14 +1298,8 @@ f_interpret_for:
 
         .generator_clear_signal:
 
-        push r10
-        string "СИГНАЛ"
-        mov r10, rax
         null
-        mov r14, rax
-        list
-        assign r10, rax, r14
-        pop r10
+        mov [СИГНАЛ], rax
 
         jmp .generator_end_while
 
@@ -1421,11 +1395,7 @@ f_interpret_for:
       interpret r11, rbx
       list_append_link r12, rax
 
-      string "СИГНАЛ"
-      mov r14, rax
-      list
-      access r14, rax
-      mov r14, rax
+      mov r14, [СИГНАЛ]
       null
       is_equal r14, rax
       boolean_value rax
@@ -1445,15 +1415,8 @@ f_interpret_for:
 
         .entry_clear_signal:
 
-        push r10
-        string "СИГНАЛ"
-        mov r10, rax
         null
-        mov r14, rax
-        list
-        assign r10, rax, r14
-        pop r10
-
+        mov [СИГНАЛ], rax
         jmp .entry_end_while
 
       .entry_no_signal:
@@ -1468,10 +1431,7 @@ f_interpret_for:
 
   .else:
 
-    string "НОМЕР_ТЕКУЩЕГО_ЦИКЛА"
-    mov rcx, rax
-    list
-    access_link rcx, rax
+    mov rax, [НОМЕР_ТЕКУЩЕГО_ЦИКЛА]
     integer_dec rax
 
     string "случай_иначе"
@@ -1482,10 +1442,7 @@ f_interpret_for:
 
   mov rbx, rax
 
-  string "НОМЕР_ТЕКУЩЕГО_ЦИКЛА"
-  mov rcx, rax
-  list
-  access_link rcx, rax
+  mov rax, [НОМЕР_ТЕКУЩЕГО_ЦИКЛА]
   integer_dec rax
 
   mov rax, rbx
@@ -1500,13 +1457,9 @@ f_interpret_skip:
   list
   mov rdx, rax
 
-  string "НОМЕР_ТЕКУЩЕГО_ЦИКЛА"
-  mov r8, rax
-  list
-  access r8, rax
-  mov r8, rax
-
+  mov r8, [НОМЕР_ТЕКУЩЕГО_ЦИКЛА]
   integer 0
+
   is_equal r8, rax
   boolean_value rax
   cmp rax, 1
@@ -1521,10 +1474,7 @@ f_interpret_skip:
 
   .in_loop:
 
-  string "СИГНАЛ"
-  mov r8, rax
-  list
-  assign r8, rax, [СИГНАЛ_ПРОПУСКА]
+  mem_mov [СИГНАЛ], [СИГНАЛ_ПРОПУСКА]
 
   null
   ret
@@ -1538,13 +1488,9 @@ f_interpret_break:
   list
   mov rdx, rax
 
-  string "НОМЕР_ТЕКУЩЕГО_ЦИКЛА"
-  mov r8, rax
-  list
-  access r8, rax
-  mov r8, rax
-
+  mov r8, [НОМЕР_ТЕКУЩЕГО_ЦИКЛА]
   integer 0
+
   is_equal r8, rax
   boolean_value rax
   cmp rax, 1
@@ -1559,10 +1505,7 @@ f_interpret_break:
 
   .in_loop:
 
-  string "СИГНАЛ"
-  mov r8, rax
-  list
-  assign r8, rax, [СИГНАЛ_ПРЕРЫВАНИЯ]
+  mem_mov [СИГНАЛ], [СИГНАЛ_ПРЕРЫВАНИЯ]
 
   null
   ret
@@ -1578,15 +1521,8 @@ f_interpret_function:
   list
   mov rdx, rax
 
-  string "СЧЁТЧИК_ФУНКЦИЙ"
-  mov r8, rax
-  list
-  mov r9, rax
-  access r8, r9
-  integer_inc rax
-  assign r8, r9, rax
-  to_string rax
-  mov r8, rax
+  mov r8, [СЧЁТЧИК_ФУНКЦИЙ]
+  integer_inc r8
 
   string "jmp .skip_function_"
   string_extend_links rax, r8

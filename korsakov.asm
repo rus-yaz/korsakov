@@ -156,6 +156,13 @@ section "koraskov_data" writable
   СИГНАЛ_ПРОПУСКА   rq 1
   СИГНАЛ_ПРЕРЫВАНИЯ rq 1
 
+  СЧЁТЧИК_ЕСЛИ         rq 1
+  СЧЁТЧИК_ЦИКЛОВ       rq 1
+  СЧЁТЧИК_ВЫЗОВОВ      rq 1
+  СЧЁТЧИК_ФУНКЦИЙ      rq 1
+  СЧЁТЧИК_ВЛОЖЕННОСТИ  rq 1
+  НОМЕР_ТЕКУЩЕГО_ЦИКЛА rq 1
+
   КОМПИЛЯЦИЯ                        dq 0
   ОТКЛЮЧЕНИЕ_СТАНДАРТНОЙ_БИБЛИОТЕКИ dq 0
 
@@ -621,47 +628,18 @@ start:
   integer 1
   mov [СИГНАЛ_ПРОПУСКА], rax
 
-  string "СЧЁТЧИК_ЕСЛИ"
-  mov rcx, rax
-  list
-  mov rbx, rax
   integer 0
-  assign rcx, rbx, rax
-
-  string "СЧЁТЧИК_ЦИКЛОВ"
-  mov rcx, rax
-  list
-  mov rbx, rax
+  mov [СЧЁТЧИК_ЕСЛИ], rax
   integer 0
-  assign rcx, rbx, rax
-
-  string "НОМЕР_ТЕКУЩЕГО_ЦИКЛА"
-  mov rcx, rax
-  list
-  mov rbx, rax
+  mov [СЧЁТЧИК_ЦИКЛОВ], rax
   integer 0
-  assign rcx, rbx, rax
-
-  string "СЧЁТЧИК_ВЛОЖЕННОСТИ"
-  mov rcx, rax
-  list
-  mov rbx, rax
+  mov [НОМЕР_ТЕКУЩЕГО_ЦИКЛА], rax
   integer 0
-  assign rcx, rbx, rax
-
-  string "СЧЁТЧИК_ФУНКЦИЙ"
-  mov rcx, rax
-  list
-  mov rbx, rax
+  mov [СЧЁТЧИК_ВЛОЖЕННОСТИ], rax
   integer 0
-  assign rcx, rbx, rax
-
-  string "СЧЁТЧИК_ВЫЗОВОВ"
-  mov rcx, rax
-  list
-  mov rbx, rax
+  mov [СЧЁТЧИК_ФУНКЦИЙ], rax
   integer 0
-  assign rcx, rbx, rax
+  mov [СЧЁТЧИК_ВЫЗОВОВ], rax
 
   integer 1
   list_get_link [ARGUMENTS], rax
