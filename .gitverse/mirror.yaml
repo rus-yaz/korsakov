@@ -1,0 +1,32 @@
+name: Зеркалирование
+
+on:
+  push:
+    branches:
+      - "*"
+    tags:
+      - "*"
+
+jobs:
+  mirror:
+    runs-on: ubuntu-cloud-runner
+    permissions:
+      contents: write
+
+    steps:
+      - name: Код
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Полная история коммитов
+
+      - name: Git
+        run: |
+          git config --global user.name "x1z53"
+          git config --global user.email "x1z53@корсаков.рус"
+
+      - name: GitHub
+        env:
+          TARGET_REPO: "https://x1z53:${{ secrets.GH_TOKEN }}@github.com/$rus-yaz/korsakov"
+        run: |
+          git remote add target $TARGET_REPO
+          git push --mirror --force target
