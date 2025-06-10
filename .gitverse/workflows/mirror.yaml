@@ -1,0 +1,35 @@
+name: Зеркалирование
+
+on:
+  push:
+    branches:
+      - "*"
+    tags:
+      - "*"
+
+jobs:
+  mirror:
+    runs-on: ubuntu-cloud-runner
+    permissions:
+      contents: write
+
+    steps:
+      - name: Код
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Git
+        run: |
+          git config --global user.name "x1z53"
+          git config --global user.email "x1z53@корсаков.рус"
+
+      - name: GitHub
+        run: |
+          git remote add github "https://x1z53:${{ secrets.GH_TOKEN }}@github.com/rus-yaz/korsakov"
+          git push --force --all github
+
+      - name: GitLab
+        run: |
+          git remote add gitlab "https://x1z53:${{ secrets.GL_TOKEN }}@gitlab.com/rus.yaz/korsakov"
+          git push --force --all gitlab
