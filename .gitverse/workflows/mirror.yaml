@@ -27,4 +27,9 @@ jobs:
       - name: GitHub
         run: |
           git remote add target "https://x1z53:${{ secrets.GH_TOKEN }}@github.com/rus-yaz/korsakov"
-          git push --mirror --force target
+          git push --force target
+
+      - name: GitLab
+        run: |
+          git remote add target "https://x1z53:${{ secrets.GL_TOKEN }}@gitlab.com/rus.yaz/korsakov"
+          git push --force target
