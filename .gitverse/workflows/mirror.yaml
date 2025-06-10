@@ -17,7 +17,7 @@ jobs:
       - name: Code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Полная история коммитов
+          fetch-depth: 0
 
       - name: Git
         run: |
@@ -26,10 +26,10 @@ jobs:
 
       - name: GitHub
         run: |
-          git remote add target "https://x1z53:${{ secrets.GH_TOKEN }}@github.com/rus-yaz/korsakov"
-          git push --force target
+          git remote add github "https://x1z53:${{ secrets.GH_TOKEN }}@github.com/rus-yaz/korsakov"
+          git push --force github
 
       - name: GitLab
         run: |
-          git remote add target "https://x1z53:${{ secrets.GL_TOKEN }}@gitlab.com/rus.yaz/korsakov"
-          git push --force target
+          git remote add gitlab "https://x1z53:${{ secrets.GL_TOKEN }}@gitlab.com/rus.yaz/korsakov"
+          git push --force gitlab
