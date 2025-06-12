@@ -25,7 +25,6 @@ f_to_string:
     jge .integer_continue
       mov r9, 1
       neg rax
-
     .integer_continue:
 
     mov rbx, 10 ; Мощность системы счисления
@@ -35,22 +34,24 @@ f_to_string:
       idiv rbx    ; Деление на мощность системы счисления
       add rdx, 48 ; Приведение числа к значению по ASCII
 
-      push rdx   ; Сохранение числа на стеке
+      dec rsp
+      inc rcx
+
+      mov [rsp], dl   ; Сохранение числа на стеке
       mov rdx, 0 ; Обнуление регистра, хранящего остаток от деления
 
-      inc rcx
-      cmp rax, 0
-      jne .integer_while
+    cmp rax, 0
+    jne .integer_while
 
     cmp r9, 1
     jne .not_negate
-
-      push "-"
+      dec rsp
       inc rcx
 
+      mov rax, "-"
+      mov [rsp], al
     .not_negate:
 
-    imul rcx, 8
     push rcx, BINARY
 
     mov rax, rsp
@@ -152,9 +153,10 @@ f_to_string:
     jne .false
       string "Истина"
       ret
+
     .false:
-    string "Ложь"
-    ret
+      string "Ложь"
+      ret
 
   .not_boolean:
 
