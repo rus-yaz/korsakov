@@ -60,6 +60,15 @@ f_addition:
     @@:
   .not_string:
 
+  cmp rdx, DICTIONARY
+  jne .not_dictionary
+    cmp r8, DICTIONARY
+    jne @f
+      dictionary_add rbx, rcx
+      ret
+    @@:
+  .not_dictionary:
+
   string "Операция сложения не может быть проведена между типами"
   mov rbx, rax
   string "и"
