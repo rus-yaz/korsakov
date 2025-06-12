@@ -168,16 +168,25 @@ f_integer_mul:
   ret
 
 f_integer_div:
-  get_arg 1
-  mov rbx, rax
   get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
 
   check_type rbx, INTEGER
   check_type rcx, INTEGER
 
+  mov rax, [rcx + INTEGER_HEADER*8]
+  cmp rax, 0
+  jne .correct_argument
+    raw_string "integer_div: Нельзя делить на 0"
+    error_raw rax
+    exit -1
+  .correct_argument:
+
   pushsd 0, 1
-  cvtsi2sd xmm0, [rax + INTEGER_HEADER*8]
-  cvtsi2sd xmm1, [rbx + INTEGER_HEADER*8]
+  cvtsi2sd xmm0, [rbx + INTEGER_HEADER*8]
+  cvtsi2sd xmm1, [rcx + INTEGER_HEADER*8]
 
   divsd xmm0, xmm1
 

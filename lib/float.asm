@@ -99,6 +99,15 @@ f_float_div:
 
   movsd xmm0, [rbx + FLOAT_HEADER*8]
   movsd xmm1, [rcx + FLOAT_HEADER*8]
+
+  raw_float 0
+  comisd xmm1, [rax]
+  jne .correct_argument
+    raw_string "float_div: Нельзя делить на 0"
+    error_raw rax
+    exit -1
+  .correct_argument:
+
   divsd xmm0, xmm1
 
   float
