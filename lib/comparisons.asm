@@ -7,35 +7,36 @@ f_is_equal:
   get_arg 1
   mov rcx, rax
 
+  mov rdx, [rbx]
+  mov r8,  [rcx]
+
   cmp rdx, FLOAT
   jne @f
   cmp r8, INTEGER
   jne @f
-    float_to_integer rbx
-    mov rbx, rax
-    mov rdx, [rax]
+    integer_to_float rcx
+    mov rcx, rax
+    mov r8,  [rcx]
   @@:
 
-  cmp r8, FLOAT
-  jne @f
   cmp rdx, INTEGER
   jne @f
-    float_to_integer rcx
-    mov rcx, rax
-    mov r8, [rax]
+  cmp r8, FLOAT
+  jne @f
+    integer_to_float rbx
+    mov rbx, rax
+    mov rdx, [rbx]
   @@:
 
-  mov rdx, [rbx]
-  mov rax, [rcx]
-  cmp rdx, rax
+  cmp rdx, r8
   jne .return_false
 
   cmp rdx, NULL
   je .return_true
 
-  mov rdx, INTEGER
-  cmp rax, rdx
+  cmp rdx, INTEGER
   jne .not_integer
+
     mov rbx, [rbx + INTEGER_HEADER*8]
     mov rcx, [rcx + INTEGER_HEADER*8]
 
@@ -45,9 +46,9 @@ f_is_equal:
 
   .not_integer:
 
-  mov rdx, FLOAT
-  cmp rax, rdx
+  cmp rdx, FLOAT
   jne .not_float
+
     movsd xmm0, [rbx + FLOAT_HEADER*8]
     movsd xmm1, [rcx + FLOAT_HEADER*8]
 
@@ -57,9 +58,9 @@ f_is_equal:
 
   .not_float:
 
-  mov rdx, BOOLEAN
-  cmp rax, rdx
+  cmp rdx, BOOLEAN
   jne .not_boolean
+
     mov rbx, [rbx + BOOLEAN_HEADER*8]
     mov rcx, [rcx + BOOLEAN_HEADER*8]
 
@@ -69,8 +70,7 @@ f_is_equal:
 
   .not_boolean:
 
-  mov rdx, LIST
-  cmp rax, rdx
+  cmp rdx, LIST
   jne .not_list
 
     list_length rbx
@@ -110,8 +110,7 @@ f_is_equal:
 
   .not_list:
 
-  mov rdx, STRING
-  cmp rax, rdx
+  cmp rdx, STRING
   jne .not_string
 
     string_length rbx
@@ -154,8 +153,7 @@ f_is_equal:
 
   .not_string:
 
-  mov rdx, DICTIONARY
-  cmp rax, rdx
+  cmp rdx, DICTIONARY
   jne .not_dictionary
 
     dictionary_items_links rbx
