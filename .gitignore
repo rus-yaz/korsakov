@@ -8,5 +8,5 @@ build.o
 korsakov
 korsakov.o
 
-core_tests
-core_tests.o
+tests
+tests.o
