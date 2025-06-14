@@ -1074,11 +1074,9 @@ f_compile_string:
 
       .while_string_end:
 
-      string 'string <"'
+      string 'string "'
       string_extend_links rax, r11
       mov r10, rax
-      string '">'
-      string_extend_links r10, rax
 
       list_append_link rdx, r10
 
@@ -1497,7 +1495,7 @@ f_compile_for:
     string_extend_links r14, rax
     list_append_link rdx, rax
 
-    string <"integer_inc rdx", 10>
+    string "integer_inc rdx", 10
     list_append_link rdx, rax
 
   .for_end:
@@ -1518,7 +1516,7 @@ f_compile_for:
   string_extend_links r14, rax
   list_append_link rdx, rax
 
-  string <"pop rdx, rcx, rbx", 10>
+  string "pop rdx, rcx, rbx", 10
   list_append_link rdx, rax
 
   mov [НОМЕР_ТЕКУЩЕГО_ЦИКЛА], r15

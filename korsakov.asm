@@ -689,10 +689,10 @@ start:
     print rax
   end if
 
-  string <"include 'core/korsakov.asm'", 10>
+  string "include 'core/korsakov.asm'", 10
   mov rcx, rax
 
-  string <"init ">
+  string "init "
   string_extend_links rcx, rax
 
   string ", "
@@ -704,7 +704,7 @@ start:
 
   string_extend_links rcx, rbx
 
-  string <10, "exit 0">
+  string 10, "exit 0"
   string_extend_links rcx, rax
 
   integer 1

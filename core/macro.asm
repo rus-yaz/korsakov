@@ -109,25 +109,28 @@ macro exit code*, buffer = 0 {
   sys_exit code
 }
 
-macro raw_string str {
-  jmp @f
-    a = $
-    db str, 0
-  @@:
-  mov rax, a
+macro raw_string [str*] {
+  common
+    jmp @f
+      a = $
+      db str, 0
+    @@:
+    mov rax, a
 }
 
-macro binary_string str {
-  raw_string <str>
-  buffer_to_binary rax
+macro binary_string [str*] {
+  common
+    raw_string str
+    buffer_to_binary rax
 }
 
-macro string str {
-  raw_string <str>
-  buffer_to_string rax
+macro string [str*] {
+  common
+    raw_string str
+    buffer_to_string rax
 }
 
-macro raw_float value = 0f {
+macro raw_float value = 0.0 {
   jmp @f
     a = $
     dq value
@@ -210,7 +213,7 @@ macro mem_copy source*, destination*, size* {
 macro check_error operation*, message* {
   push rax
 
-  raw_string <message, 10>
+  raw_string message, 10
   operation f_check_error
 
   pop rax
@@ -360,10 +363,10 @@ macro dictionary_from_lists keys = 0, values = 0 {
   return
 }
 
-macro dictionary_from_items keys = 0, values = 0 {
-  enter keys, values
+macro dictionary_from_pairs pairs = 0 {
+  enter pairs
 
-  call f_dictionary_from_items
+  call f_dictionary_from_pairs
 
   return
 }

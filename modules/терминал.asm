@@ -326,7 +326,7 @@ macro init_терминал {
 }
 
 macro print_ansi_sequence sequence {
-  raw_string <27, sequence>
+  raw_string 27, sequence
   print_raw rax
 }
 
