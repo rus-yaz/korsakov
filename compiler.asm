@@ -1108,7 +1108,7 @@ f_compile_dictionary:
   dictionary_get_link rcx, rax
   compile rax, rbx
   list_extend_links rdx, rax
-  add_code "dictionary_from_items rax"
+  add_code "dictionary_from_pairs rax"
 
   mov rax, rdx
   ret

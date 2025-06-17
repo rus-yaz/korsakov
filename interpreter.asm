@@ -1037,7 +1037,7 @@ f_interpret_dictionary:
   dictionary_get_link rcx, rax
 
   interpret rax, rbx
-  dictionary_from_items rax
+  dictionary_from_pairs rax
 
   ret
 

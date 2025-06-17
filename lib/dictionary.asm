@@ -15,11 +15,11 @@ f_dictionary:
   .not_from_lists:
 
   cmp rbx, 0
-  je .not_from_items
-    dictionary_from_items rbx
+  je .not_from_pairs
+    dictionary_from_pairs rbx
     ret
 
-  .not_from_items:
+  .not_from_pairs:
 
   collection
   mem_mov [rax + 8*0], DICTIONARY
@@ -79,7 +79,7 @@ f_dictionary_from_lists:
 
   ret
 
-f_dictionary_from_items:
+f_dictionary_from_pairs:
   get_arg 0
   mov rbx, rax
 
