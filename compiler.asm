@@ -1078,6 +1078,9 @@ f_compile_string:
       string_extend_links rax, r11
       mov r10, rax
 
+      string '"'
+      string_extend_links r10, rax
+
       list_append_link rdx, r10
 
     .continue:
