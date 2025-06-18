@@ -558,6 +558,126 @@ f_split:
   copy rax
   ret
 
+f_split_from_right_links:
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
+  get_arg 2
+  mov rdx, rax
+
+  cmp rcx, 0
+  jne .not_default_separator
+    string " "
+    mov rcx, rax
+  .not_default_separator:
+
+  cmp rdx, 0
+  jne .not_default_parts_count
+    integer -1
+    mov rdx, rax
+  .not_default_parts_count:
+
+  check_type rbx, STRING
+  check_type rcx, STRING
+  check_type rdx, INTEGER
+
+  integer_inc rdx
+
+  list
+  mov r8, rax
+  null
+  list_append_link r8, rax
+
+  integer 1
+  mov r9, rax
+
+  string_length rbx
+  inc rax
+  integer rax
+  mov r10, rax
+
+  string ""
+  mov r11, rax
+
+  .while:
+    is_equal r9, r10
+    boolean_value rax
+    cmp rax, 1
+    je .end_while
+
+    negate r9
+    string_get_link rbx, rax
+    mov r12, rax
+
+    list_length r8
+    integer rax
+    is_equal rax, rdx
+    boolean_value rax
+    cmp rax, 1
+    je .join
+
+    is_equal r12, rcx
+    boolean_value rax
+    cmp rax, 1
+    je .split
+
+    .join:
+
+      string_add_links r12, r11
+      mov r11, rax
+
+      jmp .continue
+
+    .split:
+      integer 0
+      list_insert_link r8, rax, r11
+
+      string ""
+      mov r11, rax
+
+    .continue:
+
+    integer_inc r9
+    jmp .while
+
+  .end_while:
+  integer 0
+  list_insert_link r8, rax, r11
+
+  list_pop_link r8
+
+  mov rax, r8
+  ret
+
+f_split_from_right:
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
+  get_arg 2
+  mov rdx, rax
+
+  cmp rcx, 0
+  jne .not_default_separator
+    string " "
+    mov rcx, rax
+  .not_default_separator:
+
+  cmp rdx, 0
+  jne .not_default_parts_count
+    integer -1
+    mov rdx, rax
+  .not_default_parts_count:
+
+  check_type rbx, STRING
+  check_type rcx, STRING
+  check_type rdx, INTEGER
+
+  split_from_right_links rbx, rcx, rdx
+  copy rax
+  ret
+
 f_join_links:
   get_arg 0
   mov rbx, rax

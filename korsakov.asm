@@ -711,11 +711,15 @@ start:
   list_get_link [ARGUMENTS], rax
   mov rbx, rax
   string "."
-  split rbx, rax
+  mov rdx, rax
+  integer 1
+  split_from_right rbx, rdx, rax
   mov rbx, rax
+
   integer 0
   list_get_link rbx, rax
   mov rbx, rax
+
   string ".asm"
   string_add_links rbx, rax
 

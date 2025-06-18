@@ -1370,6 +1370,22 @@ macro split string*, separator = 0, parts_count = 0 {
   return
 }
 
+macro split_from_right_links string*, separator = 0, parts_count = 0 {
+  enter string, separator, parts_count
+
+  call f_split_from_right_links
+
+  return
+}
+
+macro split_from_right string*, separator = 0, parts_count = 0 {
+  enter string, separator, parts_count
+
+  call f_split_from_right
+
+  return
+}
+
 macro join_links list*, separator = 0 {
   enter list, separator
 
