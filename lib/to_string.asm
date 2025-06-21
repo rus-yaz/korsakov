@@ -339,11 +339,56 @@ f_to_string:
 
   cmp rbx, FUNCTION
   jne .not_function
-
-    copy [rax + 8*1]
     mov rbx, rax
-    string "()"
-    string_extend rbx, rax
+
+    string "функция("
+    mov rcx, rax
+
+    mov rdx, 0
+
+    list_length [rbx + 8*3]
+    mov r8, rax
+
+    cmp r8, 0
+    je .end_while_function
+
+    .while_function:
+      integer rdx
+      list_get_link [rbx + 8*3], rax
+      mov r9, rax
+
+      null
+      dictionary_get_link [rbx + 8*4], r9, rax
+      mov r10, rax
+      null
+      is_equal rax, r10
+      boolean_value rax
+      cmp rax, 1
+      je .not_named
+
+        string " = "
+        string_extend_links r9, rax
+
+        to_string r10
+        string_extend_links r9, rax
+
+      .not_named:
+
+      string_extend_links rcx, r9
+      inc rdx
+
+      cmp rdx, r8
+      je .end_while_function
+
+      string ", "
+      string_extend_links rcx, rax
+
+      jmp .while_function
+
+    .end_while_function:
+
+    string ")"
+    string_extend_links rcx, rax
 
     ret
 
