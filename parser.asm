@@ -2942,7 +2942,7 @@ f_statement:
     cmp rax, 1
     jne .return_value
 
-      integer_sub [токен], rbx
+      integer_sub [индекс], rbx
       revert rax
 
     .return_value:

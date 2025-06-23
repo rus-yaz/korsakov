@@ -221,6 +221,17 @@ macro interpret_call node*, context* {
   debug_end "interpret_call"
 }
 
+macro interpret_return node*, context* {
+  debug_start "interpret_return"
+  enter node, context
+
+  call f_interpret_return
+
+  return
+  debug_end "interpret_return"
+}
+
+
 macro add_code [code*] {
   string code
   list_append_link rdx, rax
@@ -404,11 +415,18 @@ f_interpret:
     ret
   .not_call:
 
+  check_node_type rbx, [УЗЕЛ_ВОЗВРАЩЕНИЯ]
+  cmp rax, 1
+  jne .not_return
+    interpret_return rcx, rbx
+    ret
+  .not_return:
+
   string "Неизвестный узел:"
-  mov rbx, rax
+  mov rcx, rax
   list
-  list_append_link rax, rbx
   list_append_link rax, rcx
+  list_append_link rax, rbx
   error rax
   exit -1
 
@@ -1078,7 +1096,6 @@ f_interpret_if:
 
     boolean rax
     boolean_value rax
-
     cmp rax, 1
     jne .while
 
@@ -1086,6 +1103,8 @@ f_interpret_if:
     dictionary_get_link r11, rax
 
     interpret rax, rbx
+    mov r11, rax
+
     mov r10, 1
 
   .end_while:
@@ -1096,8 +1115,12 @@ f_interpret_if:
     string "случай_иначе"
     dictionary_get_link rcx, rax, r10
     interpret rax, rbx
+    mov r11, rax
 
   .skip_else:
+
+  integer -1
+  list_get_link r11, rax
 
   ret
 
@@ -1516,370 +1539,122 @@ f_interpret_function:
   get_arg 1
   mov rcx, rax
 
-  exit 21
-
-  list
-  mov rdx, rax
-
-  mov r8, [СЧЁТЧИК_ФУНКЦИЙ]
-  integer_inc r8
-
-  string "jmp .skip_function_"
-  string_extend_links rax, r8
-  list_append_link rdx, rax
-
-  string ".function_"
-  string_extend rax, r8
-  mov r9, rax
-  string ":"
-  string_extend_links r9, rax
-  list_append_link rdx, rax
+  string "переменная"
+  dictionary_get_link rcx, rax
+  mov r8, rax
+  string "значение"
+  dictionary_get_link r8, rax
+  mov r8, rax
 
   string "тело"
   dictionary_get_link rcx, rax
-  interpret rax, rbx
-  list_extend_links rdx, rax
-
-  add_code "ret"
-
-  string ".skip_function_"
-  string_extend_links rax, r8
-  mov r9, rax
-  string ":"
-  string_extend_links r9, rax
-  list_append_link rdx, rax
-
-  add_code "push r9, r8, rdx, rcx, rbx"
-
-  string "string "
   mov r9, rax
 
-  dictionary_get_link rcx, [переменная]
-  dictionary_get_link rax, [значение]
-  to_string rax
-  string_extend_links r9, rax
+  list
+  mov r10, rax
 
-  list_append_link rdx, rax
-  add_code "mov rbx, rax"
-
-  string "mov rcx, "
-  mov r9, rax
-  string ".function_"
-  string_extend_links r9, rax
-  string_extend_links rax, r8
-  list_append_link rdx, rax
-
-  add_code "list",\
-           "mov rdx, rax",\
-           "dictionary",\
-           "mov r8, rax"
-
-  ; Был ли встречен именованный аргумент
-  mov r8, 0
+  dictionary
+  mov r11, rax
 
   string "аргументы"
   dictionary_get_link rcx, rax
-  mov r9, rax
+  mov r12, rax
 
-  integer 0
-  mov r10, rax
+  list_length r12
+  mov r13, rax
 
-  list_length r9
-  integer rax
-  mov r11, rax
-
-  ; Порог типа
-  mov r12, 0
-  push 0
+  mov r14, 0 ; Счётчик
+  mov rdx, 0 ; Аккумуляторы
 
   .while:
-    is_equal r10, r11
-    boolean_value rax
-    cmp rax, 1
+
+    cmp r13, r14
     je .end_while
 
-    list_get_link r9, r10
-    mov r13, rax
+    integer r14
+    list_get_link r12, rax
+    mov r15, rax
 
-    check_node_type r13, [УЗЕЛ_ДОСТУПА_К_ПЕРЕМЕННОЙ]
-    cmp rax, 1
-    je .correct_argument
+    mov rdi, 0 ; Значение именованного аргумента
 
-    check_node_type r13, [УЗЕЛ_ПРИСВАИВАНИЯ_ПЕРЕМЕННОЙ]
-    cmp rax, 1
-    je .positional_argument
-
-      string "Ожидался позиционный или именованный аргумент"
-      mov rbx, rax
-      list
-      list_append_link rax, rbx
-      error rax
-      exit -1
-
-    .positional_argument:
-      mov r8, 2
-
-    .correct_argument:
-
-    dictionary_get_link r13, [ключи]
-    dictionary_get_link rax, [элементы]
-    list_length rax
-    cmp rax, 0
-    je .no_keys
-
-      string "У объявляемого аргумента не должно быть ключей"
-      mov rbx, rax
-      list
-      list_append_link rax, rbx
-      error rax
-      exit -1
-
-    .no_keys:
-
-    dictionary_get_link r13, [переменная]
-    dictionary_get_link rax, [значение]
-    mov r14, rax
-    integer -1
-    string_get_link r14, rax
-    mov r14, rax
-
-    string "*"
-    is_equal r14, rax
+    string "узел"
+    dictionary_get_link r15, rax
+    is_equal rax, [УЗЕЛ_ПРИСВАИВАНИЯ_ПЕРЕМЕННОЙ]
     boolean_value rax
     cmp rax, 1
-    jne .not_accumulator
+    jne .not_named
 
-      pop rax
-      inc rax
-      push rax
+      string "значение"
+      dictionary_get_link r15, rax
+      mov rdi, rax
 
-      mov r8, 1
+    .not_named:
 
-      dictionary_get_link r13, [переменная]
-      dictionary_get_link rax, [значение]
-      mov r14, rax
-      integer -2
-      string_get_link r14, rax
-      mov r14, rax
+    string "переменная"
+    dictionary_get_link r15, rax
+    mov r15, rax
+    string "значение"
+    dictionary_get_link r15, rax
+    mov r15, rax
 
-      string "*"
-      is_equal r14, rax
-      boolean_value rax
-      cmp rax, 1
-      jne .not_accumulator
-
-      pop rax
-      inc rax
-      push rax
-
-      mov r8, 3
-
-    .not_accumulator:
-
-    cmp r8, r12
-    jge .correct_sequence
-
-      string "Нарушена очерёдность типов аргументов"
-      mov rbx, rax
-      list
-      list_append_link rax, rbx
-      error rax
-      exit -1
-
-    .correct_sequence:
-
-    cmp r8, 0
-    jne .not_positional_argument
-
-      string "string "
-      mov r14, rax
-
-      dictionary_get_link r13, [переменная]
-      dictionary_get_link rax, [значение]
-      to_string rax
-      string_extend_links r14, rax
-      list_append_link rdx, rax
-
-      string "list_append_link rdx, rax"
-      list_append_link rdx, rax
-
-      jmp .continue
-
-    .not_positional_argument:
-
-    cmp r8, 1
-    jne .not_positional_accumulator
-
-      cmp r12, r8
-      jne .not_positional_accumulator_doublicate
-
-        string "Аккумулятор позиционных аргументов уже был объявлен"
-        mov rbx, rax
-        list
-        list_append_link rax, rbx
-        error rax
-        exit -1
-
-      .not_positional_accumulator_doublicate:
-
-      check_node_type r13, [УЗЕЛ_ПРИСВАИВАНИЯ_ПЕРЕМЕННОЙ]
-      cmp rax, 1
-      jne .correct_positional_accumulator
-
-        string "Аккумулятор позиционных аргументов не может иметь значения по умолчанию"
-        mov rbx, rax
-        list
-        list_append_link rax, rbx
-        error rax
-        exit -1
-
-      .correct_positional_accumulator:
-
-      string "string "
-      mov r14, rax
-
-      dictionary_get_link r13, [переменная]
-      dictionary_get_link rax, [значение]
-      to_string rax
-      string_extend_links r14, rax
-      list_append_link rdx, rax
-
-      string "list_append_link rdx, rax"
-      list_append_link rdx, rax
-
-      jmp .continue
-
-    .not_positional_accumulator:
-
-    cmp r8, 2
-    jne .not_named_argument
-
-      check_node_type r13, [УЗЕЛ_ПРИСВАИВАНИЯ_ПЕРЕМЕННОЙ]
-      cmp rax, 1
-      je .correct_named_argument
-
-        string "Ожидался именованный аргумент"
-        mov rbx, rax
-        list
-        list_append_link rax, rbx
-        error rax
-        exit -1
-
-      .correct_named_argument:
-
-      string "string "
-      mov r14, rax
-
-      dictionary_get_link r13, [переменная]
-      dictionary_get_link rax, [значение]
-      to_string rax
-      string_extend_links r14, rax
-      list_append_link rdx, rax
-
-      add_code "mov r9, rax",\
-               "list_append_link rdx, r9"
-
-      dictionary_get_link r13, [значение]
-      interpret rax, rbx
-      list_extend_links rdx, rax
-
-      add_code "dictionary_set_link r8, r9, rax"
-
-      jmp .continue
-
-    .not_named_argument:
-
-    cmp r8, 3
+    string "**"
+    string_include r15, rax
+    boolean_value rax
+    cmp rax, 1
     jne .not_named_accumulator
-
-      cmp r12, r8
-      jne .not_named_accumulator_doublicate
-
-        string "Аккумулятор именованных аргументов уже был объявлен"
-        mov rbx, rax
-        list
-        list_append_link rax, rbx
-        error rax
+      push rdx
+      and rdx, 0x10
+      cmp rdx, 0
+      jl .too_many_named_accumulators
+        raw_string "Неверное количество аккумуляторов именованных аргументов"
+        error_raw rax
         exit -1
+      .too_many_named_accumulators:
+      pop rdx
 
-      .not_named_accumulator_doublicate:
-
-      check_node_type r13, [УЗЕЛ_ПРИСВАИВАНИЯ_ПЕРЕМЕННОЙ]
-      cmp rax, 1
-      jne .correct_named_accumulator
-
-        string "Аккумулятор именованных аргументов не может иметь значения по умолчанию"
-        mov rbx, rax
-        list
-        list_append_link rax, rbx
-        error rax
-        exit -1
-
-      .correct_named_accumulator:
-
-      string "string "
-      mov r14, rax
-
-      dictionary_get_link r13, [переменная]
-      dictionary_get_link rax, [значение]
-      to_string rax
-      string_extend_links r14, rax
-      list_append_link rdx, rax
-
-      add_code "list_append_link rdx, rax"
-
+      add rdx, 2
       jmp .continue
-
     .not_named_accumulator:
 
-    ; а *а а=0 **а
-    ; а *а а=0
-    ; а *а     **а
-    ; а *а
-    ; а    а=0 **а
-    ; а    а=0
-    ; а        **а
-    ; а
-    ;   *а а=0 **а
-    ;   *а а=0
-    ;   *а     **а
-    ;   *а
-    ;      а=0 **а
-    ;      а=0
-    ;          **а
-    ;
+    string "*"
+    string_include r15, rax
+    boolean_value rax
+    cmp rax, 1
+    jne .not_positional_accumulator
+      push rdx
+      and rdx, 0x01
+      cmp rdx, 0
+      jl .too_many_positional_accumulators
+        raw_string "Неверное количество аккумуляторов позиционных аргументов"
+        error_raw rax
+        exit -1
+      .too_many_positional_accumulators:
+      pop rdx
 
-    string "Что-то пошло не так. Аргументы считаны некорректно"
-    mov rbx, rax
-    list
-    list_append_link rax, rbx
-    error rax
-    exit -1
+      inc rdx
+      jmp .continue
+    .not_positional_accumulator:
+
+    cmp rdi, 0
+    je @f
+      interpret rdi, rbx
+      dictionary_set_link r11, r15, rax
+    @@:
 
     .continue:
 
-    mov r12, r8
-    integer_inc r10
+    list_append_link r10, r15
 
+    inc r14
     jmp .while
 
   .end_while:
 
-  string "function rbx, rcx, rdx, r8, "
-  mov r8, rax
+  function r8, r9, r10, r11, rdi
+  mov r9, rax
 
-  pop rax
-  integer rax
-  to_string rax
-  string_extend_links r8, rax
-  list_append_link rdx, rax
-
-  add_code "mov rcx, rax",\
-           "list",\
-           "assign rbx, rax, rcx",\
-           "pop rbx, rcx, rdx, r8, r9"
-
-  mov rax, rdx
+  list
+  assign r8, rax, r9
   ret
 
 f_interpret_call:
@@ -1899,12 +1674,368 @@ f_interpret_call:
   interpret rax, rbx
   mov r9, rax
 
-  dictionary_get_link rcx, [именованные_аргументы]
+  string "именованные_аргументы"
+  dictionary_get_link rcx, rax
   list_node rax
   dictionary_node rax
   interpret rax, rbx
   mov r10, rax
 
-  function_call r8, r9, r10
+  check_type r8, FUNCTION
+  check_type r9, LIST
+  check_type r10, DICTIONARY
 
+  mov rax, [r8 + 8*6]
+  cmp rax, 1
+  jne .not_internal
+
+    function_call r8, r9, r10
+
+    ret
+
+  .not_internal:
+
+  dictionary_copy_links rbx
+  mov r15, rax
+
+  mov rax, r8
+  mov r8,  r9
+  mov r9,  r10
+
+  check_type rax, FUNCTION
+  check_type r8,  LIST
+  check_type r9,  DICTIONARY
+
+  mov rbx, [rax + 8*6]
+  push rbx
+
+  mov rbx, [rax + 8*2]
+  mov rcx, [rax + 8*3]
+  mov rdx, [rax + 8*4]
+
+  mov rax, [rax + 8*5]
+  dec rax
+  cmp rax, 0
+  jg @f
+    inc rax
+  @@:
+
+  integer rax
+  mov r10, rax
+
+  list_length rcx
+  integer rax
+  mov r11, rax
+
+  list_length r8
+  integer rax
+  mov r12, rax
+
+  dictionary_length rdx
+  integer rax
+  integer_sub r11, rax
+  integer_sub rax, r10
+  is_lower r12, rax
+  boolean_value rax
+  cmp rax, 1
+  jne .enough_arguments_count
+
+    list
+    mov rbx, rax
+
+    string "Аргументов слишком мало:"
+    list_append_link rbx, rax
+    string "Ожидалось —"
+    list_append_link rbx, rax
+
+    integer_sub r11, r10
+    to_string rax
+    mov rcx, rax
+
+    string ", получено —"
+    string_extend_links rcx, rax
+    list_append_link rbx, rax
+
+    to_string r12
+    list_append_link rbx, rax
+
+    error rax
+    exit -1
+
+  .enough_arguments_count:
+
+  integer 0
+  is_equal r10, rax
+  boolean_value rax
+  cmp rax, 1
+  jne .correct_arguments_count
+
+  is_lower r11, r12
+  boolean_value rax
+  cmp rax, 1
+  jne .correct_arguments_count
+
+    list
+    mov rbx, rax
+
+    string "Аргументов слишком много:"
+    list_append_link rbx, rax
+    string "Ожидалось —"
+    list_append_link rbx, rax
+
+    integer_sub r11, r10
+    to_string rax
+    mov rcx, rax
+
+    string ", получено —"
+    string_extend_links rcx, rax
+    list_append_link rbx, rax
+
+    to_string r12
+    list_append_link rbx, rax
+
+    error rax
+    exit -1
+
+  .correct_arguments_count:
+
+  push rcx
+  list_copy_links rcx       ; Позиционные аргументы функции
+  mov rcx, rax
+  dictionary_copy_links rdx ; Именованные аргументы функции
+  mov rdx, rax
+  list_copy_links r8        ; Переданные позиционные аргументы
+  mov r8, rax
+  dictionary_copy_links r9  ; Переданные именованные аргументы
+  mov r9, rax
+
+  list
+  mov r14, rax
+
+  .positional_while:
+
+    list_length rcx
+    cmp rax, 0
+    je .positional_while_end
+
+    list_length r8
+    cmp rax, 0
+    je .positional_while_end
+
+    integer 0
+    list_pop_link rcx, rax
+    mov r11, rax
+
+    integer -1
+    string_get_link r11, rax
+    mov r12, rax
+    string "*"
+    is_equal r12, rax
+    boolean_value rax
+    cmp rax, 1
+    je .positional_accumulator
+
+    integer 0
+    list_pop_link r8, rax
+    mov r10, rax
+
+    list
+    assign r11, rax, r10
+    list_append_link r14, r11
+
+    jmp .positional_while
+
+  .positional_while_end:
+
+  list_length rcx
+  cmp rax, 0
+  je .named
+
+  integer 0
+  list_pop_link rcx, rax
+  mov r11, rax
+
+  .positional_accumulator:
+
+  integer -1
+  string_get_link r11, rax
+  mov r12, rax
+  string "*"
+  is_equal r12, rax
+  boolean_value rax
+  cmp rax, 1
+  jne .not_positional_accumulator
+
+  integer -2
+  string_get_link r11, rax
+  mov r12, rax
+  string "*"
+  is_equal r12, rax
+  boolean_value rax
+  cmp rax, 1
+  je .named_accumulator
+
+  list
+  mov r10, rax
+
+  .positional_accumulator_while:
+
+    list_length r8
+    cmp rax, 0
+    je .positional_accumulator_while_end
+
+    integer 0
+    list_pop_link r8, rax
+    list_append_link r10, rax
+
+    jmp .positional_accumulator_while
+
+  .positional_accumulator_while_end:
+
+  string_pop_link r11
+  list
+  assign r11, rax, r10
+  list_append_link r14, r11
+
+  .not_positional_accumulator:
+
+  .named:
+
+  dictionary_add_links rdx, r9
+  mov r10, rax
+  dictionary_keys_links r10
+  mov r13, rax
+
+  .named_while:
+
+    list_length r13
+    cmp rax, 0
+    je .continue
+
+    integer 0
+    list_pop_link r13, rax
+    mov r11, rax
+
+    integer -1
+    string_get_link r11, rax
+    mov r12, rax
+    string "*"
+    is_equal r12, rax
+    boolean_value rax
+    cmp rax, 1
+    je .named_while_end
+
+    list_include r14, r11
+    boolean_value rax
+    cmp rax, 1
+    je .already_assigned
+
+      dictionary_get_link r10, r11
+      mov r12, rax
+
+      list
+      assign r11, rax, r12
+
+    .already_assigned:
+
+    jmp .named_while
+
+  .named_while_end:
+
+  .named_accumulator:
+    ; TODO
+
+  .continue:
+
+  pop rcx, rdx
+
+  cmp rdx, 1
+  jne .external
+
+    list_length rcx
+    mov rdx, rax
+
+    list_copy rcx
+    mov rcx, rax
+
+    string "*"
+    mov r8, rax
+
+    .while:
+
+      list_length rcx
+      cmp rax, 0
+      je .end_while
+
+      list_pop_link rcx
+      mov r9, rax
+
+      integer -1
+      string_get_link r9, rax
+      is_equal r8, rax
+      boolean_value rax
+      cmp rax, 1
+      jne .not_accumulator
+
+        string_pop_link r9
+
+        integer -1
+        string_get_link r9, rax
+        is_equal r8, rax
+        boolean_value rax
+        cmp rax, 1
+        jne .not_accumulator
+
+          string_pop_link r9
+
+      .not_accumulator:
+
+      list
+      access_link r9, rax
+      push rax
+
+      jmp .while
+
+    .end_while:
+
+  .external:
+
+  interpret rbx, r15
+  mov r8, rax
+
+  is_equal [СИГНАЛ], [СИГНАЛ_ВОЗВРАЩЕНИЯ]
+  boolean_value rax
+  cmp rax, 1
+  jne .return_last
+
+    null
+    mov [СИГНАЛ], rax
+
+  .return_last:
+
+  integer -1
+  list_get_link r8, rax
+  ret
+
+f_interpret_return:
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
+
+  string "значение"
+  dictionary_get_link rcx, rax
+  mov r8, rax
+
+  null
+  is_equal rax, r8
+  boolean_value rax
+  cmp rax, 1
+  je @f
+    interpret r8, rbx
+    ret
+  @@:
+
+  mem_mov [СИГНАЛ], [СИГНАЛ_ВОЗВРАЩЕНИЯ]
+  null
   ret

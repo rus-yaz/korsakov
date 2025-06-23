@@ -2021,8 +2021,18 @@ f_compile_return:
 
   string "значение"
   dictionary_get_link rcx, rax
-  compile rax, rbx
-  list_extend_links rdx, rax
+  mov r8, rax
+
+  null
+  is_equal rax, r8
+  boolean_value rax
+  cmp rax, 1
+  je @f
+
+    compile r8, rbx
+    list_extend_links rdx, rax
+
+  @@:
 
   add_code "ret"
 
