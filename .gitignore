@@ -1,12 +1,7 @@
-тест
-тест.o
-тест.asm
+*
+!*.*
+!*/
+*.o
 
-build
-build.o
-
-korsakov
-korsakov.o
-
-tests
-tests.o
+/Примеры/*
+!/Примеры/*.корс
