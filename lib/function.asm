@@ -15,6 +15,7 @@ f_function:
   get_arg 5
   mov r10, rax
 
+  check_type rbx, STRING
   check_type rdx, LIST
   check_type r8, DICTIONARY
 

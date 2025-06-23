@@ -944,3 +944,34 @@ f_string_mul:
 
   copy rdx
   ret
+
+f_string_index:
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
+
+  check_type rbx, STRING
+  collection_index rbx, rcx
+
+  ret
+
+f_string_include:
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
+
+  check_type rbx, STRING
+  string_index rbx, rcx
+
+  mov rax, [rax + INTEGER_HEADER*8]
+
+  cmp rax, -1
+  je .return_false
+    boolean 1
+    ret
+
+  .return_false:
+    boolean 0
+    ret

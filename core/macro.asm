@@ -1450,6 +1450,22 @@ macro string_mul string*, integer* {
   return
 }
 
+macro string_include string*, value* {
+  enter string, value
+
+  call f_string_include
+
+  return
+}
+
+macro string_index string*, value* {
+  enter string, value
+
+  call f_string_index
+
+  return
+}
+
 macro to_string value* {
   enter value
 
