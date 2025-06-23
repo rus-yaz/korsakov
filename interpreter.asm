@@ -1119,6 +1119,13 @@ f_interpret_if:
 
   .skip_else:
 
+  list_length r11
+  cmp rax, 0
+  jne @f
+    null
+    ret
+  @@:
+
   integer -1
   list_get_link r11, rax
 
