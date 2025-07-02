@@ -17,7 +17,12 @@ f_to_string:
     mov rax, [rax + INTEGER_HEADER*8]
 
     mov r8, rsp ; Сохранение указателя на конец стека
-    mov rcx, 0
+
+    dec rsp
+    mov rcx, 1  ; Количество байт в последовательности (1 — ноль-терминатор)
+
+    mov [rsp], cl
+    dec rsp
 
     mov r9, 0
 
@@ -52,7 +57,18 @@ f_to_string:
       mov [rsp], al
     .not_negate:
 
-    push rcx, BINARY
+    mov rdx, 0
+    mov rbx, 8
+
+    mov rax, rcx
+    idiv rbx
+
+    cmp rdx, 0
+    je @f
+      inc rax
+    @@:
+
+    push rax, BINARY
 
     mov rax, rsp
     binary_to_string rax

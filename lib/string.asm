@@ -10,6 +10,8 @@ f_buffer_to_binary:
   push rax          ; Сохранение длины буфера
   add rax, BINARY_HEADER*8
 
+  inc rax ; Учёт нуля-терминатора
+
   create_block rax
   pop rcx          ; Количество блоков копирования
 
@@ -26,135 +28,183 @@ f_buffer_to_binary:
   rep movsb    ; Копирование в аллоцированный блок
   pop rax
 
+  mov cl, 0
+  mov ebx, [rax - HEAP_BLOCK_HEADER*4 + 2*4]
+
+  add rbx, rax
+
+  @@:
+    cmp rdi, rbx
+    je @f
+
+    mov [rdi], cl
+
+    inc rdi
+    jmp @b
+  @@:
+
   ret
 
 f_binary_to_string:
   get_arg 0
-  check_type rax, BINARY
+  mov rdx, rax
 
-  mov rbx, [rax + 8*1]
+  check_type rdx, BINARY
+
+  mov rbx, [rdx + 8*1]
   cmp rbx, 0
-  jne .no_empty
-
+  jne @f
     collection
     mem_mov [rax], STRING
-
     ret
+  @@:
 
-  .no_empty:
+  add rdx, BINARY_HEADER*8
+  mov rbx, 0 ; Количество символов
 
-  ; Взятие и сохранение указателя на блок
-  add rax, BINARY_HEADER*8 ; Сдвиг указателя до тела строки
-  push rax
+  push 0
+  mov r9, rsp
 
-  mov rcx, 0   ; Счётчик пройденных бит
-  mov rdi, 0   ; Количество символов
+  mov [rsp], bl
 
-  .while_string_length:
-    ; Буфер
-    mov rdx, [rax + rcx]
-    movzx rdx, dl
+  .while:
+    mov r8, 0
+    mov rax, 0
 
-    cmp rcx, rbx
-    je .end_string_length
+    mov rcx, 0
+    mov cl, [rdx]
 
-    cmp rdx, 248
-    check_error jge, "Неизвестная битовая последовательность"
+    cmp cl, 0
+    je .end_while
 
-    cmp rdx, 128
-    jl .continue_string_length
-    cmp rdx, 192
-    jge .continue_string_length
+    sub rsp, 4
+    inc rbx
 
-    jmp .do_string_length
+    mov al, cl
+    mov ah, 10000000b
 
-    .continue_string_length:
+    and al, ah
+    cmp al, ah
+    je @f
+      mov r8, 0 ; Количество оставшихся байт символа в последовательнсоти
+      jmp .correct_start
+    @@:
 
-    inc rdi
+    mov al, cl
+    mov ah, 11110000b
 
-    .do_string_length:
+    and al, ah
+    cmp al, ah
+    jne @f
+      mov r8, 3 ; Количество оставшихся байт символа в последовательнсоти
+      jmp .correct_start
+    @@:
 
-    inc rcx
-    jmp .while_string_length
+    mov al, cl
+    mov ah, 11100000b
 
-  .end_string_length:
+    and al, ah
+    cmp al, ah
+    jne @f
+      mov r8, 2 ; Количество оставшихся байт символа в последовательнсоти
+      jmp .correct_start
+    @@:
 
-  pop rsi
+    mov al, cl
+    mov ah, 11000000b
 
-  ; RDI — количество символов в строке
-  ; RSI — указатель на тело байтовой последовательности
+    and al, ah
+    cmp al, ah
+    jne @f
+      mov r8, 1 ; Количество оставшихся байт символа в последовательнсоти
+      jmp .correct_start
+    @@:
 
-  collection rdi
-  mem_mov [rax + 8*0], STRING
-  mem_mov [rax + 8*1], rdi
-  push rax
+    mov al, cl
+    mov ah, 10000000b
 
-  mov rcx, [rax + 8*3]
+    and al, ah
+    cmp al, ah
+    jne .not_symbol_start
+      raw_string "Неизвестная битовая последовательность: начало символа имеет маску 10000000b"
+      error_raw rax
+      exit -1
+    .not_symbol_start:
 
-  .while_chars:
-    cmp rdi, 0
-    je .end_chars
+    raw_string "Неизвестная битовая последовательность: начало символа не имеет маску 11000000b, 11100000b или 11110000b"
+    error_raw rax
+    exit -1
 
-    mov r8, 0 ; Размер символа
+    .correct_start:
 
-    ; Буфер
-    mov rdx, [rsi]
-    movzx rdx, dl
-
-    ; Нахождение символов
-
-    ; Символ, занимающий 1 байт (ASCII)
-    inc r8
-    cmp rdx, 128
-    jl .continue_chars
-
-    ; Часть другого символа, которого не должно быть в этом месте
-    cmp rdx, 192
-    check_error jl, "Неизвестная битовая последовательность"
-
-    ; Начало символа, занимающего 2 байта
-    inc r8
-    cmp rdx, 224
-    jl .continue_chars
-
-    ; Начало символа, занимающего 3 байта
-    inc r8
-    cmp rdx, 240
-
-    jl .continue_chars
-    inc r8 ; Начало символа, занимающего 4 байта
-
-    ; Маска первого байта 4-х байтового символа — 1110xxxx₂ (248₁₀)
-    cmp rdx, 248
-    check_error jge, "Неизвестная битовая последовательность"
-
-  .continue_chars:
-    .while:
-      dec r8
+    movzx rax, cl
+    .while_char:
 
       cmp r8, 0
-      je .end
+      je .end_while_char
 
-      shl rdx, 8
-      inc rsi
+      dec r8
+      inc rdx
 
-      mov rbx, [rsi]
-      mov dl, bl
+      mov cl, [rdx]
+      mov ch, 10000000b
 
-      jmp .while
-    .end:
+      and cl, ch
+      cmp cl, ch
+      je .correct_sequence
+        raw_string "Неизвестная битовая последовательность: продолжение символа не имеет маску 10000000₂"
+        error_raw rax
+        exit -1
+      .correct_sequence:
 
-    integer rdx
-    mem_mov [rcx], rax
+      shl rax, 8
+      mov al, [rdx]
+
+      jmp .while_char
+
+    .end_while_char:
+
+    mov [rsp], eax
+    inc rdx
+
+    jmp .while
+
+  .end_while:
+
+  collection rbx
+  mov r8, rax
+
+  mem_mov [r8], STRING
+  mem_mov [r8 + 8*1], rbx
+
+  mov rcx, [r8 + 8*3]
+  mov rdx, 0
+
+  mov r10, r9
+  sub r10, 4
+
+  @@:
+
+    cmp rdx, rbx
+    je @f
+
+    mov eax, [r10]
+    integer rax
+    mov [rcx], rax
+
     add rcx, 8
+    sub r10, 4
 
-    inc rsi
-    dec rdi
+    inc rdx
+    jmp @b
 
-    jmp .while_chars
-  .end_chars:
+  @@:
 
+  mov rsp, r9
   pop rax
+
+  mov rax, r8
+
   ret
 
 f_buffer_to_string:

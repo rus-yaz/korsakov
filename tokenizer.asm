@@ -932,7 +932,8 @@ f_tokenizer:
 
     string "Неизвестный токен:"
     list_append_link rbx, rax
-    list_append_link rbx, [токен]
+    to_string [токен]
+    list_append_link rbx, rax
 
     error rax
     exit -1

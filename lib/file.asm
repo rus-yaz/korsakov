@@ -81,39 +81,25 @@ f_close_file:
 
 f_read_file:
   get_arg 0
-
-  ; Проверка типа
-  check_type rax, FILE
-
-  ; Сохранение указателя на файловый дескриптор
   mov rbx, rax
 
-  ; Получение размера файла
-  mov rax, [rax + 8*3]
+  check_type rbx, FILE
 
-  ; Сохранение длины строки
-  mov rcx, rax
+  ; Учёт нуля-терминатора
+  dec rsp
+  mov rax, 0
+  mov [rsp], al
 
-  add rax, BINARY_HEADER*8 ; Учёт заголовка бинарной последовательности
-  create_block rax
-
-  ; Сохранение указателя на блок
-  push rax
-
-  mem_mov [rax + 8*0], BINARY ; Тип
-  mem_mov [rax + 8*1], rcx    ; Длина
-
-  add rax, BINARY_HEADER*8 ; Сдвиг указателя до тела строки
-
-  ; RAX — указатель на созданный блок
-  ; RBX — указатель на блок файлового дескриптора
+  ; Выделение места для записи
+  sub rsp, [rbx + 8*3]
+  mov rcx, rsp
 
   ; Чтение файла
   sys_read [rbx + 8*2],\ ; Файловый дескриптор
-           rax,\         ; Блок для хранения данных
+           rcx,\         ; Блок для хранения данных
            [rbx + 8*3]   ; Размер читаемого файла
 
-  ; Проверка, что файл успешно прочитан
+  ; Проверка, что файл успешно прочитан (проверка количества прочитанных байт)
   cmp rax, 0
   jge .read
     close_file rbx
@@ -123,8 +109,13 @@ f_read_file:
 
   .read:
 
-  pop rax
-  binary_to_string rax
+  ; Приведение битовой последовательности к строке
+  mov rax, rsp
+  buffer_to_string rax
+
+  ; Восстановление указателя на конец стека
+  add rsp, [rbx + 8*3]
+  inc rsp
 
   ret
 
