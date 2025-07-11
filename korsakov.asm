@@ -87,6 +87,7 @@ section "koraskov_data" writable
   типы           rq 1
   токен          rq 1
   индекс         rq 1
+  модули         rq 1
   токены         rq 1
   символы        rq 1
   тип_токена     rq 1
@@ -646,6 +647,7 @@ start:
 
   integer 1
   list_get_link [ARGUMENTS], rax
+  get_absolute_path rax
 
   open_file rax
   mov rbx, rax
@@ -692,17 +694,28 @@ start:
     print rax
   end if
 
-  string "include 'core/korsakov.asm'", 10
+  string "include '"
   mov rcx, rax
 
-  string "init "
+  get_exe_directory
+  mov rdx, rax
   string_extend_links rcx, rax
 
-  string ", "
-  join [КОМПИЛЯЦИЯ], rax
+  string "/core/korsakov.asm'", 10
   string_extend_links rcx, rax
 
-  string 10
+  string "include '"
+  string_extend_links rcx, rax
+
+  string_extend_links rcx, rdx
+
+  string "/modules/.asm'", 10
+  string_extend_links rcx, rax
+
+  string "start:", 10
+  string_extend_links rcx, rax
+
+  string "init_", 10
   string_extend_links rcx, rax
 
   string_extend_links rcx, rbx
@@ -712,6 +725,7 @@ start:
 
   integer 1
   list_get_link [ARGUMENTS], rax
+  get_absolute_path rax
   mov rbx, rax
   string "."
   mov rdx, rax
@@ -735,6 +749,9 @@ start:
   string "/bin/fasm"
   list_append_link rcx, rax
   string ".asm"
+  string_add_links rbx, rax
+  list_append_link rcx, rax
+  string ".o"
   string_add_links rbx, rax
   list_append_link rcx, rax
 

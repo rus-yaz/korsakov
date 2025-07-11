@@ -28,7 +28,6 @@ jne .no_debug
 .no_debug:
 
 string "korsakov"
-
 mov rcx, rax
 list_include [ARGUMENTS], rcx
 boolean_value rax

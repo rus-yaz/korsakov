@@ -1043,15 +1043,24 @@ f_compile_string:
         string_get_link r10, r12
         mov r14, rax
 
+        string '"'
+        is_equal r14, rax
+        boolean_value rax
+        cmp rax, 1
+        jne .not_double_quote
+          string "', 34, '"
+          mov r14, rax
+          jmp .next_char
+        .not_double_quote:
+
         string 9
         is_equal r14, rax
         boolean_value rax
         cmp rax, 1
         jne .not_tab
-          string '", 9, "'
+          string "', 9, '"
           mov r14, rax
           jmp .next_char
-
         .not_tab:
 
         string 10
@@ -1059,10 +1068,9 @@ f_compile_string:
         boolean_value rax
         cmp rax, 1
         jne .not_newline
-          string '", 10, "'
+          string "', 10, '"
           mov r14, rax
           jmp .next_char
-
         .not_newline:
 
         .next_char:
@@ -1074,11 +1082,11 @@ f_compile_string:
 
       .while_string_end:
 
-      string 'string "'
+      string "string '"
       string_extend_links rax, r11
       mov r10, rax
 
-      string '"'
+      string "'"
       string_extend_links r10, rax
 
       list_append_link rdx, r10

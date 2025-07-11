@@ -1602,6 +1602,30 @@ macro getcwd {
   return
 }
 
+macro readlink path* {
+  enter path
+
+  call f_readlink
+
+  return
+}
+
+macro get_exe_path {
+  enter
+
+  call f_get_exe_path
+
+  return
+}
+
+macro get_exe_directory {
+  enter
+
+  call f_get_exe_directory
+
+  return
+}
+
 macro get_random start = 0, end = 0 {
   enter start, end
 
