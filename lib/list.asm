@@ -298,3 +298,77 @@ f_list_mul:
 
   copy rdx
   ret
+
+f_list_slice_links:
+  get_arg 0
+  mov rbx, rax ; Список
+  get_arg 1
+  mov rcx, rax ; Начало
+  get_arg 2
+  mov rdx, rax ; Конец
+  get_arg 3
+  mov r8,  rax ; Шаг
+
+  cmp rcx, 0
+  jne @f
+    integer 0
+    mov rcx, rax
+  @@:
+
+  cmp rdx, 0
+  jne @f
+    integer -1
+    mov rdx, rax
+  @@:
+
+  cmp r8, 0
+  jne @f
+    integer 1
+    mov r8, rax
+  @@:
+
+  check_type rbx, LIST
+  check_type rcx, INTEGER
+  check_type rdx, INTEGER
+  check_type r8,  INTEGER
+
+  collection_slice_links rbx, rcx, rdx, r8
+  ret
+
+f_list_slice:
+  get_arg 0
+  mov rbx, rax ; list
+  get_arg 1
+  mov rcx, rax ; start
+  get_arg 2
+  mov rdx, rax ; stop
+  get_arg 3
+  mov r8,  rax ; step
+
+  cmp rcx, 0
+  jne @f
+    integer 0
+    mov rcx, rax
+  @@:
+
+  cmp rdx, 0
+  jne @f
+    integer -1
+    mov rdx, rax
+  @@:
+
+  cmp r8, 0
+  jne @f
+    integer 1
+    mov r8, rax
+  @@:
+
+  check_type rbx, LIST
+  check_type rcx, INTEGER
+  check_type rdx, INTEGER
+  check_type r8,  INTEGER
+
+  collection_slice_links rbx, rcx, rdx, r8
+  copy rax
+
+  ret

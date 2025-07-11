@@ -507,6 +507,14 @@ macro run command*, env*, wait = 1 {
   leave
 }
 
+macro get_file_stat_buffer filename* {
+  enter filename
+
+  call f_get_file_stat_buffer
+
+  return
+}
+
 macro get_file_size filename* {
   enter filename
 
@@ -545,6 +553,14 @@ macro write_file file*, string* {
   call f_write_file
 
   leave
+}
+
+macro get_absolute_path path* {
+  enter path
+
+  call f_get_absolute_path
+
+  return
 }
 
 macro is_equal val_1*, val_2* {
@@ -978,6 +994,38 @@ macro collection_add collection_1*, collection_2* {
   return
 }
 
+macro collection_reverse_links collection* {
+  enter collection
+
+  call f_collection_reverse_links
+
+  return
+}
+
+macro collection_reverse collection* {
+  enter collection
+
+  call f_collection_reverse
+
+  return
+}
+
+macro collection_slice_links collection*, start = 0, stop = 0, step = 0 {
+  enter collection, start, stop, step
+
+  call f_collection_slice_links
+
+  return
+}
+
+macro collection_slice collection*, start = 0, stop = 0, step = 0 {
+  enter collection, start, stop, step
+
+  call f_collection_slice
+
+  return
+}
+
 macro is_collection value* {
   enter value
 
@@ -1158,6 +1206,22 @@ macro list_mul list*, integer* {
   enter list, integer
 
   call f_list_mul
+
+  return
+}
+
+macro list_slice_links list*, start = 0, stop = 0, step = 0 {
+  enter list, start, stop, step
+
+  call f_list_slice_links
+
+  return
+}
+
+macro list_slice list*, start = 0, stop = 0, step = 0 {
+  enter list, start, stop, step
+
+  call f_list_slice
 
   return
 }

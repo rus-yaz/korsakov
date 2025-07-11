@@ -653,3 +653,187 @@ f_collection_expand:
   collection_expand_links rbx, rax
 
   ret
+
+f_collection_reverse_links:
+  get_arg 0
+  mov rbx, rax
+
+  is_collection rbx
+
+  collection_capacity rbx
+  collection rax
+  mov r9, rax
+
+  mem_mov [r9 + 8*0], [rbx + 8*0]
+  mem_mov [r9 + 8*1], [rbx + 8*1]
+  mem_mov [r9 + 8*2], [rbx + 8*2]
+
+  collection_length rbx
+  mov rdx, rax
+
+  mov rbx, [rbx + 8*3]
+  mov rcx, [r9  + 8*3]
+
+  mov r8, rdx
+  dec r8
+  imul r8, 8
+  add rbx, r8
+
+  mov r8, 0
+  @@:
+
+    cmp rdx, r8
+    je @f
+
+    mem_mov [rcx], [rbx]
+
+    sub rbx, 8
+    add rcx, 8
+
+    inc r8
+    jmp @b
+
+  @@:
+
+  mov rax, r9
+  ret
+
+f_collection_reverse:
+  get_arg 0
+  mov rbx, rax
+
+  collection_reverse_links rbx
+  copy rax
+
+  ret
+
+f_collection_slice_links:
+  get_arg 0    ; Коллекция
+  mov rbx, rax
+  get_arg 1    ; Начало
+  mov rcx, rax
+  get_arg 2    ; Конец
+  mov rdx, rax
+  get_arg 3    ; Шаг
+  mov r8, rax
+
+  cmp rcx, 0
+  jne @f
+    integer 0
+    mov rcx, rax
+  @@:
+
+  cmp rdx, 0
+  jne @f
+    integer -1
+    mov rdx, rax
+  @@:
+
+  cmp r8, 0
+  jne @f
+    integer 1
+    mov r8, rax
+  @@:
+
+  is_collection rbx
+  check_type rcx, INTEGER
+  check_type rdx, INTEGER
+  check_type r8,  INTEGER
+
+  collection_length rbx
+  integer rax
+  is_lower rax, rdx
+  boolean_value rax
+  cmp rax, 1
+  je @f
+
+  integer 0
+  is_lower rdx, rax
+  boolean_value rax
+  cmp rax, 1
+  je @f
+
+  jmp .correct_stop
+
+  @@:
+
+    collection_length rbx
+    integer rax
+    mov rdx, rax
+
+  .correct_stop:
+
+  mov r10, 0
+
+  integer 0
+  is_lower r8, rax
+  boolean_value rax
+  cmp rax, 1
+  jne @f
+    negate r8
+    mov r8, rax
+
+    mov r10, 1
+  @@:
+
+  collection
+  mov r9, rax
+
+  mem_mov [r9 + 8*0], [rbx + 8*0]
+
+  @@:
+
+    is_equal rcx, rdx
+    boolean_value rax
+    cmp rax, 1
+    je @f
+
+    collection_get_link rbx, rcx
+    collection_append_link r9, rax
+
+    integer_add rcx, r8
+    mov rcx, rax
+    jmp @b
+
+  @@:
+
+  mov rax, r9
+  cmp r10, 0
+  je @f
+    collection_reverse_links rax
+  @@:
+
+  ret
+
+f_collection_slice:
+  get_arg 0    ; Коллекция
+  mov rbx, rax
+  get_arg 1    ; Начало
+  mov rcx, rax
+  get_arg 2    ; Конец
+  mov rdx, rax
+  get_arg 3    ; Шаг
+  mov r8, rax
+
+  cmp rcx, 0
+  jne @f
+    integer 0
+    mov rcx, rax
+  @@:
+
+  cmp rdx, 0
+  jne @f
+    integer -1
+    mov rdx, rax
+  @@:
+
+  cmp r8, 0
+  jne @f
+    integer 1
+    mov r8, rax
+  @@:
+
+  collection_slice_links rbx, rcx, rdx, r8
+  copy rax
+
+  ret

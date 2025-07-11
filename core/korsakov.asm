@@ -87,6 +87,10 @@ _start:
   mov rbp, rsp
 
   allocate_heap
+
+  if NODEFAULT eqtype
+  else
+
   reset_seed
 
   float 2.718281828459045
@@ -168,5 +172,7 @@ _start:
   list
   assign rbx, rax, rcx
   mov rcx, rax
+
+  end if
 
   call start
