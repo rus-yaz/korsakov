@@ -14,6 +14,7 @@ define SYS_EXECVE    59
 define SYS_EXIT      60
 define SYS_WAIT4     61
 define SYS_GETCWD    79
+define SYS_CHDIR     80
 define SYS_READLINK  89
 define SYS_GETRANDOM 318
 
@@ -156,6 +157,11 @@ macro sys_getcwd buffer*, size* {
   syscall SYS_GETCWD,\
           buffer,\ ; Буфер, куда будет помещён путь
           size     ; Размер буфера
+}
+
+macro sys_chdir path* {
+  syscall SYS_CHDIR,\
+          path ; Путь
 }
 
 macro sys_readlink path*, buffer*, size* {

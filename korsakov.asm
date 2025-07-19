@@ -181,6 +181,7 @@ macro print_help {
 }
 
 start:
+
   string "--help"
   list_include [ARGUMENTS], rax
   boolean_value rax
@@ -645,9 +646,13 @@ start:
   integer 0
   mov [СЧЁТЧИК_ВЫЗОВОВ], rax
 
+  list
+  mov [модули], rax
+
   integer 1
   list_get_link [ARGUMENTS], rax
   get_absolute_path rax
+  mov rcx, rax
 
   open_file rax
   mov rbx, rax
@@ -657,6 +662,20 @@ start:
 
   close_file rbx
 
+  string "/"
+  mov rdx, rax
+  integer 1
+  split_from_right rcx, rdx, rax
+  mov rcx, rax
+
+  getcwd
+  mov rbx, rax
+
+  list_pop_link rcx
+  list_pop_link rcx
+
+  chdir rax
+
   tokenizer [код]
   mov [токены], rax
   if DEBUG eqtype
@@ -664,6 +683,8 @@ start:
     list_append_link rax, [токены]
     print rax
   end if
+
+  chdir rbx
 
   parser [токены]
   mov [АСД], rax

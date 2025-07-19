@@ -6,58 +6,58 @@ f_copy:
   mov rbx, [rax]
 
   cmp rbx, NULL
-  jne .not_null
+  jne @f
     null
     ret
-  .not_null:
+  @@:
 
   cmp rbx, INTEGER
-  jne .not_integer
+  jne @f
     integer_copy rax
     ret
-  .not_integer:
+  @@:
 
   cmp rbx, FLOAT
-  jne .not_float
+  jne @f
     float_copy rax
     ret
-  .not_float:
+  @@:
 
   cmp rbx, BOOLEAN
-  jne .not_boolean
+  jne @f
     boolean_copy rax
     ret
-  .not_boolean:
+  @@:
 
   cmp rbx, COLLECTION
-  jne .not_collection
+  jne @f
     collection_copy rax
     ret
-  .not_collection:
+  @@:
 
   cmp rbx, LIST
-  jne .not_list
+  jne @f
     list_copy rax
     ret
-  .not_list:
+  @@:
 
   cmp rbx, STRING
-  jne .not_string
+  jne @f
     string_copy rax
     ret
-  .not_string:
+  @@:
 
   cmp rbx, DICTIONARY
-  jne .not_dictionary
+  jne @f
     dictionary_copy rax
     ret
-  .not_dictionary:
+  @@:
 
   cmp rbx, FUNCTION
-  jne .not_function
+  jne @f
     function_copy rax
     ret
-  .not_function:
+  @@:
 
   type_to_string rbx
   mov rbx, rax

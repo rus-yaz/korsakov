@@ -1602,6 +1602,14 @@ macro getcwd {
   return
 }
 
+macro chdir path* {
+  enter path
+
+  call f_chdir
+
+  return
+}
+
 macro readlink path* {
   enter path
 

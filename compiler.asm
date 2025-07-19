@@ -260,136 +260,136 @@ f_compile:
 
   mov rax, [rcx]
   cmp rax, LIST
-  jne .not_body
+  jne @f
     compile_body rbx, rcx
     ret
-  .not_body:
+  @@:
 
   check_node_type rcx, [УЗЕЛ_ПРИСВАИВАНИЯ_ПЕРЕМЕННОЙ]
   cmp rax, 1
-  jne .not_assign
+  jne @f
     compile_assign rbx, rcx
     ret
-  .not_assign:
+  @@:
 
   check_node_type rcx, [УЗЕЛ_ДОСТУПА_К_ПЕРЕМЕННОЙ]
   cmp rax, 1
-  jne .not_access
+  jne @f
     compile_access rbx, rcx
     ret
-  .not_access:
+  @@:
 
   check_node_type rcx, [УЗЕЛ_УНАРНОЙ_ОПЕРАЦИИ]
   cmp rax, 1
-  jne .not_unary_operation
+  jne @f
     compile_unary_operation rbx, rcx
     ret
-  .not_unary_operation:
+  @@:
 
   check_node_type rcx, [УЗЕЛ_БИНАРНОЙ_ОПЕРАЦИИ]
   cmp rax, 1
-  jne .not_binary_operation
+  jne @f
     compile_binary_operation rbx, rcx
     ret
-  .not_binary_operation:
+  @@:
 
   check_node_type rcx, [УЗЕЛ_НУЛЬ]
   cmp rax, 1
-  jne .not_null
+  jne @f
     compile_null rbx, rcx
     ret
-  .not_null:
+  @@:
 
   check_node_type rcx, [УЗЕЛ_ЦЕЛОГО_ЧИСЛА]
   cmp rax, 1
-  jne .not_integer
+  jne @f
     compile_integer rbx, rcx
     ret
-  .not_integer:
+  @@:
 
   check_node_type rcx, [УЗЕЛ_ВЕЩЕСТВЕННОГО_ЧИСЛА]
   cmp rax, 1
-  jne .not_float
+  jne @f
     compile_float rbx, rcx
     ret
-  .not_float:
+  @@:
 
   check_node_type rcx, [УЗЕЛ_СПИСКА]
   cmp rax, 1
-  jne .not_list
+  jne @f
     compile_list rbx, rcx
     ret
-  .not_list:
+  @@:
 
   check_node_type rcx, [УЗЕЛ_СТРОКИ]
   cmp rax, 1
-  jne .not_string
+  jne @f
     compile_string rbx, rcx
     ret
-  .not_string:
+  @@:
 
   check_node_type rcx, [УЗЕЛ_СЛОВАРЯ]
   cmp rax, 1
-  jne .not_dictionary
+  jne @f
     compile_dictionary rbx, rcx
     ret
-  .not_dictionary:
+  @@:
 
   check_node_type rcx, [УЗЕЛ_ЕСЛИ]
   cmp rax, 1
-  jne .not_if
+  jne @f
     compile_if rbx, rcx
     ret
-  .not_if:
+  @@:
 
   check_node_type rcx, [УЗЕЛ_ПОКА]
   cmp rax, 1
-  jne .not_while
+  jne @f
     compile_while rbx, rcx
     ret
-  .not_while:
+  @@:
 
   check_node_type rcx, [УЗЕЛ_ДЛЯ]
   cmp rax, 1
-  jne .not_for
+  jne @f
     compile_for rbx, rcx
     ret
-  .not_for:
+  @@:
 
   check_node_type rcx, [УЗЕЛ_ПРОПУСКА]
   cmp rax, 1
-  jne .not_skip
+  jne @f
     compile_skip rbx, rcx
     ret
-  .not_skip:
+  @@:
 
   check_node_type rcx, [УЗЕЛ_ПРЕРЫВАНИЯ]
   cmp rax, 1
-  jne .not_break
+  jne @f
     compile_break rbx, rcx
     ret
-  .not_break:
+  @@:
 
   check_node_type rcx, [УЗЕЛ_ФУНКЦИИ]
   cmp rax, 1
-  jne .not_function
+  jne @f
     compile_function rbx, rcx
     ret
-  .not_function:
+  @@:
 
   check_node_type rcx, [УЗЕЛ_ВЫЗОВА]
   cmp rax, 1
-  jne .not_call
+  jne @f
     compile_call rbx, rcx
     ret
-  .not_call:
+  @@:
 
   check_node_type rcx, [УЗЕЛ_ВОЗВРАЩЕНИЯ]
   cmp rax, 1
-  jne .not_return
+  jne @f
     compile_return rbx, rcx
     ret
-  .not_return:
+  @@:
 
   string "Неизвестный узел:"
   mov rbx, rax

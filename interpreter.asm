@@ -277,150 +277,150 @@ f_interpret:
 
   mov rax, [rbx]
   cmp rax, LIST
-  jne .not_body
+  jne @f
     interpret_body rcx, rbx
     ret
-  .not_body:
+  @@:
 
   check_node_type rbx, [УЗЕЛ_ПРИСВАИВАНИЯ_ПЕРЕМЕННОЙ]
   cmp rax, 1
-  jne .not_assign
+  jne @f
     interpret_assign rcx, rbx
     ret
-  .not_assign:
+  @@:
 
   check_node_type rbx, [УЗЕЛ_ПРИСВАИВАНИЯ_ССЫЛКИ_ПЕРЕМЕННОЙ]
   cmp rax, 1
-  jne .not_assign_link
+  jne @f
     interpret_assign_link rcx, rbx
     ret
-  .not_assign_link:
+  @@:
 
   check_node_type rbx, [УЗЕЛ_ДОСТУПА_К_ПЕРЕМЕННОЙ]
   cmp rax, 1
-  jne .not_access
+  jne @f
     interpret_access rcx, rbx
     ret
-  .not_access:
+  @@:
 
   check_node_type rbx, [УЗЕЛ_ДОСТУПА_К_ССЫЛКЕ_ПЕРЕМЕННОЙ]
   cmp rax, 1
-  jne .not_access_link
+  jne @f
     interpret_access_link rcx, rbx
     ret
-  .not_access_link:
+  @@:
 
   check_node_type rbx, [УЗЕЛ_УНАРНОЙ_ОПЕРАЦИИ]
   cmp rax, 1
-  jne .not_unary_operation
+  jne @f
     interpret_unary_operation rcx, rbx
     ret
-  .not_unary_operation:
+  @@:
 
   check_node_type rbx, [УЗЕЛ_БИНАРНОЙ_ОПЕРАЦИИ]
   cmp rax, 1
-  jne .not_binary_operation
+  jne @f
     interpret_binary_operation rcx, rbx
     ret
-  .not_binary_operation:
+  @@:
 
   check_node_type rbx, [УЗЕЛ_НУЛЬ]
   cmp rax, 1
-  jne .not_null
+  jne @f
     interpret_null rcx, rbx
     ret
-  .not_null:
+  @@:
 
   check_node_type rbx, [УЗЕЛ_ЦЕЛОГО_ЧИСЛА]
   cmp rax, 1
-  jne .not_integer
+  jne @f
     interpret_integer rcx, rbx
     ret
-  .not_integer:
+  @@:
 
   check_node_type rbx, [УЗЕЛ_ВЕЩЕСТВЕННОГО_ЧИСЛА]
   cmp rax, 1
-  jne .not_float
+  jne @f
     interpret_float rcx, rbx
     ret
-  .not_float:
+  @@:
 
   check_node_type rbx, [УЗЕЛ_СПИСКА]
   cmp rax, 1
-  jne .not_list
+  jne @f
     interpret_list rcx, rbx
     ret
-  .not_list:
+  @@:
 
   check_node_type rbx, [УЗЕЛ_СТРОКИ]
   cmp rax, 1
-  jne .not_string
+  jne @f
     interpret_string rcx, rbx
     ret
-  .not_string:
+  @@:
 
   check_node_type rbx, [УЗЕЛ_СЛОВАРЯ]
   cmp rax, 1
-  jne .not_dictionary
+  jne @f
     interpret_dictionary rcx, rbx
     ret
-  .not_dictionary:
+  @@:
 
   check_node_type rbx, [УЗЕЛ_ЕСЛИ]
   cmp rax, 1
-  jne .not_if
+  jne @f
     interpret_if rcx, rbx
     ret
-  .not_if:
+  @@:
 
   check_node_type rbx, [УЗЕЛ_ПОКА]
   cmp rax, 1
-  jne .not_while
+  jne @f
     interpret_while rcx, rbx
     ret
-  .not_while:
+  @@:
 
   check_node_type rbx, [УЗЕЛ_ДЛЯ]
   cmp rax, 1
-  jne .not_for
+  jne @f
     interpret_for rcx, rbx
     ret
-  .not_for:
+  @@:
 
   check_node_type rbx, [УЗЕЛ_ПРОПУСКА]
   cmp rax, 1
-  jne .not_skip
+  jne @f
     interpret_skip rcx, rbx
     ret
-  .not_skip:
+  @@:
 
   check_node_type rbx, [УЗЕЛ_ПРЕРЫВАНИЯ]
   cmp rax, 1
-  jne .not_break
+  jne @f
     interpret_break rcx, rbx
     ret
-  .not_break:
+  @@:
 
   check_node_type rbx, [УЗЕЛ_ФУНКЦИИ]
   cmp rax, 1
-  jne .not_function
+  jne @f
     interpret_function rcx, rbx
     ret
-  .not_function:
+  @@:
 
   check_node_type rbx, [УЗЕЛ_ВЫЗОВА]
   cmp rax, 1
-  jne .not_call
+  jne @f
     interpret_call rcx, rbx
     ret
-  .not_call:
+  @@:
 
   check_node_type rbx, [УЗЕЛ_ВОЗВРАЩЕНИЯ]
   cmp rax, 1
-  jne .not_return
+  jne @f
     interpret_return rcx, rbx
     ret
-  .not_return:
+  @@:
 
   string "Неизвестный узел:"
   mov rcx, rax
@@ -1365,10 +1365,10 @@ f_interpret_for:
 
     mov rax, LIST
     cmp [r8], rax
-    je .correct_type
+    je .is_list
     mov rax, STRING
     cmp [r8], rax
-    je .correct_type
+    je .is_string
 
       string "Ожидался тип Список или Строка"
       mov rbx, rax
@@ -1377,14 +1377,18 @@ f_interpret_for:
       error rax
       exit -1
 
-    .correct_type:
+    .is_list:
+      list_length r8
+      jmp @f
+    .is_string:
+      string_length r8
+    @@:
+
+    cmp rax, 0
+    je .else
 
     integer 0
     mov r9, rax
-
-    collection_length r8
-    cmp rax, 0
-    je .else
 
     integer rax
     mov r10, rax

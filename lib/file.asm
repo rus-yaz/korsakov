@@ -31,10 +31,6 @@ f_get_file_size:
 
   get_file_stat_buffer rbx
 
-  repeat 1000
-    nop
-  end repeat
-
   mov rax, [rax + 8*6] ; Размер файла в байтах
 
   ret
@@ -57,13 +53,25 @@ f_open_file:
            rbx,\      ; Тип доступа файла
            rcx        ; Первоначальное разрешение на доступ к файлу
 
+  pop rbx
+
   ; Проверка открытия файла
   cmp rax, 0
-  check_error jle, "Файл не был прочитан"
+  jg .correct
+    list
+    mov rcx, rax
+    string "Файл «"
+    list_append_link rcx, rax
+    list_append_link rcx, rbx
+    string "» не был прочитан"
+    list_append_link rcx, rax
+
+    string ""
+    error rcx, rax
+    exit -1
+  .correct:
 
   mov rcx, rax
-
-  pop rbx
 
   get_file_size rbx
   mov rdx, rax

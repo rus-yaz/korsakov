@@ -24,6 +24,75 @@ f_getcwd:
   buffer_to_string rax
   ret
 
+f_chdir:
+  get_arg 0
+  mov rbx, rax
+
+  check_type rbx, STRING
+
+  string_to_binary rbx
+  add rax, BINARY_HEADER*8
+
+  sys_chdir rax
+
+  cmp rax, 0
+  jne @f
+    ret
+  @@:
+
+  cmp rax, -2
+  jne .not_directory_not_found
+    list
+    mov rcx, rax
+    string "chdir: Объект «"
+    list_append_link rcx, rax
+    list_append_link rcx, rbx
+    string "» не найден"
+    list_append_link rcx, rax
+    string ""
+    error rcx, rax
+    exit -1
+  .not_directory_not_found:
+
+  cmp rax, -13
+  jne .not_permission_denied
+    list
+    mov rcx, rax
+    string "chdir: Доступ к директории «"
+    list_append_link rcx, rax
+    list_append_link rcx, rbx
+    string "» ограничен"
+    list_append_link rcx, rax
+    string ""
+    error rcx, rax
+    exit -1
+  .not_permission_denied:
+
+  cmp rax, -20
+  jne .not_not_a_dicretory
+    list
+    mov rcx, rax
+    string "chdir: Объект «"
+    list_append_link rcx, rax
+    list_append_link rcx, rbx
+    string "» не является директорией"
+    list_append_link rcx, rax
+    string ""
+    error rcx, rax
+    exit -1
+  .not_not_a_dicretory:
+
+  mov rcx, rax
+
+  list
+  mov rbx, rax
+  string "chdir: Непокрытая ошибка с кодом"
+  list_append_link rbx, rax
+  integer rcx
+  list_append_link rbx, rax
+  error rax
+  exit -1
+
 f_readlink:
   get_arg 0
   mov rbx, rax

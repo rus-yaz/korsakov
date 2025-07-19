@@ -11,29 +11,25 @@ f_delete:
   mov r8d, [rcx]
   cmp r8d, HEAP_BLOCK
   je .correct_block
-
     raw_string "free_block: Ожидался блок кучи"
     error_raw rax
     exit -1
-
   .correct_block:
 
   mov rcx, [rbx]
 
   cmp rcx, COLLECTION
-  je .collection
+  je @f
   cmp rcx, LIST
-  je .collection
+  je @f
   cmp rcx, STRING
-  je .collection
+  je @f
   cmp rcx, DICTIONARY
-  je .collection
-
+  je @f
     ; Если прыжка не произошло, переменная не является коллекцией
     delete_block rbx
     ret
-
-  .collection:
+  @@:
 
   mov rcx, [rbx + 8*3]
   mov rdx, [rbx + 8*1]
@@ -41,17 +37,16 @@ f_delete:
 
   mov r8, rcx
 
-  .while:
+  @@:
     cmp rdx, 0
-    je .end_while
+    je @f
 
     delete [r8]
     add r8, 8
 
     dec rdx
-    jmp .while
-
-  .end_while:
+    jmp @b
+  @@:
 
   delete_block rcx
 

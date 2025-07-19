@@ -306,9 +306,9 @@ f_string_to_binary:
   mov rbx, rsp
   add rbx, r9
 
-  .copy_while:
+  @@:
     cmp r9, 0
-    je .copy_end_while
+    je @f
 
     mov rcx, [rbx]
     mov [rax], cl
@@ -317,9 +317,8 @@ f_string_to_binary:
     inc rax
 
     dec r9
-    jmp .copy_while
-
-  .copy_end_while:
+    jmp @b
+  @@:
 
   mov rax, r12
   mov rsp, r15
