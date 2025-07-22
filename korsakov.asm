@@ -182,7 +182,25 @@ macro print_help {
 
 start:
 
+  string "--справка"
+  list_include [ARGUMENTS], rax
+  boolean_value rax
+  cmp rax, 1
+  je .help
+
+  string "--помощь"
+  list_include [ARGUMENTS], rax
+  boolean_value rax
+  cmp rax, 1
+  je .help
+
   string "--help"
+  list_include [ARGUMENTS], rax
+  boolean_value rax
+  cmp rax, 1
+  je .help
+
+  string "-п"
   list_include [ARGUMENTS], rax
   boolean_value rax
   cmp rax, 1
@@ -192,7 +210,9 @@ start:
   list_include [ARGUMENTS], rax
   boolean_value rax
   cmp rax, 1
-  jne .not_help
+  je .help
+
+  jmp .not_help
 
   .help:
 
@@ -200,6 +220,36 @@ start:
     exit 0
 
   .not_help:
+
+  string "--компиляция"
+  list_index [ARGUMENTS], rax
+  mov rbx, rax
+  integer 1
+  integer_add rbx, rax
+  boolean rax
+  boolean_value rax
+  cmp rax, 1
+  je .compile
+
+  string "--компилировать"
+  list_index [ARGUMENTS], rax
+  mov rbx, rax
+  integer 1
+  integer_add rbx, rax
+  boolean rax
+  boolean_value rax
+  cmp rax, 1
+  je .compile
+
+  string "--комп"
+  list_index [ARGUMENTS], rax
+  mov rbx, rax
+  integer 1
+  integer_add rbx, rax
+  boolean rax
+  boolean_value rax
+  cmp rax, 1
+  je .compile
 
   string "--compile"
   list_index [ARGUMENTS], rax
@@ -219,7 +269,19 @@ start:
   boolean rax
   boolean_value rax
   cmp rax, 1
-  jne .not_compile
+  je .compile
+
+  string "-к"
+  list_index [ARGUMENTS], rax
+  mov rbx, rax
+  integer 1
+  integer_add rbx, rax
+  boolean rax
+  boolean_value rax
+  cmp rax, 1
+  je .compile
+
+  jmp .not_compile
 
   .compile:
 
@@ -229,7 +291,7 @@ start:
 
   .not_compile:
 
-  string "--nostd"
+  string "--без-стандартной"
   list_index [ARGUMENTS], rax
   mov rbx, rax
   integer 1
@@ -237,7 +299,21 @@ start:
   boolean rax
   boolean_value rax
   cmp rax, 1
-  jne .not_nostd
+  je .no_std
+
+  string "--no-std"
+  list_index [ARGUMENTS], rax
+  mov rbx, rax
+  integer 1
+  integer_add rbx, rax
+  boolean rax
+  boolean_value rax
+  cmp rax, 1
+  je .no_std
+
+  jmp .not_no_std
+
+  .no_std:
 
     cmp [КОМПИЛЯЦИЯ], 1
     je .compilation
@@ -253,7 +329,7 @@ start:
     integer_dec [ARGUMENTS_COUNT]
     mov [ОТКЛЮЧЕНИЕ_СТАНДАРТНОЙ_БИБЛИОТЕКИ], 1
 
-  .not_nostd:
+  .not_no_std:
 
   integer 2
   is_equal [ARGUMENTS_COUNT], rax
@@ -812,19 +888,30 @@ f_print_help:
   integer 0
   list_get_link [ARGUMENTS], rax
   string_extend_links rcx, rax
-  string " <file.kors> [--compile|-c] [--help|-h] [--nostd]"
+  string " [флаги] файл.[корс|kors]"
   string_extend_links rcx, rax
   list_append_link rbx, rax
 
   string ""
   list_append_link rbx, rax
+
   string "Флаги:"
   list_append_link rbx, rax
-  string "  --compile или -c    Компиляция в исполняемый файл с таким же именем, что и переданный"
+  string "  --компилировать, --компиляция, --комп, -к, --compile, -c"
   list_append_link rbx, rax
-  string "  --help или -h       Показать эту справку"
+  string "      Компиляция в исполняемый файл с таким же именем, что и переданный"
   list_append_link rbx, rax
-  string "  --nostd             Компиляция без стандартной библиотеки"
+  string ""
+  list_append_link rbx, rax
+  string "  --справка, --помощь, -п, --help, -h"
+  list_append_link rbx, rax
+  string "      Показать эту справку"
+  list_append_link rbx, rax
+  string ""
+  list_append_link rbx, rax
+  string "  --без-стандартной, --no-std"
+  list_append_link rbx, rax
+  string "      Компиляция без стандартной библиотеки"
   list_append_link rbx, rax
 
   string 10
