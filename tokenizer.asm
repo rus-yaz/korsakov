@@ -439,12 +439,23 @@ f_tokenizer:
 
         .while_oneline_comment:
 
+          list_length r10
+          integer rax
+          is_equal r13, rax
+          boolean_value rax
+          cmp rax, 1
+          je .end_while_oneline_comment
+
           integer_inc r13
           list_get_link r10, rax
           is_equal rbx, rax
           boolean_value rax
           cmp rax, 1
           jne .while_oneline_comment
+
+        .end_while_oneline_comment:
+
+        integer_dec r13
 
         jmp .continue
 
@@ -463,6 +474,15 @@ f_tokenizer:
         mov r9, rax
 
         .while_multiline_comment:
+
+          list_length r10
+          dec rax
+          integer rax
+          is_equal r13, rax
+          boolean_value rax
+          cmp rax, 1
+          je .incorrect_multiline_comment
+
           integer_inc r13
           list_get_link r10, rax
 
@@ -480,6 +500,12 @@ f_tokenizer:
           jne .while_multiline_comment
 
         jmp .continue
+
+        .incorrect_multiline_comment:
+
+        raw_string "Ожидалось *! в конце комментария", 10
+        error_raw rax
+        exit -1
 
       .not_multiline_comment:
 
