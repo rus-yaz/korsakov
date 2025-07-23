@@ -23,6 +23,9 @@ f_tokenizer:
   string_to_list rax
   mov r10, rax
 
+  string 10
+  list_append_link r10, rax
+
   ; токен = ""
   string ""
   mem_mov r11, rax
