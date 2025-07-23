@@ -41,7 +41,7 @@ pamac install korsakov # Pamac
 > Не забудьте установить `fasm`
 
 ```sh
-git clone https://gitverse.ru/x1z53/korsakov --depth 1
+git clone https://gitverse.ru/rus.yaz/korsakov --depth 1
 cd korsakov
 fasm build.asm && ld build.o -o build
 ./build korsakov
