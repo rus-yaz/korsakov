@@ -1141,6 +1141,15 @@ f_find_first_string:
         jmp .end_escape_sequence
       .not_double_quote:
 
+      string '\'
+      is_equal rbx, rax
+      boolean_value rax
+      cmp rax, 1
+      jne .not_backslash
+        string '\'
+        jmp .end_escape_sequence
+      .not_backslash:
+
       string "т"
       is_equal rbx, rax
       boolean_value rax
