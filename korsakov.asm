@@ -166,7 +166,13 @@ section "koraskov_data" writable
   НОМЕР_ТЕКУЩЕГО_ЦИКЛА rq 1
 
   КОМПИЛЯЦИЯ                        dq 0
+  ИМЯ_ВЫХОДНОГО_ФАЙЛА               dq 0
   ОТКЛЮЧЕНИЕ_СТАНДАРТНОЙ_БИБЛИОТЕКИ dq 0
+
+  АРГУМЕНТЫ_ДЛЯ_КОМПИЛЯЦИИ                        rq 1
+  АРГУМЕНТЫ_ДЛЯ_ВЫХОДНОГО_ФАЙЛА                   rq 1
+  АРГУМЕНТЫ_ДЛЯ_СПРАВКИ                           rq 1
+  АРГУМЕНТЫ_ДЛЯ_ОТКЛЮЧЕНИЯ_СТАНДАРТНОЙ_БИБЛИОТЕКИ rq 1
 
 section "korsakov_code" executable
 
@@ -180,156 +186,157 @@ macro print_help {
   leave
 }
 
+macro check_compilation error_message* {
+  enter error_message
+
+  call f_check_compilation
+
+  leave
+}
+
 start:
-
+  list
+  mov [АРГУМЕНТЫ_ДЛЯ_СПРАВКИ], rax
   string "--справка"
-  list_include [ARGUMENTS], rax
-  boolean_value rax
-  cmp rax, 1
-  je .help
-
+  list_append_link [АРГУМЕНТЫ_ДЛЯ_СПРАВКИ], rax
   string "--помощь"
-  list_include [ARGUMENTS], rax
-  boolean_value rax
-  cmp rax, 1
-  je .help
-
-  string "--help"
-  list_include [ARGUMENTS], rax
-  boolean_value rax
-  cmp rax, 1
-  je .help
-
+  list_append_link [АРГУМЕНТЫ_ДЛЯ_СПРАВКИ], rax
   string "-п"
-  list_include [ARGUMENTS], rax
-  boolean_value rax
-  cmp rax, 1
-  je .help
-
+  list_append_link [АРГУМЕНТЫ_ДЛЯ_СПРАВКИ], rax
+  string "--help"
+  list_append_link [АРГУМЕНТЫ_ДЛЯ_СПРАВКИ], rax
   string "-h"
-  list_include [ARGUMENTS], rax
-  boolean_value rax
-  cmp rax, 1
-  je .help
+  list_append_link [АРГУМЕНТЫ_ДЛЯ_СПРАВКИ], rax
 
-  jmp .not_help
-
-  .help:
-
-    print_help
-    exit 0
-
-  .not_help:
-
-  string "--компиляция"
-  list_index [ARGUMENTS], rax
-  mov rbx, rax
-  integer 1
-  integer_add rbx, rax
-  boolean rax
-  boolean_value rax
-  cmp rax, 1
-  je .compile
-
+  list
+  mov [АРГУМЕНТЫ_ДЛЯ_КОМПИЛЯЦИИ], rax
   string "--компилировать"
-  list_index [ARGUMENTS], rax
-  mov rbx, rax
-  integer 1
-  integer_add rbx, rax
-  boolean rax
-  boolean_value rax
-  cmp rax, 1
-  je .compile
-
+  list_append_link [АРГУМЕНТЫ_ДЛЯ_КОМПИЛЯЦИИ], rax
+  string "--компиляция"
+  list_append_link [АРГУМЕНТЫ_ДЛЯ_КОМПИЛЯЦИИ], rax
   string "--комп"
-  list_index [ARGUMENTS], rax
-  mov rbx, rax
-  integer 1
-  integer_add rbx, rax
-  boolean rax
-  boolean_value rax
-  cmp rax, 1
-  je .compile
-
-  string "--compile"
-  list_index [ARGUMENTS], rax
-  mov rbx, rax
-  integer 1
-  integer_add rbx, rax
-  boolean rax
-  boolean_value rax
-  cmp rax, 1
-  je .compile
-
-  string "-c"
-  list_index [ARGUMENTS], rax
-  mov rbx, rax
-  integer 1
-  integer_add rbx, rax
-  boolean rax
-  boolean_value rax
-  cmp rax, 1
-  je .compile
-
+  list_append_link [АРГУМЕНТЫ_ДЛЯ_КОМПИЛЯЦИИ], rax
   string "-к"
-  list_index [ARGUMENTS], rax
-  mov rbx, rax
-  integer 1
-  integer_add rbx, rax
-  boolean rax
-  boolean_value rax
-  cmp rax, 1
-  je .compile
+  list_append_link [АРГУМЕНТЫ_ДЛЯ_КОМПИЛЯЦИИ], rax
+  string "--compile"
+  list_append_link [АРГУМЕНТЫ_ДЛЯ_КОМПИЛЯЦИИ], rax
+  string "-c"
+  list_append_link [АРГУМЕНТЫ_ДЛЯ_КОМПИЛЯЦИИ], rax
 
-  jmp .not_compile
+  list
+  mov [АРГУМЕНТЫ_ДЛЯ_ВЫХОДНОГО_ФАЙЛА], rax
+  string "--выходной-файл"
+  list_append_link [АРГУМЕНТЫ_ДЛЯ_ВЫХОДНОГО_ФАЙЛА], rax
+  string "--выход"
+  list_append_link [АРГУМЕНТЫ_ДЛЯ_ВЫХОДНОГО_ФАЙЛА], rax
+  string "-в"
+  list_append_link [АРГУМЕНТЫ_ДЛЯ_ВЫХОДНОГО_ФАЙЛА], rax
+  string "--output"
+  list_append_link [АРГУМЕНТЫ_ДЛЯ_ВЫХОДНОГО_ФАЙЛА], rax
+  string "-o"
+  list_append_link [АРГУМЕНТЫ_ДЛЯ_ВЫХОДНОГО_ФАЙЛА], rax
 
-  .compile:
-
-    list_pop_link [ARGUMENTS], rbx
-    integer_dec [ARGUMENTS_COUNT]
-    mov [КОМПИЛЯЦИЯ], 1
-
-  .not_compile:
-
+  list
+  mov [АРГУМЕНТЫ_ДЛЯ_ОТКЛЮЧЕНИЯ_СТАНДАРТНОЙ_БИБЛИОТЕКИ], rax
   string "--без-стандартной"
-  list_index [ARGUMENTS], rax
-  mov rbx, rax
-  integer 1
-  integer_add rbx, rax
-  boolean rax
-  boolean_value rax
-  cmp rax, 1
-  je .no_std
-
+  list_append_link [АРГУМЕНТЫ_ДЛЯ_ОТКЛЮЧЕНИЯ_СТАНДАРТНОЙ_БИБЛИОТЕКИ], rax
   string "--no-std"
-  list_index [ARGUMENTS], rax
+  list_append_link [АРГУМЕНТЫ_ДЛЯ_ОТКЛЮЧЕНИЯ_СТАНДАРТНОЙ_БИБЛИОТЕКИ], rax
+
+  integer 1 ; Первый аргумент — имя исполняемого файла
   mov rbx, rax
-  integer 1
-  integer_add rbx, rax
-  boolean rax
-  boolean_value rax
-  cmp rax, 1
-  je .no_std
 
-  jmp .not_no_std
+  .while:
 
-  .no_std:
+    is_greater_or_equal rbx, [ARGUMENTS_COUNT]
+    boolean_value rax
+    cmp rax, 1
+    je .end_while
 
-    cmp [КОМПИЛЯЦИЯ], 1
-    je .compilation
-      string "Отключение стандартной библиотеки доступно только при компиляции"
-      mov rbx, rax
-      list
-      list_append_link rax, rbx
-      error rax
-      exit -1
-    .compilation:
+    list_get_link [ARGUMENTS], rbx
+    mov rcx, rax
 
-    list_pop_link [ARGUMENTS], rbx
-    integer_dec [ARGUMENTS_COUNT]
-    mov [ОТКЛЮЧЕНИЕ_СТАНДАРТНОЙ_БИБЛИОТЕКИ], 1
+    list_include [АРГУМЕНТЫ_ДЛЯ_СПРАВКИ], rcx
+    boolean_value rax
+    cmp rax, 0
+    je .not_help
+      print_help
+      exit 0
+    .not_help:
 
-  .not_no_std:
+    list_include [АРГУМЕНТЫ_ДЛЯ_ВЫХОДНОГО_ФАЙЛА], rcx
+    boolean_value rax
+    cmp rax, 0
+    je .not_output_file
+
+      list_pop_link [ARGUMENTS], rbx
+      integer_dec [ARGUMENTS_COUNT]
+
+      is_greater_or_equal rbx, [ARGUMENTS_COUNT]
+      boolean_value rax
+      cmp rax, 0
+      je .correct_file_name
+        string "Имя выходного файла не было задано"
+        mov rbx, rax
+        list
+        list_append_link rax, rbx
+        error rax
+        exit -1
+      .correct_file_name:
+
+      list_pop_link [ARGUMENTS], rbx
+      mov [ИМЯ_ВЫХОДНОГО_ФАЙЛА], rax
+      integer_dec [ARGUMENTS_COUNT]
+
+      jmp .continue
+
+    .not_output_file:
+
+    list_include [АРГУМЕНТЫ_ДЛЯ_КОМПИЛЯЦИИ], rcx
+    boolean_value rax
+    cmp rax, 0
+    je .not_compile
+
+      list_pop_link [ARGUMENTS], rbx
+      integer_dec [ARGUMENTS_COUNT]
+
+      mov [КОМПИЛЯЦИЯ], 1
+      jmp .continue
+
+    .not_compile:
+
+    list_include [АРГУМЕНТЫ_ДЛЯ_ОТКЛЮЧЕНИЯ_СТАНДАРТНОЙ_БИБЛИОТЕКИ], rcx
+    boolean_value rax
+    cmp rax, 0
+    je .not_no_std
+
+      list_pop_link [ARGUMENTS], rbx
+      integer_dec [ARGUMENTS_COUNT]
+
+      mov [ОТКЛЮЧЕНИЕ_СТАНДАРТНОЙ_БИБЛИОТЕКИ], 1
+      jmp .continue
+
+    .not_no_std:
+
+    integer_inc rbx
+
+    .continue:
+
+    jmp .while
+
+  .end_while:
+
+  cmp [ИМЯ_ВЫХОДНОГО_ФАЙЛА], 0
+  je .no_check_output_file
+    string "Выходной файл можно указать только в режиме компиляции"
+    check_compilation rax
+  .no_check_output_file:
+
+  cmp [ОТКЛЮЧЕНИЕ_СТАНДАРТНОЙ_БИБЛИОТЕКИ], 0
+  je .no_check_no_std
+    string "Отключение стандартной библиотеки доступно только в режиме компиляции"
+    check_compilation rax
+  .no_check_no_std:
 
   integer 2
   is_equal [ARGUMENTS_COUNT], rax
@@ -851,6 +858,10 @@ start:
   string ".o"
   string_add_links rbx, rax
   list_append_link rcx, rax
+  string "-m"
+  list_append_link rcx, rax
+  string "1000000"
+  list_append_link rcx, rax
 
   cmp [ОТКЛЮЧЕНИЕ_СТАНДАРТНОЙ_БИБЛИОТЕКИ], 1
   jne .use_std
@@ -871,7 +882,15 @@ start:
   list_append_link rcx, rax
   string "-o"
   list_append_link rcx, rax
-  list_append_link rcx, rbx
+
+  cmp [ИМЯ_ВЫХОДНОГО_ФАЙЛА], 0
+  je .use_input_file_name
+    list_append_link rcx, [ИМЯ_ВЫХОДНОГО_ФАЙЛА]
+    jmp @f
+  .use_input_file_name:
+    list_append_link rcx, rbx
+  @@:
+
   run rcx, [ENVIRONMENT_VARIABLES]
 
   exit 0
@@ -897,19 +916,52 @@ f_print_help:
 
   string "Флаги:"
   list_append_link rbx, rax
-  string "  --компилировать, --компиляция, --комп, -к, --compile, -c"
+  
+  string "  "
+  mov rcx, rax
+  string "|"
+  mov r8, rax
+
+  join [АРГУМЕНТЫ_ДЛЯ_СПРАВКИ], r8
+  mov rdx, rax
+  copy rcx
+  string_extend_links rax, rdx
+  list_append_link rbx, rax
+  string "      Показать эту справку"
+
+  list_append_link rbx, rax
+  string ""
+  list_append_link rbx, rax
+
+  join [АРГУМЕНТЫ_ДЛЯ_КОМПИЛЯЦИИ], r8
+  mov rdx, rax
+  copy rcx
+  string_extend_links rax, rdx
   list_append_link rbx, rax
   string "      Компиляция в исполняемый файл с таким же именем, что и переданный"
   list_append_link rbx, rax
+
   string ""
   list_append_link rbx, rax
-  string "  --справка, --помощь, -п, --help, -h"
+
+  join [АРГУМЕНТЫ_ДЛЯ_ВЫХОДНОГО_ФАЙЛА], r8
+  mov rdx, rax
+  copy rcx
+  string_extend_links rax, rdx
+  mov rdx, rax
+  string " [имя_файла]"
+  string_extend_links rdx, rax
   list_append_link rbx, rax
-  string "      Показать эту справку"
+  string "      Указание имени выходного файла"
   list_append_link rbx, rax
+
   string ""
   list_append_link rbx, rax
-  string "  --без-стандартной, --no-std"
+
+  join [АРГУМЕНТЫ_ДЛЯ_ОТКЛЮЧЕНИЯ_СТАНДАРТНОЙ_БИБЛИОТЕКИ], r8
+  mov rdx, rax
+  copy rcx
+  string_extend_links rax, rdx
   list_append_link rbx, rax
   string "      Компиляция без стандартной библиотеки"
   list_append_link rbx, rax
@@ -918,5 +970,19 @@ f_print_help:
   print rbx, rax
 
   delete rax
+
+  ret
+
+f_check_compilation:
+  get_arg 0
+  mov rbx, rax
+  
+  cmp [КОМПИЛЯЦИЯ], 1
+  je .compilation
+    list
+    list_append_link rax, rbx
+    error rax
+    exit -1
+  .compilation:
 
   ret
