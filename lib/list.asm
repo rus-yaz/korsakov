@@ -1,149 +1,103 @@
 ; Копирайт © 2025 ООО «РУС.ЯЗ»
 ; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
 
+; Методы коллекций
+;   Конструктор
+;   Длина
+;   Вместимость
+;   Расширить вместимость
+;   Установить ссылку на элемент по индексу
+;   Установить копию элемента по индексу
+;   Получить ссылку на элемент по индексу
+;   Получить копию элемента по индексу
+;   Копировать ссылки
+;   Копировать элементы
+;
+; Методы списка
+;   Добавить ссылку на элемент в конец
+;   Добавить копии элемента в конец
+;   Изъять ссылку на элемент по индексу
+;   Изъять копии элемента по индексу
+;   Вставить ссылку на элемент по индексу
+;   Вставить копии элемента по индексу
+;   Получить индекс элемента
+;   Проверить, входит ли значения в список
+;   Расширить список элементами списка
+;   Расширить список копиями элементов списка
+;   Получить развёрнутый список ссылок на элементы
+;   Получить развёрнутый список копий элементов
+;   Получить срез ссылок на элементы
+;   Получить срез копий элементов
+;   Сложить списки ссылок на элементы
+;   Сложить списки копий элементов
+;   Повторить список ссылок на элементы
+;   Повторить список копий элементов
+
 f_list:
   get_arg 0
-  mov r8, rax
+  mov rbx, rax
 
-  collection r8
-  mem_mov [rax], LIST
+  cmp rbx, 0
+  jne @f
+    mov rbx, 2
+  @@:
+
+  mov rcx, rbx
+  imul rcx, 8
+
+  create_block rcx ; Аллокация места для элементов
+
+  mov      rdi, rax ; Источник копирования
+  mov byte [rdi], 0 ; Значение, которое будет раскопировано
+
+  mov rsi, rdi ; Место назначения
+  inc rsi      ; Смещение от уже назначенного
+
+  rep movsb ; Побайтовое копирование
+
+  mov rcx, rax
+
+  create_block LIST_HEADER*8
+  mem_mov [rax + 8*0], LIST ; Тип
+  mem_mov [rax + 8*1], 0    ; Длина
+  mem_mov [rax + 8*2], rbx  ; Вместимость
+  mem_mov [rax + 8*3], rcx  ; Указатель на элементы
 
   ret
 
 f_list_length:
   get_arg 0
-
   check_type rax, LIST
-  collection_length rax
 
+  mov rax, [rax + 8*1]
   ret
 
 f_list_capacity:
   get_arg 0
-
   check_type rax, LIST
-  collection_capacity rax
 
+  mov rax, [rax + 8*2]
   ret
 
-f_list_append_link:
+f_list_expand_capacity:
   get_arg 0
   mov rbx, rax
-  get_arg 1
+
+  check_type rbx, LIST
+  list_capacity rbx
+
+  imul rax, 2
+  mov [rbx + 8*2], rax
+
+  imul rax, 8
+  create_block rax
   mov rcx, rax
 
-  check_type rbx, LIST
-  collection_append_link rbx, rcx
-  mov rax, rbx
+  list_length rbx
+  mem_copy [rbx + 8*3], rcx, rax
 
-  ret
-
-f_list_append:
-  get_arg 0
-  mov rbx, rax
-  get_arg 1
-  mov rcx, rax
-
-  check_type rbx, LIST
-
-  copy rcx
-  list_append_link rbx, rax
-
-  ret
-
-f_list_add_links:
-  get_arg 0
-  mov rbx, rax
-  get_arg 1
-  mov rcx, rax
-
-  check_type rbx, LIST
-  check_type rcx, LIST
-
-  collection_add_links rbx, rcx
-  ret
-
-f_list_add:
-  get_arg 0
-  mov rbx, rax
-  get_arg 1
-  mov rcx, rax
-
-  check_type rbx, LIST
-  check_type rcx, LIST
-
-  copy rbx
-  mov rbx, rax
-  copy rcx
-
-  list_add_links rbx, rax
-  ret
-
-f_list_extend_links:
-  get_arg 0
-  mov rbx, rax
-  get_arg 1
-  mov rcx, rax
-
-  check_type rbx, LIST
-  check_type rcx, LIST
-
-  collection_expand_links rbx, rcx
-
-  ret
-
-f_list_extend:
-  get_arg 0
-  mov rbx, rax
-  get_arg 1
-  mov rcx, rax
-
-  check_type rbx, LIST
-  check_type rcx, LIST
-
-  copy rcx
-  list_extend_links rbx, rax
-
-  ret
-
-f_list_get_link:
-  get_arg 0
-  mov rbx, rax
-  get_arg 1
-  mov rcx, rax
-
-  check_type rbx, LIST
-  collection_get_link rbx, rcx
-
-  ret
-
-f_list_get:
-  get_arg 0
-  mov rbx, rax
-  get_arg 1
-  mov rcx, rax
-
-  check_type rbx, LIST
-  collection_get rbx, rcx
-
-  ret
-
-f_list_copy_links:
-  get_arg 0
-  mov rbx, rax
-
-  check_type rbx, LIST
-  collection_copy_links rbx
-
-  ret
-
-f_list_copy:
-  get_arg 0
-  mov rbx, rax
-
-  check_type rbx, LIST
-  collection_copy rbx
-  mem_mov [rax], LIST
+  delete_block [rbx + 8*3]
+  mov [rbx + 8*3], rcx
 
   ret
 
@@ -156,7 +110,32 @@ f_list_set_link:
   mov rdx, rax
 
   check_type rbx, LIST
-  collection_set_link rbx, rcx, rdx
+  check_type rcx, INTEGER
+
+  ; Запись длины списка
+  list_length rbx
+  mov r8, rax
+
+  ; Если индекс меньше нуля, то увеличить его на длину списка
+  mov rcx, [rcx + 8*1]
+  cmp rcx, 0
+  jge @f
+    add rcx, r8
+  @@:
+
+  ; Проверка, входит ли индекс в список
+  cmp rcx, r8
+  check_error jge, "list_set: Индекс выходит за пределы списка"
+  cmp rcx, 0
+  check_error jl, "list_set: Индекс выходит за пределы списка"
+
+  mov rax, rbx
+  mov rbx, [rbx + 8*3]
+
+  imul rcx, 8
+  add rbx, rcx
+
+  mov [rbx], rdx
 
   ret
 
@@ -168,9 +147,145 @@ f_list_set:
   get_arg 2
   mov rdx, rax
 
-  check_type rbx, LIST
   copy rdx
   list_set_link rbx, rcx, rax
+
+  ret
+
+f_list_get_link:
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
+
+  check_type rbx, LIST
+  check_type rcx, INTEGER
+
+  list_length rbx
+  mov rdx, rax
+
+  ; Если индекс меньше нуля, то увеличить его на длину списка
+  mov rcx, [rcx + INTEGER_HEADER*8]
+  cmp rcx, 0
+  jge @f
+    add rcx, rdx
+  @@:
+
+  ; Проверка, входит ли индекс в список
+  cmp rcx, rdx
+  check_error jge, "list_get: Индекс выходит за пределы списка"
+  cmp rcx, 0
+  check_error jl, "list_get: Индекс выходит за пределы списка"
+
+  imul rcx, 8
+  mov rax, [rbx + 8*3]
+
+  add rax, rcx
+  mov rax, [rax]
+
+  ret
+
+f_list_get:
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
+
+  list_get_link rbx, rcx
+  copy rax
+
+  ret
+
+f_list_copy_links:
+  get_arg 0
+  mov rbx, rax
+
+  check_type rbx, LIST
+
+  list_capacity rbx
+  list rax
+  mov rcx, rax
+
+  mem_mov [rcx + 8*0], [rbx + 8*0]
+  mem_mov [rcx + 8*1], [rbx + 8*1]
+  mem_copy [rbx + 8*3], [rcx + 8*3], [rcx + 8*1]
+
+  mov rax, rcx
+  ret
+
+f_list_copy:
+  get_arg 0
+  mov rbx, rax
+
+  check_type rbx, LIST
+
+  list_capacity rbx
+  list rax
+  mov rcx, rax
+
+  mem_mov [rcx + 8*0], [rbx + 8*0]
+  mem_mov [rcx + 8*1], [rbx + 8*1]
+
+  mov r8, [rbx + 8*3]
+  mov r9, [rcx + 8*3]
+
+  mov rdx, [rcx + 8*1]
+  @@:
+    cmp rdx, 0
+    je @f
+
+    copy [r8]
+    mov [r9], rax
+
+    add r8, 8
+    add r9, 8
+
+    dec rdx
+    jmp @b
+  @@:
+
+  mov rax, rcx
+  ret
+
+f_list_append_link:
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
+
+  check_type rbx, LIST
+
+  list_length rbx
+  mov rdx, rax
+
+  list_capacity rbx
+  cmp rdx, rax
+  jne @f
+    list_expand_capacity rbx
+  @@:
+
+  mov r8, rdx
+  imul r8, 8  ; Отступ до элемента
+
+  inc rdx
+  mov [rbx + 8*1], rdx ; Запись новой длины
+
+  mov rax, [rbx + 8*3] ; Взятие указателя на последовательность элементов
+  add rax, r8          ; Смещение до места для нового элемента
+
+  mov [rax], rcx
+  mov rax, rbx
+
+  ret
+
+f_list_append:
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
+
+  copy rcx
+  list_append_link rbx, rax
 
   ret
 
@@ -180,8 +295,52 @@ f_list_pop_link:
   get_arg 1
   mov rcx, rax
 
+  cmp rcx, 0
+  jne @f
+    integer -1
+    mov rcx, rax
+  @@:
+
   check_type rbx, LIST
-  collection_pop_link rbx, rcx
+  check_type rcx, INTEGER
+
+  list_length rbx
+  mov rdx, rax
+
+  mov rcx, [rcx + INTEGER_HEADER*8]
+  cmp rcx, 0
+  jge @f
+    add rcx, rdx
+  @@:
+
+  cmp rcx, rdx
+  check_error jge, "list_pop: Индекс выходит за пределы списка"
+  cmp rcx, 0
+  check_error jl, "list_pop: Индекс выходит за пределы списка"
+
+  ; Декрементация длины
+  dec rdx
+  mov [rbx + 8*1], rdx
+
+  mov r8, rdx
+  sub r8, rcx
+
+  ; Смещение до элемента
+  imul rcx, 8
+  mov rbx, [rbx + 8*3]
+
+  add rbx, rcx
+  mov rax, [rbx]
+
+  mov r9, rbx
+  add r9, 8
+
+  mem_copy r9, rbx, r8
+
+  ; Затирание последнего элемента
+  imul r8, 8
+  add rbx, r8
+  mem_mov [rbx], 0
 
   ret
 
@@ -191,12 +350,8 @@ f_list_pop:
   get_arg 1
   mov rcx, rax
 
-  check_type rbx, LIST
   list_pop_link rbx, rcx
-  mov rbx, rax
-
   copy rax
-  delete rbx
 
   ret
 
@@ -209,8 +364,60 @@ f_list_insert_link:
   mov rdx, rax
 
   check_type rbx, LIST
-  collection_insert_link rbx, rcx, rdx
+  check_type rcx, INTEGER
 
+  list_length rbx
+  mov r8, rax
+
+  list_capacity rbx
+
+  cmp r8, rax
+  jne @f
+    list_expand_capacity rbx
+  @@:
+
+  mov rcx, [rcx + 8*1]
+  cmp rcx, 0
+  jge @f
+    add rcx, r8
+  @@:
+
+  cmp rcx, r8
+  check_error jge, "list_insert: Индекс выходит за пределы списка"
+  cmp rcx, 0
+  check_error jl, "list_insert: Индекс выходит за пределы списка"
+
+  inc r8
+  mov [rbx + 8*1], r8
+
+  dec r8
+  sub r8, rcx
+  mov r10, r8
+  imul r8, 8
+
+  mov rax, [rbx + 8*3]
+  add rax, r8
+
+  mov r9, rax
+  sub r9, 8
+
+  @@:
+    cmp r10, 0
+    je @f
+
+    mem_mov [rax], [r9]
+
+    sub r9, 8
+    sub rax, 8
+
+    dec r10
+    jmp @b
+  @@:
+
+
+  mov [rax], rdx
+
+  mov rax, rbx
   ret
 
 f_list_insert:
@@ -220,8 +427,6 @@ f_list_insert:
   mov rcx, rax
   get_arg 2
   mov rdx, rax
-
-  check_type rbx, LIST
 
   copy rdx
   list_insert_link rbx, rcx, rax
@@ -235,8 +440,33 @@ f_list_index:
   mov rcx, rax
 
   check_type rbx, LIST
-  collection_index rbx, rcx
 
+  integer 0
+  mov rdx, rax
+
+  list_length rbx
+  mov r8, rax
+
+  @@:
+    cmp [rdx + INTEGER_HEADER*8], r8
+    je @f
+
+    list_get_link rbx, rdx
+    is_equal rax, rcx
+    boolean_value rax
+    cmp rax, 1
+    je .return_index
+
+    integer_inc rdx
+    jmp @b
+  @@:
+
+  delete rdx
+  integer -1
+  ret
+
+  .return_index:
+  mov rax, rdx
   ret
 
 f_list_include:
@@ -246,20 +476,256 @@ f_list_include:
   mov rcx, rax
 
   check_type rbx, LIST
+
   list_index rbx, rcx
+  mov rbx, [rax + INTEGER_HEADER*8]
+  delete rax
 
-  mov rax, [rax + INTEGER_HEADER*8]
-
-  cmp rax, -1
-  je .return_false
+  cmp rbx, -1
+  je @f
     boolean 1
     ret
 
-  .return_false:
+  @@:
     boolean 0
     ret
 
-f_list_mul:
+f_list_extend_links:
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
+
+  check_type rbx, LIST
+  check_type rcx, LIST
+
+  list_length rcx
+  mov rdx, rax
+
+  integer 0
+  mov r8, rax
+
+  @@:
+    cmp rdx, 0
+    je @f
+
+    list_get_link rcx, r8
+    list_append_link rbx, rax
+
+    integer_inc r8
+    dec rdx
+    jmp @b
+  @@:
+
+  delete r8
+
+  mov rax, rbx
+  ret
+
+f_list_extend:
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
+
+  copy rcx
+  mov rcx, rax
+
+  list_extend_links rbx, rcx
+  delete_block rcx
+
+  ret
+
+f_list_reverse_links:
+  get_arg 0
+  mov rbx, rax
+
+  check_type rbx, LIST
+
+  list_capacity rbx
+  list rax
+  mov r9, rax
+
+  mem_mov [r9 + 8*0], [rbx + 8*0]
+  mem_mov [r9 + 8*1], [rbx + 8*1]
+
+  list_length rbx
+  mov rdx, rax
+
+  mov rbx, [rbx + 8*3]
+  mov rcx, [r9  + 8*3]
+
+  mov r8, rdx
+  dec r8
+  imul r8, 8
+  add rbx, r8
+
+  mov r8, 0
+  @@:
+    cmp rdx, r8
+    je @f
+
+    mem_mov [rcx], [rbx]
+
+    sub rbx, 8
+    add rcx, 8
+
+    inc r8
+    jmp @b
+  @@:
+
+  mov rax, r9
+  ret
+
+f_list_reverse:
+  get_arg 0
+  mov rbx, rax
+
+  list_reverse_links rbx
+  copy rax
+
+  ret
+
+f_list_slice_links:
+  get_arg 0    ; Коллекция
+  mov rbx, rax
+  get_arg 1    ; Начало
+  mov rcx, rax
+  get_arg 2    ; Конец
+  mov rdx, rax
+  get_arg 3    ; Шаг
+  mov r8, rax
+
+  cmp rcx, 0
+  jne @f
+    integer 0
+    mov rcx, rax
+  @@:
+
+  cmp rdx, 0
+  jne @f
+    integer -1
+    mov rdx, rax
+  @@:
+
+  cmp r8, 0
+  jne @f
+    integer 1
+    mov r8, rax
+  @@:
+
+  check_type rbx, LIST
+  check_type rcx, INTEGER
+  check_type rdx, INTEGER
+  check_type r8,  INTEGER
+
+  list_length rbx
+  integer rax
+  mov r15, rax
+  is_lower rax, rdx
+  boolean_value rax
+  delete r15
+  cmp rax, 1
+  je @f
+
+  integer 0
+  mov r15, rax
+  is_lower rdx, rax
+  boolean_value rax
+  delete r15
+  cmp rax, 1
+  je @f
+
+  jmp .correct_stop
+
+  @@:
+    list_length rbx
+    integer rax
+    mov rdx, rax
+
+  .correct_stop:
+
+  mov r10, 0 ; 0 — прямое направление, 1 — обратное
+
+  integer 0
+  mov r15, rax
+  is_lower r8, rax
+  boolean_value rax
+  delete r15
+  cmp rax, 1
+  jne @f
+    negate r8
+    mov r8, rax
+
+    mov r10, 1
+  @@:
+
+  list
+  mov r9, rax
+
+  @@:
+    is_equal rcx, rdx
+    boolean_value rax
+    cmp rax, 1
+    je @f
+
+    list_get_link rbx, rcx
+    list_append_link r9, rax
+
+    integer_add rcx, r8
+    mov rcx, rax
+    jmp @b
+  @@:
+
+  mov rax, r9
+  cmp r10, 0
+  je @f
+    list_reverse_links rax
+  @@:
+
+  ret
+
+f_list_slice:
+  get_arg 0    ; Коллекция
+  mov rbx, rax
+  get_arg 1    ; Начало
+  mov rcx, rax
+  get_arg 2    ; Конец
+  mov rdx, rax
+  get_arg 3    ; Шаг
+  mov r8, rax
+
+  list_slice_links rbx, rcx, rdx, r8
+  copy rax
+
+  ret
+
+f_list_add_links:
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
+
+  check_type rbx, LIST
+  check_type rcx, LIST
+
+  list_copy_links rbx
+  list_extend_links rax, rcx
+
+  ret
+
+f_list_add:
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
+
+  list_add_links rbx, rcx
+  list_copy rax
+
+  ret
+
+f_list_mul_links:
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -270,105 +736,33 @@ f_list_mul:
 
   mov rcx, [rcx + INTEGER_HEADER*8]
   cmp rcx, 0
-  jge .correct
-
-    string "list_mul: Нельзя умножить Список на отрицательное число"
+  jge @f
+    list_reverse_links rbx
     mov rbx, rax
-    list
-    list_append_link rax, rbx
-    error rax
-    exit -1
-
-  .correct:
+  @@:
 
   list
   mov rdx, rax
 
-  .while:
-
+  @@:
     cmp rcx, 0
-    je .end_while
+    je @f
 
     list_extend_links rdx, rbx
 
     dec rcx
-    jmp .while
+    jmp @b
+  @@:
 
-  .end_while:
-
-  copy rdx
   ret
 
-f_list_slice_links:
+f_list_mul:
   get_arg 0
-  mov rbx, rax ; Список
+  mov rbx, rax
   get_arg 1
-  mov rcx, rax ; Начало
-  get_arg 2
-  mov rdx, rax ; Конец
-  get_arg 3
-  mov r8,  rax ; Шаг
+  mov rcx, rax
 
-  cmp rcx, 0
-  jne @f
-    integer 0
-    mov rcx, rax
-  @@:
-
-  cmp rdx, 0
-  jne @f
-    integer -1
-    mov rdx, rax
-  @@:
-
-  cmp r8, 0
-  jne @f
-    integer 1
-    mov r8, rax
-  @@:
-
-  check_type rbx, LIST
-  check_type rcx, INTEGER
-  check_type rdx, INTEGER
-  check_type r8,  INTEGER
-
-  collection_slice_links rbx, rcx, rdx, r8
-  ret
-
-f_list_slice:
-  get_arg 0
-  mov rbx, rax ; list
-  get_arg 1
-  mov rcx, rax ; start
-  get_arg 2
-  mov rdx, rax ; stop
-  get_arg 3
-  mov r8,  rax ; step
-
-  cmp rcx, 0
-  jne @f
-    integer 0
-    mov rcx, rax
-  @@:
-
-  cmp rdx, 0
-  jne @f
-    integer -1
-    mov rdx, rax
-  @@:
-
-  cmp r8, 0
-  jne @f
-    integer 1
-    mov r8, rax
-  @@:
-
-  check_type rbx, LIST
-  check_type rcx, INTEGER
-  check_type rdx, INTEGER
-  check_type r8,  INTEGER
-
-  collection_slice_links rbx, rcx, rdx, r8
+  list_mul_links rbx, rcx
   copy rax
 
   ret

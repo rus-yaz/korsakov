@@ -29,12 +29,6 @@ f_copy:
     ret
   @@:
 
-  cmp rbx, COLLECTION
-  jne @f
-    collection_copy rax
-    ret
-  @@:
-
   cmp rbx, LIST
   jne @f
     list_copy rax

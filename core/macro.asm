@@ -347,26 +347,18 @@ macro delete [variable*] {
   leave
 }
 
-macro dictionary keys = 0, values = 0 {
-  enter keys, values
+macro dictionary capacity = 0 {
+  enter capacity
 
   call f_dictionary
 
   return
 }
 
-macro dictionary_from_lists keys = 0, values = 0 {
-  enter keys, values
+macro dictionary_from_list pairs_list = 0 {
+  enter pairs_list
 
-  call f_dictionary_from_lists
-
-  return
-}
-
-macro dictionary_from_pairs pairs = 0 {
-  enter pairs
-
-  call f_dictionary_from_pairs
+  call f_dictionary_from_list
 
   return
 }
@@ -383,6 +375,46 @@ macro dictionary_capacity dictionary* {
   enter dictionary
 
   call f_dictionary_capacity
+
+  return
+}
+
+macro dictionary_expand_capacity dictionary* {
+  enter dictionary
+
+  call f_dictionary_expand_capacity
+
+  return
+}
+
+macro dictionary_set_link dictionary*, key*, value* {
+  enter dictionary, key, value
+
+  call f_dictionary_set_link
+
+  return
+}
+
+macro dictionary_set dictionary*, key*, value* {
+  enter dictionary, key, value
+
+  call f_dictionary_set
+
+  return
+}
+
+macro dictionary_get_link dictionary*, key*, default_value = 0 {
+  enter dictionary, key, default_value
+
+  call f_dictionary_get_link
+
+  return
+}
+
+macro dictionary_get dictionary*, key*, default_value = 0 {
+  enter dictionary, key, default_value
+
+  call f_dictionary_get
 
   return
 }
@@ -451,34 +483,18 @@ macro dictionary_values dictionary* {
   return
 }
 
-macro dictionary_get_link dictionary*, key*, default_value = 0 {
-  enter dictionary, key, default_value
+macro dictionary_extend_links dictionary1*, dictionary2* {
+  enter  dictionary1, dictionary2
 
-  call f_dictionary_get_link
-
-  return
-}
-
-macro dictionary_get dictionary*, key*, default_value = 0 {
-  enter dictionary, key, default_value
-
-  call f_dictionary_get
+  call f_dictionary_extend_links
 
   return
 }
 
-macro dictionary_set_link dictionary*, key*, value* {
-  enter dictionary, key, value
+macro dictionary_extend dictionary1*, dictionary2* {
+  enter  dictionary1, dictionary2
 
-  call f_dictionary_set_link
-
-  return
-}
-
-macro dictionary_set dictionary*, key*, value* {
-  enter dictionary, key, value
-
-  call f_dictionary_set
+  call f_dictionary_extend
 
   return
 }
@@ -818,222 +834,6 @@ macro string_to_float string {
   return
 }
 
-macro collection capacity = 0 {
-  enter capacity
-
-  call f_collection
-
-  return
-}
-
-macro collection_length collection* {
-  enter collection
-
-  call f_collection_length
-
-  return
-}
-
-macro collection_capacity collection* {
-  enter collection
-
-  call f_collection_capacity
-
-  return
-}
-
-macro collection_expand_capacity collection* {
-  enter collection
-
-  call f_collection_expand_capacity
-
-  return
-}
-
-macro collection_append_link collection*, item* {
-  enter collection, item
-
-  call f_collection_append_link
-
-  return
-}
-
-macro collection_append collection*, item* {
-  enter collection, item
-
-  call f_collection_append
-
-  return
-}
-
-macro collection_expand_links collection_1*, collection_2* {
-  enter collection_1, collection_2
-
-  call f_collection_expand_links
-
-  return
-}
-
-macro collection_expand collection_1*, collection_2* {
-  enter collection_1, collection_2
-
-  call f_collection_expand
-
-  return
-}
-
-macro collection_get_link collection*, index* {
-  enter collection, index
-
-  call f_collection_get_link
-
-  return
-}
-
-macro collection_get collection*, index* {
-  enter collection, index
-
-  call f_collection_get
-
-  return
-}
-
-macro collection_copy_links collection* {
-  enter collection
-
-  call f_collection_copy_links
-
-  return
-}
-
-macro collection_copy collection* {
-  enter collection
-
-  call f_collection_copy
-
-  return
-}
-
-macro collection_index collection*, item* {
-  enter collection, item
-
-  call f_collection_index
-
-  return
-}
-
-macro collection_include collection*, item* {
-  enter collection, item
-
-  call f_collection_include
-
-  return
-}
-
-macro collection_set_link collection*, index*, item* {
-  enter collection, index, item
-
-  call f_collection_set_link
-
-  return
-}
-
-macro collection_set collection*, index*, item* {
-  enter collection, index, item
-
-  call f_collection_set
-
-  return
-}
-
-macro collection_pop_link collection*, index = 0 {
-  enter collection, index
-
-  call f_collection_pop_link
-
-  return
-}
-
-macro collection_pop collection*, index = 0 {
-  enter collection, index
-
-  call f_collection_pop
-
-  return
-}
-
-macro collection_insert_link collection*, index*, item* {
-  enter collection, index, item
-
-  call f_collection_insert_link
-
-  return
-}
-
-macro collection_insert collection*, index*, item* {
-  enter collection, index, item
-
-  call f_collection_insert
-
-  return
-}
-
-macro collection_add_links collection_1*, collection_2* {
-  enter collection_1, collection_2
-
-  call f_collection_add_links
-
-  return
-}
-
-macro collection_add collection_1*, collection_2* {
-  enter collection_1, collection_1
-
-  call f_collection_add
-
-  return
-}
-
-macro collection_reverse_links collection* {
-  enter collection
-
-  call f_collection_reverse_links
-
-  return
-}
-
-macro collection_reverse collection* {
-  enter collection
-
-  call f_collection_reverse
-
-  return
-}
-
-macro collection_slice_links collection*, start = 0, stop = 0, step = 0 {
-  enter collection, start, stop, step
-
-  call f_collection_slice_links
-
-  return
-}
-
-macro collection_slice collection*, start = 0, stop = 0, step = 0 {
-  enter collection, start, stop, step
-
-  call f_collection_slice
-
-  return
-}
-
-macro is_collection value* {
-  enter value
-
-  call f_is_collection
-
-  return
-}
-
 macro list capacity = 0 {
   enter capacity
 
@@ -1058,50 +858,26 @@ macro list_capacity list* {
   return
 }
 
-macro list_append_link list*, item* {
-  enter list, item
+macro list_expand_capacity list* {
+  enter list
 
-  call f_list_append_link
+  call f_list_expand_capacity
+
+  leave
+}
+
+macro list_set_link list*, index*, item* {
+  enter list, index, item
+
+  call f_list_set_link
 
   return
 }
 
-macro list_append list*, item* {
-  enter list, item
+macro list_set list*, index*, item* {
+  enter list, index, item
 
-  call f_list_append
-
-  return
-}
-
-macro list_add_links list_1*, list_2* {
-  enter list_1, list_2
-
-  call f_list_add_links
-
-  return
-}
-
-macro list_add list_1*, list_2* {
-  enter list_1, list_2
-
-  call f_list_add
-
-  return
-}
-
-macro list_extend_links list_1*, list_2* {
-  enter list_1, list_2
-
-  call f_list_extend_links
-
-  return
-}
-
-macro list_extend list_1*, list_2* {
-  enter list_1, list_2
-
-  call f_list_extend
+  call f_list_set
 
   return
 }
@@ -1138,34 +914,18 @@ macro list_copy list* {
   return
 }
 
-macro list_index list*, item* {
+macro list_append_link list*, item* {
   enter list, item
 
-  call f_list_index
+  call f_list_append_link
 
   return
 }
 
-macro list_include list*, item* {
+macro list_append list*, item* {
   enter list, item
 
-  call f_list_include
-
-  return
-}
-
-macro list_set_link list*, index*, item* {
-  enter list, index, item
-
-  call f_list_set_link
-
-  return
-}
-
-macro list_set list*, index*, item* {
-  enter list, index, item
-
-  call f_list_set
+  call f_list_append
 
   return
 }
@@ -1202,10 +962,50 @@ macro list_insert list*, index*, item* {
   return
 }
 
-macro list_mul list*, integer* {
-  enter list, integer
+macro list_index list*, item* {
+  enter list, item
 
-  call f_list_mul
+  call f_list_index
+
+  return
+}
+
+macro list_include list*, item* {
+  enter list, item
+
+  call f_list_include
+
+  return
+}
+
+macro list_extend_links list_1*, list_2* {
+  enter list_1, list_2
+
+  call f_list_extend_links
+
+  return
+}
+
+macro list_extend list_1*, list_2* {
+  enter list_1, list_2
+
+  call f_list_extend
+
+  return
+}
+
+macro list_reverse_links list* {
+  enter list
+
+  call f_list_extend_links
+
+  return
+}
+
+macro list_reverse list* {
+  enter list
+
+  call f_list_reverse
 
   return
 }
@@ -1222,6 +1022,46 @@ macro list_slice list*, start = 0, stop = 0, step = 0 {
   enter list, start, stop, step
 
   call f_list_slice
+
+  return
+}
+
+macro list_add_links list_1*, list_2* {
+  enter list_1, list_2
+
+  call f_list_add_links
+
+  return
+}
+
+macro list_add_links list_1*, list_2* {
+  enter list_1, list_2
+
+  call f_list_add_links
+
+  return
+}
+
+macro list_add list_1*, list_2* {
+  enter list_1, list_2
+
+  call f_list_add
+
+  return
+}
+
+macro list_mul_links list*, integer* {
+  enter list, integer
+
+  call f_list_mul_links
+
+  return
+}
+
+macro list_mul list*, integer* {
+  enter list, integer
+
+  call f_list_mul
 
   return
 }
@@ -1322,6 +1162,14 @@ macro string_to_binary string* {
   return
 }
 
+macro string_from_capacity capacity* {
+  enter capacity
+
+  call f_string_from_capacity
+
+  return
+}
+
 macro string_length string* {
   enter string
 
@@ -1336,6 +1184,14 @@ macro string_capacity string* {
   call f_string_capacity
 
   return
+}
+
+macro string_expand_capacity string* {
+  enter string
+
+  call f_string_expand_capacity
+
+  leave
 }
 
 macro string_copy_links string* {
@@ -1490,6 +1346,38 @@ macro string_to_list string* {
   return
 }
 
+macro string_reverse_links string* {
+  enter string
+
+  call f_string_reverse_links
+
+  return
+}
+
+macro string_reverse string* {
+  enter string
+
+  call f_string_reverse
+
+  return
+}
+
+macro string_slice_links string*, start = 0, stop = 0, step = 0 {
+  enter string, start, stop, step
+
+  call f_string_slice_links
+
+  return
+}
+
+macro string_slice string*, start = 0, stop = 0, step = 0 {
+  enter string, start, stop, step
+
+  call f_string_slice
+
+  return
+}
+
 macro string_pop_link string*, integer = 0 {
   enter string, integer
 
@@ -1502,6 +1390,14 @@ macro string_pop string*, integer = 0 {
   enter string, integer
 
   call f_string_pop
+
+  return
+}
+
+macro string_mul_links string*, integer* {
+  enter string, integer
+
+  call f_string_mul_links
 
   return
 }

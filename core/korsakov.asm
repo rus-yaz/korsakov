@@ -30,14 +30,13 @@ define NULL        0
 define INTEGER     1
 define FLOAT       2
 define BOOLEAN     3
-define COLLECTION  4
-define LIST        5
-define STRING      6
-define BINARY      7
-define DICTIONARY  8
-define FUNCTION    9
-define CLASS       10
-define FILE        11
+define LIST        4
+define STRING      5
+define BINARY      6
+define DICTIONARY  7
+define FUNCTION    8
+define CLASS       9
+define FILE        10
 
 ; Размер заголовка
 define NULL_HEADER       1
@@ -45,7 +44,6 @@ define BOOLEAN_HEADER    1
 define INTEGER_HEADER    1
 define FLOAT_HEADER      1
 define BINARY_HEADER     2
-define COLLECTION_HEADER 4
 define LIST_HEADER       4
 define STRING_HEADER     4
 define DICTIONARY_HEADER 4
@@ -122,30 +120,30 @@ _start:
   list
   mov [ENVIRONMENT_VARIABLES], rax
 
-  mov rcx, [ARGUMENTS_COUNT]
-  mov rcx, [rcx + INTEGER_HEADER*8]
-  inc rcx ; Учёт блока с количеством аргументов
-  inc rcx ; Учёт нуля-разделителя
-
-  imul rcx, 8
-
-  mov rbx, rbp
-  add rbx, rcx
-
-  mov rcx, 0
-
-  .environment_variables_while:
-
-    cmp [rbx], rcx
-    je .environment_variables_end_while
-
-    buffer_to_string [rbx]
-    list_append_link [ENVIRONMENT_VARIABLES], rax
-
-    add rbx, 8
-    jmp .environment_variables_while
-
-  .environment_variables_end_while:
+  ; mov rcx, [ARGUMENTS_COUNT]
+  ; mov rcx, [rcx + INTEGER_HEADER*8]
+  ; inc rcx ; Учёт блока с количеством аргументов
+  ; inc rcx ; Учёт нуля-разделителя
+  ;
+  ; imul rcx, 8
+  ;
+  ; mov rbx, rbp
+  ; add rbx, rcx
+  ;
+  ; mov rcx, 0
+  ;
+  ; .environment_variables_while:
+  ;
+  ;   cmp [rbx], rcx
+  ;   je .environment_variables_end_while
+  ;
+  ;   buffer_to_string [rbx]
+  ;   list_append_link [ENVIRONMENT_VARIABLES], rax
+  ;
+  ;   add rbx, 8
+  ;   jmp .environment_variables_while
+  ;
+  ; .environment_variables_end_while:
 
   dictionary
   mov [GLOBAL_CONTEXT], rax

@@ -3,7 +3,6 @@
 
 include "arithmetical.asm"
 include "boolean.asm"
-include "collection.asm"
 include "comparisons.asm"
 include "copy.asm"
 include "delete.asm"

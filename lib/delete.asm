@@ -18,8 +18,6 @@ f_delete:
 
   mov rcx, [rbx]
 
-  cmp rcx, COLLECTION
-  je @f
   cmp rcx, LIST
   je @f
   cmp rcx, STRING

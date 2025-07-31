@@ -4,12 +4,7 @@
 raw_string "Словари", 10, 10
 print_raw rax
 
-include "dictionary_from_items.asm"
-
-raw_string 10
-print_raw rax
-
-include "dictionary_from_lists.asm"
+include "dictionary_from_list.asm"
 
 raw_string 10
 print_raw rax
