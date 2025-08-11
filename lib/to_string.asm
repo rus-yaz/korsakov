@@ -167,11 +167,11 @@ f_to_string:
 
     cmp rax, 1
     jne .false
-      string "Истина"
+      string "истина"
       ret
 
     .false:
-      string "Ложь"
+      string "ложь"
       ret
 
   .not_boolean:
