@@ -67,6 +67,14 @@ macro float_node token* {
   return
 }
 
+macro boolean_node token* {
+  enter token
+
+  call f_boolean_node
+
+  return
+}
+
 macro string_node token* {
   enter token
 
@@ -281,6 +289,16 @@ f_float_node:
   mov rbx, rax
 
   dictionary_set_link rbx, [узел], [УЗЕЛ_ВЕЩЕСТВЕННОГО_ЧИСЛА]
+  get_arg 0
+  dictionary_set_link rbx, [значение], rax
+
+  ret
+
+f_boolean_node:
+  dictionary
+  mov rbx, rax
+
+  dictionary_set_link rbx, [узел], [УЗЕЛ_ЛОГИЧЕСКОГО_ЗНАЧЕНИЯ]
   get_arg 0
   dictionary_set_link rbx, [значение], rax
 

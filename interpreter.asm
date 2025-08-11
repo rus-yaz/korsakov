@@ -121,6 +121,16 @@ macro interpret_float node*, context* {
   debug_end "interpret_float"
 }
 
+macro interpret_boolean node*, context* {
+  debug_start "interpret_boolean"
+  enter node, context
+
+  call f_interpret_boolean
+
+  return
+  debug_end "interpret_boolean"
+}
+
 macro interpret_list node*, context* {
   debug_start "interpret_list"
   enter node, context
@@ -342,6 +352,13 @@ f_interpret:
   cmp rax, 1
   jne @f
     interpret_float rcx, rbx
+    ret
+  @@:
+
+  check_node_type rbx, [УЗЕЛ_ЛОГИЧЕСКОГО_ЗНАЧЕНИЯ]
+  cmp rax, 1
+  jne @f
+    interpret_boolean rcx, rbx
     ret
   @@:
 
@@ -939,6 +956,39 @@ f_interpret_float:
   string "значение"
   dictionary_get_link rcx, rax
   string_to_float rax
+  ret
+
+f_interpret_boolean:
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
+
+  string "значение"
+  dictionary_get_link rcx, rax
+  mov rcx, rax
+
+  token_check_keyword rcx, [ИСТИНА]
+  cmp rax, 1
+  jne @f
+    boolean 1
+    ret
+  @@:
+
+  token_check_keyword rcx, [ЛОЖЬ]
+  cmp rax, 1
+  jne @f
+    boolean 0
+    ret
+  @@:
+
+  string "Ожидалось ключевое слово логического значения: `истина`, `ложь`"
+  mov rbx, rax
+  list
+  list_append_link rax, rbx
+  error rax
+  exit -1
+
   ret
 
 f_interpret_list:

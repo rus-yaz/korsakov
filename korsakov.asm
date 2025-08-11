@@ -133,6 +133,7 @@ section "koraskov_data" writable
   УЗЕЛ_ПОКА                           rq 1
   УЗЕЛ_ЦЕЛОГО_ЧИСЛА                   rq 1
   УЗЕЛ_ВЕЩЕСТВЕННОГО_ЧИСЛА            rq 1
+  УЗЕЛ_ЛОГИЧЕСКОГО_ЗНАЧЕНИЯ           rq 1
   УЗЕЛ_ВЫЗОВА                         rq 1
   УЗЕЛ_КЛАССА                         rq 1
   УЗЕЛ_МЕТОДА                         rq 1
@@ -651,6 +652,9 @@ start:
   mov [УЗЕЛ_ВЕЩЕСТВЕННОГО_ЧИСЛА], rax
   integer_copy rax
   integer_inc rax
+  mov [УЗЕЛ_ЛОГИЧЕСКОГО_ЗНАЧЕНИЯ], rax
+  integer_copy rax
+  integer_inc rax
   mov [УЗЕЛ_ВЫЗОВА], rax
   integer_copy rax
   integer_inc rax
@@ -916,7 +920,7 @@ f_print_help:
 
   string "Флаги:"
   list_append_link rbx, rax
-  
+
   string "  "
   mov rcx, rax
   string "|"
@@ -976,7 +980,7 @@ f_print_help:
 f_check_compilation:
   get_arg 0
   mov rbx, rax
-  
+
   cmp [КОМПИЛЯЦИЯ], 1
   je .compilation
     list

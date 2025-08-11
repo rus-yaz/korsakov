@@ -690,6 +690,24 @@ f_atom:
 
   .not_float:
 
+  token_check_keyword rbx, [ИСТИНА]
+  cmp rax, 1
+  je .boolean
+
+  token_check_keyword rbx, [ЛОЖЬ]
+  cmp rax, 1
+  je .boolean
+
+  jmp .not_boolean
+
+  .boolean:
+    next
+
+    boolean_node rbx
+    ret
+
+  .not_boolean:
+
   token_check_type rbx, [ТИП_СТРОКА]
   cmp rax, 1
   jne .not_string

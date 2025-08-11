@@ -101,6 +101,16 @@ macro compile_float node*, context* {
   debug_end "compile_float"
 }
 
+macro compile_boolean node*, context* {
+  debug_start "compile_boolean"
+  enter node, context
+
+  call f_compile_boolean
+
+  return
+  debug_end "compile_boolean"
+}
+
 macro compile_list node*, context* {
   debug_start "compile_list"
   enter node, context
@@ -311,6 +321,13 @@ f_compile:
   cmp rax, 1
   jne @f
     compile_float rbx, rcx
+    ret
+  @@:
+
+  check_node_type rcx, [УЗЕЛ_ЛОГИЧЕСКОГО_ЗНАЧЕНИЯ]
+  cmp rax, 1
+  jne @f
+    compile_boolean rbx, rcx
     ret
   @@:
 
@@ -923,6 +940,45 @@ f_compile_float:
 
   mov rax, rdx
   ret
+
+f_compile_boolean:
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
+
+  list
+  mov rdx, rax
+
+  string "значение"
+  dictionary_get_link rcx, rax
+  mov rcx, rax
+
+  token_check_keyword rcx, [ИСТИНА]
+  cmp rax, 1
+  jne .not_true
+    add_code "boolean 1"
+    mov rax, rdx
+    ret
+  .not_true:
+
+  token_check_keyword rcx, [ЛОЖЬ]
+  cmp rax, 1
+  jne .not_false
+    add_code "boolean 0"
+    mov rax, rdx
+    ret
+  .not_false:
+
+  string "Ожидалось ключевое слово логического значения: `истина`, `ложь`"
+  mov rbx, rax
+  list
+  list_append_link rax, rbx
+  error rax
+  exit -1
+
+  ret
+
 
 f_compile_list:
   get_arg 0
