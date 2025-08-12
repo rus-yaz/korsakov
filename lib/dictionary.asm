@@ -208,10 +208,6 @@ f_dictionary_set_link:
   mov [rax], rcx
   mov rax, rbx
 
-  repeat 1000
-    nop
-  end repeat
-
   ret
 
 f_dictionary_set:
