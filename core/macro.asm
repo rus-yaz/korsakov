@@ -133,11 +133,14 @@ macro string [str*] {
 }
 
 macro raw_float value = 0.0 {
-  jmp @f
-    a = $
-    dq value
-  @@:
-  mov rax, a
+  common
+    local .float, .end
+
+    jmp .end
+      .float dq value
+    .end:
+
+    mov rax, .float
 }
 
 macro float value {
