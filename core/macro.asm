@@ -38,21 +38,21 @@ macro enter [arg] {
 }
 
 macro get_arg index {
+  local .incorrect, .correct
   mov rax, index
+
   cmp rax, 0
-  jge @f
+  jl .incorrect
 
+  cmp rax, [rbp]
+  jge .incorrect
+
+  jmp .correct
+
+  .incorrect:
     exit 100
-  @@:
+  .correct:
 
-  mov rax, [rbp]
-  cmp rax, index
-  jg @f
-
-    exit 100
-  @@:
-
-  mov rax, index
   mov rax, [rbp + (1 + index) * 8]
 }
 
