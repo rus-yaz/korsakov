@@ -111,11 +111,13 @@ macro exit code*, buffer = 0 {
 
 macro raw_string [str*] {
   common
-    jmp @f
-      a = $
-      db str, 0
-    @@:
-    mov rax, a
+    local .string, .end
+
+    jmp .end
+      .string db str, 0
+    .end:
+
+    mov rax, .string
 }
 
 macro binary_string [str*] {
