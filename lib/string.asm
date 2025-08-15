@@ -124,6 +124,9 @@ f_string_set_link:
     exit -1
   .correct_length:
 
+  mov rdx, [rdx + 8*3]
+  mov rdx, [rdx]
+
   ; Запись длины строки
   string_length rbx
   mov r8, rax
