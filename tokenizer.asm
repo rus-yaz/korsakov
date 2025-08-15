@@ -43,67 +43,73 @@ f_tokenizer:
     list_get_link r10, r13
     string_extend_links r11, rax
 
-    mov rbx, 0
-    .new_token_while:
+    string " "
+    is_equal r11, rax
+    boolean_value rax
+    cmp rax, 1
+    jne .not_space
 
-      string " "
-      is_equal r11, rax
-      boolean_value rax
-      cmp rax, 1
-      je .find_new_token
-
-      string 10
-      is_equal r11, rax
-      boolean_value rax
-      cmp rax, 1
-      jne .new_token_while_end
-
-      mov rbx, 1
-
-      .find_new_token:
+    .space:
 
       integer_inc r13
 
       list_length r10
       integer rax
-      is_equal r13, rax
-      boolean_value rax
-      cmp rax, 1
-      je .new_token_while_end
-
-      list_get_link r10, r13
-      mov r11, rax
-
-      jmp .new_token_while
-
-    .new_token_while_end:
-
-    cmp rbx, 1
-    jne .not_newline
-
-      integer_dec r13
-
-      list_length r12
-      cmp rax, 0
-      je .continue_newline_check
-
-      integer -1
-      list_get_link r12, rax
-      mov rbx, rax
-      string "тип"
-      dictionary_get_link rbx, rax
-
-      is_equal rax, [ТИП_ПЕРЕНОС_СТРОКИ]
+      is_lower_or_equal rax, r13
       boolean_value rax
       cmp rax, 1
       je .continue
 
-      .continue_newline_check:
+      list_get_link r10, r13
+      mov r11, rax
+
+      string " "
+      is_equal rax, r11
+      boolean_value rax
+      cmp rax, 1
+      je .space
+
+    .not_space:
+
+    string 10
+    is_equal r11, rax
+    boolean_value rax
+    cmp rax, 1
+    jne .not_newline
+
+    .newline:
+
+      integer_inc r13
+
+      list_length r10
+      integer rax
+      is_lower_or_equal rax, r13
+      boolean_value rax
+      cmp rax, 1
+      je .write_token
+
+      list_get_link r10, r13
+      mov r11, rax
 
       string 10
+      is_equal r11, rax
+      boolean_value rax
+      cmp rax, 1
+      je .newline
+
+      integer_dec r13
+
+      integer -1
+      list_get_link r12, rax
+      mov rbx, rax
+
+      token_check_type rbx, [ТИП_ПЕРЕНОС_СТРОКИ]
+      cmp rax, 1
+      je .continue
+
+      mem_mov [тип_токена], [ТИП_ПЕРЕНОС_СТРОКИ]
+      string 10
       mov r11, rax
-      integer_copy [ТИП_ПЕРЕНОС_СТРОКИ]
-      mov [тип_токена], rax
 
       jmp .write_token
 
@@ -458,9 +464,10 @@ f_tokenizer:
 
         .end_while_oneline_comment:
 
-        integer_dec r13
+        string ""
+        mov r11, rax
 
-        jmp .continue
+        jmp .while
 
       .not_oneline_comment:
 
@@ -1008,7 +1015,7 @@ f_tokenizer:
 
     list_length r10
     integer rax
-    is_equal rax, r13
+    is_lower_or_equal rax, r13
     boolean_value rax
     cmp rax, 1
     jne .while
