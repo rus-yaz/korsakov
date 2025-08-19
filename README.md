@@ -48,33 +48,54 @@ pamac install korsakov # Pamac
 
 ### Установка из репозитория
 
-> Не забудьте установить `fasm`
+#### Подготовка
 
 ```sh
 git clone https://gitverse.ru/rus.yaz/korsakov --depth 1
 cd korsakov
-fasm build.asm && ld build.o -o build
-./build korsakov
 ```
 
-> В `build.asm` просто выполняется следующий код:
->
-> ```sh
-> fasm korsakov.asm -m 131072 && ld korsakov.o -o korsakov
-> ```
+#### Сборка
 
-#### Режим отладки
-
-Режим отладки позволяет увидеть промежуточные этапы работы компилятора/интерпретатора:
-
-- Токены
-- Работу парсера и итоговое абстрактное синтаксическое дерево
-- Работу компилятора (и итоговый код) или интерпретатора, в зависимости от режима исполнения
+##### Make
 
 ```sh
-./build korsakov --debug
-# Или
-fasm korsakov.asm -m 131072 -d DEBUG= && ld korsakov.o -o korsakov
+make
+# или
+make build
+```
+
+##### Вручную
+
+```sh
+fasm -m 131072 korsakov.asm korsakov.o
+ld korsakov.o -o korsakov
+ld korsakov.o -o корсаков
+```
+
+##### Отладочная сборка
+
+> Режим отладки позволяет увидеть промежуточные этапы работы компилятора/интерпретатора:
+>
+> - Токены
+> - Работу парсера и итоговое абстрактное синтаксическое дерево
+> - Работу компилятора (и итоговый код) или интерпретатора, в зависимости от режима исполнения
+
+```sh
+make debug
+# или
+fasm -m 131072 -d DEBUG= korsakov.asm korsakov.o
+ld korsakov.o -o korsakov
+ld korsakov.o -o корсаков
+```
+
+#### Установка
+
+```sh
+make install
+# или
+sudo install -m 755 korsakov /usr/bin/korsakov
+sudo install -m 755 корсаков /usr/bin/корсаков
 ```
 
 ### Использование
@@ -148,7 +169,7 @@ cp -r syntax ftdetect ~/.config/nvim
 
 ### Другие ссылки
 
-- [Прототип языка  на Python](https://gitverse.ru/rus.yaz/korsakov_python). Синтаксис уже не совместим с текущей версией, доступна только интерпретация. Данный прототип более не будет развиваться.
+- [Прототип языка на Python](https://gitverse.ru/rus.yaz/korsakov_python). Синтаксис уже не совместим с текущей версией, доступна только интерпретация. Данный прототип более не будет развиваться.
 - [Документация от сообщества](https://gitverse.ru/YaKotikTvoy/LearningKorsakov). Спасибо пользователю [YaKotikTvoy](https://gitverse.ru/YaKotikTvoy) за активное участие в жизни проекта!
 
 ### Спонсорство
