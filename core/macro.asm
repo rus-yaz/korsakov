@@ -1002,7 +1002,7 @@ macro list_extend list_1*, list_2* {
 macro list_reverse_links list* {
   enter list
 
-  call f_list_extend_links
+  call f_list_reverse_links
 
   return
 }

@@ -737,6 +737,7 @@ f_list_mul_links:
   mov rcx, [rcx + INTEGER_HEADER*8]
   cmp rcx, 0
   jge @f
+    neg rcx
     list_reverse_links rbx
     mov rbx, rax
   @@:
