@@ -61,6 +61,7 @@ section "koraskov_data" writable
   путь                  rq 1
   тело                  rq 1
   узел                  rq 1
+  файл                  rq 1
   ключи                 rq 1
   конец                 rq 1
   начало                rq 1
@@ -170,6 +171,9 @@ section "koraskov_data" writable
   ИМЯ_ВЫХОДНОГО_ФАЙЛА               dq 0
   ОТКЛЮЧЕНИЕ_СТАНДАРТНОЙ_БИБЛИОТЕКИ dq 0
 
+  НАЧАЛО                            rq 1
+  КОНЕЦ                             rq 1
+
   АРГУМЕНТЫ_ДЛЯ_КОМПИЛЯЦИИ                        rq 1
   АРГУМЕНТЫ_ДЛЯ_ВЫХОДНОГО_ФАЙЛА                   rq 1
   АРГУМЕНТЫ_ДЛЯ_СПРАВКИ                           rq 1
@@ -178,6 +182,11 @@ section "koraskov_data" writable
 section "korsakov_code" executable
 
 _include
+
+macro string_to_label label* {
+  string #`label
+  mov [label], rax
+}
 
 macro print_help {
   enter
@@ -580,58 +589,33 @@ start:
   mov [ПРОПУСТИТЬ], rax
   list_append_link [ключевые_слова], rax
 
-  string "тип"
-  mov [тип], rax
-  string "шаг"
-  mov [шаг], rax
-  string "путь"
-  mov [путь], rax
-  string "тело"
-  mov [тело], rax
-  string "узел"
-  mov [узел], rax
-  string "ключи"
-  mov [ключи], rax
-  string "конец"
-  mov [конец], rax
-  string "начало"
-  mov [начало], rax
-  string "случаи"
-  mov [случаи], rax
-  string "операнд"
-  mov [операнд], rax
-  string "условие"
-  mov [условие], rax
-  string "значение"
-  mov [значение], rax
-  string "оператор"
-  mov [оператор], rax
-  string "родители"
-  mov [родители], rax
-  string "элементы"
-  mov [элементы], rax
-  string "аргументы"
-  mov [аргументы], rax
-  string "имя_класса"
-  mov [имя_класса], rax
-  string "левый_узел"
-  mov [левый_узел], rax
-  string "переменная"
-  mov [переменная], rax
-  string "имя_объекта"
-  mov [имя_объекта], rax
-  string "правый_узел"
-  mov [правый_узел], rax
-  string "вернуть_нуль"
-  mov [вернуть_нуль], rax
-  string "случай_иначе"
-  mov [случай_иначе], rax
-  string "имя_переменной"
-  mov [имя_переменной], rax
-  string "автовозвращение"
-  mov [автовозвращение], rax
-  string "именованные_аргументы"
-  mov [именованные_аргументы], rax
+  string_to_label тип
+  string_to_label шаг
+  string_to_label путь
+  string_to_label тело
+  string_to_label узел
+  string_to_label файл
+  string_to_label ключи
+  string_to_label конец
+  string_to_label начало
+  string_to_label случаи
+  string_to_label операнд
+  string_to_label условие
+  string_to_label значение
+  string_to_label оператор
+  string_to_label родители
+  string_to_label элементы
+  string_to_label аргументы
+  string_to_label имя_класса
+  string_to_label левый_узел
+  string_to_label переменная
+  string_to_label имя_объекта
+  string_to_label правый_узел
+  string_to_label вернуть_нуль
+  string_to_label случай_иначе
+  string_to_label имя_переменной
+  string_to_label автовозвращение
+  string_to_label именованные_аргументы
 
   integer 0
   mov [УЗЕЛ_ДЛЯ], rax
@@ -741,7 +725,9 @@ start:
   get_absolute_path rax
   mov rcx, rax
 
-  open_file rax
+  mov r8, rax
+
+  open_file rcx
   mov rbx, rax
 
   read_file rax
@@ -763,7 +749,8 @@ start:
 
   chdir rax
 
-  tokenizer [код]
+  tokenizer [код], r8
+
   mov [токены], rax
   if DEBUG eqtype
     list
