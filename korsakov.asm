@@ -3,12 +3,7 @@
 
 include "./core/korsakov.asm"
 
-include "./token.asm"
-include "./nodes.asm"
-include "./tokenizer.asm"
-include "./parser.asm"
-include "./compiler.asm"
-include "./interpreter.asm"
+include "./executor/.asm"
 
 section "koraskov_data" writable
 
