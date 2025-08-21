@@ -119,6 +119,9 @@ f_readlink:
 
   .correct:
 
+  add rax, rsp
+  mov byte [rax], 0
+
   mov rax, rsp
   buffer_to_string rax
   add rsp, MAX_PATH_LENGTH
