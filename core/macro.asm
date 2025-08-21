@@ -1598,3 +1598,43 @@ macro euler_power exponent* {
 
   return
 }
+
+macro set_program_start_pointer pointer* {
+  enter pointer
+
+  call f_set_program_start_pointer
+
+  return
+}
+
+macro get_program_start_pointer {
+  enter
+
+  call f_get_program_start_pointer
+
+  return
+}
+
+macro get_cli_arguments_count {
+  enter
+
+  call f_get_cli_arguments_count
+
+  return
+}
+
+macro get_cli_arguments  {
+  enter
+
+  call f_get_cli_arguments
+
+  return
+}
+
+macro get_environment_variables  {
+  enter
+
+  call f_get_environment_variables
+
+  return
+}

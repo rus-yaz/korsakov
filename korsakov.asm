@@ -174,6 +174,10 @@ section "koraskov_data" writable
   НАЧАЛО                            rq 1
   КОНЕЦ                             rq 1
 
+  КОЛИЧЕСТВО_АРГУМЕНТОВ rq 1
+  АРГУМЕНТЫ             rq 1
+  ПЕРЕМЕННЫЕ_СРЕДЫ      rq 1
+
   АРГУМЕНТЫ_ДЛЯ_КОМПИЛЯЦИИ                        rq 1
   АРГУМЕНТЫ_ДЛЯ_ВЫХОДНОГО_ФАЙЛА                   rq 1
   АРГУМЕНТЫ_ДЛЯ_СПРАВКИ                           rq 1
@@ -205,6 +209,15 @@ macro check_compilation error_message* {
 }
 
 start:
+  get_cli_arguments_count
+  mov [КОЛИЧЕСТВО_АРГУМЕНТОВ], rax
+
+  get_cli_arguments
+  mov [АРГУМЕНТЫ], rax
+
+  get_environment_variables
+  mov [ПЕРЕМЕННЫЕ_СРЕДЫ], rax
+
   list
   mov [АРГУМЕНТЫ_ДЛЯ_СПРАВКИ], rax
   string "--справка"
@@ -258,12 +271,12 @@ start:
 
   .while:
 
-    is_greater_or_equal rbx, [ARGUMENTS_COUNT]
+    is_greater_or_equal rbx, [КОЛИЧЕСТВО_АРГУМЕНТОВ]
     boolean_value rax
     cmp rax, 1
     je .end_while
 
-    list_get_link [ARGUMENTS], rbx
+    list_get_link [АРГУМЕНТЫ], rbx
     mov rcx, rax
 
     list_include [АРГУМЕНТЫ_ДЛЯ_СПРАВКИ], rcx
@@ -279,10 +292,10 @@ start:
     cmp rax, 0
     je .not_output_file
 
-      list_pop_link [ARGUMENTS], rbx
-      integer_dec [ARGUMENTS_COUNT]
+      list_pop_link [АРГУМЕНТЫ], rbx
+      integer_dec [КОЛИЧЕСТВО_АРГУМЕНТОВ]
 
-      is_greater_or_equal rbx, [ARGUMENTS_COUNT]
+      is_greater_or_equal rbx, [КОЛИЧЕСТВО_АРГУМЕНТОВ]
       boolean_value rax
       cmp rax, 0
       je .correct_file_name
@@ -294,9 +307,9 @@ start:
         exit -1
       .correct_file_name:
 
-      list_pop_link [ARGUMENTS], rbx
+      list_pop_link [АРГУМЕНТЫ], rbx
       mov [ИМЯ_ВЫХОДНОГО_ФАЙЛА], rax
-      integer_dec [ARGUMENTS_COUNT]
+      integer_dec [КОЛИЧЕСТВО_АРГУМЕНТОВ]
 
       jmp .continue
 
@@ -307,8 +320,8 @@ start:
     cmp rax, 0
     je .not_compile
 
-      list_pop_link [ARGUMENTS], rbx
-      integer_dec [ARGUMENTS_COUNT]
+      list_pop_link [АРГУМЕНТЫ], rbx
+      integer_dec [КОЛИЧЕСТВО_АРГУМЕНТОВ]
 
       mov [КОМПИЛЯЦИЯ], 1
       jmp .continue
@@ -320,8 +333,8 @@ start:
     cmp rax, 0
     je .not_no_std
 
-      list_pop_link [ARGUMENTS], rbx
-      integer_dec [ARGUMENTS_COUNT]
+      list_pop_link [АРГУМЕНТЫ], rbx
+      integer_dec [КОЛИЧЕСТВО_АРГУМЕНТОВ]
 
       mov [ОТКЛЮЧЕНИЕ_СТАНДАРТНОЙ_БИБЛИОТЕКИ], 1
       jmp .continue
@@ -349,7 +362,7 @@ start:
   .no_check_no_std:
 
   integer 2
-  is_equal [ARGUMENTS_COUNT], rax
+  is_equal [КОЛИЧЕСТВО_АРГУМЕНТОВ], rax
   boolean_value rax
   cmp rax, 1
   je .start
@@ -721,7 +734,7 @@ start:
   mov [модули], rax
 
   integer 1
-  list_get_link [ARGUMENTS], rax
+  list_get_link [АРГУМЕНТЫ], rax
   get_absolute_path rax
   mov rcx, rax
 
@@ -794,7 +807,7 @@ start:
 
   get_exe_directory
   mov rdx, rax
-  string_extend_links rcx, rax
+  string_extend_links rcx, rdx
 
   string "/core/korsakov.asm'", 10
   string_extend_links rcx, rax
@@ -819,7 +832,7 @@ start:
   string_extend_links rcx, rax
 
   integer 1
-  list_get_link [ARGUMENTS], rax
+  list_get_link [АРГУМЕНТЫ], rax
   get_absolute_path rax
   mov rbx, rax
   string "."
@@ -862,7 +875,7 @@ start:
     list_append_link rcx, rax
   .use_std:
 
-  run rcx, [ENVIRONMENT_VARIABLES]
+  run rcx, [ПЕРЕМЕННЫЕ_СРЕДЫ]
 
   list
   mov rcx, rax
@@ -882,7 +895,7 @@ start:
     list_append_link rcx, rbx
   @@:
 
-  run rcx, [ENVIRONMENT_VARIABLES]
+  run rcx, [ПЕРЕМЕННЫЕ_СРЕДЫ]
 
   exit 0
 
@@ -896,7 +909,7 @@ f_print_help:
   string "  "
   mov rcx, rax
   integer 0
-  list_get_link [ARGUMENTS], rax
+  list_get_link [АРГУМЕНТЫ], rax
   string_extend_links rcx, rax
   string " [флаги] файл.[корс|kors]"
   string_extend_links rcx, rax
