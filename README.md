@@ -3,7 +3,7 @@
 [![](<https://gitverse.ru/api/repos/rus.yaz/mediakit/raw/branch/master/Корсаков%20(блок)/Корсаков%20(блок,%20скруглённый%20прямоугольник)/Корсаков%20(блок,%20скруглённый%20прямоугольник).svg>)](https://корсаков.рус)
 
 <div style="display: flex; justify-content: space-around">
-    <a href="https://gitverse.ru/rus.yaz/korsakov"><img width="50em" src="https://gitverse.ru/favicon-32x32.png"></a>
+    <a href="https://gitverse.ru/rus.yaz/korsakov"><img width="50em" src="https://gitverse.ru/apple-touch-icon.png"></a>
     <a href="https://altlinux.space/rus.yaz/korsakov"><img width="50em" src="https://altlinux.space/altlinux-space/design/raw/branch/main/ALT-Linux-Space-Favicon-Monochrome-White.svg"></a>
     <a href="https://github.com/rus-yaz/korsakov"><img width="50em" src="https://github.githubassets.com/favicons/favicon-dark.svg"></a>
     <a href="https://gitlab.com/rus.yaz/korsakov"><img width="50em" src="https://images.ctfassets.net/xz1dnu24egyd/5VNS0QDlyHhsJnrAv9uO53/e4c4ade0e9a25c33c13cda7b5c6be67c/gitlab-logo-700.svg"></a>
