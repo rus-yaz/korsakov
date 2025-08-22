@@ -27,6 +27,11 @@ jobs:
           git remote add github "https://x1z53:${{ secrets.GH_TOKEN }}@github.com/rus-yaz/korsakov"
           git push --force --all github
 
+      - name: Codeberg
+        run: |
+          git remote add codeberg "https://x1z53:${{ secrets.CB_TOKEN }}@codeberg.org/rus-yaz/korsakov"
+          git push --force --all codeberg
+
       - name: GitLab
         run: |
           git remote add gitlab "https://x1z53:${{ secrets.GL_TOKEN }}@gitlab.com/rus.yaz/korsakov"
