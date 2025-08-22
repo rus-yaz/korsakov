@@ -195,6 +195,14 @@ macro print_help {
   leave
 }
 
+macro format_help_flag list {
+  enter list
+
+  call f_format_help_flag
+
+  return
+}
+
 macro check_compilation error_message* {
   enter error_message
 
@@ -916,60 +924,131 @@ f_print_help:
   string "Флаги:"
   list_append_link rbx, rax
 
-  string "  "
+  list
   mov rcx, rax
-  string "|"
-  mov r8, rax
 
-  join [АРГУМЕНТЫ_ДЛЯ_СПРАВКИ], r8
+  list
   mov rdx, rax
-  copy rcx
-  string_extend_links rax, rdx
-  list_append_link rbx, rax
-  string "      Показать эту справку"
+  list_append_link rdx, [АРГУМЕНТЫ_ДЛЯ_СПРАВКИ]
+  string "Показать эту справку"
+  list_append_link rdx, rax
+  list_append_link rcx, rdx
 
-  list_append_link rbx, rax
-  string ""
-  list_append_link rbx, rax
-
-  join [АРГУМЕНТЫ_ДЛЯ_КОМПИЛЯЦИИ], r8
+  list
   mov rdx, rax
-  copy rcx
-  string_extend_links rax, rdx
-  list_append_link rbx, rax
-  string "      Компиляция в исполняемый файл с таким же именем, что и переданный"
-  list_append_link rbx, rax
+  list_append_link rdx, [АРГУМЕНТЫ_ДЛЯ_КОМПИЛЯЦИИ]
+  string "Компиляция в исполняемый файл с таким же именем, что и переданный"
+  list_append_link rdx, rax
+  list_append_link rcx, rdx
 
-  string ""
-  list_append_link rbx, rax
-
-  join [АРГУМЕНТЫ_ДЛЯ_ВЫХОДНОГО_ФАЙЛА], r8
+  list
   mov rdx, rax
-  copy rcx
-  string_extend_links rax, rdx
-  mov rdx, rax
-  string " [имя_файла]"
-  string_extend_links rdx, rax
-  list_append_link rbx, rax
-  string "      Указание имени выходного файла"
-  list_append_link rbx, rax
+  list_append_link rdx, [АРГУМЕНТЫ_ДЛЯ_ВЫХОДНОГО_ФАЙЛА]
+  string "Указание имени выходного файла"
+  list_append_link rdx, rax
+  string "имя_файла"
+  list_append_link rdx, rax
+  list_append_link rcx, rdx
 
-  string ""
-  list_append_link rbx, rax
-
-  join [АРГУМЕНТЫ_ДЛЯ_ОТКЛЮЧЕНИЯ_СТАНДАРТНОЙ_БИБЛИОТЕКИ], r8
+  list
   mov rdx, rax
-  copy rcx
-  string_extend_links rax, rdx
-  list_append_link rbx, rax
-  string "      Компиляция без стандартной библиотеки"
-  list_append_link rbx, rax
+  list_append_link rdx, [АРГУМЕНТЫ_ДЛЯ_ОТКЛЮЧЕНИЯ_СТАНДАРТНОЙ_БИБЛИОТЕКИ]
+  string "Компиляция без стандартной библиотеки"
+  list_append_link rdx, rax
+  list_append_link rcx, rdx
+
+  integer 0
+  mov rdx, rax
+
+  @@:
+    list_length rcx
+    integer rax
+    is_equal rax, rdx
+    boolean_value rax
+    cmp rax, 1
+    je @f
+
+    list_get_link rcx, rdx
+    format_help_flag rax
+    list_append_link rbx, rax
+
+    string ""
+    list_append_link rbx, rax
+
+    integer_inc rdx
+    jmp @b
+
+  @@:
+
+  list_pop_link rbx
 
   string 10
   print rbx, rax
+  ret
 
-  delete rax
+f_format_help_flag:
+  get_arg 0
+  mov rbx, rax
+  check_type rbx, LIST
 
+  ; Флаг
+  integer 0
+  list_get_link rbx, rax
+  mov rcx, rax
+
+  ; Описание
+  integer 1
+  list_get_link rbx, rax
+  mov rdx, rax
+
+  ; Аргумент флага, если есть
+  list_length rbx
+  cmp rax, 2
+  jle @f
+    integer 2
+    list_get_link rbx, rax
+    mov r8, rax
+    jmp .next
+  @@:
+    mov r8, 0
+  .next:
+
+  list
+  mov rbx, rax
+
+  ; Отступ флагов
+  string "  "
+  list_append_link rbx, rax
+
+  ; Флаги
+  string "|"
+  join rcx, rax
+  list_append_link rbx, rax
+
+  ; Аргументы флагов, если есть
+  cmp r8, 0
+  je @f
+    ; Отступ между флагами и аргументами флагов
+    string " "
+    list_append_link rbx, rax
+
+    ; Аргументы флагов
+    list_append_link rbx, r8
+  @@:
+
+  ; Перенос строки
+  string 10
+  list_append_link rbx, rax
+
+  ; Отступ описания
+  string "      "
+  list_append_link rbx, rax
+
+  ; Описание
+  list_append_link rbx, rdx
+
+  string ""
+  join rbx, rax
   ret
 
 f_check_compilation:
