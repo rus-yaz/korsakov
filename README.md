@@ -8,6 +8,7 @@
     <a href="https://github.com/rus-yaz/korsakov"><img width="50em" src="https://github.githubassets.com/favicons/favicon-dark.svg"></a>
     <a href="https://gitlab.com/rus.yaz/korsakov"><img width="50em" src="https://images.ctfassets.net/xz1dnu24egyd/5VNS0QDlyHhsJnrAv9uO53/e4c4ade0e9a25c33c13cda7b5c6be67c/gitlab-logo-700.svg"></a>
     <a href="https://sourcecraft.dev/rus-yaz/korsakov"><img width="50em" src="https://sourcecraft.dev/icons/favicon.svg"></a>
+    <a href="https://gitflic.ru/project/rus-yaz/korsakov"><img width="50em" src="https://gitflic.ru//static/image/favicon/icon@512.png"></a>
 </div>
 
 ## Описание
