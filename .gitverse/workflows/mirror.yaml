@@ -31,3 +31,8 @@ jobs:
         run: |
           git remote add gitlab "https://x1z53:${{ secrets.GL_TOKEN }}@gitlab.com/rus.yaz/korsakov"
           git push --force --all gitlab
+
+      - name: GitFlic
+        run: |
+          git remote add gitflic "https://x1z53:${{ secrets.GF_TOKEN }}@gitflic.ru/project/rus-yaz/korsakov.git"
+          git push --force --all gitflic
