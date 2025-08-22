@@ -92,7 +92,7 @@ macro init_ {
   list
   assign rbx, rax, rcx
 
-  arguments "нижний_порог", "верхний порог"
+  arguments "нижний_порог", "верхний_порог"
   mov rdx, rax
 
   dictionary
@@ -119,7 +119,7 @@ macro init_ {
   list
   assign rbx, rax, rcx
 
-  arguments "нижний_порог", "верхний порог"
+  arguments "нижний_порог", "верхний_порог"
   mov rdx, rax
 
   dictionary
