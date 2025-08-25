@@ -54,10 +54,6 @@ f_mem_copy:
 
   ret
 
-f_check_error:
-  error_raw rax
-  exit -1
-
 f_type_to_string:
   get_arg 0
 

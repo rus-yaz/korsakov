@@ -148,6 +148,23 @@ macro float value {
   buffer_to_float rax
 }
 
+macro check_error operation*, message* {
+  local .incorrect, .correct
+
+  push rax
+
+  raw_string message, 10
+  operation .incorrect
+  jmp .correct
+
+  .incorrect:
+    error_raw rax
+    exit -1
+  .correct:
+
+  pop rax
+}
+
 macro init [module_name] {
   common
     if NOSTD eqtype
