@@ -2,6 +2,7 @@
 ; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
 
 f_set_program_start_pointer:
+  get_arg 0
   mov [PROGRAM_START_POINTER], rax
   ret
 
