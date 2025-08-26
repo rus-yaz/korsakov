@@ -3,6 +3,8 @@ DATADIR = /usr/share
 BINDIR = /usr/bin
 PREFIX = $(DATADIR)/korsakov
 
+DOCS_ROOT = docs
+
 .PHONY: all build debug test install clean
 
 all: build
@@ -35,3 +37,8 @@ clean:
 macros:
 	rm core/generated_macros.asm
 	sh ./hooks/generate_macros.sh
+
+docs:
+	rm -rf $(DOCS_ROOT)
+	mkdir -p $(DOCS_ROOT)
+	sh ./hooks/generate_docs_internal.sh $(DOCS_ROOT)
