@@ -8,7 +8,7 @@
 ; @example
 ;   raw_float 3.14
 ;   buffer_to_float rax  ; возвращает вещественное число 3.14
-f_buffer_to_float:
+_function buffer_to_float, rbx
   get_arg 0
   mov rbx, rax
 
@@ -26,7 +26,7 @@ f_buffer_to_float:
 ; @example
 ;   float 3.14
 ;   float_copy rax  ; создает копию числа 3.14
-f_float_copy:
+_function float_copy, rbx
   get_arg 0
   mov rbx, rax
 
@@ -47,7 +47,7 @@ f_float_copy:
 ;   mov rbx, rax
 ;   float 2.86
 ;   float_add rbx, rax  ; вернет 6.0
-f_float_add:
+_function float_add, rbx, rcx
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -79,7 +79,7 @@ f_float_add:
 ;   mov rbx, rax
 ;   float 2.3
 ;   float_sub rbx, rax  ; вернет 3.2
-f_float_sub:
+_function float_sub, rbx, rcx
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -111,7 +111,7 @@ f_float_sub:
 ;   mov rbx, rax
 ;   float 2.5
 ;   float_mul rbx, rax  ; вернет 7.5
-f_float_mul:
+_function float_mul, rbx, rcx
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -143,7 +143,7 @@ f_float_mul:
 ;   mov rbx, rax
 ;   float 3.0
 ;   float_div rbx, rax  ; вернет 3.333...
-f_float_div:
+_function float_div, rbx, rcx
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -181,7 +181,7 @@ f_float_div:
 ; @example
 ;   float 3.14
 ;   float_neg rax  ; возвращает -3.14
-f_float_neg:
+_function float_neg
   get_arg 0
   check_type rax, FLOAT
 
@@ -207,7 +207,7 @@ f_float_neg:
 ; @example
 ;   integer 42
 ;   integer_to_float rax  ; возвращает 42.0
-f_integer_to_float:
+_function integer_to_float
   get_arg 0
   check_type rax, INTEGER
 
@@ -228,7 +228,7 @@ f_integer_to_float:
 ; @example
 ;   string "3,14"
 ;   string_to_float rax  ; возвращает вещественное число 3.14
-f_string_to_float:
+_function string_to_float, rbx, rcx, rdx, r8, r9, r10
   get_arg 0
   mov rbx, rax
 

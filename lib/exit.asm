@@ -7,7 +7,7 @@
 ; @example
 ;   program_exit  ; завершает с кодом 0
 ;   program_exit 1  ; завершает с кодом 1
-f_program_exit:
+_function program_exit, rax
   get_arg 0
   cmp rax, 0
   jne @f

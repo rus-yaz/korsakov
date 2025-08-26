@@ -6,256 +6,6 @@ section "parser_data" writable
 
 section "parser_code" executable
 
-macro parser tokens* {
-  debug_start "parser"
-  enter tokens
-
-  call f_parser
-
-  return
-  debug_end "parser"
-}
-
-macro next {
-  debug_start "next"
-  enter
-
-  call f_next
-
-  return
-  debug_end "next"
-}
-
-macro skip_newline {
-  debug_start "skip_newline"
-  enter
-
-  call f_skip_newline
-
-  return
-  debug_end "skip_newline"
-}
-
-macro revert amount = 0 {
-  debug_start "revert"
-  enter amount
-
-  call f_revert
-
-  return
-  debug_end "revert"
-}
-
-macro update_token {
-  debug_start "update_token"
-  enter
-
-  call f_update_token
-
-  leave
-  debug_end "update_token"
-}
-
-macro expression {
-  debug_start "expression"
-  enter
-
-  call f_expression
-
-  return
-  debug_end "expression"
-}
-
-macro binary_operation operators*, left_function*, right_function = 0 {
-  debug_start "binary_operation"
-  enter operators, left_function, right_function
-
-  call f_binary_operation
-
-  return
-  debug_end "binary_operation"
-}
-
-macro atom {
-  debug_start "atom"
-  enter
-
-  call f_atom
-
-  return
-  debug_end "atom"
-}
-
-macro call_expression {
-  debug_start "call_expression"
-  enter
-
-  call f_call_expression
-
-  return
-  debug_end "call_expression"
-}
-
-macro power_root {
-  debug_start "power_root"
-  enter
-
-  call f_power_root
-
-  return
-  debug_end "power_root"
-}
-
-macro factor {
-  debug_start "factor"
-  enter
-
-  call f_factor
-
-  return
-  debug_end "factor"
-}
-
-macro term {
-  debug_start "term"
-  enter
-
-  call f_term
-
-  return
-  debug_end "term"
-}
-
-macro comparison_expression {
-  debug_start "comparison_expression"
-  enter
-
-  call f_comparison_expression
-
-  return
-  debug_end "comparison_expression"
-}
-
-macro arithmetical_expression {
-  debug_start "arithmetical_expression"
-  enter
-
-  call f_arithmetical_expression
-
-  return
-  debug_end "arithmetical_expression"
-}
-
-macro list_expression {
-  debug_start "list_expression"
-  enter
-
-  call f_list_expression
-
-  return
-  debug_end "list_expression"
-}
-
-macro check_expression {
-  debug_start "check_expression"
-  enter
-
-  call f_check_expression
-
-  return
-  debug_end "check_expression"
-}
-
-macro if_expression {
-  debug_start "if_expression"
-  enter
-
-  call f_if_expression
-
-  return
-  debug_end "if_expression"
-}
-
-macro else_expression {
-  debug_start "else_expression"
-  enter
-
-  call f_else_expression
-
-  return
-  debug_end "else_expression"
-}
-
-macro for_expression {
-  debug_start "for_expression"
-  enter
-
-  call f_for_expression
-
-  return
-  debug_end "for_expression"
-}
-
-macro while_expression {
-  debug_start "while_expression"
-  enter
-
-  call f_while_expression
-
-  return
-  debug_end "while_expression"
-}
-
-macro function_expression is_method = 0 {
-  debug_start "function_expression"
-  enter is_method
-
-  call f_function_expression
-
-  return
-  debug_end "function_expression"
-}
-
-macro class_expression {
-  debug_start "class_expression"
-  enter
-
-  call f_class_expression
-
-  return
-  debug_end "class_expression"
-}
-
-macro delete_expression {
-  debug_start "delete_expression"
-  enter
-
-  call f_delete_expression
-
-  return
-  debug_end "delete_expression"
-}
-
-macro include_statement {
-  debug_start "include_statement"
-  enter
-
-  call f_include_statement
-
-  return
-  debug_end "include_statement"
-}
-
-macro statement {
-  debug_start "statement"
-  enter
-
-  call f_statement
-
-  return
-  debug_end "statement"
-}
-
 ; @function parser
 ; @debug
 ; @description Основная функция парсера, обрабатывает список токенов и создает AST
@@ -263,7 +13,7 @@ macro statement {
 ; @return Абстрактное синтаксическое дерево (AST)
 ; @example
 ;   parser token_list
-f_parser:
+_function parser
   get_arg 0
   check_type rax, LIST
 
@@ -302,7 +52,7 @@ f_parser:
 ; @return Следующий токен
 ; @example
 ;   next
-f_next:
+_function next, rbx
   mov rbx, [индекс]
   mov rbx, [rbx + INTEGER_HEADER*8]
 
@@ -324,7 +74,7 @@ f_next:
 ; @return Нет возвращаемого значения
 ; @example
 ;   skip_newline
-f_skip_newline:
+_function skip_newline
   token_check_type [токен], [ТИП_ПЕРЕНОС_СТРОКИ]
   cmp rax, 1
   jne .no_newline
@@ -339,7 +89,7 @@ f_skip_newline:
 ; @return Нет возвращаемого значения
 ; @example
 ;   revert 2
-f_revert:
+_function revert
   get_arg 0
   ; RAX — amount = 0
 
@@ -361,7 +111,7 @@ f_revert:
 ; @description Обновляет текущий токен
 ; @example
 ;   update_token
-f_update_token:
+_function update_token, rax, rbx
   mov rbx, [индекс]
   mov rbx, [rbx + INTEGER_HEADER*8]
 
@@ -387,7 +137,7 @@ f_update_token:
 ; @return Узел выражения
 ; @example
 ;   expression
-f_expression:
+_function expression, rbx, rcx, rdx, r8, r9, r10, r11, r12
   ; RBX — index
   integer_copy [индекс]
   mov rbx, rax
@@ -615,7 +365,7 @@ f_expression:
 ; @return Узел бинарной операции
 ; @example
 ;   binary_operation ["+", "-"], atom
-f_binary_operation:
+_function binary_operation, rbx, rcx, rdx, r8, r9, r10, r11, r12
   get_arg 0
   mov rdx, rax
   get_arg 1
@@ -710,7 +460,7 @@ f_binary_operation:
 ; @return Узел атомарного выражения
 ; @example
 ;   atom
-f_atom:
+_function atom, rbx, rcx, rdx, r8, r9
   ; RBX — token
   dictionary_copy [токен]
   mov rbx, rax
@@ -1089,7 +839,7 @@ f_atom:
 ; @return Узел вызова функции
 ; @example
 ;   call_expression
-f_call_expression:
+_function call_expression, rbx, rcx, rdx, r8, r9, r10, r11
   ; RBX — atom
   atom
   mov rbx, rax
@@ -1217,7 +967,7 @@ f_call_expression:
 ; @return Узел операции возведения в степень или извлечения корня
 ; @example
 ;   power_root
-f_power_root:
+_function power_root
   list
   list_append_link rax, [ТИП_ВОЗВЕДЕНИЕ_В_СТЕПЕНЬ]
   list_append_link rax, [ТИП_ИЗВЛЕЧЕНИЕ_КОРНЯ]
@@ -1231,7 +981,7 @@ f_power_root:
 ; @return Узел множителя
 ; @example
 ;   factor
-f_factor:
+_function factor, rbx
   ; RBX — token
   mov rbx, [токен]
 
@@ -1261,7 +1011,7 @@ f_factor:
 ; @return Узел терма
 ; @example
 ;   term
-f_term:
+_function term
   list
   list_append_link rax, [ТИП_УМНОЖЕНИЕ]
   list_append_link rax, [ТИП_ДЕЛЕНИЕ]
@@ -1274,7 +1024,7 @@ f_term:
 ; @return Узел выражения сравнения
 ; @example
 ;   comparison_expression
-f_comparison_expression:
+_function comparison_expression, rbx
   token_check_keyword [токен], [НЕ]
   cmp rax, 1
   jne .not_unary
@@ -1298,7 +1048,7 @@ f_comparison_expression:
 ; @return Узел арифметического выражения
 ; @example
 ;   arithmetical_expression
-f_arithmetical_expression:
+_function arithmetical_expression
   list
   list_append_link rax, [ТИП_СЛОЖЕНИЕ]
   list_append_link rax, [ТИП_ВЫЧИТАНИЕ]
@@ -1312,7 +1062,7 @@ f_arithmetical_expression:
 ; @return Узел списка
 ; @example
 ;   list_expression
-f_list_expression:
+_function list_expression, rbx, rcx, rdx
   token_check_type [токен], [ТИП_ОТКРЫВАЮЩАЯ_СКОБКА_СПИСКА]
   cmp rax, 1
   je .correct_start
@@ -1486,7 +1236,7 @@ f_list_expression:
 ; @return Узел условной конструкции check
 ; @example
 ;   check_expression
-f_check_expression:
+_function check_expression, rbx, rcx, rdx, r8, r9, r11, r13, r14
   ; RBX — cases
   ; RCX — else_case
 
@@ -1736,7 +1486,7 @@ f_check_expression:
 ; @return Узел условной конструкции if
 ; @example
 ;   if_expression
-f_if_expression:
+_function if_expression, rbx, rcx, rdx, r8, r9
   ; RBX — cases
   ; RCX — else_case
 
@@ -1905,7 +1655,7 @@ f_if_expression:
 ; @return Узел блока else
 ; @example
 ;   else_expression
-f_else_expression:
+_function else_expression, rbx, rcx
   ; RBX — else_case
 
   mov rbx, 0
@@ -1982,7 +1732,7 @@ f_else_expression:
 ; @return Узел цикла for
 ; @example
 ;   for_expression
-f_for_expression:
+_function for_expression, rbx, rcx, rdx, r8, r9, r10, r11
   ; RBX — else_case
   mov rbx, 0
 
@@ -2203,7 +1953,7 @@ f_for_expression:
 ; @return Узел цикла while
 ; @example
 ;   while_expression
-f_while_expression:
+_function while_expression, rbx, rcx, r8, r9, r10, r11
   ; RBX — else_case
 
   mov rbx, 0
@@ -2321,7 +2071,7 @@ f_while_expression:
 ; @example
 ;   function_expression 1  ; для метода
 ;   function_expression    ; для функции
-f_function_expression:
+_function function_expression, r10, r8, r9, rbx, rcx, rdx
   get_arg 0
   mov rbx, rax
   ; RBX — is_method
@@ -2627,7 +2377,7 @@ f_function_expression:
 ; @return Узел класса
 ; @example
 ;   class_expression
-f_class_expression:
+_function class_expression, rbx, rcx, rdx, r8, r9
   token_check_keyword [токен], [КЛАСС]
   cmp rax, 1
   je .correct_class
@@ -2930,7 +2680,7 @@ f_class_expression:
 ; @return Узел оператора delete
 ; @example
 ;   delete_expression
-f_delete_expression:
+_function delete_expression, rbx
   token_check_keyword [токен], [УДАЛИТЬ]
   cmp rax, 1
   je .correct_delete
@@ -2987,7 +2737,7 @@ f_delete_expression:
 ; @return Узел оператора include
 ; @example
 ;   include_statement
-f_include_statement:
+_function include_statement, rbx, rcx
   token_check_keyword [токен], [ВКЛЮЧИТЬ]
   cmp rax, 1
   je .correct_include
@@ -3067,7 +2817,7 @@ f_include_statement:
 ; @return Узел оператора
 ; @example
 ;   statement
-f_statement:
+_function statement, rbx, rcx
   token_check_keyword [токен], [ВЕРНУТЬ]
   cmp rax, 1
   jne .not_return

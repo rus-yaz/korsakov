@@ -27,7 +27,7 @@
 ;   list
 ;   boolean rax  ; Возвращает Ложь
 ; @todo Вынести перевод в логическое значение в методы типов
-f_boolean:
+_function boolean, rbx
   get_arg 0
   mov rbx, rax
 
@@ -125,7 +125,7 @@ f_boolean:
 ; @example
 ;   boolean 1
 ;   boolean_copy rax  ; Копия со значением Истина
-f_boolean_copy:
+_function boolean_copy, rbx
   get_arg 0
   check_type rax, BOOLEAN
   mov rbx, rax
@@ -143,7 +143,7 @@ f_boolean_copy:
 ; @example
 ;   boolean 1
 ;   boolean_value rax  ; Возвращает 1
-f_boolean_value:
+_function boolean_value
   get_arg 0
   check_type rax, BOOLEAN
 
@@ -164,7 +164,7 @@ f_boolean_value:
 ;   boolean 1
 ;   boolean_not rax  ; Возвращает Ложь
 ; @todo Переименовать в logical_not и написать с нуля boolean_not
-f_boolean_not:
+_function boolean_not, rbx
   get_arg 0
 
   boolean rax
@@ -196,7 +196,7 @@ f_boolean_not:
 ;   boolean 0
 ;   boolean_and rbx, rax  ; Вернёт Ложь
 ; @todo Переименовать в logical_and и написать с нуля boolean_and
-f_boolean_and:
+_function boolean_and, rbx, rcx
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -241,7 +241,7 @@ f_boolean_and:
 ;   boolean 0
 ;   boolean_or rbx, rax  ; возвращает true
 ; @todo Переименовать в logical_or и написать с нуля boolean_or
-f_boolean_or:
+_function boolean_or, rbx, rcx
   get_arg 0
   mov rbx, rax
   get_arg 1

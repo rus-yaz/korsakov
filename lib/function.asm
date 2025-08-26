@@ -13,7 +13,7 @@
 ; @example
 ;   string "my_function"
 ;   function rax, some_link, args_list, named_args  ; создает функцию
-f_function:
+_function function, rbx, rcx, rdx, r8, r9, r10
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -53,7 +53,7 @@ f_function:
 ; @return Копия функции
 ; @example
 ;   function_copy some_function  ; создает копию функции
-f_function_copy:
+_function function_copy, rbx, rcx, rdx, r8
   get_arg 0
   mov rbx, rax
 
@@ -83,13 +83,11 @@ f_function_copy:
 ; @return Результат выполнения функции
 ; @example
 ;   function_call some_function, args_list, named_args  ; вызывает функцию
-f_function_call:
+_function function_call, rbx, rcx, rdx, r8, r9, r10, r11, r12, r13, r14, r15
   push rax
   mov r15, [GLOBAL_CONTEXT]
   dictionary_copy_links r15
   mov [GLOBAL_CONTEXT], rax
-
-  push rbp, rax, rbx, rcx, rdx, rsi, rdi, r8, r9, r10, r11, r12, r13, r14, r15
 
   get_arg 2
   mov r9, rax
@@ -401,7 +399,10 @@ f_function_call:
   call rbx
 
   mov [GLOBAL_CONTEXT], r15
-  return
+
+  pop rbp
+  imul rbp, 8
+  add rsp, rbp
 
   mov rbx, rax
   pop rax

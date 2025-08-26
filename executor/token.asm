@@ -1,26 +1,6 @@
 ; Копирайт © 2025 ООО «РУС.ЯЗ»
 ; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
 
-macro token_check_type token*, types* {
-  debug_start "token_check_type"
-  enter token, types
-
-  call f_token_check_type
-
-  return
-  debug_end "token_check_type"
-}
-
-macro token_check_keyword token*, keywords* {
-  debug_start "token_check_keyword"
-  enter token, keywords
-
-  call f_token_check_keyword
-
-  return
-  debug_end "token_check_keyword"
-}
-
 ; @function token_check_type
 ; @debug
 ; @description Проверяет тип токена на соответствие списку типов
@@ -29,7 +9,7 @@ macro token_check_keyword token*, keywords* {
 ; @return Логическое значение (true/false)
 ; @example
 ;   token_check_type token, [ЧИСЛО, СТРОКА]
-f_token_check_type:
+_function token_check_type, rbx, rcx, rdx, r8, r9
   get_arg 1
   mov rbx, rax
   get_arg 0
@@ -87,7 +67,7 @@ f_token_check_type:
 ; @return Логическое значение (true/false)
 ; @example
 ;   token_check_keyword token, [если, пока, для]
-f_token_check_keyword:
+_function token_check_keyword, rbx, rcx, rdx, r8, r9
   get_arg 1
   mov rbx, rax
   get_arg 0

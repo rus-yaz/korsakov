@@ -16,7 +16,7 @@
 ;   mov rbx, rax
 ;   integer 5
 ;   is_equal rbx, rax  ; Вернёт Истину
-f_is_equal:
+_function is_equal, rbx, rcx, rdx, r8, r9, r10
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -228,7 +228,7 @@ f_is_equal:
 ;   mov rbx, rax
 ;   integer 3
 ;   is_not_equal rbx, rax  ; Вернёт Истину
-f_is_not_equal:
+_function is_not_equal, rbx, rcx
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -248,7 +248,7 @@ f_is_not_equal:
 ;   mov rbx, rax
 ;   integer 5
 ;   is_lower rbx, rax  ; Вернёт Истину
-f_is_lower:
+_function is_lower, rbx, rcx, rdx, r8
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -341,7 +341,7 @@ f_is_lower:
 ;   mov rbx, rax
 ;   integer 3
 ;   is_greater rbx, rax  ; Вернёт Истину
-f_is_greater:
+_function is_greater, rbx, rcx, rdx, r8
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -434,7 +434,7 @@ f_is_greater:
 ;   mov rbx, rax
 ;   integer 5
 ;   is_lower_or_equal rbx, rax  ; возвращает true
-f_is_lower_or_equal:
+_function is_lower_or_equal, rbx, rcx
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -454,7 +454,7 @@ f_is_lower_or_equal:
 ;   mov rbx, rax
 ;   integer 3
 ;   is_greater_or_equal rbx, rax  ; возвращает true
-f_is_greater_or_equal:
+_function is_greater_or_equal, rbx, rcx
   get_arg 0
   mov rbx, rax
   get_arg 1

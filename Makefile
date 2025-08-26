@@ -31,3 +31,7 @@ test: clean
 
 clean:
 	rm -f *.o $(TARGETS) $(TESTS)
+
+macros:
+	rm core/generated_macros.asm
+	sh ./hooks/generate_macros.sh

@@ -1,226 +1,6 @@
 ; Копирайт © 2025 ООО «РУС.ЯЗ»
 ; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
 
-macro compiler ast*, context* {
-  debug_start "compiler"
-  enter ast, context
-
-  call f_compiler
-
-  return
-  debug_end "compiler"
-}
-
-macro compile node*, context* {
-  debug_start "compile"
-  enter node, context
-
-  call f_compile
-
-  return
-  debug_end "compile"
-}
-
-macro compile_body node*, context* {
-  debug_start "compile_body"
-  enter node, context
-
-  call f_compile_body
-
-  return
-  debug_end "compile_body"
-}
-
-macro compile_assign node*, context* {
-  debug_start "compile_assign"
-  enter node, context
-
-  call f_compile_assign
-
-  return
-  debug_end "compile_assign"
-}
-
-macro compile_access node*, context* {
-  debug_start "compile_access"
-  enter node, context
-
-  call f_compile_access
-
-  return
-  debug_end "compile_access"
-}
-
-macro compile_unary_operation node*, context* {
-  debug_start "compile_unary_operation"
-  enter node, context
-
-  call f_compile_unary_operation
-
-  return
-  debug_end "compile_unary_operation"
-}
-
-macro compile_binary_operation node*, context* {
-  debug_start "compile_binary_operation"
-  enter node, context
-
-  call f_compile_binary_operation
-
-  return
-  debug_end "compile_binary_operation"
-}
-
-macro compile_null node*, context* {
-  debug_start "compile_null"
-  enter node, context
-
-  call f_compile_null
-
-  return
-  debug_end "compile_null"
-}
-
-macro compile_integer node*, context* {
-  debug_start "compile_integer"
-  enter node, context
-
-  call f_compile_integer
-
-  return
-  debug_end "compile_integer"
-}
-
-macro compile_float node*, context* {
-  debug_start "compile_float"
-  enter node, context
-
-  call f_compile_float
-
-  return
-  debug_end "compile_float"
-}
-
-macro compile_boolean node*, context* {
-  debug_start "compile_boolean"
-  enter node, context
-
-  call f_compile_boolean
-
-  return
-  debug_end "compile_boolean"
-}
-
-macro compile_list node*, context* {
-  debug_start "compile_list"
-  enter node, context
-
-  call f_compile_list
-
-  return
-  debug_end "compile_list"
-}
-
-macro compile_string node*, context* {
-  debug_start "compile_string"
-  enter node, context
-
-  call f_compile_string
-
-  return
-  debug_end "compile_string"
-}
-
-macro compile_dictionary node*, context* {
-  debug_start "compile_dictionary"
-  enter node, context
-
-  call f_compile_dictionary
-
-  return
-  debug_end "compile_dictionary"
-}
-
-macro compile_if node*, context* {
-  debug_start "compile_if"
-  enter node, context
-
-  call f_compile_if
-
-  return
-  debug_end "compile_if"
-}
-
-macro compile_while node*, context* {
-  debug_start "compile_while"
-  enter node, context
-
-  call f_compile_while
-
-  return
-  debug_end "compile_while"
-}
-
-macro compile_for node*, context* {
-  debug_start "compile_for"
-  enter node, context
-
-  call f_compile_for
-
-  return
-  debug_end "compile_for"
-}
-
-macro compile_skip node*, context* {
-  debug_start "compile_skip"
-  enter node, context
-
-  call f_compile_skip
-
-  return
-  debug_end "compile_skip"
-}
-
-macro compile_break node*, context* {
-  debug_start "compile_break"
-  enter node, context
-
-  call f_compile_break
-
-  return
-  debug_end "compile_break"
-}
-
-macro compile_function node*, context* {
-  debug_start "compile_function"
-  enter node, context
-
-  call f_compile_function
-
-  return
-  debug_end "compile_function"
-}
-
-macro compile_call node*, context* {
-  debug_start "compile_call"
-  enter node, context
-
-  call f_compile_call
-
-  return
-  debug_end "compile_call"
-}
-
-macro compile_return node*, context* {
-  debug_start "compile_return"
-  enter node, context
-
-  call f_compile_return
-
-  return
-  debug_end "compile_return"
-}
-
 macro add_code [code*] {
   string code
   list_append_link rdx, rax
@@ -233,7 +13,7 @@ macro add_code [code*] {
 ; @return Скомпилированный машинный код
 ; @example
 ;   compiler ast_tree, compilation_context
-f_compiler:
+_function compiler, rbx, rcx, rdx, r8
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -276,7 +56,7 @@ f_compiler:
 ; @return Скомпилированный код для узла
 ; @example
 ;   compile node, context
-f_compile:
+_function compile, rbx, rcx
   get_arg 1
   mov rbx, rax
   get_arg 0
@@ -437,7 +217,7 @@ f_compile:
 ; @return Скомпилированный код тела программы
 ; @example
 ;   compile_body body_node, context
-f_compile_body:
+_function compile_body, rbx, rcx, rdx, r8, r9
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -478,7 +258,7 @@ f_compile_body:
 ; @return Скомпилированный код присваивания
 ; @example
 ;   compile_assign assign_node, context
-f_compile_assign:
+_function compile_assign, rbx, rcx, rdx, r8
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -536,7 +316,7 @@ f_compile_assign:
 ; @return Скомпилированный код доступа к переменной
 ; @example
 ;   compile_access access_node, context
-f_compile_access:
+_function compile_access, rbx, rcx, rdx, r8
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -746,7 +526,7 @@ f_compile_unary_operation:
 ; @return Скомпилированный код бинарной операции
 ; @example
 ;   compile_binary_operation binary_node, context
-f_compile_binary_operation:
+_function compile_binary_operation, rbx, rcx, rdx, r8
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -896,7 +676,7 @@ f_compile_binary_operation:
 ; @return Скомпилированный код для null
 ; @example
 ;   compile_null null_node, context
-f_compile_null:
+_function compile_null, rbx, rcx, rdx
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -917,7 +697,7 @@ f_compile_null:
 ; @return Скомпилированный код для целого числа
 ; @example
 ;   compile_integer integer_node, context
-f_compile_integer:
+_function compile_integer, rbx, rcx, rdx
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -1018,7 +798,7 @@ f_compile_float:
 ; @return Скомпилированный код для логического значения
 ; @example
 ;   compile_boolean boolean_node, context
-f_compile_boolean:
+_function compile_boolean, rbx, rcx, rdx
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -1064,7 +844,7 @@ f_compile_boolean:
 ; @return Скомпилированный код для списка
 ; @example
 ;   compile_list list_node, context
-f_compile_list:
+_function compile_list, rbx, rcx, rdx, r8
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -1123,7 +903,7 @@ f_compile_list:
 ; @return Скомпилированный код для строки
 ; @example
 ;   compile_string string_node, context
-f_compile_string:
+_function compile_string, rbx, rcx, rdx, r8, r9, r10, r11, r12, r13, r14
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -1260,7 +1040,7 @@ f_compile_string:
 ; @return Скомпилированный код для словаря
 ; @example
 ;   compile_dictionary dict_node, context
-f_compile_dictionary:
+_function compile_dictionary, rbx, rcx, rdx
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -1285,7 +1065,7 @@ f_compile_dictionary:
 ; @return Скомпилированный код условной конструкции
 ; @example
 ;   compile_if if_node, context
-f_compile_if:
+_function compile_if, rbx, rcx, rdx, r8, r9, r10, r12, r13, r14
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -1399,7 +1179,7 @@ f_compile_if:
 ; @return Скомпилированный код цикла while
 ; @example
 ;   compile_while while_node, context
-f_compile_while:
+_function compile_while, rbx, rcx, rdx, r13, r14, r15
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -1511,7 +1291,7 @@ f_compile_while:
 ; @return Скомпилированный код цикла for
 ; @example
 ;   compile_for for_node, context
-f_compile_for:
+_function compile_for, rbx, rcx, rdx, r8, r9, r10, r11, r14, r15
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -1720,7 +1500,7 @@ f_compile_for:
 ; @return Скомпилированный код оператора skip
 ; @example
 ;   compile_skip skip_node, context
-f_compile_skip:
+_function compile_skip, rbx, rcx, rdx, r8, r9
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -1762,7 +1542,7 @@ f_compile_skip:
 ; @return Скомпилированный код оператора break
 ; @example
 ;   compile_break break_node, context
-f_compile_break:
+_function compile_break, rbx, rcx, rdx, r8, r9
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -1804,7 +1584,7 @@ f_compile_break:
 ; @return Скомпилированный код функции
 ; @example
 ;   compile_function function_node, context
-f_compile_function:
+_function compile_function, rbx, rcx, rdx, r8, r9, r10, r11, r12, r13, r14
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -2184,7 +1964,7 @@ f_compile_function:
 ; @return Скомпилированный код вызова функции
 ; @example
 ;   compile_call call_node, context
-f_compile_call:
+_function compile_call, rbx, rcx, rdx
   get_arg 0
   mov rbx, rax
   get_arg 1

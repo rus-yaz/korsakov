@@ -7,15 +7,15 @@
 ; @example
 ;   raw_string "Error message"
 ;   error_raw rax  ; выводит "Error message" в stderr
-f_error_raw:
+_function error_raw, rax, rbx, rcx
   get_arg 0
-  mov rsi, rax
-
-  buffer_length rsi
   mov rbx, rax
 
-  sys_error rsi,\      ; Указатель на буфер
-            rbx        ; Размер буфера
+  buffer_length rbx
+  mov rcx, rax
+
+  sys_error rbx,\      ; Указатель на буфер
+            rcx        ; Размер буфера
 
   ret
 
@@ -25,7 +25,7 @@ f_error_raw:
 ; @example
 ;   binary_string "Error message"
 ;   error_binary rax  ; выводит "Error message" в stderr
-f_error_binary:
+_function error_binary
   get_arg 0
   add rax, BINARY_HEADER*8
 
@@ -42,7 +42,7 @@ f_error_binary:
 ;   list_append rax, "Error"
 ;   list_append rax, "message"
 ;   error rax  ; выводит "Error message\n" в stderr
-f_error:
+_function error, rax, rbx, rcx, rdx, r8, r9, r10, r11
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -107,18 +107,3 @@ f_error:
   ret
 
   ret
-
-f_exit_with_error:
-  get_arg 0
-  mov rbx, rax
-  get_arg 1
-  mov rcx, rax
-  get_arg 2
-  mov rdx, rax
-  get_arg 2
-  mov r8, rax
-
-  error rcx, rdx, r8
-
-  mov rax, [rbx + INTEGER_HEADER*8]
-  exit rax

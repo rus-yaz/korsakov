@@ -8,7 +8,7 @@
 ; @example
 ;   integer 42  ; создает целое число 42
 ;   integer -10  ; создает целое число -10
-f_integer:
+_function integer, rbx
   get_arg 0
   mov rbx, rax
 
@@ -28,7 +28,7 @@ f_integer:
 ;   string_to_integer rax  ; возвращает целое число 123
 ;   string "-456"
 ;   string_to_integer rax  ; возвращает целое число -456
-f_string_to_integer:
+_function string_to_integer, rbx, rcx, rdx, r8, r9
   get_arg 0
   check_type rax, STRING
   mov rbx, rax
@@ -106,7 +106,7 @@ f_string_to_integer:
 ; @example
 ;   integer 42
 ;   integer_copy rax  ; создает копию числа 42
-f_integer_copy:
+_function integer_copy, rbx
   get_arg 0
   check_type rax, INTEGER
   mov rbx, [rax + 8*1]
@@ -124,7 +124,7 @@ f_integer_copy:
 ; @example
 ;   integer 42
 ;   integer_neg rax  ; возвращает -42
-f_integer_neg:
+_function integer_neg
   get_arg 0
   check_type rax, INTEGER
 
@@ -141,7 +141,7 @@ f_integer_neg:
 ; @example
 ;   integer 5
 ;   integer_inc rax  ; изменяет число на 6
-f_integer_inc:
+_function integer_inc, rbx
   get_arg 0
   check_type rax, INTEGER
 
@@ -158,7 +158,7 @@ f_integer_inc:
 ; @example
 ;   integer 5
 ;   integer_dec rax  ; изменяет число на 4
-f_integer_dec:
+_function integer_dec, rbx
   get_arg 0
   check_type rax, INTEGER
 
@@ -178,7 +178,7 @@ f_integer_dec:
 ;   mov rbx, rax
 ;   integer 3
 ;   integer_add rbx, rax  ; вернет 8
-f_integer_add:
+_function integer_add, rbx, rcx
   get_arg 1
   mov rbx, rax
   get_arg 0
@@ -203,7 +203,7 @@ f_integer_add:
 ;   mov rbx, rax
 ;   integer 3
 ;   integer_sub rbx, rax  ; вернет 7
-f_integer_sub:
+_function integer_sub, rbx, rcx
   get_arg 1
   mov rbx, rax
   get_arg 0
@@ -227,7 +227,7 @@ f_integer_sub:
 ;   mov rbx, rax
 ;   integer 7
 ;   integer_mul rbx, rax  ; вернет 42
-f_integer_mul:
+_function integer_mul, rbx, rcx
   get_arg 1
   mov rbx, rax
   get_arg 0
@@ -251,7 +251,7 @@ f_integer_mul:
 ;   mov rbx, rax
 ;   integer 3
 ;   integer_div rbx, rax  ; вернет 3.333...
-f_integer_div:
+_function integer_div, rbx, rcx
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -288,7 +288,7 @@ f_integer_div:
 ; @example
 ;   float 3.7
 ;   float_to_integer rax  ; возвращает 3
-f_float_to_integer:
+_function float_to_integer, rbx
   get_arg 0
   check_type rax, FLOAT
 

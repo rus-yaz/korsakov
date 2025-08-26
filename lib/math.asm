@@ -8,7 +8,7 @@
 ; @example
 ;   integer 5
 ;   factorial rax  ; возвращает 120 (5!)
-f_factorial:
+_function factorial, rbx
   get_arg 0
   check_type rax, INTEGER
 
@@ -50,7 +50,7 @@ f_factorial:
 ; @example
 ;   float 2.0
 ;   euler_power_taylor rax  ; возвращает e^2
-f_euler_power_taylor:
+_function euler_power_taylor, rbx, rcx, rdx, r8, r9, r10
   get_arg 0
   mov rbx, rax
 
@@ -185,7 +185,7 @@ f_euler_power_taylor:
 ; @example
 ;   float 2.0
 ;   euler_power rax  ; возвращает e^2
-f_euler_power:
+_function euler_power, rbx, rcx, rdx
   get_arg 0
   mov rbx, rax
 

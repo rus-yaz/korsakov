@@ -6,7 +6,7 @@
 ; @return Путь к текущей рабочей директории
 ; @example
 ;   getcwd  ; возвращает текущую рабочую директорию
-f_getcwd:
+_function getcwd, rbx
   sub rsp, MAX_PATH_LENGTH
   mov rax, rsp
   sys_getcwd rax, MAX_PATH_LENGTH
@@ -35,7 +35,7 @@ f_getcwd:
 ; @example
 ;   string "/home/user"
 ;   chdir rax  ; изменяет рабочую директорию
-f_chdir:
+_function chdir, rax, rbx, rcx
   get_arg 0
   mov rbx, rax
 
@@ -111,7 +111,7 @@ f_chdir:
 ; @example
 ;   string "/path/to/link"
 ;   readlink rax  ; читает содержимое символической ссылки
-f_readlink:
+_function readlink, rbx
   get_arg 0
   mov rbx, rax
 
@@ -151,7 +151,7 @@ f_readlink:
 ; @return Путь к исполняемому файлу
 ; @example
 ;   get_exe_path  ; возвращает путь к исполняемому файлу
-f_get_exe_path:
+_function get_exe_path
   string "/proc/self/exe"
   readlink rax
 
@@ -162,7 +162,7 @@ f_get_exe_path:
 ; @return Путь к директории исполняемого файла
 ; @example
 ;   get_exe_directory  ; возвращает директорию исполняемого файла
-f_get_exe_directory:
+_function get_exe_directory, rbx, rcx
   get_exe_path
   mov rbx, rax
 

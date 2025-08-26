@@ -26,7 +26,7 @@
 ;   mov rbx, rax
 ;   string "World"
 ;   addition rbx, rax  ; Вернёт "HelloWorld"
-f_addition:
+_function addition, rbx, rcx, rdx, r8
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -129,7 +129,7 @@ f_addition:
 ;   mov rbx, rax
 ;   integer 3
 ;   subtraction rbx, rax  ; Вернёт 7
-f_subtraction:
+_function subtraction, rbx, rcx, rdx, r8
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -207,7 +207,7 @@ f_subtraction:
 ;   mov rbx, rax
 ;   integer 7
 ;   multiplication rbx, rax  ; Вернёт 42
-f_multiplication:
+_function multiplication, rbx, rcx, rdx, r8
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -313,7 +313,7 @@ f_multiplication:
 ;   mov rbx, rax
 ;   integer 3
 ;   division rbx, rax  ; Вернёт 3.333...
-f_division:
+_function division, rbx, rcx, rdx, r8
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -379,7 +379,7 @@ f_division:
 ; @example
 ;   integer 42
 ;   negate rax  ; Возвращает -42
-f_negate:
+_function negate, rbx, rcx
   get_arg 0
 
   mov rbx, [rax]
@@ -398,7 +398,7 @@ f_negate:
 
   string "Операция негативизации не может быть проведена над типом "
   mov rbx, rax
-  type_to_string rdx
+  type_to_string rbx
   mov rcx, rax
 
   list

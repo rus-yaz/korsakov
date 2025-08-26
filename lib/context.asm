@@ -6,7 +6,7 @@
 ; @param pointer - указатель на начало программы
 ; @example
 ;   set_program_start_pointer rbp  ; Устанавливает указатель на начало программы
-f_set_program_start_pointer:
+_function set_program_start_pointer, rax
   get_arg 0
   mov [PROGRAM_START_POINTER], rax
   ret
@@ -16,7 +16,7 @@ f_set_program_start_pointer:
 ; @return Указатель на начало программы
 ; @example
 ;   get_program_start_pointer  ; Возвращает указатель на начало программы
-f_get_program_start_pointer:
+_function get_program_start_pointer
   mov rax, [PROGRAM_START_POINTER]
   ret
 
@@ -25,7 +25,7 @@ f_get_program_start_pointer:
 ; @return Количество аргументов, переданных программе
 ; @example
 ;   get_cli_arguments_count  ; Возвращает количество аргументов, переданных программе
-f_get_cli_arguments_count:
+_function get_cli_arguments_count
   get_program_start_pointer
   integer [rax]
   ret
@@ -35,7 +35,7 @@ f_get_cli_arguments_count:
 ; @return Список аргументов, переданных программе
 ; @example
 ;   get_cli_arguments  ; Возвращает список аргументов, переданных программе
-f_get_cli_arguments:
+_function get_cli_arguments, rbx, rcx, rdx
   push rbp
   get_program_start_pointer
   mov rbp, rax
@@ -68,7 +68,7 @@ f_get_cli_arguments:
 ; @return Список переменных окружения
 ; @example
 ;   get_environment_variables  ; Возвращает список переменных окружения
-f_get_environment_variables:
+_function get_environment_variables, rbx, rcx
   push rbp
   mov rbp, [PROGRAM_START_POINTER]
 

@@ -68,7 +68,7 @@ define GRND_NONBLOCK 1 ; Попытка немедленного получен�
 define GRND_RANDOM   2 ; Попытка вернуть число, используя максимальную энтропию
 
 macro syscall number*, arg_1 = 0, arg_2 = 0, arg_3 = 0, arg_4 = 0, arg_5 = 0, arg_6 = 0 {
-  push r9, r8, r10, rdx, rsi, rdi
+  push rcx, r9, r8, r10, rdx, rsi, rdi
 
   mov r9,  arg_6
   mov r8,  arg_5
@@ -79,7 +79,7 @@ macro syscall number*, arg_1 = 0, arg_2 = 0, arg_3 = 0, arg_4 = 0, arg_5 = 0, ar
   mov rax, number
   syscall
 
-  pop rdi, rsi, rdx, r10, r8, r9
+  pop rdi, rsi, rdx, r10, r8, r9, rcx
 }
 
 macro sys_read file_descriptor*, buffer_ptr*, size* {

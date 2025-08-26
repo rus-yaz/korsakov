@@ -9,7 +9,7 @@
 ; @example
 ;   get_random  ; генерирует случайное число в диапазоне [0, MAX_INT/2]
 ;   get_random 1, 10  ; генерирует случайное число от 1 до 10
-f_get_random:
+_function get_random, rbx, rcx, rdx, r8
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -74,7 +74,7 @@ f_get_random:
 ; @example
 ;   get_pseudorandom  ; генерирует псевдослучайное число в диапазоне [0, MAX_INT/2]
 ;   get_pseudorandom 1, 10  ; генерирует псевдослучайное число от 1 до 10
-f_get_pseudorandom:
+_function get_pseudorandom, rbx, rcx, rdx, r8
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -139,7 +139,7 @@ f_get_pseudorandom:
 ; @example
 ;   integer 12345
 ;   set_seed rax  ; устанавливает начальное значение 12345
-f_set_seed:
+_function set_seed, rax
   get_arg 0
   check_type rax, INTEGER
   mov [RANDOM_SEED], rax
@@ -149,7 +149,7 @@ f_set_seed:
 ; @description Сбрасывает начальное значение генератора псевдослучайных чисел к значению по умолчанию
 ; @example
 ;   reset_seed  ; сбрасывает начальное значение к 2108
-f_reset_seed:
+_function reset_seed, rax
   integer 2108
   mov [RANDOM_SEED], rax
   ret

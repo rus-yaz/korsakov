@@ -44,11 +44,6 @@ f_list:
   get_arg 0
   mov rbx, rax
 
-  cmp rbx, 0
-  jne @f
-    mov rbx, 2
-  @@:
-
   mov rcx, rbx
   imul rcx, 8
 
@@ -80,7 +75,7 @@ f_list:
 ;   list
 ;   list_append rax, value
 ;   list_length rax  ; возвращает 1
-f_list_length:
+_function list_length
   get_arg 0
   check_type rax, LIST
 
@@ -94,7 +89,7 @@ f_list_length:
 ; @example
 ;   list 10
 ;   list_capacity rax  ; возвращает 10
-f_list_capacity:
+_function list_capacity
   get_arg 0
   check_type rax, LIST
 
@@ -107,7 +102,7 @@ f_list_capacity:
 ; @example
 ;   list 2
 ;   list_expand_capacity rax  ; увеличивает вместимость до 4
-f_list_expand_capacity:
+_function list_expand_capacity, rax, rbx, rcx
   get_arg 0
   mov rbx, rax
 
@@ -140,7 +135,7 @@ f_list_expand_capacity:
 ;   list_append rax, value1
 ;   string "new_value"
 ;   list_set_link rax, 0, rbx
-f_list_set_link:
+_function list_set_link, rbx, rcx, rdx, r8
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -189,7 +184,7 @@ f_list_set_link:
 ;   list_append rax, value1
 ;   string "new_value"
 ;   list_set rax, 0, rbx
-f_list_set:
+_function list_set, rbx, rcx, rdx
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -211,7 +206,7 @@ f_list_set:
 ;   list
 ;   list_append rax, value
 ;   list_get_link rax, 0  ; возвращает value
-f_list_get_link:
+_function list_get_link, rbx, rcx, rdx
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -253,7 +248,7 @@ f_list_get_link:
 ;   list
 ;   list_append rax, value
 ;   list_get rax, 0  ; возвращает копию value
-f_list_get:
+_function list_get, rbx, rcx
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -272,7 +267,7 @@ f_list_get:
 ;   list
 ;   list_append rax, value
 ;   list_copy_links rax  ; создает копию со ссылками
-f_list_copy_links:
+_function list_copy_links, rbx, rcx
   get_arg 0
   mov rbx, rax
 
@@ -297,7 +292,7 @@ f_list_copy_links:
 ;   list
 ;   list_append rax, value
 ;   list_copy rax  ; создает полную копию
-f_list_copy:
+_function list_copy, rbx, rcx, rdx, r8, r9
   get_arg 0
   mov rbx, rax
 
@@ -340,7 +335,7 @@ f_list_copy:
 ;   list
 ;   string "value"
 ;   list_append_link rax, rbx
-f_list_append_link:
+_function list_append_link, rbx, rcx, rdx, r8
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -380,7 +375,7 @@ f_list_append_link:
 ;   list
 ;   string "value"
 ;   list_append rax, rbx
-f_list_append:
+_function list_append, rbx, rcx
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -401,13 +396,13 @@ f_list_append:
 ;   list_append rax, value1
 ;   list_append rax, value2
 ;   list_pop_link rax, -1  ; удаляет и возвращает последний элемент
-f_list_pop_link:
+_function list_pop_link, rbx, rcx, rdx, r8, r9
   get_arg 0
   mov rbx, rax
   get_arg 1
   mov rcx, rax
 
-  cmp rcx, 0
+  cmp rcx, -1
   jne @f
     integer -1
     mov rcx, rax
@@ -466,7 +461,7 @@ f_list_pop_link:
 ;   list_append rax, value1
 ;   list_append rax, value2
 ;   list_pop rax, -1  ; удаляет и возвращает копию последнего элемента
-f_list_pop:
+_function list_pop, rbx, rcx
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -488,7 +483,7 @@ f_list_pop:
 ;   list_append rax, value1
 ;   string "inserted"
 ;   list_insert_link rax, 0, rbx  ; вставляет в начало
-f_list_insert_link:
+_function list_insert_link, rbx, rcx, rdx, r8, r9, r10
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -564,7 +559,7 @@ f_list_insert_link:
 ;   list_append rax, value1
 ;   string "inserted"
 ;   list_insert rax, 0, rbx  ; вставляет в начало
-f_list_insert:
+_function list_insert, rbx, rcx, rdx
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -587,7 +582,7 @@ f_list_insert:
 ;   list_append rax, value1
 ;   list_append rax, value2
 ;   list_index rax, value1  ; возвращает 0
-f_list_index:
+_function list_index, rbx, rcx, rdx, r8
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -632,7 +627,7 @@ f_list_index:
 ;   list
 ;   list_append rax, value1
 ;   list_include rax, value1  ; возвращает true
-f_list_include:
+_function list_include, rbx, rcx
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -664,7 +659,7 @@ f_list_include:
 ;   list
 ;   list_append rbx, value2
 ;   list_extend_links rax, rbx
-f_list_extend_links:
+_function list_extend_links, rbx, rcx, rdx, r8
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -707,7 +702,7 @@ f_list_extend_links:
 ;   list
 ;   list_append rbx, value2
 ;   list_extend rax, rbx
-f_list_extend:
+_function list_extend, rbx, rcx
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -730,7 +725,7 @@ f_list_extend:
 ;   list_append rax, value1
 ;   list_append rax, value2
 ;   list_reverse_links rax  ; возвращает [value2, value1]
-f_list_reverse_links:
+_function list_reverse_links, rbx, rcx, rdx, r8, r9
   get_arg 0
   mov rbx, rax
 
@@ -780,7 +775,7 @@ f_list_reverse_links:
 ;   list_append rax, value1
 ;   list_append rax, value2
 ;   list_reverse rax  ; возвращает копии в обратном порядке
-f_list_reverse:
+_function list_reverse, rbx
   get_arg 0
   mov rbx, rax
 
@@ -802,7 +797,7 @@ f_list_reverse:
 ;   list_append rax, value2
 ;   list_append rax, value3
 ;   list_slice_links rax, 0, 2  ; возвращает [value1, value2]
-f_list_slice_links:
+_function list_slice_links, rbx, rcx, rdx, r8, r9, r10, r15
   get_arg 0    ; Коллекция
   mov rbx, rax
   get_arg 1    ; Начало
@@ -818,13 +813,13 @@ f_list_slice_links:
     mov rcx, rax
   @@:
 
-  cmp rdx, 0
+  cmp rdx, -1
   jne @f
     integer -1
     mov rdx, rax
   @@:
 
-  cmp r8, 0
+  cmp r8, 1
   jne @f
     integer 1
     mov r8, rax
@@ -914,7 +909,7 @@ f_list_slice_links:
 ;   list_append rax, value2
 ;   list_append rax, value3
 ;   list_slice rax, 0, 2  ; возвращает копии [value1, value2]
-f_list_slice:
+_function list_slice, rbx, rcx, rdx, r8
   get_arg 0    ; Коллекция
   mov rbx, rax
   get_arg 1    ; Начало
@@ -940,7 +935,7 @@ f_list_slice:
 ;   list
 ;   list_append rbx, value2
 ;   list_add_links rax, rbx
-f_list_add_links:
+_function list_add_links, rbx, rcx
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -965,7 +960,7 @@ f_list_add_links:
 ;   list
 ;   list_append rbx, value2
 ;   list_add rax, rbx
-f_list_add:
+_function list_add, rbx, rcx
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -986,7 +981,7 @@ f_list_add:
 ;   list_append rax, value
 ;   integer 3
 ;   list_mul_links rax, rbx  ; возвращает [value, value, value]
-f_list_mul_links:
+_function list_mul_links, rbx, rcx, rdx
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -1028,7 +1023,7 @@ f_list_mul_links:
 ;   list_append rax, value
 ;   integer 3
 ;   list_mul rax, rbx  ; возвращает копии [value, value, value]
-f_list_mul:
+_function list_mul, rbx, rcx
   get_arg 0
   mov rbx, rax
   get_arg 1

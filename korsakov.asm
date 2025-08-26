@@ -187,30 +187,6 @@ macro string_to_label label* {
   mov [label], rax
 }
 
-macro print_help {
-  enter
-
-  call f_print_help
-
-  leave
-}
-
-macro format_help_flag list {
-  enter list
-
-  call f_format_help_flag
-
-  return
-}
-
-macro check_compilation error_message* {
-  enter error_message
-
-  call f_check_compilation
-
-  leave
-}
-
 start:
   get_cli_arguments_count
   mov [КОЛИЧЕСТВО_АРГУМЕНТОВ], rax
@@ -902,7 +878,11 @@ start:
 
   exit 0
 
-f_print_help:
+; @function print_help
+; @description Выводит справку по использованию программы
+; @example
+;   print_help
+_function print_help, rax, rbx, rcx, rdx
   list
   mov rbx, rax
 
@@ -986,7 +966,13 @@ f_print_help:
   print rbx, rax
   ret
 
-f_format_help_flag:
+; @function format_help_flag
+; @description Форматирует флаг справки для вывода
+; @param flag_info - список с информацией о флаге (флаг, описание, аргумент)
+; @return Отформатированная строка флага
+; @example
+;   format_help_flag flag_info
+_function format_help_flag, rbx, rcx, rdx, r8
   get_arg 0
   mov rbx, rax
   check_type rbx, LIST
@@ -1051,7 +1037,13 @@ f_format_help_flag:
   join rbx, rax
   ret
 
-f_check_compilation:
+; @function check_compilation
+; @description Проверяет, что программа запущена в режиме компиляции
+; @param error_message - сообщение об ошибке, если не в режиме компиляции
+; @example
+;   string "Ошибка: требуется режим компиляции"
+;   check_compilation rax
+_function check_compilation, rax, rbx
   get_arg 0
   mov rbx, rax
 

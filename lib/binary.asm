@@ -8,7 +8,7 @@
 ; @example
 ;   raw_string "Hello"
 ;   buffer_to_binary rax  ; Создаёт бинарную последовательность из буфера
-f_buffer_to_binary:
+_function buffer_to_binary, rbx, rcx, rdx, rdi, rsi
   get_arg 0
   mov rbx, rax
 
@@ -50,7 +50,7 @@ f_buffer_to_binary:
 ; @example
 ;   binary_string "Hello"
 ;   binary_to_string rax  ; Вернёт обычную строку
-f_binary_to_string:
+_function binary_to_string, rbx, rcx, rdx, r8, r9, r10
   get_arg 0
   mov rdx, rax
 
@@ -219,7 +219,7 @@ f_binary_to_string:
 ; @example
 ;   raw_string "Hello"
 ;   buffer_to_string rax  ; Преобразует буфер в строку
-f_buffer_to_string:
+_function buffer_to_string, rbx
   get_arg 0
 
   buffer_to_binary rax
@@ -237,7 +237,7 @@ f_buffer_to_string:
 ; @example
 ;   string "Hello"
 ;   string_to_binary rax  ; Вернёт бинарную последовательность
-f_string_to_binary:
+_function string_to_binary, rbx, rcx, rdx, r8, r9, r11, r12, r15
   get_arg 0
   mov rbx, rax
   check_type rbx, STRING
@@ -347,7 +347,7 @@ f_string_to_binary:
 ; @example
 ;   binary_string "Hello"
 ;   binary_length rax  ; Возвращает длину бинарной последовательности
-f_binary_length:
+_function binary_length
   get_arg 0
   check_type rax, BINARY
 

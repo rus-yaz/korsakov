@@ -32,14 +32,9 @@
 ; @example
 ;   dictionary     ; Создаёт словарь с вместимостью 2
 ;   dictionary 10  ; Создаёт словарь с вместимостью 10
-f_dictionary:
+_function dictionary, rbx, rcx, rdi, rsi
   get_arg 0
   mov rbx, rax
-
-  cmp rbx, 0
-  jne @f
-    mov rbx, 2
-  @@:
 
   mov rcx, rbx
   imul rcx, 8
@@ -86,7 +81,7 @@ f_dictionary:
 ;   list_append_link rax, rbx
 ;
 ;   dictionary_from_list rax
-f_dictionary_from_list:
+_function dictionary_from_list, rbx, rcx, rdx, r8, r9, r10
   get_arg 0
   mov rbx, rax
 
@@ -150,7 +145,7 @@ f_dictionary_from_list:
 ;   dictionary
 ;   dictionary_set rax, key, value
 ;   dictionary_length rax  ; Вернёт 1
-f_dictionary_length:
+_function dictionary_length
   get_arg 0
   check_type rax, DICTIONARY
 
@@ -164,7 +159,7 @@ f_dictionary_length:
 ; @example
 ;   dictionary 10
 ;   dictionary_capacity rax  ; Вернёт 10
-f_dictionary_capacity:
+_function dictionary_capacity
   get_arg 0
   check_type rax, DICTIONARY
 
@@ -177,7 +172,7 @@ f_dictionary_capacity:
 ; @example
 ;   dictionary 2
 ;   dictionary_expand_capacity rax  ; Увеличивает вместимость до 4
-f_dictionary_expand_capacity:
+_function dictionary_expand_capacity, rax, rbx, rcx
   get_arg 0
   mov rbx, rax
 
@@ -213,7 +208,7 @@ f_dictionary_expand_capacity:
 ;   mov rcx, rax
 ;   string "John"
 ;   dictionary_set_link rbx, rcx, rax
-f_dictionary_set_link:
+_function dictionary_set_link, rbx, rcx, rdx, r8, r9
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -286,7 +281,7 @@ f_dictionary_set_link:
 ;   string "name"
 ;   string "John"
 ;   dictionary_set rax, rbx, rcx
-f_dictionary_set:
+_function dictionary_set, rbx, rcx, rdx
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -313,7 +308,7 @@ f_dictionary_set:
 ;   dictionary
 ;   dictionary_set rax, key, value
 ;   dictionary_get_link rax, key  ; возвращает value
-f_dictionary_get_link:
+_function dictionary_get_link, rbx, rcx, rdx, r8
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -369,7 +364,7 @@ f_dictionary_get_link:
 ;   dictionary
 ;   dictionary_set rax, key, value
 ;   dictionary_get rax, key  ; возвращает копию value
-f_dictionary_get:
+_function dictionary_get, rbx, rcx, rdx
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -391,7 +386,7 @@ f_dictionary_get:
 ;   dictionary
 ;   dictionary_set rax, key, value
 ;   dictionary_copy_links rax  ; создает копию со ссылками
-f_dictionary_copy_links:
+_function dictionary_copy_links, rbx, rcx
   get_arg 0
   mov rbx, rax
 
@@ -416,7 +411,7 @@ f_dictionary_copy_links:
 ;   dictionary
 ;   dictionary_set rax, key, value
 ;   dictionary_copy rax  ; создает полную копию
-f_dictionary_copy:
+_function dictionary_copy, rbx, rcx, rdx, r8, r9
   get_arg 0
   mov rbx, rax
 
@@ -458,7 +453,7 @@ f_dictionary_copy:
 ;   dictionary
 ;   dictionary_set rax, key, value
 ;   dictionary_items_links rax  ; возвращает список пар
-f_dictionary_items_links:
+_function dictionary_items_links
   get_arg 0
   check_type rax, DICTIONARY
 
@@ -474,7 +469,7 @@ f_dictionary_items_links:
 ;   dictionary
 ;   dictionary_set rax, key, value
 ;   dictionary_items rax  ; возвращает список пар как копии
-f_dictionary_items:
+_function dictionary_items
   get_arg 0
   check_type rax, DICTIONARY
 
@@ -492,7 +487,7 @@ f_dictionary_items:
 ;   dictionary_set rax, key1, value1
 ;   dictionary_set rax, key2, value2
 ;   dictionary_keys_links rax  ; возвращает [key1, key2]
-f_dictionary_keys_links:
+_function dictionary_keys_links, rbx, rcx, rdx, r8, r9
   get_arg 0
   mov rbx, rax
 
@@ -542,7 +537,7 @@ f_dictionary_keys_links:
 ;   dictionary_set rax, key1, value1
 ;   dictionary_set rax, key2, value2
 ;   dictionary_keys rax  ; возвращает копии ключей
-f_dictionary_keys:
+_function dictionary_keys
   get_arg 0
   check_type rax, DICTIONARY
 
@@ -560,7 +555,7 @@ f_dictionary_keys:
 ;   dictionary_set rax, key1, value1
 ;   dictionary_set rax, key2, value2
 ;   dictionary_values_links rax  ; возвращает [value1, value2]
-f_dictionary_values_links:
+_function dictionary_values_links, rbx, rcx, rdx, r8, r9
   get_arg 0
   mov rbx, rax
 
@@ -610,7 +605,7 @@ f_dictionary_values_links:
 ;   dictionary_set rax, key1, value1
 ;   dictionary_set rax, key2, value2
 ;   dictionary_values rax  ; возвращает копии значений
-f_dictionary_values:
+_function dictionary_values
   get_arg 0
   check_type rax, DICTIONARY
 
@@ -630,7 +625,7 @@ f_dictionary_values:
 ;   dictionary
 ;   dictionary_set rbx, key2, value2
 ;   dictionary_extend_links rax, rbx
-f_dictionary_extend_links:
+_function dictionary_extend_links, rbx, rcx, rdx, r8, r9, r10, r11
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -680,7 +675,7 @@ f_dictionary_extend_links:
 ;   dictionary
 ;   dictionary_set rbx, key2, value2
 ;   dictionary_extend rax, rbx
-f_dictionary_extend:
+_function dictionary_extend, rbx, rcx
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -705,7 +700,7 @@ f_dictionary_extend:
 ;   dictionary
 ;   dictionary_set rbx, key2, value2
 ;   dictionary_add_links rax, rbx
-f_dictionary_add_links:
+_function dictionary_add_links, rbx, rcx
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -727,7 +722,7 @@ f_dictionary_add_links:
 ;   dictionary
 ;   dictionary_set rbx, key2, value2
 ;   dictionary_add rax, rbx
-f_dictionary_add:
+_function dictionary_add, rbx, rcx
   get_arg 0
   mov rbx, rax
   get_arg 1

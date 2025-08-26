@@ -1,208 +1,6 @@
 ; Копирайт © 2025 ООО «РУС.ЯЗ»
 ; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
 
-macro check_node_type node*, type* {
-  debug_start "check_node_type"
-  enter node, type
-
-  call f_check_node_type
-
-  return
-  debug_end "check_node_type"
-}
-
-macro access_node variable*, keys* {
-  enter variable, keys
-
-  call f_access_node
-
-  return
-}
-
-macro assign_node variable*, keys*, value* {
-  enter variable, keys, value
-
-  call f_assign_node
-
-  return
-}
-
-macro binary_operation_node left_node*, operator*, right_node* {
-  enter left_node, operator, right_node
-
-  call f_binary_operation_node
-
-  return
-}
-
-macro list_node elements* {
-  enter elements
-
-  call f_list_node
-
-  return
-}
-
-macro null_node {
-  enter
-
-  call f_null_node
-
-  return
-}
-
-macro integer_node token* {
-  enter token
-
-  call f_integer_node
-
-  return
-}
-
-macro float_node token* {
-  enter token
-
-  call f_float_node
-
-  return
-}
-
-macro boolean_node token* {
-  enter token
-
-  call f_boolean_node
-
-  return
-}
-
-macro string_node token* {
-  enter token
-
-  call f_string_node
-
-  return
-}
-
-macro call_node variable*, arguments*, named_arguments* {
-  enter variable, arguments, named_arguments
-
-  call f_call_node
-
-  return
-}
-
-macro unary_operation_node operator*, operand* {
-  enter operator, operand
-
-  call f_unary_operation_node
-
-  return
-}
-
-macro dictionary_node elements* {
-  enter elements
-
-  call f_dictionary_node
-
-  return
-}
-
-macro check_node cases*, else_case* {
-  enter cases, else_case
-
-  call f_check_node
-
-  return
-}
-
-macro if_node cases*, else_case* {
-  enter cases, else_case
-
-  call f_if_node
-
-  return
-}
-
-macro for_node variable*, start*, end*, step*, body*, else_case* {
-  enter variable, start, end, step, body, else_case
-
-  call f_for_node
-
-  return
-}
-
-macro while_node condition*, body*, else_case* {
-  enter condition, body, else_case
-
-  call f_while_node
-
-  return
-}
-
-macro method_node variable*, arguments*, body*, autoreturn*, class_name, object_name {
-  enter variable, arguments, body, autoreturn, class_name, object_name
-
-  call f_method_node
-
-  return
-}
-
-macro function_node variable*, arguments*, body*, autoreturn* {
-  enter variable, arguments, body, autoreturn
-
-  call f_function_node
-
-  return
-}
-
-macro class_node variable*, body*, parents* {
-  enter variable, body, parents
-
-  call f_class_node
-
-  return
-}
-
-macro delete_node variable* {
-  enter variable
-
-  call f_delete_node
-
-  return
-}
-
-macro include_node path* {
-  enter path
-
-  call f_include_node
-
-  return
-}
-
-macro return_node value* {
-  enter value
-
-  call f_return_node
-
-  return
-}
-
-macro skip_node {
-  enter
-
-  call f_skip_node
-
-  return
-}
-
-macro break_node {
-  enter
-
-  call f_break_node
-
-  return
-}
-
 ; @function check_node_type
 ; @debug
 ; @description Проверяет тип узла AST
@@ -211,7 +9,7 @@ macro break_node {
 ; @return Логическое значение (true/false)
 ; @example
 ;   check_node_type node, [УЗЕЛ_ПРИСВАИВАНИЯ_ПЕРЕМЕННОЙ]
-f_check_node_type:
+_function check_node_type, rbx, rcx
   get_arg 1
   mov rbx, rax
   get_arg 0
@@ -231,7 +29,7 @@ f_check_node_type:
 ; @return Узел доступа к переменной
 ; @example
 ;   access_node variable, keys
-f_access_node:
+_function access_node, rbx
   dictionary
   mov rbx, rax
 
@@ -251,7 +49,7 @@ f_access_node:
 ; @return Узел присваивания
 ; @example
 ;   assign_node variable, keys, value
-f_assign_node:
+_function assign_node, rbx
   dictionary
   mov rbx, rax
 
@@ -273,7 +71,7 @@ f_assign_node:
 ; @return Узел бинарной операции
 ; @example
 ;   binary_operation_node left, "+", right
-f_binary_operation_node:
+_function binary_operation_node, rbx
   dictionary
   mov rbx, rax
 
@@ -293,7 +91,7 @@ f_binary_operation_node:
 ; @return Узел списка
 ; @example
 ;   list_node elements
-f_list_node:
+_function list_node, rbx
   dictionary
   mov rbx, rax
 
@@ -308,7 +106,7 @@ f_list_node:
 ; @return Узел null
 ; @example
 ;   null_node
-f_null_node:
+_function null_node, rbx
   dictionary
   mov rbx, rax
 
@@ -322,7 +120,7 @@ f_null_node:
 ; @return Узел целого числа
 ; @example
 ;   integer_node token
-f_integer_node:
+_function integer_node, rbx
   dictionary
   mov rbx, rax
 
@@ -338,7 +136,7 @@ f_integer_node:
 ; @return Узел вещественного числа
 ; @example
 ;   float_node token
-f_float_node:
+_function float_node, rbx
   dictionary
   mov rbx, rax
 
@@ -354,7 +152,7 @@ f_float_node:
 ; @return Узел логического значения
 ; @example
 ;   boolean_node token
-f_boolean_node:
+_function boolean_node, rbx
   dictionary
   mov rbx, rax
 
@@ -370,7 +168,7 @@ f_boolean_node:
 ; @return Узел строки
 ; @example
 ;   string_node token
-f_string_node:
+_function string_node, rbx
   dictionary
   mov rbx, rax
 
@@ -388,7 +186,7 @@ f_string_node:
 ; @return Узел вызова функции
 ; @example
 ;   call_node function, args, named_args
-f_call_node:
+_function call_node, rbx
   dictionary
   mov rbx, rax
 
@@ -409,7 +207,7 @@ f_call_node:
 ; @return Узел унарной операции
 ; @example
 ;   unary_operation_node "-", operand
-f_unary_operation_node:
+_function unary_operation_node, rbx
   dictionary
   mov rbx, rax
 
@@ -427,7 +225,7 @@ f_unary_operation_node:
 ; @return Узел словаря
 ; @example
 ;   dictionary_node elements
-f_dictionary_node:
+_function dictionary_node, rbx
   dictionary
   mov rbx, rax
 
@@ -444,7 +242,7 @@ f_dictionary_node:
 ; @return Узел условной конструкции
 ; @example
 ;   check_node cases, else_case
-f_check_node:
+_function check_node, rbx
   dictionary
   mov rbx, rax
 
@@ -463,7 +261,7 @@ f_check_node:
 ; @return Узел условной конструкции
 ; @example
 ;   if_node cases, else_case
-f_if_node:
+_function if_node, rbx
   dictionary
   mov rbx, rax
 
@@ -486,7 +284,7 @@ f_if_node:
 ; @return Узел цикла for
 ; @example
 ;   for_node var, start, end, step, body, else_case
-f_for_node:
+_function for_node, rbx
   dictionary
   mov rbx, rax
 
@@ -514,7 +312,7 @@ f_for_node:
 ; @return Узел цикла while
 ; @example
 ;   while_node condition, body, else_case
-f_while_node:
+_function while_node, rbx
   dictionary
   mov rbx, rax
 
@@ -539,7 +337,7 @@ f_while_node:
 ; @return Узел метода
 ; @example
 ;   method_node name, args, body, autoreturn, class, object
-f_method_node:
+_function method_node, rbx, rcx, rdx, r8, r9, r10
   get_arg 0
   mov r10, rax
   get_arg 1
@@ -587,7 +385,7 @@ f_method_node:
 ; @return Узел функции
 ; @example
 ;   function_node name, args, body, autoreturn
-f_function_node:
+_function function_node, rbx
   dictionary
   mov rbx, rax
 
@@ -612,7 +410,7 @@ f_function_node:
 ; @return Узел класса
 ; @example
 ;   class_node name, body, parents
-f_class_node:
+_function class_node, rbx
   dictionary
   mov rbx, rax
 
@@ -632,7 +430,7 @@ f_class_node:
 ; @return Узел удаления
 ; @example
 ;   delete_node variable
-f_delete_node:
+_function delete_node, rbx
   dictionary
   mov rbx, rax
 
@@ -648,7 +446,7 @@ f_delete_node:
 ; @return Узел включения
 ; @example
 ;   include_node path
-f_include_node:
+_function include_node, rbx
   dictionary
   mov rbx, rax
 
@@ -664,7 +462,7 @@ f_include_node:
 ; @return Узел return
 ; @example
 ;   return_node value
-f_return_node:
+_function return_node, rbx
   dictionary
   mov rbx, rax
 
@@ -679,7 +477,7 @@ f_return_node:
 ; @return Узел skip
 ; @example
 ;   skip_node
-f_skip_node:
+_function skip_node
   dictionary
   dictionary_set_link rax, [узел], [УЗЕЛ_ПРОПУСКА]
 
@@ -690,7 +488,7 @@ f_skip_node:
 ; @return Узел break
 ; @example
 ;   break_node
-f_break_node:
+_function break_node
   dictionary
   dictionary_set_link rax, [узел], [УЗЕЛ_ПРЕРЫВАНИЯ]
 

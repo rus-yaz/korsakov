@@ -10,7 +10,7 @@
 ;   to_string rax  ; возвращает "42"
 ;   float 3.14
 ;   to_string rax  ; возвращает "3,14"
-f_to_string:
+_function to_string, rbx, rcx, rdx, r8, r9, r10
   get_arg 0
   mov rbx, [rax]
 

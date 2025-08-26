@@ -6,7 +6,7 @@
 ; @return Объект типа null
 ; @example
 ;   null  ; создает объект null
-f_null:
+_function null
   create_block NULL_SIZE*8
   mem_mov [rax + 8*0], NULL
   ret

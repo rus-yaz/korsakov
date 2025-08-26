@@ -10,7 +10,7 @@
 ;   copy rax  ; создаёт копию Целого числа
 ;   string "Hello"
 ;   copy rax  ; создаёт копию Строки
-f_copy:
+_function copy, rbx, rcx
   get_arg 0
   mov rbx, [rax]
 

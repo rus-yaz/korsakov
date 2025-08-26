@@ -5,6 +5,8 @@ macro debug_start function_name* {
   if DEBUG eqtype
   enter
 
+  push rax, rbx, rcx, rdx, r8
+
   list_length [DEBUG_TIME]
   integer rax
   mov rbx, rax
@@ -17,7 +19,8 @@ macro debug_start function_name* {
   string ""
   print rbx, rax, rax
 
-  delete rbx, rax
+  delete rbx
+  delete rax
 
   string "начало"
   mov rcx, rax
@@ -43,7 +46,8 @@ macro debug_start function_name* {
   mov rbx, rax
   string " "
   print rbx, rax, rax
-  delete rbx, rax
+  delete rbx
+  delete rax
 
   raw_string function_name
   print_raw rax
@@ -51,13 +55,16 @@ macro debug_start function_name* {
   list
   print rax
 
-  leave
+  pop r8, rdx, rcx, rbx, rax
+
+  return
   end if
 }
 
 macro debug_end function_name* {
   if DEBUG eqtype
   enter
+  push rax, rbx, rcx, rdx, r8, r9
 
   list_length [DEBUG_TIME]
   dec rax
@@ -71,7 +78,8 @@ macro debug_end function_name* {
   mov rbx, rax
   string ""
   print rbx, rax, rax
-  delete rbx, rax
+  delete rbx
+  delete rax
 
   string "конец "
   mov rcx, rax
@@ -113,6 +121,8 @@ macro debug_end function_name* {
   print rax
   delete rax
 
-  leave
+  pop r9, r8, rdx, rcx, rbx, rax
+
+  return
   end if
 }

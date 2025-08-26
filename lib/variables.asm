@@ -15,7 +15,7 @@
 ;   string "Hello"
 ;   dictionary
 ;   assign_link rbx, rax, rcx, rdx
-f_assign_link:
+_function assign_link, rbx, rcx, rdx, r8, r9, r10, r11, r12, r13
   get_arg 0
   mov r8, rax
   get_arg 1
@@ -237,7 +237,7 @@ f_assign_link:
 ;   string "Hello"
 ;   dictionary
 ;   assign rbx, rax, rcx, rdx
-f_assign:
+_function assign, rbx, rcx, rdx, r8
   get_arg 0
   mov r8, rax
   get_arg 1
@@ -273,7 +273,7 @@ f_assign:
 ;   list_append rax, 0
 ;   dictionary
 ;   access_link rbx, rax, rcx
-f_access_link:
+_function access_link, rbx, rcx, rdx, r8
   get_arg 0
   mov rdx, rax
   get_arg 1
@@ -400,7 +400,7 @@ f_access_link:
 ;   list_append rax, 0
 ;   dictionary
 ;   access rbx, rax, rcx
-f_access:
+_function access, rbx, rcx, rdx
   get_arg 0
   mov rdx, rax
   get_arg 1

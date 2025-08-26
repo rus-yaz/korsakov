@@ -12,46 +12,6 @@ section "tokenizer_data" writable
 
 section "tokenizer_code" executable
 
-macro tokenizer code*, filename* {
-  enter code, filename
-
-  call f_tokenizer
-
-  return
-}
-
-macro find_string list*, start* {
-  enter list, start
-
-  call f_find_string
-
-  return
-}
-
-macro syntax_error file_stack*, message* {
-  enter file_stack, message
-
-  call f_syntax_error
-
-  return
-}
-
-macro dump_currect_position file_name*, code*, start_line*, start_column*, stop_line*, stop_column* {
-  enter file_name, code, start_line, start_column, stop_line, stop_column
-
-  call f_dump_currect_position
-
-  return
-}
-
-macro format_token type*, value*, start_line*, start_column*, stop_line*, stop_column* {
-  enter type, value, start_line, start_column, stop_line, stop_column
-
-  call f_format_token
-
-  return
-}
-
 ; @function tokenizer
 ; @description Основная функция токенизатора, разбивает код на токены
 ; @param code - исходный код для токенизации
@@ -59,7 +19,7 @@ macro format_token type*, value*, start_line*, start_column*, stop_line*, stop_c
 ; @return Список токенов
 ; @example
 ;   tokenizer source_code, "main.ksk"
-f_tokenizer:
+_function tokenizer, rbx, rcx, rdx, r8, r9, r10, r11, r12, r13, r14
   ; символы = Список(код)
   get_arg 0
   string_to_list rax
@@ -1239,7 +1199,7 @@ f_tokenizer:
 ; @return Найденная строка
 ; @example
 ;   find_string char_list, start_pos
-f_find_string:
+_function find_string, rbx, rcx, rdx, r8, r9, r10, r11, r12, r13, r14
   get_arg 0
   mov r14, rax
 
@@ -1464,7 +1424,7 @@ f_find_string:
 ; @return Нет возвращаемого значения
 ; @example
 ;   syntax_error file_stack, "Ожидался символ ';'"
-f_syntax_error:
+_function syntax_error, rbx, rcx, rdx, r8, r9, r10, r11, r12, r13, r14, r15
   list
   mov rbx, rax
 
@@ -1627,7 +1587,7 @@ f_syntax_error:
 ; @return Нет возвращаемого значения
 ; @example
 ;   dump_currect_position "main.ksk", code, 10, 5, 10, 15
-f_dump_currect_position:
+_function dump_currect_position, rbx, rcx, rdx, r8
   list
   mov rbx, rax
 
@@ -1669,7 +1629,7 @@ f_dump_currect_position:
 ; @return Отформатированный токен
 ; @example
 ;   format_token ЧИСЛО, "42", 1, 1, 1, 2
-f_format_token:
+_function format_token, rbx, rcx
   dictionary
   mov rbx, rax
 

@@ -43,14 +43,9 @@
 ; @example
 ;   string_from_capacity  ; создает строку с вместимостью 2
 ;   string_from_capacity 10  ; создает строку с вместимостью 10
-f_string_from_capacity:
+_function string_from_capacity, rbx, rcx, rdi, rsi
   get_arg 0
   mov rbx, rax
-
-  cmp rbx, 0
-  jne @f
-    mov rbx, 2
-  @@:
 
   mov rcx, rbx
   imul rcx, 8
@@ -81,7 +76,7 @@ f_string_from_capacity:
 ; @example
 ;   string "Hello, World!"
 ;   string_length rax  ; вернет 13
-f_string_length:
+_function string_length
   get_arg 0
   check_type rax, STRING
 
@@ -95,7 +90,7 @@ f_string_length:
 ; @example
 ;   string "Hello"
 ;   string_capacity rax  ; возвращает вместимость строки
-f_string_capacity:
+_function string_capacity
   get_arg 0
   check_type rax, STRING
 
@@ -108,7 +103,7 @@ f_string_capacity:
 ; @example
 ;   string "Hi"
 ;   string_expand_capacity rax  ; увеличивает вместимость до 4
-f_string_expand_capacity:
+_function string_expand_capacity, rax, rbx, rcx
   get_arg 0
   mov rbx, rax
 
@@ -141,7 +136,7 @@ f_string_expand_capacity:
 ;   string "Hello"
 ;   string "X"
 ;   string_set_link rax, 0, rbx  ; заменяет первый символ на X
-f_string_set_link:
+_function string_set_link, rbx, rcx, rdx, r8
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -200,7 +195,7 @@ f_string_set_link:
 ;   string "Hello"
 ;   string "X"
 ;   string_set rax, 0, rbx  ; заменяет первый символ на X
-f_string_set:
+_function string_set, rbx, rcx, rdx
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -221,7 +216,7 @@ f_string_set:
 ; @example
 ;   string "Hello"
 ;   string_get_link rax, 0  ; возвращает "H"
-f_string_get_link:
+_function string_get_link, rbx, rcx, r8
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -274,7 +269,7 @@ f_string_get_link:
 ; @example
 ;   string "Hello"
 ;   string_get rax, 0  ; возвращает копию "H"
-f_string_get:
+_function string_get, rbx, rcx
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -292,7 +287,7 @@ f_string_get:
 ; @example
 ;   string "Hello"
 ;   string_copy_links rax  ; создает копию со ссылками
-f_string_copy_links:
+_function string_copy_links, rbx, rcx
   get_arg 0
   mov rbx, rax
 
@@ -316,7 +311,7 @@ f_string_copy_links:
 ; @example
 ;   string "Hello"
 ;   string_copy rax  ; создает полную копию
-f_string_copy:
+_function string_copy, rbx, rcx, rdx, r8, r9, r10,
   get_arg 0
   mov rbx, rax
 
@@ -358,13 +353,13 @@ f_string_copy:
 ; @example
 ;   string "Hello"
 ;   string_pop_link rax, -1  ; удаляет и возвращает последний символ
-f_string_pop_link:
+_function string_pop_link, rbx, rcx, rdx, r8, r9
   get_arg 0
   mov rbx, rax
   get_arg 1
   mov rcx, rax
 
-  cmp rcx, 0
+  cmp rcx, -1
   jne @f
     integer -1
     mov rcx, rax
@@ -432,7 +427,7 @@ f_string_pop_link:
 ; @example
 ;   string "Hello"
 ;   string_pop rax, -1  ; удаляет и возвращает копию последнего символа
-f_string_pop:
+_function string_pop, rbx, rcx
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -452,7 +447,7 @@ f_string_pop:
 ;   string "Hello"
 ;   string "l"
 ;   string_index rax, rbx  ; возвращает 2
-f_string_index:
+_function string_index, rbx, rcx, rdx, r8
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -506,7 +501,7 @@ f_string_index:
 ;   string "Hello World"
 ;   string "World"
 ;   string_include rax, rbx  ; возвращает true
-f_string_include:
+_function string_include, rbx, rcx, rdx, r8, r9, r10, r11
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -576,7 +571,7 @@ f_string_include:
 ;   string "Hello"
 ;   string " World"
 ;   string_extend_links rax, rbx
-f_string_extend_links:
+_function string_extend_links, rbx, rcx, rdx, rdi, rsi
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -625,7 +620,7 @@ f_string_extend_links:
 ;   string "Hello"
 ;   string " World"
 ;   string_extend rax, rbx
-f_string_extend:
+_function string_extend, rbx, rcx
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -646,7 +641,7 @@ f_string_extend:
 ;   string "Hello World Test"
 ;   string " "
 ;   split_links rax, rbx  ; возвращает ["Hello", "World", "Test"]
-f_split_links:
+_function split_links, rbx, rcx, rdx, r8, r9, r10, r11, r12
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -654,13 +649,13 @@ f_split_links:
   get_arg 2
   mov rdx, rax
 
-  cmp rcx, 0
+  cmp rcx, " "
   jne .not_default_separator
     string " "
     mov rcx, rax
   .not_default_separator:
 
-  cmp rdx, 0
+  cmp rdx, -1
   jne .not_default_parts_count
     integer -1
     mov rdx, rax
@@ -737,7 +732,7 @@ f_split_links:
 ;   string "Hello World Test"
 ;   string " "
 ;   split rax, rbx  ; возвращает копии ["Hello", "World", "Test"]
-f_split:
+_function split, rbx, rcx, rdx
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -759,7 +754,7 @@ f_split:
 ;   string "Hello World Test"
 ;   string " "
 ;   split_from_right_links rax, rbx  ; возвращает ["Hello World", "Test"]
-f_split_from_right_links:
+_function split_from_right_links, rbx, rcx, rdx, r8, r9, r10, r11, r12
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -861,7 +856,7 @@ f_split_from_right_links:
 ;   string "Hello World Test"
 ;   string " "
 ;   split_from_right rax, rbx  ; возвращает копии ["Hello World", "Test"]
-f_split_from_right:
+_function split_from_right, rbx, rcx, rdx
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -884,7 +879,7 @@ f_split_from_right:
 ;   list_append rax, "World"
 ;   string " "
 ;   join_links rax, rbx  ; возвращает "Hello World"
-f_join_links:
+_function join_links, rbx, rcx, rdx, r8, r9
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -948,7 +943,7 @@ f_join_links:
 ;   list_append rax, "World"
 ;   string " "
 ;   join rax, rbx  ; возвращает "Hello World"
-f_join:
+_function join, rbx, rcx
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -966,7 +961,7 @@ f_join:
 ; @example
 ;   string "Hello"
 ;   is_alpha rax  ; возвращает true
-f_is_alpha:
+_function is_alpha, rbx, rcx, rdx
   get_arg 0
   check_type rax, STRING
   mov rbx, rax
@@ -1031,7 +1026,7 @@ f_is_alpha:
 ; @example
 ;   string "12345"
 ;   is_digit rax  ; возвращает true
-f_is_digit:
+_function is_digit, rbx, rcx, rdx
   get_arg 0
   check_type rax, STRING
   mov rbx, rax
@@ -1081,7 +1076,7 @@ f_is_digit:
 ; @example
 ;   string "Hello"
 ;   string_to_list rax  ; возвращает ["H", "e", "l", "l", "o"]
-f_string_to_list:
+_function string_to_list, rbx, rcx, rdx, r8
   get_arg 0
   mov rbx, rax
 
@@ -1121,7 +1116,7 @@ f_string_to_list:
 ; @example
 ;   string "Hello"
 ;   string_reverse_links rax  ; возвращает "olleH"
-f_string_reverse_links:
+_function string_reverse_links, rbx, rcx, rdx, r8, r9
   get_arg 0
   mov rbx, rax
 
@@ -1169,7 +1164,7 @@ f_string_reverse_links:
 ; @example
 ;   string "Hello"
 ;   string_reverse rax  ; возвращает "olleH"
-f_string_reverse:
+_function string_reverse, rbx
   get_arg 0
   mov rbx, rax
 
@@ -1188,7 +1183,7 @@ f_string_reverse:
 ; @example
 ;   string "Hello World"
 ;   string_slice_links rax, 0, 5  ; возвращает "Hello"
-f_string_slice_links:
+_function string_slice_links, rbx, rcx, rdx, r8, r9, r10, r15
   get_arg 0    ; Коллекция
   mov rbx, rax
   get_arg 1    ; Начало
@@ -1210,7 +1205,7 @@ f_string_slice_links:
     mov rdx, rax
   @@:
 
-  cmp r8, 0
+  cmp r8, 1
   jne @f
     integer 1
     mov r8, rax
@@ -1297,7 +1292,7 @@ f_string_slice_links:
 ; @example
 ;   string "Hello World"
 ;   string_slice rax, 0, 5  ; возвращает копию "Hello"
-f_string_slice:
+_function string_slice, rbx, rcx, rdx, r8
   get_arg 0    ; Коллекция
   mov rbx, rax
   get_arg 1    ; Начало
@@ -1321,7 +1316,7 @@ f_string_slice:
 ;   string "Hello"
 ;   string " World"
 ;   string_add_links rax, rbx
-f_string_add_links:
+_function string_add_links, rbx, rcx
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -1344,7 +1339,7 @@ f_string_add_links:
 ;   string "Hello"
 ;   string " World"
 ;   string_add rax, rbx
-f_string_add:
+_function string_add, rbx, rcx
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -1364,7 +1359,7 @@ f_string_add:
 ;   string "Hi"
 ;   integer 3
 ;   string_mul_links rax, rbx  ; возвращает "HiHiHi"
-f_string_mul_links:
+_function string_mul_links, rbx, rcx, rdx
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -1405,7 +1400,7 @@ f_string_mul_links:
 ;   string "Hi"
 ;   integer 3
 ;   string_mul rax, rbx  ; возвращает "HiHiHi"
-f_string_mul:
+_function string_mul, rbx, rcx
   get_arg 0
   mov rbx, rax
   get_arg 1

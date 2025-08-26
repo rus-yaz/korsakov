@@ -9,7 +9,7 @@
 ;   delete rax  ; освобождает память, занятую Целым числом
 ;   string "Hello"
 ;   delete rax  ; освобождает память, занятую Строкой и её элементами
-f_delete:
+_function delete, rax, rbx, rcx, rdx, r8
   get_arg 0
   mov rbx, rax
 

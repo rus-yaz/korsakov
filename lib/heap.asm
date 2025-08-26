@@ -5,13 +5,15 @@
 ; @description Выделяет новую страницу памяти для кучи
 ; @example
 ;   allocate_heap  ; выделяет новую страницу памяти
-f_allocate_heap:
+_function allocate_heap, rax, rbx, rcx, r11
+  push r11
   sys_mmap 0,\                                  ; Адрес (если 0, находится автоматически)
            PAGE_SIZE,\                          ; Количество памяти для аллокации
            PROT_READ + PROT_WRITE + PROT_EXEC,\ ; Права (PROT_READ | PROT_WRITE)
            MAP_SHARED + MAP_ANONYMOUS,\         ; MAP_ANONYMOUS | MAP_PRIVATE
            0,\                                  ; Файл дескриптор (ввод)
            0                                    ; Смещение относительно начала файла (с начала файла)
+  pop r11
 
   ; Проверка корректности выделения памяти
   test rax, rax
@@ -60,7 +62,7 @@ f_allocate_heap:
 ; @param block - блок памяти для освобождения
 ; @example
 ;   free_block some_block  ; освобождает блок памяти
-f_free_block:
+_function free_block, rax, rbx, rcx, rdx, r8, r9
   get_arg 0
 
   mov r8d, [rax]
@@ -130,7 +132,7 @@ f_free_block:
 ; @param block_2 - второй блок для объединения
 ; @example
 ;   merge_blocks block1, block2  ; объединяет два блока памяти
-f_merge_blocks:
+_function merge_blocks, rax, rbx, rcx, rdx, r8
   get_arg 1
   mov rbx, rax
   get_arg 0
@@ -206,7 +208,7 @@ f_merge_blocks:
 ; @param block - блок памяти для удаления
 ; @example
 ;   delete_block some_block  ; удаляет блок памяти
-f_delete_block:
+_function delete_block, rax, rbx, rcx, r8
   get_arg 0
   sub rax, HEAP_BLOCK_HEADER*4
 
@@ -286,7 +288,7 @@ f_delete_block:
 ; @example
 ;   integer 1024
 ;   create_block rax  ; создает блок памяти размером 1024 байта
-f_create_block:
+_function create_block, rbx, rcx, rdx, r8, r9, r10
   get_arg 0
 
   ; Приведение размера к числу, кратному 8

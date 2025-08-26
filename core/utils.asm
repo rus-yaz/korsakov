@@ -8,7 +8,7 @@
 ; @example
 ;   raw_string "Hello"
 ;   buffer_length rax  ; Вернёт 5
-f_buffer_length:
+_function buffer_length, rbx, rcx
   get_arg 0
   mov rcx, 0 ; Счётчик
 
@@ -17,12 +17,12 @@ f_buffer_length:
     mov bl, [rax + rcx]
 
     cmp bl, 0
-    je .end_while
+    je @f
 
     inc rcx
-    jmp .while
+    jmp @b
 
-  .end_while:
+  @@:
   mov rax, rcx
 
   ret
@@ -35,7 +35,7 @@ f_buffer_length:
 ;   raw_string "Hello"
 ;   buffer_length rax
 ;   sys_print rbx, rax  ; Выводит данные в стандартный поток вывода
-f_sys_print:
+_function sys_print, rax, rbx
   get_arg 1
   mov rbx, rax
   get_arg 0
@@ -54,7 +54,7 @@ f_sys_print:
 ;   raw_string "Error"
 ;   buffer_length rax
 ;   sys_error rbx, rax  ; Выводит данные в стандартный поток вывода
-f_sys_error:
+_function sys_error, rax, rbx
   get_arg 1
   mov rbx, rax
   get_arg 0
@@ -72,7 +72,7 @@ f_sys_error:
 ; @param size - количество блоков для копирования
 ; @example
 ;   mem_copy source_ptr, dest_ptr, block_count  ; Копирование block_count блоков из source_ptr в dest_ptr
-f_mem_copy:
+_function mem_copy, rax, rcx, rdi, rsi
   get_arg 0
   mov rsi, rax ; Источник
   get_arg 1
@@ -93,7 +93,7 @@ f_mem_copy:
 ; @example
 ;   type_to_string INTEGER  ; Возвращает "Целое число"
 ;   type_to_string STRING   ; Возвращает "Строка"
-f_type_to_string:
+_function type_to_string, rbx, rcx
   get_arg 0
 
   mov rbx, HEAP_BLOCK
@@ -190,7 +190,7 @@ f_type_to_string:
 ; @example
 ;   type_full_size INTEGER  ; Возвращает размер целого числа
 ;   type_full_size STRING   ; Возвращает размер заголовка строки
-f_type_full_size:
+_function type_full_size, rbx, rcx
   get_arg 0
 
   cmp rax, NULL
@@ -253,7 +253,7 @@ f_type_full_size:
 ; @param type - ожидаемый тип объекта
 ; @example
 ;   check_type some_variable, INTEGER  ; Проверяет, что переменная — целое число
-f_check_type:
+_function check_type rax, rbx, r8, r9
   get_arg 0
   mov r8, [rax]
   get_arg 1

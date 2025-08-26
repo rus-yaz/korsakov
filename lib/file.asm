@@ -8,7 +8,7 @@
 ; @example
 ;   string "test.txt"
 ;   get_file_stat_buffer rax  ; получает информацию о файле test.txt
-f_get_file_stat_buffer:
+_function get_file_stat_buffer, rbx, rcx
   get_arg 0
   mov rbx, rax
 
@@ -37,7 +37,7 @@ f_get_file_stat_buffer:
 ; @example
 ;   string "test.txt"
 ;   get_file_size rax  ; возвращает размер файла test.txt
-f_get_file_size:
+_function get_file_size, rbx
   get_arg 0
   mov rbx, rax
 
@@ -58,7 +58,7 @@ f_get_file_size:
 ; @example
 ;   string "test.txt"
 ;   open_file rax  ; открывает файл для чтения
-f_open_file:
+_function open_file, rbx, rcx, rdx
   get_arg 2
   mov rcx, rax
   get_arg 1
@@ -118,7 +118,7 @@ f_open_file:
 ;   string "test.txt"
 ;   open_file rax
 ;   close_file rax  ; закрывает файл
-f_close_file:
+_function close_file, rax, rbx
   get_arg 0
 
   ; Проверка типа
@@ -141,7 +141,7 @@ f_close_file:
 ;   string "test.txt"
 ;   open_file rax
 ;   read_file rax  ; читает содержимое файла
-f_read_file:
+_function read_file, rbx, rcx
   get_arg 0
   mov rbx, rax
 
@@ -190,7 +190,7 @@ f_read_file:
 ;   open_file rax
 ;   string "Hello, World!"
 ;   write_file rbx, rax  ; записывает строку в файл
-f_write_file:
+_function write_file, rax, rbx, rcx, rdx
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -219,7 +219,7 @@ f_write_file:
 ; @example
 ;   string "test.txt"
 ;   get_absolute_path rax  ; возвращает абсолютный путь к файлу
-f_get_absolute_path:
+_function get_absolute_path, rbx, rcx, rdx, r8, r9
   get_arg 0
   copy rax
   mov rbx, rax

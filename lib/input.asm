@@ -9,7 +9,7 @@
 ;   input  ; читает строку без приглашения
 ;   string "Введите имя: "
 ;   input rax  ; выводит приглашение и читает строку
-f_input:
+_function input, rbx, rcx
   get_arg 0
   mov rbx, rax
 
@@ -26,7 +26,8 @@ f_input:
   list
   list_append rax, rbx
   print rax, rcx, rcx
-  delete rax, rcx
+  delete rax
+  delete rcx
 
   push 0
   mov rbx, rsp

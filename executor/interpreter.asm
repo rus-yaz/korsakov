@@ -1,252 +1,6 @@
 ; Копирайт © 2025 ООО «РУС.ЯЗ»
 ; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
 
-macro interpreter ast*, context* {
-  debug_start "interpreter"
-  enter ast, context
-
-  call f_interpreter
-
-  return
-  debug_end "interpreter"
-}
-
-macro interpret node*, context* {
-  debug_start "interpret"
-  enter node, context
-
-  call f_interpret
-
-  return
-  debug_end "interpret"
-}
-
-macro interpret_body node*, context* {
-  debug_start "interpret_body"
-  enter node, context
-
-  call f_interpret_body
-
-  return
-  debug_end "interpret_body"
-}
-
-macro interpret_assign_link node*, context* {
-  debug_start "interpret_assign_link"
-  enter node, context
-
-  call f_interpret_assign_link
-
-  return
-  debug_end "interpret_assign_link"
-}
-
-macro interpret_assign node*, context* {
-  debug_start "interpret_assign"
-  enter node, context
-
-  call f_interpret_assign
-
-  return
-  debug_end "interpret_assign"
-}
-
-macro interpret_access_link node*, context* {
-  debug_start "interpret_access_link"
-  enter node, context
-
-  call f_interpret_access_link
-
-  return
-  debug_end "interpret_access_link"
-}
-
-macro interpret_access node*, context* {
-  debug_start "interpret_access"
-  enter node, context
-
-  call f_interpret_access
-
-  return
-  debug_end "interpret_access"
-}
-
-macro interpret_unary_operation node*, context* {
-  debug_start "interpret_unary_operation"
-  enter node, context
-
-  call f_interpret_unary_operation
-
-  return
-  debug_end "interpret_unary_operation"
-}
-
-macro interpret_binary_operation node*, context* {
-  debug_start "interpret_binary_operation"
-  enter node, context
-
-  call f_interpret_binary_operation
-
-  return
-  debug_end "interpret_binary_operation"
-}
-
-macro interpret_null node*, context* {
-  debug_start "interpret_null"
-  enter node, context
-
-  call f_interpret_null
-
-  return
-  debug_end "interpret_null"
-}
-
-macro interpret_integer node*, context* {
-  debug_start "interpret_integer"
-  enter node, context
-
-  call f_interpret_integer
-
-  return
-  debug_end "interpret_integer"
-}
-
-macro interpret_float node*, context* {
-  debug_start "interpret_float"
-  enter node, context
-
-  call f_interpret_float
-
-  return
-  debug_end "interpret_float"
-}
-
-macro interpret_boolean node*, context* {
-  debug_start "interpret_boolean"
-  enter node, context
-
-  call f_interpret_boolean
-
-  return
-  debug_end "interpret_boolean"
-}
-
-macro interpret_list node*, context* {
-  debug_start "interpret_list"
-  enter node, context
-
-  call f_interpret_list
-
-  return
-  debug_end "interpret_list"
-}
-
-macro interpret_string node*, context* {
-  debug_start "interpret_string"
-  enter node, context
-
-  call f_interpret_string
-
-  return
-  debug_end "interpret_string"
-}
-
-macro interpret_dictionary node*, context* {
-  debug_start "interpret_dictionary"
-  enter node, context
-
-  call f_interpret_dictionary
-
-  return
-  debug_end "interpret_dictionary"
-}
-
-macro interpret_if node*, context* {
-  debug_start "interpret_if"
-  enter node, context
-
-  call f_interpret_if
-
-  return
-  debug_end "interpret_if"
-}
-
-macro interpret_while node*, context* {
-  debug_start "interpret_while"
-  enter node, context
-
-  call f_interpret_while
-
-  return
-  debug_end "interpret_while"
-}
-
-macro interpret_for node*, context* {
-  debug_start "interpret_for"
-  enter node, context
-
-  call f_interpret_for
-
-  return
-  debug_end "interpret_for"
-}
-
-macro interpret_skip node*, context* {
-  debug_start "interpret_skip"
-  enter node, context
-
-  call f_interpret_skip
-
-  return
-  debug_end "interpret_skip"
-}
-
-macro interpret_break node*, context* {
-  debug_start "interpret_break"
-  enter node, context
-
-  call f_interpret_break
-
-  return
-  debug_end "interpret_break"
-}
-
-macro interpret_function node*, context* {
-  debug_start "interpret_function"
-  enter node, context
-
-  call f_interpret_function
-
-  return
-  debug_end "interpret_function"
-}
-
-macro interpret_call node*, context* {
-  debug_start "interpret_call"
-  enter node, context
-
-  call f_interpret_call
-
-  return
-  debug_end "interpret_call"
-}
-
-macro interpret_return node*, context* {
-  debug_start "interpret_return"
-  enter node, context
-
-  call f_interpret_return
-
-  return
-  debug_end "interpret_return"
-}
-
-
-macro add_code [code*] {
-  string code
-  list_append_link rdx, rax
-}
-
 ; @function interpreter
 ; @debug
 ; @description Интерпретирует абстрактное синтаксическое дерево (AST) в заданном контексте
@@ -255,7 +9,7 @@ macro add_code [code*] {
 ; @return Список результатов интерпретации всех узлов AST
 ; @example
 ;   interpreter ast_tree, execution_context
-f_interpreter:
+_function interpreter, rbx, rcx, rdx, r8
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -471,7 +225,7 @@ f_interpret:
 ; @return Результат интерпретации тела программы
 ; @example
 ;   interpret_body body_node, context
-f_interpret_body:
+_function interpret_body, rbx, rcx, rdx, r8, r9, r10, r11
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -538,7 +292,7 @@ f_interpret_body:
 ; @return Результат присваивания ссылки
 ; @example
 ;   interpret_assign_link assign_node, context
-f_interpret_assign_link:
+_function interpret_assign_link, rbx, rcx, rdx, r8, r9
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -591,7 +345,7 @@ f_interpret_assign_link:
 ; @return Результат присваивания значения
 ; @example
 ;   interpret_assign assign_node, context
-f_interpret_assign:
+_function interpret_assign, rbx, rcx, rdx, r8, r9
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -644,7 +398,7 @@ f_interpret_assign:
 ; @return Значение ссылки переменной
 ; @example
 ;   interpret_access_link access_node, context
-f_interpret_access_link:
+_function interpret_access_link, rbx, rcx, rdx
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -675,7 +429,7 @@ f_interpret_access_link:
 ; @return Значение переменной
 ; @example
 ;   interpret_access access_node, context
-f_interpret_access:
+_function interpret_access, rbx, rcx, rdx
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -706,7 +460,7 @@ f_interpret_access:
 ; @return Результат унарной операции
 ; @example
 ;   interpret_unary_operation unary_node, context
-f_interpret_unary_operation:
+_function interpret_unary_operation, rbx, rcx, rdx, r8, r9, r10, r11, r12
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -833,7 +587,7 @@ f_interpret_unary_operation:
 ; @return Результат бинарной операции
 ; @example
 ;   interpret_binary_operation binary_node, context
-f_interpret_binary_operation:
+_function interpret_binary_operation, rbx, rcx, rdx, r8, r9
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -969,7 +723,7 @@ f_interpret_binary_operation:
 ; @return Null значение
 ; @example
 ;   interpret_null null_node, context
-f_interpret_null:
+_function interpret_null, rbx, rcx
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -986,7 +740,7 @@ f_interpret_null:
 ; @return Целочисленное значение
 ; @example
 ;   interpret_integer integer_node, context
-f_interpret_integer:
+_function interpret_integer, rbx, rcx
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -1024,7 +778,7 @@ f_interpret_integer:
 ; @return Вещественное число
 ; @example
 ;   interpret_float float_node, context
-f_interpret_float:
+_function interpret_float, rbx, rcx
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -1054,7 +808,15 @@ f_interpret_float:
   string_to_float rax
   ret
 
-f_interpret_boolean:
+; @function interpret_boolean
+; @debug
+; @description Интерпретирует логическое значение
+; @param node - узел логического значения
+; @param context - контекст выполнения
+; @return Логическое значение (true/false)
+; @example
+;   interpret_boolean boolean_node, context
+_function interpret_boolean, rbx, rcx
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -1142,7 +904,7 @@ f_interpret_list:
 ; @return Строковое значение
 ; @example
 ;   interpret_string string_node, context
-f_interpret_string:
+_function interpret_string, rbx, rcx, rdx, r8, r9, r10
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -1215,7 +977,7 @@ f_interpret_string:
 ; @return Словарь
 ; @example
 ;   interpret_dictionary dict_node, context
-f_interpret_dictionary:
+_function interpret_dictionary, rbx, rcx
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -1237,7 +999,7 @@ f_interpret_dictionary:
 ; @return Результат выполнения соответствующей ветки
 ; @example
 ;   interpret_if if_node, context
-f_interpret_if:
+_function interpret_if, rbx, rcx, rdx, r8, r9, r10, r11
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -1317,7 +1079,7 @@ f_interpret_if:
 ; @return Результат выполнения цикла
 ; @example
 ;   interpret_while while_node, context
-f_interpret_while:
+_function interpret_while, rbx, rcx, rdx, r8, r9, r11
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -1407,7 +1169,7 @@ f_interpret_while:
 ; @return Результат выполнения цикла
 ; @example
 ;   interpret_for for_node, context
-f_interpret_for:
+_function interpret_for, rbx, rcx, rdx, r8, r9, r10, r11, r12, r13, r14
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -1684,7 +1446,7 @@ f_interpret_for:
 ; @return Null значение
 ; @example
 ;   interpret_skip skip_node, context
-f_interpret_skip:
+_function interpret_skip, rbx, rcx, rdx, r8
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -1723,7 +1485,7 @@ f_interpret_skip:
 ; @return Специальное значение для прерывания цикла
 ; @example
 ;   interpret_break break_node, context
-f_interpret_break:
+_function interpret_break, rbx, rcx, rdx, r8
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -1762,7 +1524,7 @@ f_interpret_break:
 ; @return Объект функции
 ; @example
 ;   interpret_function function_node, context
-f_interpret_function:
+_function interpret_function, rbx, rcx, rdx, rdi, r8, r9, r10, r11, r12, r13, r14, r15
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -1894,7 +1656,7 @@ f_interpret_function:
 ; @return Результат выполнения функции
 ; @example
 ;   interpret_call call_node, context
-f_interpret_call:
+_function interpret_call, rbx, rcx, rdx, r8, r9, r10, r11, r12, r13, r14, r15
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -2262,7 +2024,7 @@ f_interpret_call:
 ; @return Значение для возврата из функции
 ; @example
 ;   interpret_return return_node, context
-f_interpret_return:
+_function interpret_return, rbx, rcx, r8
   get_arg 0
   mov rbx, rax
   get_arg 1

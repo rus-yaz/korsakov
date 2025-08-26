@@ -9,13 +9,13 @@
 ;   print_raw rax  ; выводит "Hello"
 f_print_raw:
   get_arg 0
-  mov rsi, rax
-
-  buffer_length rsi
   mov rbx, rax
 
-  sys_print rsi,\      ; Указатель на буфер
-            rbx        ; Размер буфера
+  buffer_length rbx
+  mov rcx, rax
+
+  sys_print rbx,\      ; Указатель на буфер
+            rcx        ; Размер буфера
 
   ret
 
@@ -25,7 +25,7 @@ f_print_raw:
 ; @example
 ;   binary_string "Hello"
 ;   print_binary rax  ; выводит "Hello"
-f_print_binary:
+_function print_binary
   get_arg 0
   add rax, BINARY_HEADER*8
 
@@ -42,7 +42,7 @@ f_print_binary:
 ;   list_append rax, "Hello"
 ;   list_append rax, "World"
 ;   print rax  ; выводит "Hello World\n"
-f_print:
+_function print, rax, rbx, rcx, rdx, r8, r9, r10, r11
   get_arg 0
   mov rbx, rax
   get_arg 1
