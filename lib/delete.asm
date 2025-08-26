@@ -1,6 +1,14 @@
 ; Копирайт © 2025 ООО «РУС.ЯЗ»
 ; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
 
+; @function delete
+; @description Рекурсивно свобождает память, занятую объектом и его содержимым
+; @param variable - объект для удаления
+; @example
+;   integer 42
+;   delete rax  ; освобождает память, занятую Целым числом
+;   string "Hello"
+;   delete rax  ; освобождает память, занятую Строкой и её элементами
 f_delete:
   get_arg 0
   mov rbx, rax

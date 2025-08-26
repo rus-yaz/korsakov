@@ -1,6 +1,13 @@
 ; Копирайт © 2025 ООО «РУС.ЯЗ»
 ; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
 
+; @function factorial
+; @description Вычисляет факториал целого числа
+; @param integer - целое число для вычисления факториала
+; @return Факториал числа
+; @example
+;   integer 5
+;   factorial rax  ; возвращает 120 (5!)
 f_factorial:
   get_arg 0
   check_type rax, INTEGER
@@ -36,7 +43,13 @@ f_factorial:
   integer rbx
   ret
 
-; Реализация через ряд Тейлора
+; @function euler_power_taylor
+; @description Вычисляет e^x через ряд Тейлора
+; @param exponent - показатель степени (целое или вещественное число)
+; @return E в степени exponent
+; @example
+;   float 2.0
+;   euler_power_taylor rax  ; возвращает e^2
 f_euler_power_taylor:
   get_arg 0
   mov rbx, rax
@@ -165,7 +178,13 @@ f_euler_power_taylor:
 
   ret
 
-; Реализация через константу
+; @function euler_power
+; @description Вычисляет e^x через константу
+; @param exponent - показатель степени (целое или вещественное число)
+; @return E в степени exponent
+; @example
+;   float 2.0
+;   euler_power rax  ; возвращает e^2
 f_euler_power:
   get_arg 0
   mov rbx, rax

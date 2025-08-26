@@ -1,6 +1,19 @@
 ; Копирайт © 2025 ООО «РУС.ЯЗ»
 ; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
 
+; @function run
+; @description Запускает внешнюю команду с указанными аргументами и переменными окружения
+; @param command - список команд и аргументов для выполнения
+; @param env - список переменных окружения
+; @param wait=1 - флаг ожидания завершения процесса
+; @example
+;   list
+;   list_append rax, "ls"
+;   list_append rax, "-la"
+;   mov rbx, rax
+;
+;   list
+;   run rbx, rax  ; запускает команду ls -la без переменных среды
 f_run:
   get_arg 0
   mov rbx, rax

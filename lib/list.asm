@@ -33,6 +33,13 @@
 ;   Повторить список ссылок на элементы
 ;   Повторить список копий элементов
 
+; @function list
+; @description Создает новый список с указанной начальной вместимостью
+; @param capacity=2 - начальная вместимость списка
+; @return Объект списка
+; @example
+;   list  ; создает список с вместимостью 2
+;   list 10  ; создает список с вместимостью 10
 f_list:
   get_arg 0
   mov rbx, rax
@@ -65,6 +72,14 @@ f_list:
 
   ret
 
+; @function list_length
+; @description Возвращает количество элементов в списке
+; @param list - список для измерения длины
+; @return Количество элементов в списке
+; @example
+;   list
+;   list_append rax, value
+;   list_length rax  ; возвращает 1
 f_list_length:
   get_arg 0
   check_type rax, LIST
@@ -72,6 +87,13 @@ f_list_length:
   mov rax, [rax + 8*1]
   ret
 
+; @function list_capacity
+; @description Возвращает текущую вместимость списка
+; @param list - список для получения вместимости
+; @return Вместимость списка
+; @example
+;   list 10
+;   list_capacity rax  ; возвращает 10
 f_list_capacity:
   get_arg 0
   check_type rax, LIST
@@ -79,6 +101,12 @@ f_list_capacity:
   mov rax, [rax + 8*2]
   ret
 
+; @function list_expand_capacity
+; @description Увеличивает вместимость списка в два раза
+; @param list - список для расширения вместимости
+; @example
+;   list 2
+;   list_expand_capacity rax  ; увеличивает вместимость до 4
 f_list_expand_capacity:
   get_arg 0
   mov rbx, rax
@@ -101,6 +129,17 @@ f_list_expand_capacity:
 
   ret
 
+; @function list_set_link
+; @description Устанавливает элемент по индексу в список (без копирования)
+; @param list - список для установки элемента
+; @param index - индекс для установки элемента
+; @param value - значение для установки
+; @return Список с установленным элементом
+; @example
+;   list
+;   list_append rax, value1
+;   string "new_value"
+;   list_set_link rax, 0, rbx
 f_list_set_link:
   get_arg 0
   mov rbx, rax
@@ -139,6 +178,17 @@ f_list_set_link:
 
   ret
 
+; @function list_set
+; @description Устанавливает элемент по индексу в список (с копированием)
+; @param list - список для установки элемента
+; @param index - индекс для установки элемента
+; @param value - значение для установки
+; @return Список с установленным элементом
+; @example
+;   list
+;   list_append rax, value1
+;   string "new_value"
+;   list_set rax, 0, rbx
 f_list_set:
   get_arg 0
   mov rbx, rax
@@ -152,6 +202,15 @@ f_list_set:
 
   ret
 
+; @function list_get_link
+; @description Получает элемент по индексу из списка (без копирования)
+; @param list - список для получения элемента
+; @param index - индекс элемента для получения
+; @return Элемент по указанному индексу
+; @example
+;   list
+;   list_append rax, value
+;   list_get_link rax, 0  ; возвращает value
 f_list_get_link:
   get_arg 0
   mov rbx, rax
@@ -185,6 +244,15 @@ f_list_get_link:
 
   ret
 
+; @function list_get
+; @description Получает элемент по индексу из списка (с копированием)
+; @param list - список для получения элемента
+; @param index - индекс элемента для получения
+; @return Копия элемента по указанному индексу
+; @example
+;   list
+;   list_append rax, value
+;   list_get rax, 0  ; возвращает копию value
 f_list_get:
   get_arg 0
   mov rbx, rax
@@ -196,6 +264,14 @@ f_list_get:
 
   ret
 
+; @function list_copy_links
+; @description Создает копию списка со ссылками на элементы
+; @param list - список для копирования
+; @return Копия списка со ссылками
+; @example
+;   list
+;   list_append rax, value
+;   list_copy_links rax  ; создает копию со ссылками
 f_list_copy_links:
   get_arg 0
   mov rbx, rax
@@ -213,6 +289,14 @@ f_list_copy_links:
   mov rax, rcx
   ret
 
+; @function list_copy
+; @description Создает полную копию списка с копированием всех элементов
+; @param list - список для копирования
+; @return Полная копия списка
+; @example
+;   list
+;   list_append rax, value
+;   list_copy rax  ; создает полную копию
 f_list_copy:
   get_arg 0
   mov rbx, rax
@@ -247,6 +331,15 @@ f_list_copy:
   mov rax, rcx
   ret
 
+; @function list_append_link
+; @description Добавляет элемент в конец списка (без копирования)
+; @param list - список для добавления элемента
+; @param value - значение для добавления
+; @return Список с добавленным элементом
+; @example
+;   list
+;   string "value"
+;   list_append_link rax, rbx
 f_list_append_link:
   get_arg 0
   mov rbx, rax
@@ -278,6 +371,15 @@ f_list_append_link:
 
   ret
 
+; @function list_append
+; @description Добавляет элемент в конец списка (с копированием)
+; @param list - список для добавления элемента
+; @param value - значение для добавления
+; @return Список с добавленным элементом
+; @example
+;   list
+;   string "value"
+;   list_append rax, rbx
 f_list_append:
   get_arg 0
   mov rbx, rax
@@ -289,6 +391,16 @@ f_list_append:
 
   ret
 
+; @function list_pop_link
+; @description Удаляет и возвращает элемент по индексу (без копирования)
+; @param list - список для удаления элемента
+; @param index=-1 - индекс элемента для удаления
+; @return Удаленный элемент
+; @example
+;   list
+;   list_append rax, value1
+;   list_append rax, value2
+;   list_pop_link rax, -1  ; удаляет и возвращает последний элемент
 f_list_pop_link:
   get_arg 0
   mov rbx, rax
@@ -344,6 +456,16 @@ f_list_pop_link:
 
   ret
 
+; @function list_pop
+; @description Удаляет и возвращает элемент по индексу (с копированием)
+; @param list - список для удаления элемента
+; @param index=-1 - индекс элемента для удаления
+; @return Копия удаленного элемента
+; @example
+;   list
+;   list_append rax, value1
+;   list_append rax, value2
+;   list_pop rax, -1  ; удаляет и возвращает копию последнего элемента
 f_list_pop:
   get_arg 0
   mov rbx, rax
@@ -355,6 +477,17 @@ f_list_pop:
 
   ret
 
+; @function list_insert_link
+; @description Вставляет элемент по индексу в список (без копирования)
+; @param list - список для вставки элемента
+; @param index - индекс для вставки элемента
+; @param value - значение для вставки
+; @return Список с вставленным элементом
+; @example
+;   list
+;   list_append rax, value1
+;   string "inserted"
+;   list_insert_link rax, 0, rbx  ; вставляет в начало
 f_list_insert_link:
   get_arg 0
   mov rbx, rax
@@ -420,6 +553,17 @@ f_list_insert_link:
   mov rax, rbx
   ret
 
+; @function list_insert
+; @description Вставляет элемент по индексу в список (с копированием)
+; @param list - список для вставки элемента
+; @param index - индекс для вставки элемента
+; @param value - значение для вставки
+; @return Список с вставленным элементом
+; @example
+;   list
+;   list_append rax, value1
+;   string "inserted"
+;   list_insert rax, 0, rbx  ; вставляет в начало
 f_list_insert:
   get_arg 0
   mov rbx, rax
@@ -433,6 +577,16 @@ f_list_insert:
 
   ret
 
+; @function list_index
+; @description Возвращает индекс первого вхождения элемента в список
+; @param list - список для поиска элемента
+; @param value - значение для поиска
+; @return Индекс элемента или -1, если не найден
+; @example
+;   list
+;   list_append rax, value1
+;   list_append rax, value2
+;   list_index rax, value1  ; возвращает 0
 f_list_index:
   get_arg 0
   mov rbx, rax
@@ -469,6 +623,15 @@ f_list_index:
   mov rax, rdx
   ret
 
+; @function list_include
+; @description Проверяет, содержится ли элемент в списке
+; @param list - список для проверки
+; @param value - значение для проверки
+; @return Булево значение (true если элемент найден)
+; @example
+;   list
+;   list_append rax, value1
+;   list_include rax, value1  ; возвращает true
 f_list_include:
   get_arg 0
   mov rbx, rax
@@ -490,6 +653,17 @@ f_list_include:
     boolean 0
     ret
 
+; @function list_extend_links
+; @description Добавляет все элементы из другого списка как ссылки
+; @param list - целевой список для расширения
+; @param other - список с элементами для добавления
+; @return Расширенный список
+; @example
+;   list
+;   list_append rax, value1
+;   list
+;   list_append rbx, value2
+;   list_extend_links rax, rbx
 f_list_extend_links:
   get_arg 0
   mov rbx, rax
@@ -522,6 +696,17 @@ f_list_extend_links:
   mov rax, rbx
   ret
 
+; @function list_extend
+; @description Добавляет все элементы из другого списка как копии
+; @param list - целевой список для расширения
+; @param other - список с элементами для добавления
+; @return Расширенный список
+; @example
+;   list
+;   list_append rax, value1
+;   list
+;   list_append rbx, value2
+;   list_extend rax, rbx
 f_list_extend:
   get_arg 0
   mov rbx, rax
@@ -536,6 +721,15 @@ f_list_extend:
 
   ret
 
+; @function list_reverse_links
+; @description Создает новый список с элементами в обратном порядке (ссылки)
+; @param list - список для разворота
+; @return Новый список с элементами в обратном порядке
+; @example
+;   list
+;   list_append rax, value1
+;   list_append rax, value2
+;   list_reverse_links rax  ; возвращает [value2, value1]
 f_list_reverse_links:
   get_arg 0
   mov rbx, rax
@@ -577,6 +771,15 @@ f_list_reverse_links:
   mov rax, r9
   ret
 
+; @function list_reverse
+; @description Создает новый список с элементами в обратном порядке (копии)
+; @param list - список для разворота
+; @return Новый список с элементами в обратном порядке
+; @example
+;   list
+;   list_append rax, value1
+;   list_append rax, value2
+;   list_reverse rax  ; возвращает копии в обратном порядке
 f_list_reverse:
   get_arg 0
   mov rbx, rax
@@ -586,6 +789,19 @@ f_list_reverse:
 
   ret
 
+; @function list_slice_links
+; @description Создает срез списка как ссылки на элементы
+; @param list - список для создания среза
+; @param start=0 - начальный индекс среза
+; @param end=-1 - конечный индекс среза
+; @param step=1 - шаг среза
+; @return Срез списка как ссылки
+; @example
+;   list
+;   list_append rax, value1
+;   list_append rax, value2
+;   list_append rax, value3
+;   list_slice_links rax, 0, 2  ; возвращает [value1, value2]
 f_list_slice_links:
   get_arg 0    ; Коллекция
   mov rbx, rax
@@ -685,6 +901,19 @@ f_list_slice_links:
 
   ret
 
+; @function list_slice
+; @description Создает срез списка как копии элементов
+; @param list - список для создания среза
+; @param start=0 - начальный индекс среза
+; @param end=-1 - конечный индекс среза
+; @param step=1 - шаг среза
+; @return Срез списка как копии
+; @example
+;   list
+;   list_append rax, value1
+;   list_append rax, value2
+;   list_append rax, value3
+;   list_slice rax, 0, 2  ; возвращает копии [value1, value2]
 f_list_slice:
   get_arg 0    ; Коллекция
   mov rbx, rax
@@ -700,6 +929,17 @@ f_list_slice:
 
   ret
 
+; @function list_add_links
+; @description Создает новый список как объединение двух списков со ссылками
+; @param list1 - первый список для объединения
+; @param list2 - второй список для объединения
+; @return Новый список с объединенными элементами
+; @example
+;   list
+;   list_append rax, value1
+;   list
+;   list_append rbx, value2
+;   list_add_links rax, rbx
 f_list_add_links:
   get_arg 0
   mov rbx, rax
@@ -714,6 +954,17 @@ f_list_add_links:
 
   ret
 
+; @function list_add
+; @description Создает новый список как объединение двух списков с копиями
+; @param list1 - первый список для объединения
+; @param list2 - второй список для объединения
+; @return Новый список с объединенными элементами
+; @example
+;   list
+;   list_append rax, value1
+;   list
+;   list_append rbx, value2
+;   list_add rax, rbx
 f_list_add:
   get_arg 0
   mov rbx, rax
@@ -725,6 +976,16 @@ f_list_add:
 
   ret
 
+; @function list_mul_links
+; @description Создает новый список как повторение исходного списка (ссылки)
+; @param list - список для повторения
+; @param count - количество повторений
+; @return Новый список с повторенными элементами
+; @example
+;   list
+;   list_append rax, value
+;   integer 3
+;   list_mul_links rax, rbx  ; возвращает [value, value, value]
 f_list_mul_links:
   get_arg 0
   mov rbx, rax
@@ -757,6 +1018,16 @@ f_list_mul_links:
 
   ret
 
+; @function list_mul
+; @description Создает новый список как повторение исходного списка (копии)
+; @param list - список для повторения
+; @param count - количество повторений
+; @return Новый список с повторенными элементами
+; @example
+;   list
+;   list_append rax, value
+;   integer 3
+;   list_mul rax, rbx  ; возвращает копии [value, value, value]
 f_list_mul:
   get_arg 0
   mov rbx, rax

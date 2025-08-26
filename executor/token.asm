@@ -21,6 +21,14 @@ macro token_check_keyword token*, keywords* {
   debug_end "token_check_keyword"
 }
 
+; @function token_check_type
+; @debug
+; @description Проверяет тип токена на соответствие списку типов
+; @param token - токен для проверки
+; @param types - список типов для проверки
+; @return Логическое значение (true/false)
+; @example
+;   token_check_type token, [ЧИСЛО, СТРОКА]
 f_token_check_type:
   get_arg 1
   mov rbx, rax
@@ -71,6 +79,14 @@ f_token_check_type:
   .end_while:
   ret
 
+; @function token_check_keyword
+; @debug
+; @description Проверяет, является ли токен ключевым словом из списка
+; @param token - токен для проверки
+; @param keywords - список ключевых слов
+; @return Логическое значение (true/false)
+; @example
+;   token_check_keyword token, [если, пока, для]
 f_token_check_keyword:
   get_arg 1
   mov rbx, rax

@@ -1,6 +1,14 @@
 ; Копирайт © 2025 ООО «РУС.ЯЗ»
 ; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
 
+; @function input
+; @description Читает строку из стандартного ввода с возможностью вывода приглашения
+; @param string=0 - приглашение для вывода
+; @return Прочитанная строка
+; @example
+;   input  ; читает строку без приглашения
+;   string "Введите имя: "
+;   input rax  ; выводит приглашение и читает строку
 f_input:
   get_arg 0
   mov rbx, rax

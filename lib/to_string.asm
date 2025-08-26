@@ -1,6 +1,15 @@
 ; Копирайт © 2025 ООО «РУС.ЯЗ»
 ; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
 
+; @function to_string
+; @description Преобразует объект в строковое представление
+; @param value - объект для преобразования в строку
+; @return Строковое представление объекта
+; @example
+;   integer 42
+;   to_string rax  ; возвращает "42"
+;   float 3.14
+;   to_string rax  ; возвращает "3,14"
 f_to_string:
   get_arg 0
   mov rbx, [rax]

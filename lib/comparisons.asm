@@ -1,6 +1,21 @@
 ; Копирайт © 2025 ООО «РУС.ЯЗ»
 ; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
 
+; @function is_equal
+; @description
+;   Проверяет равенство значений двух объектов одного типа (обратная операция — @function is_not_equal)
+;
+;   Исключением являются числовые типы: если один из аргументов имеет тип Вещественное число, а другой — Целое число, то Целоичесленный аргумент будет приведён к вещественному типу
+;
+;   Иначе, если аргументы имеют разные типы — вернётся Ложь
+; @param value_1 - первый объект для сравнения
+; @param value_2 - второй объект для сравнения
+; @return Истина, если объекты равны, иначе — Ложь
+; @example
+;   integer 5
+;   mov rbx, rax
+;   integer 5
+;   is_equal rbx, rax  ; Вернёт Истину
 f_is_equal:
   get_arg 0
   mov rbx, rax
@@ -203,6 +218,16 @@ f_is_equal:
     boolean 0
     ret
 
+; @function is_not_equal
+; @description Проверяет неравенство двух объектов (обратная операция — @function is_not_equal)
+; @param value_1 - первый объект для сравнения
+; @param value_2 - второй объект для сравнения
+; @return Истина, если объекты не равны, иначе — Ложь
+; @example
+;   integer 5
+;   mov rbx, rax
+;   integer 3
+;   is_not_equal rbx, rax  ; Вернёт Истину
 f_is_not_equal:
   get_arg 0
   mov rbx, rax
@@ -213,6 +238,16 @@ f_is_not_equal:
   boolean_not rax
   ret
 
+; @function is_lower
+; @description Проверяет, что первое число меньше второго (обратная операция — @function is_greater_or_equal)
+; @param value_1 - первое Целое или Вещественное число
+; @param value_2 - второе Целое или Вещественное число
+; @return Истина, если первое меньше второго, иначе — Ложь
+; @example
+;   integer 3
+;   mov rbx, rax
+;   integer 5
+;   is_lower rbx, rax  ; Вернёт Истину
 f_is_lower:
   get_arg 0
   mov rbx, rax
@@ -296,6 +331,16 @@ f_is_lower:
     boolean 0
     ret
 
+; @function is_greater
+; @description Проверяет, что первое число больше второго (обратная операция — @function is_lower_or_equal)
+; @param value_1 - первое Целое или Вещественное число
+; @param value_2 - второе Целое или Вещественное число
+; @return Истина, если первое больше второго, иначе — Ложь
+; @example
+;   integer 5
+;   mov rbx, rax
+;   integer 3
+;   is_greater rbx, rax  ; Вернёт Истину
 f_is_greater:
   get_arg 0
   mov rbx, rax
@@ -379,6 +424,16 @@ f_is_greater:
     boolean 0
     ret
 
+; @function is_lower_or_equal
+; @description Проверяет, что первое число меньше или равно второму (обратная операция — @function is_greater)
+; @param value_1 - первое Целое или Вещественное число
+; @param value_2 - второе Целое или Вещественное число
+; @return Истина, если первое меньше или равно второму, иначе — Ложь
+; @example
+;   integer 3
+;   mov rbx, rax
+;   integer 5
+;   is_lower_or_equal rbx, rax  ; возвращает true
 f_is_lower_or_equal:
   get_arg 0
   mov rbx, rax
@@ -389,6 +444,16 @@ f_is_lower_or_equal:
   boolean_not rax
   ret
 
+; @function is_greater_or_equal
+; @description Проверяет, что первое число больше или равно второму (обратная операция — @function is_lower)
+; @param value_1 - первое Целое или Вещественное число
+; @param value_2 - второе Целое или Вещественное число
+; @return Истина, если первое больше или равно второму, иначе — Ложь
+; @example
+;   integer 5
+;   mov rbx, rax
+;   integer 3
+;   is_greater_or_equal rbx, rax  ; возвращает true
 f_is_greater_or_equal:
   get_arg 0
   mov rbx, rax

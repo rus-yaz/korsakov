@@ -1,6 +1,13 @@
 ; Копирайт © 2025 ООО «РУС.ЯЗ»
 ; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
 
+; @function buffer_to_binary
+; @description Преобразует буфер в бинарную последовательность
+; @param pointer - адрес буфера для преобразования
+; @return Бинарная последовательность
+; @example
+;   raw_string "Hello"
+;   buffer_to_binary rax  ; Создаёт бинарную последовательность из буфера
 f_buffer_to_binary:
   get_arg 0
   mov rbx, rax
@@ -36,6 +43,13 @@ f_buffer_to_binary:
 
   ret
 
+; @function binary_to_string
+; @description Преобразует бинарную последовательность в обычную строку
+; @param binary - адрес бинарной последовательности для преобразования
+; @return Обычная строка
+; @example
+;   binary_string "Hello"
+;   binary_to_string rax  ; Вернёт обычную строку
 f_binary_to_string:
   get_arg 0
   mov rdx, rax
@@ -198,6 +212,13 @@ f_binary_to_string:
 
   ret
 
+; @function buffer_to_string
+; @description Преобразует сырую бинарная последовательность в Строку
+; @param buffer - адрес буфера для преобразования
+; @return Строка
+; @example
+;   raw_string "Hello"
+;   buffer_to_string rax  ; Преобразует буфер в строку
 f_buffer_to_string:
   get_arg 0
 
@@ -209,6 +230,13 @@ f_buffer_to_string:
 
   ret
 
+; @function string_to_binary
+; @description Преобразует обычную строку в бинарную последовательность
+; @param string - строка для преобразования в бинарную
+; @return Бинарная последовательность
+; @example
+;   string "Hello"
+;   string_to_binary rax  ; Вернёт бинарную последовательность
 f_string_to_binary:
   get_arg 0
   mov rbx, rax
@@ -312,6 +340,13 @@ f_string_to_binary:
 
   ret
 
+; @function binary_length
+; @description Возвращает длину бинарной последовательности
+; @param binary - бинарная последовательность для измерения длины
+; @return Длина бинарной последовательности
+; @example
+;   binary_string "Hello"
+;   binary_length rax  ; Возвращает длину бинарной последовательности
 f_binary_length:
   get_arg 0
   check_type rax, BINARY

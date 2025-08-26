@@ -36,6 +36,13 @@
 ;   Повторить строки из ссылок на символы
 ;   Повторить строки из копий симоволов
 
+; @function string_from_capacity
+; @description Создает новую строку с указанной начальной вместимостью
+; @param capacity=2 - начальная вместимость строки
+; @return Объект строки
+; @example
+;   string_from_capacity  ; создает строку с вместимостью 2
+;   string_from_capacity 10  ; создает строку с вместимостью 10
 f_string_from_capacity:
   get_arg 0
   mov rbx, rax
@@ -67,6 +74,13 @@ f_string_from_capacity:
 
   ret
 
+; @function string_length
+; @description Возвращает текущую длину строки
+; @param string - строка для измерения длины
+; @return Количество символов в строке
+; @example
+;   string "Hello, World!"
+;   string_length rax  ; вернет 13
 f_string_length:
   get_arg 0
   check_type rax, STRING
@@ -74,6 +88,13 @@ f_string_length:
   mov rax, [rax + 8*1]
   ret
 
+; @function string_capacity
+; @description Возвращает текущую вместимость строки
+; @param string - строка для получения вместимости
+; @return Вместимость строки
+; @example
+;   string "Hello"
+;   string_capacity rax  ; возвращает вместимость строки
 f_string_capacity:
   get_arg 0
   check_type rax, STRING
@@ -81,6 +102,12 @@ f_string_capacity:
   mov rax, [rax + 8*2]
   ret
 
+; @function string_expand_capacity
+; @description Увеличивает вместимость строки в два раза
+; @param string - строка для расширения вместимости
+; @example
+;   string "Hi"
+;   string_expand_capacity rax  ; увеличивает вместимость до 4
 f_string_expand_capacity:
   get_arg 0
   mov rbx, rax
@@ -104,6 +131,16 @@ f_string_expand_capacity:
 
   ret
 
+; @function string_set_link
+; @description Устанавливает символ по индексу в строку (без копирования)
+; @param string - строка для установки символа
+; @param index - индекс для установки символа
+; @param char - символ для установки (строка длиной 1)
+; @return Строка с установленным символом
+; @example
+;   string "Hello"
+;   string "X"
+;   string_set_link rax, 0, rbx  ; заменяет первый символ на X
 f_string_set_link:
   get_arg 0
   mov rbx, rax
@@ -153,6 +190,16 @@ f_string_set_link:
   mov [rbx], rdx
   ret
 
+; @function string_set
+; @description Устанавливает символ по индексу в строку (с копированием)
+; @param string - строка для установки символа
+; @param index - индекс для установки символа
+; @param char - символ для установки (строка длиной 1)
+; @return Строка с установленным символом
+; @example
+;   string "Hello"
+;   string "X"
+;   string_set rax, 0, rbx  ; заменяет первый символ на X
 f_string_set:
   get_arg 0
   mov rbx, rax
@@ -166,6 +213,14 @@ f_string_set:
 
   ret
 
+; @function string_get_link
+; @description Получает символ по индексу из строки (без копирования)
+; @param string - строка для получения символа
+; @param index - индекс символа для получения
+; @return Символ по указанному индексу (строка длиной 1)
+; @example
+;   string "Hello"
+;   string_get_link rax, 0  ; возвращает "H"
 f_string_get_link:
   get_arg 0
   mov rbx, rax
@@ -211,6 +266,14 @@ f_string_get_link:
   mov rax, r8
   ret
 
+; @function string_get
+; @description Получает символ по индексу из строки (с копированием)
+; @param string - строка для получения символа
+; @param index - индекс символа для получения
+; @return Копия символа по указанному индексу (строка длиной 1)
+; @example
+;   string "Hello"
+;   string_get rax, 0  ; возвращает копию "H"
 f_string_get:
   get_arg 0
   mov rbx, rax
@@ -222,6 +285,13 @@ f_string_get:
 
   ret
 
+; @function string_copy_links
+; @description Создает копию строки со ссылками на символы
+; @param string - строка для копирования
+; @return Копия строки со ссылками
+; @example
+;   string "Hello"
+;   string_copy_links rax  ; создает копию со ссылками
 f_string_copy_links:
   get_arg 0
   mov rbx, rax
@@ -239,6 +309,13 @@ f_string_copy_links:
   mov rax, rcx
   ret
 
+; @function string_copy
+; @description Создает полную копию строки с копированием всех символов
+; @param string - строка для копирования
+; @return Полная копия строки
+; @example
+;   string "Hello"
+;   string_copy rax  ; создает полную копию
 f_string_copy:
   get_arg 0
   mov rbx, rax
@@ -273,6 +350,14 @@ f_string_copy:
   mov rax, rcx
   ret
 
+; @function string_pop_link
+; @description Удаляет и возвращает символ по индексу (без копирования)
+; @param string - строка для удаления символа
+; @param index=-1 - индекс символа для удаления
+; @return Удаленный символ (строка длиной 1)
+; @example
+;   string "Hello"
+;   string_pop_link rax, -1  ; удаляет и возвращает последний символ
 f_string_pop_link:
   get_arg 0
   mov rbx, rax
@@ -339,6 +424,14 @@ f_string_pop_link:
   mov rax, rcx
   ret
 
+; @function string_pop
+; @description Удаляет и возвращает символ по индексу (с копированием)
+; @param string - строка для удаления символа
+; @param index=-1 - индекс символа для удаления
+; @return Копия удаленного символа (строка длиной 1)
+; @example
+;   string "Hello"
+;   string_pop rax, -1  ; удаляет и возвращает копию последнего символа
 f_string_pop:
   get_arg 0
   mov rbx, rax
@@ -350,6 +443,15 @@ f_string_pop:
 
   ret
 
+; @function string_index
+; @description Возвращает индекс первого вхождения символа в строку
+; @param string - строка для поиска символа
+; @param char - символ для поиска (строка длиной 1)
+; @return Индекс символа или -1, если не найден
+; @example
+;   string "Hello"
+;   string "l"
+;   string_index rax, rbx  ; возвращает 2
 f_string_index:
   get_arg 0
   mov rbx, rax
@@ -395,6 +497,15 @@ f_string_index:
   mov rax, rdx
   ret
 
+; @function string_include
+; @description Проверяет, содержится ли подстрока в строке
+; @param string - строка для проверки
+; @param substring - подстрока для поиска
+; @return Булево значение (true если подстрока найдена)
+; @example
+;   string "Hello World"
+;   string "World"
+;   string_include rax, rbx  ; возвращает true
 f_string_include:
   get_arg 0
   mov rbx, rax
@@ -456,6 +567,15 @@ f_string_include:
     boolean 1
     ret
 
+; @function string_extend_links
+; @description Добавляет все символы из другой строки как ссылки
+; @param string - целевая строка для расширения
+; @param other - строка с символами для добавления
+; @return Расширенная строка
+; @example
+;   string "Hello"
+;   string " World"
+;   string_extend_links rax, rbx
 f_string_extend_links:
   get_arg 0
   mov rbx, rax
@@ -496,6 +616,15 @@ f_string_extend_links:
 
   ret
 
+; @function string_extend
+; @description Добавляет все символы из другой строки как копии
+; @param string - целевая строка для расширения
+; @param other - строка с символами для добавления
+; @return Расширенная строка
+; @example
+;   string "Hello"
+;   string " World"
+;   string_extend rax, rbx
 f_string_extend:
   get_arg 0
   mov rbx, rax
@@ -507,6 +636,16 @@ f_string_extend:
 
   ret
 
+; @function split_links
+; @description Разделяет строку на части по разделителю (ссылки)
+; @param string - строка для разделения
+; @param separator=" " - разделитель
+; @param max_parts=-1 - максимальное количество частей
+; @return Список частей строки как ссылки
+; @example
+;   string "Hello World Test"
+;   string " "
+;   split_links rax, rbx  ; возвращает ["Hello", "World", "Test"]
 f_split_links:
   get_arg 0
   mov rbx, rax
@@ -588,6 +727,16 @@ f_split_links:
   mov rax, r8
   ret
 
+; @function split
+; @description Разделяет строку на части по разделителю (копии)
+; @param string - строка для разделения
+; @param separator=" " - разделитель
+; @param max_parts=-1 - максимальное количество частей
+; @return Список частей строки как копии
+; @example
+;   string "Hello World Test"
+;   string " "
+;   split rax, rbx  ; возвращает копии ["Hello", "World", "Test"]
 f_split:
   get_arg 0
   mov rbx, rax
@@ -600,6 +749,16 @@ f_split:
   copy rax
   ret
 
+; @function split_from_right_links
+; @description Разделяет строку на части по разделителю справа налево (ссылки)
+; @param string - строка для разделения
+; @param separator=0 - разделитель (по умолчанию пробел)
+; @param max_parts=0 - максимальное количество частей (0 - без ограничений)
+; @return Список частей строки как ссылки
+; @example
+;   string "Hello World Test"
+;   string " "
+;   split_from_right_links rax, rbx  ; возвращает ["Hello World", "Test"]
 f_split_from_right_links:
   get_arg 0
   mov rbx, rax
@@ -692,6 +851,16 @@ f_split_from_right_links:
   mov rax, r8
   ret
 
+; @function split_from_right
+; @description Разделяет строку на части по разделителю справа налево (копии)
+; @param string - строка для разделения
+; @param separator=0 - разделитель (по умолчанию пробел)
+; @param max_parts=0 - максимальное количество частей (0 - без ограничений)
+; @return Список частей строки как копии
+; @example
+;   string "Hello World Test"
+;   string " "
+;   split_from_right rax, rbx  ; возвращает копии ["Hello World", "Test"]
 f_split_from_right:
   get_arg 0
   mov rbx, rax
@@ -704,6 +873,17 @@ f_split_from_right:
   copy rax
   ret
 
+; @function join_links
+; @description Объединяет список строк в одну строку с разделителем (ссылки)
+; @param list - список строк для объединения
+; @param separator=0 - разделитель (по умолчанию пробел)
+; @return Объединенная строка
+; @example
+;   list
+;   list_append rax, "Hello"
+;   list_append rax, "World"
+;   string " "
+;   join_links rax, rbx  ; возвращает "Hello World"
 f_join_links:
   get_arg 0
   mov rbx, rax
@@ -757,6 +937,17 @@ f_join_links:
 
   ret
 
+; @function join
+; @description Объединяет список строк в одну строку с разделителем (копии)
+; @param list - список строк для объединения
+; @param separator=0 - разделитель (по умолчанию пробел)
+; @return Объединенная строка
+; @example
+;   list
+;   list_append rax, "Hello"
+;   list_append rax, "World"
+;   string " "
+;   join rax, rbx  ; возвращает "Hello World"
 f_join:
   get_arg 0
   mov rbx, rax
@@ -768,6 +959,13 @@ f_join:
 
   ret
 
+; @function is_alpha
+; @description Проверяет, состоит ли строка только из букв
+; @param string - строка для проверки
+; @return Булево значение (true если строка состоит только из букв)
+; @example
+;   string "Hello"
+;   is_alpha rax  ; возвращает true
 f_is_alpha:
   get_arg 0
   check_type rax, STRING
@@ -826,6 +1024,13 @@ f_is_alpha:
   mov rax, 0
   ret
 
+; @function is_digit
+; @description Проверяет, состоит ли строка только из цифр
+; @param string - строка для проверки
+; @return Булево значение (true если строка состоит только из цифр)
+; @example
+;   string "12345"
+;   is_digit rax  ; возвращает true
 f_is_digit:
   get_arg 0
   check_type rax, STRING
@@ -869,6 +1074,13 @@ f_is_digit:
   mov rax, 0
   ret
 
+; @function string_to_list
+; @description Преобразует строку в список символов
+; @param string - строка для преобразования
+; @return Список символов
+; @example
+;   string "Hello"
+;   string_to_list rax  ; возвращает ["H", "e", "l", "l", "o"]
 f_string_to_list:
   get_arg 0
   mov rbx, rax
@@ -902,6 +1114,13 @@ f_string_to_list:
   mov rax, rcx
   ret
 
+; @function string_reverse_links
+; @description Создает новую строку с символами в обратном порядке (ссылки)
+; @param string - строка для разворота
+; @return Новая строка с символами в обратном порядке
+; @example
+;   string "Hello"
+;   string_reverse_links rax  ; возвращает "olleH"
 f_string_reverse_links:
   get_arg 0
   mov rbx, rax
@@ -943,6 +1162,13 @@ f_string_reverse_links:
   mov rax, r9
   ret
 
+; @function string_reverse
+; @description Создает новую строку с символами в обратном порядке (копии)
+; @param string - строка для разворота
+; @return Новая строка с символами в обратном порядке
+; @example
+;   string "Hello"
+;   string_reverse rax  ; возвращает "olleH"
 f_string_reverse:
   get_arg 0
   mov rbx, rax
@@ -952,6 +1178,16 @@ f_string_reverse:
 
   ret
 
+; @function string_slice_links
+; @description Создает срез строки как ссылки на символы
+; @param string - строка для создания среза
+; @param start=0 - начальный индекс среза
+; @param end=0 - конечный индекс среза (0 означает до конца)
+; @param step=1 - шаг среза
+; @return Срез строки как ссылки
+; @example
+;   string "Hello World"
+;   string_slice_links rax, 0, 5  ; возвращает "Hello"
 f_string_slice_links:
   get_arg 0    ; Коллекция
   mov rbx, rax
@@ -1051,6 +1287,16 @@ f_string_slice_links:
 
   ret
 
+; @function string_slice
+; @description Создает срез строки как копии символов
+; @param string - строка для создания среза
+; @param start=0 - начальный индекс среза
+; @param end=0 - конечный индекс среза (0 означает до конца)
+; @param step=1 - шаг среза
+; @return Срез строки как копии
+; @example
+;   string "Hello World"
+;   string_slice rax, 0, 5  ; возвращает копию "Hello"
 f_string_slice:
   get_arg 0    ; Коллекция
   mov rbx, rax
@@ -1066,6 +1312,15 @@ f_string_slice:
 
   ret
 
+; @function string_add_links
+; @description Создает новую строку как объединение двух строк со ссылками
+; @param string1 - первая строка для объединения
+; @param string2 - вторая строка для объединения
+; @return Новая строка с объединенными символами
+; @example
+;   string "Hello"
+;   string " World"
+;   string_add_links rax, rbx
 f_string_add_links:
   get_arg 0
   mov rbx, rax
@@ -1080,6 +1335,15 @@ f_string_add_links:
 
   ret
 
+; @function string_add
+; @description Создает новую строку как объединение двух строк с копиями
+; @param string1 - первая строка для объединения
+; @param string2 - вторая строка для объединения
+; @return Новая строка с объединенными символами
+; @example
+;   string "Hello"
+;   string " World"
+;   string_add rax, rbx
 f_string_add:
   get_arg 0
   mov rbx, rax
@@ -1091,6 +1355,15 @@ f_string_add:
 
   ret
 
+; @function string_mul_links
+; @description Создает новую строку как повторение исходной строки (ссылки)
+; @param string - строка для повторения
+; @param count - количество повторений
+; @return Новая строка с повторенными символами
+; @example
+;   string "Hi"
+;   integer 3
+;   string_mul_links rax, rbx  ; возвращает "HiHiHi"
 f_string_mul_links:
   get_arg 0
   mov rbx, rax
@@ -1123,6 +1396,15 @@ f_string_mul_links:
 
   ret
 
+; @function string_mul
+; @description Создает новую строку как повторение исходной строки (копии)
+; @param string - строка для повторения
+; @param count - количество повторений
+; @return Новая строка с повторенными символами
+; @example
+;   string "Hi"
+;   integer 3
+;   string_mul rax, rbx  ; возвращает "HiHiHi"
 f_string_mul:
   get_arg 0
   mov rbx, rax

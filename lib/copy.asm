@@ -1,6 +1,15 @@
 ; Копирайт © 2025 ООО «РУС.ЯЗ»
 ; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
 
+; @function copy
+; @description Создаёт копию объекта в зависимости от его типа
+; @param value - объект для копирования
+; @return Копия объекта
+; @example
+;   integer 42
+;   copy rax  ; создаёт копию Целого числа
+;   string "Hello"
+;   copy rax  ; создаёт копию Строки
 f_copy:
   get_arg 0
   mov rbx, [rax]

@@ -1,6 +1,13 @@
 ; Копирайт © 2025 ООО «РУС.ЯЗ»
 ; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
 
+; @function buffer_to_float
+; @description Преобразует буфер в вещественное число
+; @param buffer - буфер для преобразования в вещественное число
+; @return Вещественное число, полученное из буфера
+; @example
+;   raw_float 3.14
+;   buffer_to_float rax  ; возвращает вещественное число 3.14
 f_buffer_to_float:
   get_arg 0
   mov rbx, rax
@@ -12,6 +19,13 @@ f_buffer_to_float:
 
   ret
 
+; @function float_copy
+; @description Создает копию вещественного числа
+; @param float - вещественное число для копирования
+; @return Копия вещественного числа
+; @example
+;   float 3.14
+;   float_copy rax  ; создает копию числа 3.14
 f_float_copy:
   get_arg 0
   mov rbx, rax
@@ -23,6 +37,16 @@ f_float_copy:
 
   ret
 
+; @function float_add
+; @description Складывает два вещественных числа
+; @param float_1 - первое вещественное число для сложения
+; @param float_2 - второе вещественное число для сложения
+; @return Новое вещественное число, равное сумме аргументов
+; @example
+;   float 3.14
+;   mov rbx, rax
+;   float 2.86
+;   float_add rbx, rax  ; вернет 6.0
 f_float_add:
   get_arg 0
   mov rbx, rax
@@ -45,6 +69,16 @@ f_float_add:
 
   ret
 
+; @function float_sub
+; @description Вычитает второе вещественное число из первого
+; @param float_1 - уменьшаемое вещественное число
+; @param float_2 - вычитаемое вещественное число
+; @return Новое вещественное число, равное разности аргументов
+; @example
+;   float 5.5
+;   mov rbx, rax
+;   float 2.3
+;   float_sub rbx, rax  ; вернет 3.2
 f_float_sub:
   get_arg 0
   mov rbx, rax
@@ -67,6 +101,16 @@ f_float_sub:
 
   ret
 
+; @function float_mul
+; @description Умножает два вещественных числа
+; @param float_1 - первое вещественное число для умножения
+; @param float_2 - второе вещественное число для умножения
+; @return Новое вещественное число, равное произведению аргументов
+; @example
+;   float 3.0
+;   mov rbx, rax
+;   float 2.5
+;   float_mul rbx, rax  ; вернет 7.5
 f_float_mul:
   get_arg 0
   mov rbx, rax
@@ -89,6 +133,16 @@ f_float_mul:
 
   ret
 
+; @function float_div
+; @description Делит первое вещественное число на второе
+; @param float_1 - делимое вещественное число
+; @param float_2 - делитель вещественное число
+; @return Новое вещественное число, равное частному аргументов
+; @example
+;   float 10.0
+;   mov rbx, rax
+;   float 3.0
+;   float_div rbx, rax  ; вернет 3.333...
 f_float_div:
   get_arg 0
   mov rbx, rax
@@ -120,6 +174,13 @@ f_float_div:
 
   ret
 
+; @function float_neg
+; @description Возвращает отрицательное значение вещественного числа
+; @param float - вещественное число для изменения знака
+; @return Вещественное число с противоположным знаком
+; @example
+;   float 3.14
+;   float_neg rax  ; возвращает -3.14
 f_float_neg:
   get_arg 0
   check_type rax, FLOAT
@@ -139,6 +200,13 @@ f_float_neg:
 
   ret
 
+; @function integer_to_float
+; @description Преобразует целое число в вещественное
+; @param integer - целое число для преобразования
+; @return Вещественное число, полученное из целого
+; @example
+;   integer 42
+;   integer_to_float rax  ; возвращает 42.0
 f_integer_to_float:
   get_arg 0
   check_type rax, INTEGER
@@ -153,6 +221,13 @@ f_integer_to_float:
 
   ret
 
+; @function string_to_float
+; @description Преобразует строку в вещественное число
+; @param string - строка для преобразования в вещественное число
+; @return Вещественное число, полученное из строки
+; @example
+;   string "3,14"
+;   string_to_float rax  ; возвращает вещественное число 3.14
 f_string_to_float:
   get_arg 0
   mov rbx, rax

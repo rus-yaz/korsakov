@@ -1,6 +1,12 @@
 ; Копирайт © 2025 ООО «РУС.ЯЗ»
 ; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
 
+; @function error_raw
+; @description Выводит сырой буфер в стандартный поток ошибок
+; @param raw_string_link - указатель на сырой буфер для вывода в stderr
+; @example
+;   raw_string "Error message"
+;   error_raw rax  ; выводит "Error message" в stderr
 f_error_raw:
   get_arg 0
   mov rsi, rax
@@ -13,6 +19,12 @@ f_error_raw:
 
   ret
 
+; @function error_binary
+; @description Выводит бинарную строку в стандартный поток ошибок
+; @param binary_string_link - указатель на бинарную строку для вывода в stderr
+; @example
+;   binary_string "Error message"
+;   error_binary rax  ; выводит "Error message" в stderr
 f_error_binary:
   get_arg 0
   add rax, BINARY_HEADER*8
@@ -20,6 +32,16 @@ f_error_binary:
   error_raw rax
   ret
 
+; @function error
+; @description Выводит список объектов в стандартный поток ошибок с разделителями
+; @param arguments - список объектов для вывода в stderr
+; @param separator=0 - разделитель между элементами
+; @param end_of_string=0 - символ в конце вывода
+; @example
+;   list
+;   list_append rax, "Error"
+;   list_append rax, "message"
+;   error rax  ; выводит "Error message\n" в stderr
 f_error:
   get_arg 0
   mov rbx, rax

@@ -1,6 +1,13 @@
 ; Копирайт © 2025 ООО «РУС.ЯЗ»
 ; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
 
+; @function integer
+; @description Создает объект целого числа
+; @param value - числовое значение для создания целого числа
+; @return Объект целого числа
+; @example
+;   integer 42  ; создает целое число 42
+;   integer -10  ; создает целое число -10
 f_integer:
   get_arg 0
   mov rbx, rax
@@ -12,6 +19,15 @@ f_integer:
 
   ret
 
+; @function string_to_integer
+; @description Преобразует строку в целое число
+; @param integer - строка для преобразования в целое число
+; @return Целое число, полученное из строки
+; @example
+;   string "123"
+;   string_to_integer rax  ; возвращает целое число 123
+;   string "-456"
+;   string_to_integer rax  ; возвращает целое число -456
 f_string_to_integer:
   get_arg 0
   check_type rax, STRING
@@ -83,6 +99,13 @@ f_string_to_integer:
 
   ret
 
+; @function integer_copy
+; @description Создает копию целого числа
+; @param int - целое число для копирования
+; @return Копия целого числа
+; @example
+;   integer 42
+;   integer_copy rax  ; создает копию числа 42
 f_integer_copy:
   get_arg 0
   check_type rax, INTEGER
@@ -94,6 +117,13 @@ f_integer_copy:
 
   ret
 
+; @function integer_neg
+; @description Возвращает отрицательное значение целого числа
+; @param int - целое число для изменения знака
+; @return Целое число с противоположным знаком
+; @example
+;   integer 42
+;   integer_neg rax  ; возвращает -42
 f_integer_neg:
   get_arg 0
   check_type rax, INTEGER
@@ -104,6 +134,13 @@ f_integer_neg:
 
   ret
 
+; @function integer_inc
+; @description Увеличивает целое число на 1
+; @param int - целое число для увеличения
+; @return int - Увеличенное число
+; @example
+;   integer 5
+;   integer_inc rax  ; изменяет число на 6
 f_integer_inc:
   get_arg 0
   check_type rax, INTEGER
@@ -114,6 +151,13 @@ f_integer_inc:
 
   ret
 
+; @function integer_dec
+; @description Уменьшает целое число на 1
+; @param int - целое число для уменьшения
+; @return int - уменьшенное число
+; @example
+;   integer 5
+;   integer_dec rax  ; изменяет число на 4
 f_integer_dec:
   get_arg 0
   check_type rax, INTEGER
@@ -124,6 +168,16 @@ f_integer_dec:
 
   ret
 
+; @function integer_add
+; @description Складывает два целых числа и возвращает новый объект с результатом
+; @param int_1 - первое целое число для сложения
+; @param int_2 - второе целое число для сложения
+; @return Новое целое число, равное сумме аргументов
+; @example
+;   integer 5
+;   mov rbx, rax
+;   integer 3
+;   integer_add rbx, rax  ; вернет 8
 f_integer_add:
   get_arg 1
   mov rbx, rax
@@ -139,6 +193,16 @@ f_integer_add:
 
   ret
 
+; @function integer_sub
+; @description Вычитает второе целое число из первого
+; @param int_1 - уменьшаемое целое число
+; @param int_2 - вычитаемое целое число
+; @return Новое целое число, равное разности аргументов
+; @example
+;   integer 10
+;   mov rbx, rax
+;   integer 3
+;   integer_sub rbx, rax  ; вернет 7
 f_integer_sub:
   get_arg 1
   mov rbx, rax
@@ -153,6 +217,16 @@ f_integer_sub:
   integer rcx
   ret
 
+; @function integer_mul
+; @description Умножает два целых числа
+; @param int_1 - первое целое число для умножения
+; @param int_2 - второе целое число для умножения
+; @return Новое целое число, равное произведению аргументов
+; @example
+;   integer 6
+;   mov rbx, rax
+;   integer 7
+;   integer_mul rbx, rax  ; вернет 42
 f_integer_mul:
   get_arg 1
   mov rbx, rax
@@ -167,6 +241,16 @@ f_integer_mul:
   integer rcx
   ret
 
+; @function integer_div
+; @description Делит первое целое число на второе (возвращает вещественное число)
+; @param int_1 - делимое целое число
+; @param int_2 - делитель целое число
+; @return Вещественное число, равное частному аргументов
+; @example
+;   integer 10
+;   mov rbx, rax
+;   integer 3
+;   integer_div rbx, rax  ; вернет 3.333...
 f_integer_div:
   get_arg 0
   mov rbx, rax
@@ -197,6 +281,13 @@ f_integer_div:
 
   ret
 
+; @function float_to_integer
+; @description Преобразует вещественное число в целое (отбрасывает дробную часть)
+; @param float - вещественное число для преобразования
+; @return Целое число, полученное из вещественного
+; @example
+;   float 3.7
+;   float_to_integer rax  ; возвращает 3
 f_float_to_integer:
   get_arg 0
   check_type rax, FLOAT

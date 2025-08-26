@@ -1,6 +1,18 @@
 ; Копирайт © 2025 ООО «РУС.ЯЗ»
 ; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
 
+; @function function
+; @description Создает объект функции с указанными параметрами
+; @param name - имя функции
+; @param link - ссылка на функцию
+; @param arguments - список аргументов функции
+; @param named_arguments - словарь именованных аргументов
+; @param accumulators=0 - тип аккумуляторов (0-нет, 1-позиционный, 2-именованный, 3-оба)
+; @param is_internal=0 - флаг встроенной функции
+; @return Объект функции
+; @example
+;   string "my_function"
+;   function rax, some_link, args_list, named_args  ; создает функцию
 f_function:
   get_arg 0
   mov rbx, rax
@@ -35,6 +47,12 @@ f_function:
 
   ret
 
+; @function function_copy
+; @description Создает копию объекта функции
+; @param function - функция для копирования
+; @return Копия функции
+; @example
+;   function_copy some_function  ; создает копию функции
 f_function_copy:
   get_arg 0
   mov rbx, rax
@@ -57,6 +75,14 @@ f_function_copy:
 
   ret
 
+; @function function_call
+; @description Вызывает функцию с указанными аргументами
+; @param function - функция для вызова
+; @param arguments - список аргументов для передачи
+; @param named_arguments - словарь именованных аргументов
+; @return Результат выполнения функции
+; @example
+;   function_call some_function, args_list, named_args  ; вызывает функцию
 f_function_call:
   push rax
   mov r15, [GLOBAL_CONTEXT]

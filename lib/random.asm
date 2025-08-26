@@ -1,6 +1,14 @@
 ; Копирайт © 2025 ООО «РУС.ЯЗ»
 ; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
 
+; @function get_random
+; @description Генерирует случайное целое число в заданном диапазоне
+; @param start=0 - нижняя граница диапазона
+; @param end=0 - верхняя граница диапазона
+; @return Случайное целое число в диапазоне [start, end]
+; @example
+;   get_random  ; генерирует случайное число в диапазоне [0, MAX_INT/2]
+;   get_random 1, 10  ; генерирует случайное число от 1 до 10
 f_get_random:
   get_arg 0
   mov rbx, rax
@@ -58,6 +66,14 @@ f_get_random:
 
   ret
 
+; @function get_pseudorandom
+; @description Генерирует псевдослучайное целое число в заданном диапазоне
+; @param start=0 - нижняя граница диапазона
+; @param end=0 - верхняя граница диапазона
+; @return Псевдослучайное целое число в диапазоне [start, end]
+; @example
+;   get_pseudorandom  ; генерирует псевдослучайное число в диапазоне [0, MAX_INT/2]
+;   get_pseudorandom 1, 10  ; генерирует псевдослучайное число от 1 до 10
 f_get_pseudorandom:
   get_arg 0
   mov rbx, rax
@@ -117,12 +133,22 @@ f_get_pseudorandom:
   ret
 
 
+; @function set_seed
+; @description Устанавливает начальное значение для генератора псевдослучайных чисел
+; @param seed - начальное значение для генератора
+; @example
+;   integer 12345
+;   set_seed rax  ; устанавливает начальное значение 12345
 f_set_seed:
   get_arg 0
   check_type rax, INTEGER
   mov [RANDOM_SEED], rax
   ret
 
+; @function reset_seed
+; @description Сбрасывает начальное значение генератора псевдослучайных чисел к значению по умолчанию
+; @example
+;   reset_seed  ; сбрасывает начальное значение к 2108
 f_reset_seed:
   integer 2108
   mov [RANDOM_SEED], rax

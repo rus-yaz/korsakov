@@ -203,6 +203,14 @@ macro break_node {
   return
 }
 
+; @function check_node_type
+; @debug
+; @description Проверяет тип узла AST
+; @param node - узел для проверки
+; @param type - ожидаемый тип узла
+; @return Логическое значение (true/false)
+; @example
+;   check_node_type node, [УЗЕЛ_ПРИСВАИВАНИЯ_ПЕРЕМЕННОЙ]
 f_check_node_type:
   get_arg 1
   mov rbx, rax
@@ -216,6 +224,13 @@ f_check_node_type:
 
   ret
 
+; @function access_node
+; @description Создает узел доступа к переменной
+; @param variable - переменная для доступа
+; @param keys - ключи доступа
+; @return Узел доступа к переменной
+; @example
+;   access_node variable, keys
 f_access_node:
   dictionary
   mov rbx, rax
@@ -228,6 +243,14 @@ f_access_node:
 
   ret
 
+; @function assign_node
+; @description Создает узел присваивания переменной
+; @param variable - переменная для присваивания
+; @param keys - ключи доступа
+; @param value - значение для присваивания
+; @return Узел присваивания
+; @example
+;   assign_node variable, keys, value
 f_assign_node:
   dictionary
   mov rbx, rax
@@ -242,6 +265,14 @@ f_assign_node:
 
   ret
 
+; @function binary_operation_node
+; @description Создает узел бинарной операции
+; @param left_node - левый операнд
+; @param operator - оператор
+; @param right_node - правый операнд
+; @return Узел бинарной операции
+; @example
+;   binary_operation_node left, "+", right
 f_binary_operation_node:
   dictionary
   mov rbx, rax
@@ -256,6 +287,12 @@ f_binary_operation_node:
 
   ret
 
+; @function list_node
+; @description Создает узел списка
+; @param elements - элементы списка
+; @return Узел списка
+; @example
+;   list_node elements
 f_list_node:
   dictionary
   mov rbx, rax
@@ -266,6 +303,11 @@ f_list_node:
 
   ret
 
+; @function null_node
+; @description Создает узел null
+; @return Узел null
+; @example
+;   null_node
 f_null_node:
   dictionary
   mov rbx, rax
@@ -274,6 +316,12 @@ f_null_node:
 
   ret
 
+; @function integer_node
+; @description Создает узел целого числа
+; @param token - токен с числовым значением
+; @return Узел целого числа
+; @example
+;   integer_node token
 f_integer_node:
   dictionary
   mov rbx, rax
@@ -284,6 +332,12 @@ f_integer_node:
 
   ret
 
+; @function float_node
+; @description Создает узел вещественного числа
+; @param token - токен с числовым значением
+; @return Узел вещественного числа
+; @example
+;   float_node token
 f_float_node:
   dictionary
   mov rbx, rax
@@ -294,6 +348,12 @@ f_float_node:
 
   ret
 
+; @function boolean_node
+; @description Создает узел логического значения
+; @param token - токен с логическим значением
+; @return Узел логического значения
+; @example
+;   boolean_node token
 f_boolean_node:
   dictionary
   mov rbx, rax
@@ -304,6 +364,12 @@ f_boolean_node:
 
   ret
 
+; @function string_node
+; @description Создает узел строки
+; @param token - токен со строковым значением
+; @return Узел строки
+; @example
+;   string_node token
 f_string_node:
   dictionary
   mov rbx, rax
@@ -314,6 +380,14 @@ f_string_node:
 
   ret
 
+; @function call_node
+; @description Создает узел вызова функции
+; @param variable - вызываемая функция
+; @param arguments - позиционные аргументы
+; @param named_arguments - именованные аргументы
+; @return Узел вызова функции
+; @example
+;   call_node function, args, named_args
 f_call_node:
   dictionary
   mov rbx, rax
@@ -328,6 +402,13 @@ f_call_node:
 
   ret
 
+; @function unary_operation_node
+; @description Создает узел унарной операции
+; @param operator - унарный оператор
+; @param operand - операнд
+; @return Узел унарной операции
+; @example
+;   unary_operation_node "-", operand
 f_unary_operation_node:
   dictionary
   mov rbx, rax
@@ -340,6 +421,12 @@ f_unary_operation_node:
 
   ret
 
+; @function dictionary_node
+; @description Создает узел словаря
+; @param elements - элементы словаря
+; @return Узел словаря
+; @example
+;   dictionary_node elements
 f_dictionary_node:
   dictionary
   mov rbx, rax
@@ -350,6 +437,13 @@ f_dictionary_node:
 
   ret
 
+; @function check_node
+; @description Создает узел условной конструкции check
+; @param cases - случаи для проверки
+; @param else_case - блок else
+; @return Узел условной конструкции
+; @example
+;   check_node cases, else_case
 f_check_node:
   dictionary
   mov rbx, rax
@@ -362,6 +456,13 @@ f_check_node:
 
   ret
 
+; @function if_node
+; @description Создает узел условной конструкции if
+; @param cases - случаи для проверки
+; @param else_case - блок else
+; @return Узел условной конструкции
+; @example
+;   if_node cases, else_case
 f_if_node:
   dictionary
   mov rbx, rax
@@ -374,6 +475,17 @@ f_if_node:
 
   ret
 
+; @function for_node
+; @description Создает узел цикла for
+; @param variable - переменная цикла
+; @param start - начальное значение
+; @param end - конечное значение
+; @param step - шаг цикла
+; @param body - тело цикла
+; @param else_case - блок else
+; @return Узел цикла for
+; @example
+;   for_node var, start, end, step, body, else_case
 f_for_node:
   dictionary
   mov rbx, rax
@@ -394,6 +506,14 @@ f_for_node:
 
   ret
 
+; @function while_node
+; @description Создает узел цикла while
+; @param condition - условие цикла
+; @param body - тело цикла
+; @param else_case - блок else
+; @return Узел цикла while
+; @example
+;   while_node condition, body, else_case
 f_while_node:
   dictionary
   mov rbx, rax
@@ -408,6 +528,17 @@ f_while_node:
 
   ret
 
+; @function method_node
+; @description Создает узел метода класса
+; @param variable - имя метода
+; @param arguments - аргументы метода
+; @param body - тело метода
+; @param autoreturn - флаг автоматического возврата
+; @param class_name=0 - имя класса
+; @param object_name=0 - имя объекта
+; @return Узел метода
+; @example
+;   method_node name, args, body, autoreturn, class, object
 f_method_node:
   get_arg 0
   mov r10, rax
@@ -447,6 +578,15 @@ f_method_node:
 
   ret
 
+; @function function_node
+; @description Создает узел функции
+; @param variable - имя функции
+; @param arguments - аргументы функции
+; @param body - тело функции
+; @param autoreturn - флаг автоматического возврата
+; @return Узел функции
+; @example
+;   function_node name, args, body, autoreturn
 f_function_node:
   dictionary
   mov rbx, rax
@@ -464,6 +604,14 @@ f_function_node:
 
   ret
 
+; @function class_node
+; @description Создает узел класса
+; @param variable - имя класса
+; @param body - тело класса
+; @param parents - родительские классы
+; @return Узел класса
+; @example
+;   class_node name, body, parents
 f_class_node:
   dictionary
   mov rbx, rax
@@ -478,6 +626,12 @@ f_class_node:
 
   ret
 
+; @function delete_node
+; @description Создает узел удаления переменной
+; @param variable - переменная для удаления
+; @return Узел удаления
+; @example
+;   delete_node variable
 f_delete_node:
   dictionary
   mov rbx, rax
@@ -488,6 +642,12 @@ f_delete_node:
 
   ret
 
+; @function include_node
+; @description Создает узел включения файла
+; @param path - путь к файлу
+; @return Узел включения
+; @example
+;   include_node path
 f_include_node:
   dictionary
   mov rbx, rax
@@ -498,6 +658,12 @@ f_include_node:
 
   ret
 
+; @function return_node
+; @description Создает узел оператора return
+; @param value - возвращаемое значение
+; @return Узел return
+; @example
+;   return_node value
 f_return_node:
   dictionary
   mov rbx, rax
@@ -508,12 +674,22 @@ f_return_node:
 
   ret
 
+; @function skip_node
+; @description Создает узел оператора skip
+; @return Узел skip
+; @example
+;   skip_node
 f_skip_node:
   dictionary
   dictionary_set_link rax, [узел], [УЗЕЛ_ПРОПУСКА]
 
   ret
 
+; @function break_node
+; @description Создает узел оператора break
+; @return Узел break
+; @example
+;   break_node
 f_break_node:
   dictionary
   dictionary_set_link rax, [узел], [УЗЕЛ_ПРЕРЫВАНИЯ]

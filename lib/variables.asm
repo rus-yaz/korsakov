@@ -1,6 +1,20 @@
 ; Копирайт © 2025 ООО «РУС.ЯЗ»
 ; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
 
+; @function assign_link
+; @description Присваивает значение переменной по цепочке ключей (без копирования)
+; @param variable - имя переменной (строка)
+; @param keys - список ключей для доступа к вложенным элементам
+; @param value - значение для присваивания
+; @param context=[GLOBAL_CONTEXT] - контекст переменных (словарь)
+; @return Присвоенное значение
+; @example
+;   string "my_var"
+;   list
+;   list_append rax, 0
+;   string "Hello"
+;   dictionary
+;   assign_link rbx, rax, rcx, rdx
 f_assign_link:
   get_arg 0
   mov r8, rax
@@ -209,6 +223,20 @@ f_assign_link:
 
   ret
 
+; @function assign
+; @description Присваивает значение переменной по цепочке ключей (с копированием)
+; @param variable - имя переменной (строка)
+; @param keys - список ключей для доступа к вложенным элементам
+; @param value - значение для присваивания
+; @param context=[GLOBAL_CONTEXT] - контекст переменных (словарь)
+; @return Присвоенное значение
+; @example
+;   string "my_var"
+;   list
+;   list_append rax, 0
+;   string "Hello"
+;   dictionary
+;   assign rbx, rax, rcx, rdx
 f_assign:
   get_arg 0
   mov r8, rax
@@ -233,6 +261,18 @@ f_assign:
 
   ret
 
+; @function access_link
+; @description Получает значение переменной по цепочке ключей (без копирования)
+; @param variable - имя переменной (строка)
+; @param keys - список ключей для доступа к вложенным элементам
+; @param context=[GLOBAL_CONTEXT] - контекст переменных (словарь)
+; @return Значение переменной
+; @example
+;   string "my_var"
+;   list
+;   list_append rax, 0
+;   dictionary
+;   access_link rbx, rax, rcx
 f_access_link:
   get_arg 0
   mov rdx, rax
@@ -348,6 +388,18 @@ f_access_link:
   mov rax, rdx
   ret
 
+; @function access
+; @description Получает значение переменной по цепочке ключей (с копированием)
+; @param variable - имя переменной (строка)
+; @param keys - список ключей для доступа к вложенным элементам
+; @param context=[GLOBAL_CONTEXT] - контекст переменных (словарь)
+; @return Копия значения переменной
+; @example
+;   string "my_var"
+;   list
+;   list_append rax, 0
+;   dictionary
+;   access rbx, rax, rcx
 f_access:
   get_arg 0
   mov rdx, rax

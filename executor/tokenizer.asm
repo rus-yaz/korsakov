@@ -52,6 +52,13 @@ macro format_token type*, value*, start_line*, start_column*, stop_line*, stop_c
   return
 }
 
+; @function tokenizer
+; @description Основная функция токенизатора, разбивает код на токены
+; @param code - исходный код для токенизации
+; @param filename - имя файла с кодом
+; @return Список токенов
+; @example
+;   tokenizer source_code, "main.ksk"
 f_tokenizer:
   ; символы = Список(код)
   get_arg 0
@@ -1225,6 +1232,13 @@ f_tokenizer:
   mov rax, r12
   ret
 
+; @function find_string
+; @description Находит строку в списке символов, начиная с указанной позиции
+; @param list - список символов
+; @param start - начальная позиция поиска
+; @return Найденная строка
+; @example
+;   find_string char_list, start_pos
 f_find_string:
   get_arg 0
   mov r14, rax
@@ -1443,6 +1457,13 @@ f_find_string:
 
     exit -1
 
+; @function syntax_error
+; @description Выводит сообщение об ошибке синтаксиса
+; @param file_stack - стек файлов
+; @param message - сообщение об ошибке
+; @return Нет возвращаемого значения
+; @example
+;   syntax_error file_stack, "Ожидался символ ';'"
 f_syntax_error:
   list
   mov rbx, rax
@@ -1595,6 +1616,17 @@ f_syntax_error:
 
   ret
 
+; @function dump_currect_position
+; @description Выводит текущую позицию в коде для отладки
+; @param file_name - имя файла
+; @param code - исходный код
+; @param start_line - начальная строка
+; @param start_column - начальный столбец
+; @param stop_line - конечная строка
+; @param stop_column - конечный столбец
+; @return Нет возвращаемого значения
+; @example
+;   dump_currect_position "main.ksk", code, 10, 5, 10, 15
 f_dump_currect_position:
   list
   mov rbx, rax
@@ -1626,6 +1658,17 @@ f_dump_currect_position:
 
   ret
 
+; @function format_token
+; @description Форматирует токен с информацией о позиции
+; @param type - тип токена
+; @param value - значение токена
+; @param start_line - начальная строка
+; @param start_column - начальный столбец
+; @param stop_line - конечная строка
+; @param stop_column - конечный столбец
+; @return Отформатированный токен
+; @example
+;   format_token ЧИСЛО, "42", 1, 1, 1, 2
 f_format_token:
   dictionary
   mov rbx, rax

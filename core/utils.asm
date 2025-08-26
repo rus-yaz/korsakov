@@ -1,11 +1,18 @@
 ; Копирайт © 2025 ООО «РУС.ЯЗ»
 ; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
 
+; @function buffer_length
+; @description Возвращает длину буфера (количество символов до нулевого байта)
+; @param pointer - указатель на буфер для измерения длины
+; @return Количество символов в буфере (без учета нулевого байта)
+; @example
+;   raw_string "Hello"
+;   buffer_length rax  ; Вернёт 5
 f_buffer_length:
   get_arg 0
   mov rcx, 0 ; Счётчик
 
-  .while:
+  @@:
     ; Сравниваем текущий байт с нулём
     mov bl, [rax + rcx]
 
@@ -20,6 +27,14 @@ f_buffer_length:
 
   ret
 
+; @function sys_print
+; @description Выводит данные в стандартный поток вывода через системный вызов
+; @param pointer - указатель на данные для вывода
+; @param size - размер данных для вывода
+; @example
+;   raw_string "Hello"
+;   buffer_length rax
+;   sys_print rbx, rax  ; Выводит данные в стандартный поток вывода
 f_sys_print:
   get_arg 1
   mov rbx, rax
@@ -31,6 +46,14 @@ f_sys_print:
 
   ret
 
+; @function sys_error
+; @description Выводит данные в стандартный поток ошибок через системный вызов
+; @param pointer - указатель на данные для вывода
+; @param size - размер данных для вывода
+; @example
+;   raw_string "Error"
+;   buffer_length rax
+;   sys_error rbx, rax  ; Выводит данные в стандартный поток вывода
 f_sys_error:
   get_arg 1
   mov rbx, rax
@@ -42,6 +65,13 @@ f_sys_error:
 
   ret
 
+; @function mem_copy
+; @description Копирует блоки (по 8 байт) памяти из источника в назначение
+; @param source - указатель на источник данных
+; @param destination - указатель на место назначения
+; @param size - количество блоков для копирования
+; @example
+;   mem_copy source_ptr, dest_ptr, block_count  ; Копирование block_count блоков из source_ptr в dest_ptr
 f_mem_copy:
   get_arg 0
   mov rsi, rax ; Источник
@@ -54,6 +84,15 @@ f_mem_copy:
 
   ret
 
+; @function type_to_string
+; @description
+;   Преобразует тип объекта в строковое представление
+;   Если тип не найден, то произойдёт выход ошибкой
+; @param type - тип объекта для преобразования
+; @return Строковое представление типа
+; @example
+;   type_to_string INTEGER  ; Возвращает "Целое число"
+;   type_to_string STRING   ; Возвращает "Строка"
 f_type_to_string:
   get_arg 0
 
@@ -142,6 +181,15 @@ f_type_to_string:
   error rax
   exit -1
 
+; @function type_full_size
+; @description
+;   Возвращает полный размер объекта указанного типа
+;   Если тип не найден, то произойдёт выход ошибкой
+; @param type - тип объекта для определения размера
+; @return Размер объекта в блоках
+; @example
+;   type_full_size INTEGER  ; Возвращает размер целого числа
+;   type_full_size STRING   ; Возвращает размер заголовка строки
 f_type_full_size:
   get_arg 0
 
@@ -197,6 +245,14 @@ f_type_full_size:
   error rax
   exit -1
 
+; @function check_type
+; @description
+;   Проверяет, что объект имеет указанный тип
+;   Если тип не совпадает, то произойдёт выход ошибкой
+; @param value - указатель на объект для проверки
+; @param type - ожидаемый тип объекта
+; @example
+;   check_type some_variable, INTEGER  ; Проверяет, что переменная — целое число
 f_check_type:
   get_arg 0
   mov r8, [rax]

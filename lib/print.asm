@@ -1,6 +1,12 @@
 ; Копирайт © 2025 ООО «РУС.ЯЗ»
 ; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
 
+; @function print_raw
+; @description Выводит сырой буфер в стандартный вывод
+; @param raw_string_link - указатель на сырой буфер для вывода
+; @example
+;   raw_string "Hello"
+;   print_raw rax  ; выводит "Hello"
 f_print_raw:
   get_arg 0
   mov rsi, rax
@@ -13,6 +19,12 @@ f_print_raw:
 
   ret
 
+; @function print_binary
+; @description Выводит бинарную строку в стандартный вывод
+; @param binary_string_link - указатель на бинарную строку для вывода
+; @example
+;   binary_string "Hello"
+;   print_binary rax  ; выводит "Hello"
 f_print_binary:
   get_arg 0
   add rax, BINARY_HEADER*8
@@ -20,6 +32,16 @@ f_print_binary:
   print_raw rax
   ret
 
+; @function print
+; @description Выводит список объектов в стандартный вывод с разделителями
+; @param arguments - список объектов для вывода
+; @param separator=0 - разделитель между элементами
+; @param end_of_string=0 - символ в конце вывода
+; @example
+;   list
+;   list_append rax, "Hello"
+;   list_append rax, "World"
+;   print rax  ; выводит "Hello World\n"
 f_print:
   get_arg 0
   mov rbx, rax

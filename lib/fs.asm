@@ -1,6 +1,11 @@
 ; Копирайт © 2025 ООО «РУС.ЯЗ»
 ; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
 
+; @function getcwd
+; @description Возвращает текущую рабочую директорию
+; @return Путь к текущей рабочей директории
+; @example
+;   getcwd  ; возвращает текущую рабочую директорию
 f_getcwd:
   sub rsp, MAX_PATH_LENGTH
   mov rax, rsp
@@ -24,6 +29,12 @@ f_getcwd:
   buffer_to_string rax
   ret
 
+; @function chdir
+; @description Изменяет текущую рабочую директорию
+; @param path - путь к новой рабочей директории
+; @example
+;   string "/home/user"
+;   chdir rax  ; изменяет рабочую директорию
 f_chdir:
   get_arg 0
   mov rbx, rax
@@ -93,6 +104,13 @@ f_chdir:
   error rax
   exit -1
 
+; @function readlink
+; @description Читает содержимое символической ссылки
+; @param path - путь к символической ссылке
+; @return Содержимое символической ссылки
+; @example
+;   string "/path/to/link"
+;   readlink rax  ; читает содержимое символической ссылки
 f_readlink:
   get_arg 0
   mov rbx, rax
@@ -128,12 +146,22 @@ f_readlink:
 
   ret
 
+; @function get_exe_path
+; @description Возвращает путь к исполняемому файлу программы
+; @return Путь к исполняемому файлу
+; @example
+;   get_exe_path  ; возвращает путь к исполняемому файлу
 f_get_exe_path:
   string "/proc/self/exe"
   readlink rax
 
   ret
 
+; @function get_exe_directory
+; @description Возвращает директорию, в которой находится исполняемый файл программы
+; @return Путь к директории исполняемого файла
+; @example
+;   get_exe_directory  ; возвращает директорию исполняемого файла
 f_get_exe_directory:
   get_exe_path
   mov rbx, rax

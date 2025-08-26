@@ -247,6 +247,14 @@ macro add_code [code*] {
   list_append_link rdx, rax
 }
 
+; @function interpreter
+; @debug
+; @description Интерпретирует абстрактное синтаксическое дерево (AST) в заданном контексте
+; @param ast - абстрактное синтаксическое дерево для интерпретации
+; @param context - контекст выполнения
+; @return Список результатов интерпретации всех узлов AST
+; @example
+;   interpreter ast_tree, execution_context
 f_interpreter:
   get_arg 0
   mov rbx, rax
@@ -279,6 +287,14 @@ f_interpreter:
   mov rax, r8
   ret
 
+; @function interpret
+; @debug
+; @description Интерпретирует отдельный узел AST в зависимости от его типа
+; @param node - узел AST для интерпретации
+; @param context - контекст выполнения
+; @return Результат интерпретации узла
+; @example
+;   interpret node, context
 f_interpret:
   get_arg 0
   mov rbx, rax
@@ -447,6 +463,14 @@ f_interpret:
   error rax
   exit -1
 
+; @function interpret_body
+; @debug
+; @description Интерпретирует тело программы (список узлов)
+; @param node - узел, содержащий тело программы
+; @param context - контекст выполнения
+; @return Результат интерпретации тела программы
+; @example
+;   interpret_body body_node, context
 f_interpret_body:
   get_arg 0
   mov rbx, rax
@@ -506,6 +530,14 @@ f_interpret_body:
   mov rax, rdx
   ret
 
+; @function interpret_assign_link
+; @debug
+; @description Интерпретирует присваивание ссылки переменной
+; @param node - узел присваивания ссылки
+; @param context - контекст выполнения
+; @return Результат присваивания ссылки
+; @example
+;   interpret_assign_link assign_node, context
 f_interpret_assign_link:
   get_arg 0
   mov rbx, rax
@@ -551,6 +583,14 @@ f_interpret_assign_link:
   assign_link rax, r9, r8
   ret
 
+; @function interpret_assign
+; @debug
+; @description Интерпретирует присваивание значения переменной
+; @param node - узел присваивания
+; @param context - контекст выполнения
+; @return Результат присваивания значения
+; @example
+;   interpret_assign assign_node, context
 f_interpret_assign:
   get_arg 0
   mov rbx, rax
@@ -596,6 +636,14 @@ f_interpret_assign:
   assign rax, r9, r8
   ret
 
+; @function interpret_access_link
+; @debug
+; @description Интерпретирует доступ к ссылке переменной
+; @param node - узел доступа к ссылке
+; @param context - контекст выполнения
+; @return Значение ссылки переменной
+; @example
+;   interpret_access_link access_node, context
 f_interpret_access_link:
   get_arg 0
   mov rbx, rax
@@ -619,6 +667,14 @@ f_interpret_access_link:
   access_link rax, rdx
   ret
 
+; @function interpret_access
+; @debug
+; @description Интерпретирует доступ к переменной
+; @param node - узел доступа к переменной
+; @param context - контекст выполнения
+; @return Значение переменной
+; @example
+;   interpret_access access_node, context
 f_interpret_access:
   get_arg 0
   mov rbx, rax
@@ -642,6 +698,14 @@ f_interpret_access:
   access rax, rdx
   ret
 
+; @function interpret_unary_operation
+; @debug
+; @description Интерпретирует унарную операцию
+; @param node - узел унарной операции
+; @param context - контекст выполнения
+; @return Результат унарной операции
+; @example
+;   interpret_unary_operation unary_node, context
 f_interpret_unary_operation:
   get_arg 0
   mov rbx, rax
@@ -761,6 +825,14 @@ f_interpret_unary_operation:
   mov rax, r11
   ret
 
+; @function interpret_binary_operation
+; @debug
+; @description Интерпретирует бинарную операцию
+; @param node - узел бинарной операции
+; @param context - контекст выполнения
+; @return Результат бинарной операции
+; @example
+;   interpret_binary_operation binary_node, context
 f_interpret_binary_operation:
   get_arg 0
   mov rbx, rax
@@ -889,6 +961,14 @@ f_interpret_binary_operation:
   error rax
   exit -1
 
+; @function interpret_null
+; @debug
+; @description Интерпретирует узел null
+; @param node - узел null
+; @param context - контекст выполнения
+; @return Null значение
+; @example
+;   interpret_null null_node, context
 f_interpret_null:
   get_arg 0
   mov rbx, rax
@@ -898,6 +978,14 @@ f_interpret_null:
   null
   ret
 
+; @function interpret_integer
+; @debug
+; @description Интерпретирует целочисленное значение
+; @param node - узел целого числа
+; @param context - контекст выполнения
+; @return Целочисленное значение
+; @example
+;   interpret_integer integer_node, context
 f_interpret_integer:
   get_arg 0
   mov rbx, rax
@@ -928,6 +1016,14 @@ f_interpret_integer:
   string_to_integer rax
   ret
 
+; @function interpret_float
+; @debug
+; @description Интерпретирует вещественное число
+; @param node - узел вещественного числа
+; @param context - контекст выполнения
+; @return Вещественное число
+; @example
+;   interpret_float float_node, context
 f_interpret_float:
   get_arg 0
   mov rbx, rax
@@ -991,6 +1087,14 @@ f_interpret_boolean:
 
   ret
 
+; @function interpret_list
+; @debug
+; @description Интерпретирует список
+; @param node - узел списка
+; @param context - контекст выполнения
+; @return Список значений
+; @example
+;   interpret_list list_node, context
 f_interpret_list:
   get_arg 0
   mov rbx, rax
@@ -1030,6 +1134,14 @@ f_interpret_list:
   mov rax, r9
   ret
 
+; @function interpret_string
+; @debug
+; @description Интерпретирует строку
+; @param node - узел строки
+; @param context - контекст выполнения
+; @return Строковое значение
+; @example
+;   interpret_string string_node, context
 f_interpret_string:
   get_arg 0
   mov rbx, rax
@@ -1095,6 +1207,14 @@ f_interpret_string:
   mov rax, rdx
   ret
 
+; @function interpret_dictionary
+; @debug
+; @description Интерпретирует словарь
+; @param node - узел словаря
+; @param context - контекст выполнения
+; @return Словарь
+; @example
+;   interpret_dictionary dict_node, context
 f_interpret_dictionary:
   get_arg 0
   mov rbx, rax
@@ -1109,6 +1229,14 @@ f_interpret_dictionary:
 
   ret
 
+; @function interpret_if
+; @debug
+; @description Интерпретирует условную конструкцию if
+; @param node - узел условной конструкции
+; @param context - контекст выполнения
+; @return Результат выполнения соответствующей ветки
+; @example
+;   interpret_if if_node, context
 f_interpret_if:
   get_arg 0
   mov rbx, rax
@@ -1181,6 +1309,14 @@ f_interpret_if:
 
   ret
 
+; @function interpret_while
+; @debug
+; @description Интерпретирует цикл while
+; @param node - узел цикла while
+; @param context - контекст выполнения
+; @return Результат выполнения цикла
+; @example
+;   interpret_while while_node, context
 f_interpret_while:
   get_arg 0
   mov rbx, rax
@@ -1263,6 +1399,14 @@ f_interpret_while:
   mov rax, r9
   ret
 
+; @function interpret_for
+; @debug
+; @description Интерпретирует цикл for
+; @param node - узел цикла for
+; @param context - контекст выполнения
+; @return Результат выполнения цикла
+; @example
+;   interpret_for for_node, context
 f_interpret_for:
   get_arg 0
   mov rbx, rax
@@ -1532,6 +1676,14 @@ f_interpret_for:
   mov rax, rbx
   ret
 
+; @function interpret_skip
+; @debug
+; @description Интерпретирует оператор skip (пропуск)
+; @param node - узел оператора skip
+; @param context - контекст выполнения
+; @return Null значение
+; @example
+;   interpret_skip skip_node, context
 f_interpret_skip:
   get_arg 0
   mov rbx, rax
@@ -1563,6 +1715,14 @@ f_interpret_skip:
   null
   ret
 
+; @function interpret_break
+; @debug
+; @description Интерпретирует оператор break
+; @param node - узел оператора break
+; @param context - контекст выполнения
+; @return Специальное значение для прерывания цикла
+; @example
+;   interpret_break break_node, context
 f_interpret_break:
   get_arg 0
   mov rbx, rax
@@ -1594,6 +1754,14 @@ f_interpret_break:
   null
   ret
 
+; @function interpret_function
+; @debug
+; @description Интерпретирует определение функции
+; @param node - узел определения функции
+; @param context - контекст выполнения
+; @return Объект функции
+; @example
+;   interpret_function function_node, context
 f_interpret_function:
   get_arg 0
   mov rbx, rax
@@ -1718,6 +1886,14 @@ f_interpret_function:
   assign r8, rax, r9
   ret
 
+; @function interpret_call
+; @debug
+; @description Интерпретирует вызов функции
+; @param node - узел вызова функции
+; @param context - контекст выполнения
+; @return Результат выполнения функции
+; @example
+;   interpret_call call_node, context
 f_interpret_call:
   get_arg 0
   mov rbx, rax
@@ -2078,6 +2254,14 @@ f_interpret_call:
   list_get_link r8, rax
   ret
 
+; @function interpret_return
+; @debug
+; @description Интерпретирует оператор return
+; @param node - узел оператора return
+; @param context - контекст выполнения
+; @return Значение для возврата из функции
+; @example
+;   interpret_return return_node, context
 f_interpret_return:
   get_arg 0
   mov rbx, rax

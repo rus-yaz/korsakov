@@ -25,6 +25,13 @@
 ;   Сложить ссылки на пары словарей
 ;   Сложить копии пар словарей
 
+; @function dictionary
+; @description Создаёт новый словарь с указанной начальной вместимостью
+; @param capacity=2 - начальная вместимость словаря
+; @return Словарь
+; @example
+;   dictionary     ; Создаёт словарь с вместимостью 2
+;   dictionary 10  ; Создаёт словарь с вместимостью 10
 f_dictionary:
   get_arg 0
   mov rbx, rax
@@ -56,6 +63,29 @@ f_dictionary:
 
   ret
 
+; @function dictionary_from_list
+; @description Создаёт словарь из списка пар ключ-значение
+; @param list - список пар ключ-значение для создания словаря
+; @return Словарь
+; @example
+;   ; Первая пара
+;   list
+;   mov rbx, rax
+;   list_append_link rbx, key1
+;   list_append_link rbx, value1
+;
+;   ; Вторая пара
+;   list
+;   mov rcx, rax
+;   list_append_link rcx, key2
+;   list_append_link rcx, value2
+;
+;   ; Список всех пар
+;   list
+;   list_append_link rax, rcx
+;   list_append_link rax, rbx
+;
+;   dictionary_from_list rax
 f_dictionary_from_list:
   get_arg 0
   mov rbx, rax
@@ -112,6 +142,14 @@ f_dictionary_from_list:
 
   ret
 
+; @function dictionary_length
+; @description Возвращает количество пар ключ-значение в словаре
+; @param dictionary - словарь для измерения длины
+; @return Сырое число - Количество пар в словаре
+; @example
+;   dictionary
+;   dictionary_set rax, key, value
+;   dictionary_length rax  ; Вернёт 1
 f_dictionary_length:
   get_arg 0
   check_type rax, DICTIONARY
@@ -119,6 +157,13 @@ f_dictionary_length:
   mov rax, [rax + 8*1]
   ret
 
+; @function dictionary_capacity
+; @description Возвращает текущую вместимость словаря
+; @param dictionary - словарь для получения вместимости
+; @return Вместимость словаря (сырое число)
+; @example
+;   dictionary 10
+;   dictionary_capacity rax  ; Вернёт 10
 f_dictionary_capacity:
   get_arg 0
   check_type rax, DICTIONARY
@@ -126,6 +171,12 @@ f_dictionary_capacity:
   mov rax, [rax + 8*2]
   ret
 
+; @function dictionary_expand_capacity
+; @description Увеличивает вместимость словаря в два раза
+; @param dictionary - словарь для расширения вместимости
+; @example
+;   dictionary 2
+;   dictionary_expand_capacity rax  ; Увеличивает вместимость до 4
 f_dictionary_expand_capacity:
   get_arg 0
   mov rbx, rax
@@ -148,6 +199,20 @@ f_dictionary_expand_capacity:
 
   ret
 
+; @function dictionary_set_link
+
+; @description Устанавливает пару ключ-значение в словарь (без копирования)
+; @param dictionary - словарь для установки пары
+; @param key - ключ для установки
+; @param value - значение для установки
+; @return Словарь с установленной парой
+; @example
+;   dictionary
+;   mov rbx, rax
+;   string "name"
+;   mov rcx, rax
+;   string "John"
+;   dictionary_set_link rbx, rcx, rax
 f_dictionary_set_link:
   get_arg 0
   mov rbx, rax
@@ -210,6 +275,17 @@ f_dictionary_set_link:
 
   ret
 
+; @function dictionary_set
+; @description Устанавливает пару ключ-значение в словарь (с копированием)
+; @param dictionary - словарь для установки пары
+; @param key - ключ для установки
+; @param value - значение для установки
+; @return Словарь с установленной парой
+; @example
+;   dictionary
+;   string "name"
+;   string "John"
+;   dictionary_set rax, rbx, rcx
 f_dictionary_set:
   get_arg 0
   mov rbx, rax
@@ -227,6 +303,16 @@ f_dictionary_set:
 
   ret
 
+; @function dictionary_get_link
+; @description Получает значение по ключу из словаря (без копирования)
+; @param dictionary - словарь для получения значения
+; @param key - ключ для поиска
+; @param default=0 - значение по умолчанию, если ключ не найден
+; @return Значение по ключу или значение по умолчанию
+; @example
+;   dictionary
+;   dictionary_set rax, key, value
+;   dictionary_get_link rax, key  ; возвращает value
 f_dictionary_get_link:
   get_arg 0
   mov rbx, rax
@@ -273,6 +359,16 @@ f_dictionary_get_link:
 
   ret
 
+; @function dictionary_get
+; @description Получает значение по ключу из словаря (с копированием)
+; @param dictionary - словарь для получения значения
+; @param key - ключ для поиска
+; @param default=0 - значение по умолчанию, если ключ не найден
+; @return Копия значения по ключу или значение по умолчанию
+; @example
+;   dictionary
+;   dictionary_set rax, key, value
+;   dictionary_get rax, key  ; возвращает копию value
 f_dictionary_get:
   get_arg 0
   mov rbx, rax
@@ -287,6 +383,14 @@ f_dictionary_get:
 
   ret
 
+; @function dictionary_copy_links
+; @description Создает копию словаря со ссылками на элементы
+; @param dictionary - словарь для копирования
+; @return Копия словаря со ссылками
+; @example
+;   dictionary
+;   dictionary_set rax, key, value
+;   dictionary_copy_links rax  ; создает копию со ссылками
 f_dictionary_copy_links:
   get_arg 0
   mov rbx, rax
@@ -304,6 +408,14 @@ f_dictionary_copy_links:
   mov rax, rcx
   ret
 
+; @function dictionary_copy
+; @description Создает полную копию словаря с копированием всех элементов
+; @param dictionary - словарь для копирования
+; @return Полная копия словаря
+; @example
+;   dictionary
+;   dictionary_set rax, key, value
+;   dictionary_copy rax  ; создает полную копию
 f_dictionary_copy:
   get_arg 0
   mov rbx, rax
@@ -338,6 +450,14 @@ f_dictionary_copy:
   mov rax, rcx
   ret
 
+; @function dictionary_items_links
+; @description Возвращает список пар ключ-значение как ссылки
+; @param dictionary - словарь для получения пар
+; @return Список пар [ключ, значение] как ссылки
+; @example
+;   dictionary
+;   dictionary_set rax, key, value
+;   dictionary_items_links rax  ; возвращает список пар
 f_dictionary_items_links:
   get_arg 0
   check_type rax, DICTIONARY
@@ -346,6 +466,14 @@ f_dictionary_items_links:
   mem_mov [rax + 8*0], LIST
   ret
 
+; @function dictionary_items
+; @description Возвращает список пар ключ-значение как копии
+; @param dictionary - словарь для получения пар
+; @return Список пар [ключ, значение] как копии
+; @example
+;   dictionary
+;   dictionary_set rax, key, value
+;   dictionary_items rax  ; возвращает список пар как копии
 f_dictionary_items:
   get_arg 0
   check_type rax, DICTIONARY
@@ -355,6 +483,15 @@ f_dictionary_items:
 
   ret
 
+; @function dictionary_keys_links
+; @description Возвращает список ключей словаря как ссылки
+; @param dictionary - словарь для получения ключей
+; @return Список ключей как ссылки
+; @example
+;   dictionary
+;   dictionary_set rax, key1, value1
+;   dictionary_set rax, key2, value2
+;   dictionary_keys_links rax  ; возвращает [key1, key2]
 f_dictionary_keys_links:
   get_arg 0
   mov rbx, rax
@@ -396,6 +533,15 @@ f_dictionary_keys_links:
 
   ret
 
+; @function dictionary_keys
+; @description Возвращает список ключей словаря как копии
+; @param dictionary - словарь для получения ключей
+; @return Список ключей как копии
+; @example
+;   dictionary
+;   dictionary_set rax, key1, value1
+;   dictionary_set rax, key2, value2
+;   dictionary_keys rax  ; возвращает копии ключей
 f_dictionary_keys:
   get_arg 0
   check_type rax, DICTIONARY
@@ -405,6 +551,15 @@ f_dictionary_keys:
 
   ret
 
+; @function dictionary_values_links
+; @description Возвращает список значений словаря как ссылки
+; @param dictionary - словарь для получения значений
+; @return Список значений как ссылки
+; @example
+;   dictionary
+;   dictionary_set rax, key1, value1
+;   dictionary_set rax, key2, value2
+;   dictionary_values_links rax  ; возвращает [value1, value2]
 f_dictionary_values_links:
   get_arg 0
   mov rbx, rax
@@ -446,6 +601,15 @@ f_dictionary_values_links:
 
   ret
 
+; @function dictionary_values
+; @description Возвращает список значений словаря как копии
+; @param dictionary - словарь для получения значений
+; @return Список значений как копии
+; @example
+;   dictionary
+;   dictionary_set rax, key1, value1
+;   dictionary_set rax, key2, value2
+;   dictionary_values rax  ; возвращает копии значений
 f_dictionary_values:
   get_arg 0
   check_type rax, DICTIONARY
@@ -455,6 +619,17 @@ f_dictionary_values:
 
   ret
 
+; @function dictionary_extend_links
+; @description Добавляет все пары из другого словаря как ссылки
+; @param dictionary - целевой словарь для расширения
+; @param other - словарь с парами для добавления
+; @return Расширенный словарь
+; @example
+;   dictionary
+;   dictionary_set rax, key1, value1
+;   dictionary
+;   dictionary_set rbx, key2, value2
+;   dictionary_extend_links rax, rbx
 f_dictionary_extend_links:
   get_arg 0
   mov rbx, rax
@@ -494,6 +669,17 @@ f_dictionary_extend_links:
   mov rax, rbx
   ret
 
+; @function dictionary_extend
+; @description Добавляет все пары из другого словаря как копии
+; @param dictionary - целевой словарь для расширения
+; @param other - словарь с парами для добавления
+; @return Расширенный словарь
+; @example
+;   dictionary
+;   dictionary_set rax, key1, value1
+;   dictionary
+;   dictionary_set rbx, key2, value2
+;   dictionary_extend rax, rbx
 f_dictionary_extend:
   get_arg 0
   mov rbx, rax
@@ -508,6 +694,17 @@ f_dictionary_extend:
 
   ret
 
+; @function dictionary_add_links
+; @description Создает новый словарь как объединение двух словарей со ссылками
+; @param dictionary1 - первый словарь для объединения
+; @param dictionary2 - второй словарь для объединения
+; @return Новый словарь с объединенными парами
+; @example
+;   dictionary
+;   dictionary_set rax, key1, value1
+;   dictionary
+;   dictionary_set rbx, key2, value2
+;   dictionary_add_links rax, rbx
 f_dictionary_add_links:
   get_arg 0
   mov rbx, rax
@@ -519,6 +716,17 @@ f_dictionary_add_links:
 
   ret
 
+; @function dictionary_add
+; @description Создает новый словарь как объединение двух словарей с копиями
+; @param dictionary1 - первый словарь для объединения
+; @param dictionary2 - второй словарь для объединения
+; @return Новый словарь с объединенными парами
+; @example
+;   dictionary
+;   dictionary_set rax, key1, value1
+;   dictionary
+;   dictionary_set rbx, key2, value2
+;   dictionary_add rax, rbx
 f_dictionary_add:
   get_arg 0
   mov rbx, rax

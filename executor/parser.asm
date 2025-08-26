@@ -256,6 +256,13 @@ macro statement {
   debug_end "statement"
 }
 
+; @function parser
+; @debug
+; @description Основная функция парсера, обрабатывает список токенов и создает AST
+; @param tokens - список токенов для парсинга
+; @return Абстрактное синтаксическое дерево (AST)
+; @example
+;   parser token_list
 f_parser:
   get_arg 0
   check_type rax, LIST
@@ -290,6 +297,11 @@ f_parser:
   mov rax, rbx
   ret
 
+; @function next
+; @description Переходит к следующему токену в потоке
+; @return Следующий токен
+; @example
+;   next
 f_next:
   mov rbx, [индекс]
   mov rbx, [rbx + INTEGER_HEADER*8]
@@ -307,6 +319,11 @@ f_next:
   mov rax, [индекс]
   ret
 
+; @function skip_newline
+; @description Пропускает символы новой строки
+; @return Нет возвращаемого значения
+; @example
+;   skip_newline
 f_skip_newline:
   token_check_type [токен], [ТИП_ПЕРЕНОС_СТРОКИ]
   cmp rax, 1
@@ -316,6 +333,12 @@ f_skip_newline:
 
   ret
 
+; @function revert
+; @description Возвращается назад на указанное количество токенов
+; @param amount=0 - количество токенов для возврата (по умолчанию 0)
+; @return Нет возвращаемого значения
+; @example
+;   revert 2
 f_revert:
   get_arg 0
   ; RAX — amount = 0
@@ -334,6 +357,10 @@ f_revert:
   mov rax, [токен]
   ret
 
+; @function update_token
+; @description Обновляет текущий токен
+; @example
+;   update_token
 f_update_token:
   mov rbx, [индекс]
   mov rbx, [rbx + INTEGER_HEADER*8]
@@ -355,6 +382,11 @@ f_update_token:
   .skip:
   ret
 
+; @function expression
+; @description Парсит выражение
+; @return Узел выражения
+; @example
+;   expression
 f_expression:
   ; RBX — index
   integer_copy [индекс]
@@ -575,6 +607,14 @@ f_expression:
 
   ret
 
+; @function binary_operation
+; @description Парсит бинарную операцию
+; @param operators - список операторов
+; @param left_function - функция для парсинга левого операнда
+; @param right_function=0 - функция для парсинга правого операнда
+; @return Узел бинарной операции
+; @example
+;   binary_operation ["+", "-"], atom
 f_binary_operation:
   get_arg 0
   mov rdx, rax
@@ -665,6 +705,11 @@ f_binary_operation:
   mov rax, r8
   ret
 
+; @function atom
+; @description Парсит атомарное выражение
+; @return Узел атомарного выражения
+; @example
+;   atom
 f_atom:
   ; RBX — token
   dictionary_copy [токен]
@@ -1039,6 +1084,11 @@ f_atom:
   mov rax, rbx
   ret
 
+; @function call_expression
+; @description Парсит вызов функции
+; @return Узел вызова функции
+; @example
+;   call_expression
 f_call_expression:
   ; RBX — atom
   atom
@@ -1162,6 +1212,11 @@ f_call_expression:
   call_node rbx, rcx, rdx
   ret
 
+; @function power_root
+; @description Парсит возведение в степень и извлечение корня
+; @return Узел операции возведения в степень или извлечения корня
+; @example
+;   power_root
 f_power_root:
   list
   list_append_link rax, [ТИП_ВОЗВЕДЕНИЕ_В_СТЕПЕНЬ]
@@ -1171,6 +1226,11 @@ f_power_root:
 
   ret
 
+; @function factor
+; @description Парсит множитель (фактор)
+; @return Узел множителя
+; @example
+;   factor
 f_factor:
   ; RBX — token
   mov rbx, [токен]
@@ -1196,6 +1256,11 @@ f_factor:
 
   ret
 
+; @function term
+; @description Парсит терм (слагаемое)
+; @return Узел терма
+; @example
+;   term
 f_term:
   list
   list_append_link rax, [ТИП_УМНОЖЕНИЕ]
@@ -1204,6 +1269,11 @@ f_term:
   binary_operation rax, f_factor
   ret
 
+; @function comparison_expression
+; @description Парсит выражение сравнения
+; @return Узел выражения сравнения
+; @example
+;   comparison_expression
 f_comparison_expression:
   token_check_keyword [токен], [НЕ]
   cmp rax, 1
@@ -1223,6 +1293,11 @@ f_comparison_expression:
 
   ret
 
+; @function arithmetical_expression
+; @description Парсит арифметическое выражение
+; @return Узел арифметического выражения
+; @example
+;   arithmetical_expression
 f_arithmetical_expression:
   list
   list_append_link rax, [ТИП_СЛОЖЕНИЕ]
@@ -1232,6 +1307,11 @@ f_arithmetical_expression:
 
   ret
 
+; @function list_expression
+; @description Парсит выражение списка
+; @return Узел списка
+; @example
+;   list_expression
 f_list_expression:
   token_check_type [токен], [ТИП_ОТКРЫВАЮЩАЯ_СКОБКА_СПИСКА]
   cmp rax, 1
@@ -1401,6 +1481,11 @@ f_list_expression:
   list_node rcx
   ret
 
+; @function check_expression
+; @description Парсит условную конструкцию check
+; @return Узел условной конструкции check
+; @example
+;   check_expression
 f_check_expression:
   ; RBX — cases
   ; RCX — else_case
@@ -1646,6 +1731,11 @@ f_check_expression:
   check_node rbx, r14
   ret
 
+; @function if_expression
+; @description Парсит условную конструкцию if
+; @return Узел условной конструкции if
+; @example
+;   if_expression
 f_if_expression:
   ; RBX — cases
   ; RCX — else_case
@@ -1810,6 +1900,11 @@ f_if_expression:
 
     ret
 
+; @function else_expression
+; @description Парсит блок else
+; @return Узел блока else
+; @example
+;   else_expression
 f_else_expression:
   ; RBX — else_case
 
@@ -1882,6 +1977,11 @@ f_else_expression:
 
   ret
 
+; @function for_expression
+; @description Парсит цикл for
+; @return Узел цикла for
+; @example
+;   for_expression
 f_for_expression:
   ; RBX — else_case
   mov rbx, 0
@@ -2098,6 +2198,11 @@ f_for_expression:
 
   ret
 
+; @function while_expression
+; @description Парсит цикл while
+; @return Узел цикла while
+; @example
+;   while_expression
 f_while_expression:
   ; RBX — else_case
 
@@ -2209,6 +2314,13 @@ f_while_expression:
 
   ret
 
+; @function function_expression
+; @description Парсит определение функции или метода
+; @param is_method=0 - флаг, указывающий что это метод
+; @return Узел функции или метода
+; @example
+;   function_expression 1  ; для метода
+;   function_expression    ; для функции
 f_function_expression:
   get_arg 0
   mov rbx, rax
@@ -2510,6 +2622,11 @@ f_function_expression:
   function_node rcx, rdx, r10, 1
   ret
 
+; @function class_expression
+; @description Парсит определение класса
+; @return Узел класса
+; @example
+;   class_expression
 f_class_expression:
   token_check_keyword [токен], [КЛАСС]
   cmp rax, 1
@@ -2808,6 +2925,11 @@ f_class_expression:
 
   ret
 
+; @function delete_expression
+; @description Парсит оператор delete
+; @return Узел оператора delete
+; @example
+;   delete_expression
 f_delete_expression:
   token_check_keyword [токен], [УДАЛИТЬ]
   cmp rax, 1
@@ -2860,6 +2982,11 @@ f_delete_expression:
 
   ret
 
+; @function include_statement
+; @description Парсит оператор include
+; @return Узел оператора include
+; @example
+;   include_statement
 f_include_statement:
   token_check_keyword [токен], [ВКЛЮЧИТЬ]
   cmp rax, 1
@@ -2935,6 +3062,11 @@ f_include_statement:
     error rax
     exit -1
 
+; @function statement
+; @description Парсит оператор (statement)
+; @return Узел оператора
+; @example
+;   statement
 f_statement:
   token_check_keyword [токен], [ВЕРНУТЬ]
   cmp rax, 1

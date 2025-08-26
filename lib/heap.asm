@@ -1,6 +1,10 @@
 ; Копирайт © 2025 ООО «РУС.ЯЗ»
 ; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
 
+; @function allocate_heap
+; @description Выделяет новую страницу памяти для кучи
+; @example
+;   allocate_heap  ; выделяет новую страницу памяти
 f_allocate_heap:
   sys_mmap 0,\                                  ; Адрес (если 0, находится автоматически)
            PAGE_SIZE,\                          ; Количество памяти для аллокации
@@ -51,6 +55,11 @@ f_allocate_heap:
 
   ret
 
+; @function free_block
+; @description Освобождает блок памяти в куче
+; @param block - блок памяти для освобождения
+; @example
+;   free_block some_block  ; освобождает блок памяти
 f_free_block:
   get_arg 0
 
@@ -115,6 +124,12 @@ f_free_block:
 
   ret
 
+; @function merge_blocks
+; @description Объединяет два соседних блока памяти в куче
+; @param block_1 - первый блок для объединения
+; @param block_2 - второй блок для объединения
+; @example
+;   merge_blocks block1, block2  ; объединяет два блока памяти
 f_merge_blocks:
   get_arg 1
   mov rbx, rax
@@ -186,6 +201,11 @@ f_merge_blocks:
 
   ret
 
+; @function delete_block
+; @description Удаляет блок памяти из кучи
+; @param block - блок памяти для удаления
+; @example
+;   delete_block some_block  ; удаляет блок памяти
 f_delete_block:
   get_arg 0
   sub rax, HEAP_BLOCK_HEADER*4
@@ -259,6 +279,13 @@ f_delete_block:
 
   ret
 
+; @function create_block
+; @description Создает блок памяти указанного размера в куче
+; @param size - размер блока для создания
+; @return Указатель на созданный блок памяти
+; @example
+;   integer 1024
+;   create_block rax  ; создает блок памяти размером 1024 байта
 f_create_block:
   get_arg 0
 
