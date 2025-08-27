@@ -55,11 +55,18 @@ create_function_doc() {
     mkdir -p "$function_dir"
 
     # Обработка пустых значений
-    local safe_description=$(echo -e "${description:-Нет описания}")
-    local safe_params=$(echo -e "${params:-Нет параметров}")
-    local safe_return=$(echo -e "${return_value:-Нет возвращаемого значения}")
-    local safe_example=$(echo -e "${example:-Нет примеров}")
-    local safe_asm=$(echo -e "${asm_snippet:-Нет ASM snippet}")
+    local safe_description
+    local safe_params
+    local safe_return
+    local safe_example
+    local safe_asm
+
+    # Используем printf для корректной обработки escape-последовательностей
+    safe_description=$(printf '%b' "${description:-Нет описания}")
+    safe_params=$(printf '%b' "${params:-Нет параметров}")
+    safe_return=$(printf '%b' "${return_value:-Нет возвращаемого значения}")
+    safe_example=$(printf '%b' "${example:-Нет примеров}")
+    safe_asm=$(printf '%b' "${asm_snippet:-Нет ASM-вставки}")
 
     # Создание index.md для функции
     cat > "$function_dir/index.md" << EOF
