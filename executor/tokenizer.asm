@@ -680,14 +680,17 @@ _function tokenizer, rbx, rcx, rdx, r8, r9, r10, r11, r12, r13, r14
           cmp rax, 1
           jne .while_multiline_comment
 
-          integer_inc [КОНЕЦ_СТОЛБЕЦ]
-          integer_inc r13
+          integer_copy r13
+          integer_inc rax
           list_get_link r10, rax
 
           is_equal r9, rax
           boolean_value rax
           cmp rax, 1
           jne .while_multiline_comment
+
+          integer_inc [КОНЕЦ_СТОЛБЕЦ]
+          integer_inc r13
 
         jmp .continue
 

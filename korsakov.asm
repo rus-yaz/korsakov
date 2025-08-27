@@ -742,8 +742,8 @@ start:
   chdir rax
 
   tokenizer [код], r8
-
   mov [токены], rax
+
   if DEBUG eqtype
     list
     list_append_link rax, [токены]
