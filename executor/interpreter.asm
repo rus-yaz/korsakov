@@ -49,7 +49,7 @@ _function interpreter, rbx, rcx, rdx, r8
 ; @return Результат интерпретации узла
 ; @example
 ;   interpret node, context
-f_interpret:
+_function interpret, rbx, rcx
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -857,7 +857,7 @@ _function interpret_boolean, rbx, rcx
 ; @return Список значений
 ; @example
 ;   interpret_list list_node, context
-f_interpret_list:
+_function interpret_list, rbx, rcx, rdx, r8, r9
   get_arg 0
   mov rbx, rax
   get_arg 1

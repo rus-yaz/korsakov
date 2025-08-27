@@ -7,6 +7,7 @@ macro add_code [code*] {
 }
 
 ; @function compiler
+; @debug
 ; @description Основная функция компилятора, компилирует AST в машинный код
 ; @param ast - абстрактное синтаксическое дерево
 ; @param context - контекст компиляции
@@ -50,6 +51,7 @@ _function compiler, rbx, rcx, rdx, r8
   ret
 
 ; @function compile
+; @debug
 ; @description Компилирует отдельный узел AST
 ; @param node - узел AST для компиляции
 ; @param context - контекст компиляции
@@ -211,6 +213,7 @@ _function compile, rbx, rcx
   exit -1
 
 ; @function compile_body
+; @debug
 ; @description Компилирует тело программы (список узлов)
 ; @param node - узел, содержащий тело программы
 ; @param context - контекст компиляции
@@ -252,6 +255,7 @@ _function compile_body, rbx, rcx, rdx, r8, r9
   ret
 
 ; @function compile_assign
+; @debug
 ; @description Компилирует присваивание переменной
 ; @param node - узел присваивания
 ; @param context - контекст компиляции
@@ -310,6 +314,7 @@ _function compile_assign, rbx, rcx, rdx, r8
   ret
 
 ; @function compile_access
+; @debug
 ; @description Компилирует доступ к переменной
 ; @param node - узел доступа к переменной
 ; @param context - контекст компиляции
@@ -352,13 +357,14 @@ _function compile_access, rbx, rcx, rdx, r8
   ret
 
 ; @function compile_unary_operation
+; @debug
 ; @description Компилирует унарную операцию
 ; @param node - узел унарной операции
 ; @param context - контекст компиляции
 ; @return Скомпилированный код унарной операции
 ; @example
 ;   compile_unary_operation unary_node, context
-f_compile_unary_operation:
+_function compile_unary_operation, rbx, rcx, rdx, r8, r9, r11, r12
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -520,6 +526,7 @@ f_compile_unary_operation:
   ret
 
 ; @function compile_binary_operation
+; @debug
 ; @description Компилирует бинарную операцию
 ; @param node - узел бинарной операции
 ; @param context - контекст компиляции
@@ -670,6 +677,7 @@ _function compile_binary_operation, rbx, rcx, rdx, r8
   ret
 
 ; @function compile_null
+; @debug
 ; @description Компилирует узел null
 ; @param node - узел null
 ; @param context - контекст компиляции
@@ -691,6 +699,7 @@ _function compile_null, rbx, rcx, rdx
   ret
 
 ; @function compile_integer
+; @debug
 ; @description Компилирует целочисленное значение
 ; @param node - узел целого числа
 ; @param context - контекст компиляции
@@ -737,13 +746,14 @@ _function compile_integer, rbx, rcx, rdx
   ret
 
 ; @function compile_float
+; @debug
 ; @description Компилирует вещественное число
 ; @param node - узел вещественного числа
 ; @param context - контекст компиляции
 ; @return Скомпилированный код для вещественного числа
 ; @example
 ;   compile_float float_node, context
-f_compile_float:
+_function compile_float, rbx, rcx, rdx, r8, r9
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -792,6 +802,7 @@ f_compile_float:
   ret
 
 ; @function compile_boolean
+; @debug
 ; @description Компилирует логическое значение
 ; @param node - узел логического значения
 ; @param context - контекст компиляции
@@ -838,6 +849,7 @@ _function compile_boolean, rbx, rcx, rdx
 
 
 ; @function compile_list
+; @debug
 ; @description Компилирует список
 ; @param node - узел списка
 ; @param context - контекст компиляции
@@ -897,6 +909,7 @@ _function compile_list, rbx, rcx, rdx, r8
   ret
 
 ; @function compile_string
+; @debug
 ; @description Компилирует строку
 ; @param node - узел строки
 ; @param context - контекст компиляции
@@ -1034,6 +1047,7 @@ _function compile_string, rbx, rcx, rdx, r8, r9, r10, r11, r12, r13, r14
   ret
 
 ; @function compile_dictionary
+; @debug
 ; @description Компилирует словарь
 ; @param node - узел словаря
 ; @param context - контекст компиляции
@@ -1059,6 +1073,7 @@ _function compile_dictionary, rbx, rcx, rdx
   ret
 
 ; @function compile_if
+; @debug
 ; @description Компилирует условную конструкцию if
 ; @param node - узел условной конструкции
 ; @param context - контекст компиляции
@@ -1173,6 +1188,7 @@ _function compile_if, rbx, rcx, rdx, r8, r9, r10, r12, r13, r14
   ret
 
 ; @function compile_while
+; @debug
 ; @description Компилирует цикл while
 ; @param node - узел цикла while
 ; @param context - контекст компиляции
@@ -1285,6 +1301,7 @@ _function compile_while, rbx, rcx, rdx, r13, r14, r15
   ret
 
 ; @function compile_for
+; @debug
 ; @description Компилирует цикл for
 ; @param node - узел цикла for
 ; @param context - контекст компиляции
@@ -1494,6 +1511,7 @@ _function compile_for, rbx, rcx, rdx, r8, r9, r10, r11, r14, r15
   ret
 
 ; @function compile_skip
+; @debug
 ; @description Компилирует оператор skip
 ; @param node - узел оператора skip
 ; @param context - контекст компиляции
@@ -1536,6 +1554,7 @@ _function compile_skip, rbx, rcx, rdx, r8, r9
   ret
 
 ; @function compile_break
+; @debug
 ; @description Компилирует оператор break
 ; @param node - узел оператора break
 ; @param context - контекст компиляции
@@ -1578,6 +1597,7 @@ _function compile_break, rbx, rcx, rdx, r8, r9
   ret
 
 ; @function compile_function
+; @debug
 ; @description Компилирует определение функции
 ; @param node - узел определения функции
 ; @param context - контекст компиляции
@@ -1958,6 +1978,7 @@ _function compile_function, rbx, rcx, rdx, r8, r9, r10, r11, r12, r13, r14
   ret
 
 ; @function compile_call
+; @debug
 ; @description Компилирует вызов функции
 ; @param node - узел вызова функции
 ; @param context - контекст компиляции
@@ -2002,13 +2023,15 @@ _function compile_call, rbx, rcx, rdx
   ret
 
 ; @function compile_return
+; @debug
+; @debug
 ; @description Компилирует оператор return
 ; @param node - узел оператора return
 ; @param context - контекст компиляции
 ; @return Скомпилированный код оператора return
 ; @example
 ;   compile_return return_node, context
-f_compile_return:
+_function compile_return, rbx, rcx, rdx, r8
   get_arg 0
   mov rbx, rax
   get_arg 1

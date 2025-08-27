@@ -195,7 +195,6 @@ _function dictionary_expand_capacity, rax, rbx, rcx
   ret
 
 ; @function dictionary_set_link
-
 ; @description Устанавливает пару ключ-значение в словарь (без копирования)
 ; @param dictionary - словарь для установки пары
 ; @param key - ключ для установки

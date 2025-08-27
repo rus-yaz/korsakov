@@ -311,7 +311,7 @@ _function string_copy_links, rbx, rcx
 ; @example
 ;   string "Hello"
 ;   string_copy rax  ; создает полную копию
-_function string_copy, rbx, rcx, rdx, r8, r9, r10
+_function string_copy, rbx, rcx, rdx, r8, r9
   get_arg 0
   mov rbx, rax
 

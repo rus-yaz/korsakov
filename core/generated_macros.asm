@@ -584,195 +584,147 @@ macro parser tokens* {
 }
 
 macro next  {
-  debug_start "next"
   enter 
   call f_next
   return
-  debug_end "next"
 }
 
 macro skip_newline  {
-  debug_start "skip_newline"
   enter 
   call f_skip_newline
   return
-  debug_end "skip_newline"
 }
 
 macro revert amount=0 {
-  debug_start "revert"
   enter amount
   call f_revert
   return
-  debug_end "revert"
 }
 
 macro update_token  {
-  debug_start "update_token"
   enter 
   call f_update_token
   return
-  debug_end "update_token"
 }
 
 macro expression  {
-  debug_start "expression"
   enter 
   call f_expression
   return
-  debug_end "expression"
 }
 
 macro binary_operation operators*, left_function*, right_function=0 {
-  debug_start "binary_operation"
   enter operators, left_function, right_function
   call f_binary_operation
   return
-  debug_end "binary_operation"
 }
 
 macro atom  {
-  debug_start "atom"
   enter 
   call f_atom
   return
-  debug_end "atom"
 }
 
 macro call_expression  {
-  debug_start "call_expression"
   enter 
   call f_call_expression
   return
-  debug_end "call_expression"
 }
 
 macro power_root  {
-  debug_start "power_root"
   enter 
   call f_power_root
   return
-  debug_end "power_root"
 }
 
 macro factor  {
-  debug_start "factor"
   enter 
   call f_factor
   return
-  debug_end "factor"
 }
 
 macro term  {
-  debug_start "term"
   enter 
   call f_term
   return
-  debug_end "term"
 }
 
 macro comparison_expression  {
-  debug_start "comparison_expression"
   enter 
   call f_comparison_expression
   return
-  debug_end "comparison_expression"
 }
 
 macro arithmetical_expression  {
-  debug_start "arithmetical_expression"
   enter 
   call f_arithmetical_expression
   return
-  debug_end "arithmetical_expression"
 }
 
 macro list_expression  {
-  debug_start "list_expression"
   enter 
   call f_list_expression
   return
-  debug_end "list_expression"
 }
 
 macro check_expression  {
-  debug_start "check_expression"
   enter 
   call f_check_expression
   return
-  debug_end "check_expression"
 }
 
 macro if_expression  {
-  debug_start "if_expression"
   enter 
   call f_if_expression
   return
-  debug_end "if_expression"
 }
 
 macro else_expression  {
-  debug_start "else_expression"
   enter 
   call f_else_expression
   return
-  debug_end "else_expression"
 }
 
 macro for_expression  {
-  debug_start "for_expression"
   enter 
   call f_for_expression
   return
-  debug_end "for_expression"
 }
 
 macro while_expression  {
-  debug_start "while_expression"
   enter 
   call f_while_expression
   return
-  debug_end "while_expression"
 }
 
 macro function_expression is_method=0 {
-  debug_start "function_expression"
   enter is_method
   call f_function_expression
   return
-  debug_end "function_expression"
 }
 
 macro class_expression  {
-  debug_start "class_expression"
   enter 
   call f_class_expression
   return
-  debug_end "class_expression"
 }
 
 macro delete_expression  {
-  debug_start "delete_expression"
   enter 
   call f_delete_expression
   return
-  debug_end "delete_expression"
 }
 
 macro include_statement  {
-  debug_start "include_statement"
   enter 
   call f_include_statement
   return
-  debug_end "include_statement"
 }
 
 macro statement  {
-  debug_start "statement"
   enter 
   call f_statement
   return
-  debug_end "statement"
 }
 
 ; ./executor/token.asm

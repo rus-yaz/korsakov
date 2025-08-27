@@ -1953,7 +1953,7 @@ _function for_expression, rbx, rcx, rdx, r8, r9, r10, r11
 ; @return Узел цикла while
 ; @example
 ;   while_expression
-_function while_expression, rbx, rcx, r8, r9, r10, r11
+_function while_expression, rbx, rcx, r10, r11
   ; RBX — else_case
 
   mov rbx, 0

@@ -40,7 +40,7 @@
 ; @example
 ;   list  ; создает список с вместимостью 2
 ;   list 10  ; создает список с вместимостью 10
-f_list:
+_function list, rbx, rcx, rdi, rsi
   get_arg 0
   mov rbx, rax
 

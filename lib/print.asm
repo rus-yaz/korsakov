@@ -7,7 +7,7 @@
 ; @example
 ;   raw_string "Hello"
 ;   print_raw rax  ; выводит "Hello"
-f_print_raw:
+_function print_raw, rax, rbx, rcx
   get_arg 0
   mov rbx, rax
 
