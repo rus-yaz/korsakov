@@ -426,7 +426,12 @@ _function string_pop_link, rbx, rcx, rdx, r8, r9
 ; @return Копия удаленного символа (строка длиной 1)
 ; @example
 ;   string "Hello"
-;   string_pop rax, -1  ; удаляет и возвращает копию последнего символа
+;   string_pop rax  ; удаляет и возвращает копию последнего символа
+;
+;   integer 0
+;   mov rbx, rax
+;   string "Bye"
+;   string_pop rax, rbx  ; удаляет и возвращает копию первого символа
 _function string_pop, rbx, rcx
   get_arg 0
   mov rbx, rax
@@ -747,8 +752,8 @@ _function split, rbx, rcx, rdx
 ; @function split_from_right_links
 ; @description Разделяет строку на части по разделителю справа налево (ссылки)
 ; @param string - строка для разделения
-; @param separator=0 - разделитель (по умолчанию пробел)
-; @param max_parts=0 - максимальное количество частей (0 - без ограничений)
+; @param separator=" " - разделитель
+; @param max_parts=-1 - максимальное количество частей
 ; @return Список частей строки как ссылки
 ; @example
 ;   string "Hello World Test"
@@ -762,13 +767,13 @@ _function split_from_right_links, rbx, rcx, rdx, r8, r9, r10, r11, r12
   get_arg 2
   mov rdx, rax
 
-  cmp rcx, 0
+  cmp rcx, " "
   jne .not_default_separator
     string " "
     mov rcx, rax
   .not_default_separator:
 
-  cmp rdx, 0
+  cmp rdx, -1
   jne .not_default_parts_count
     integer -1
     mov rdx, rax
@@ -849,8 +854,8 @@ _function split_from_right_links, rbx, rcx, rdx, r8, r9, r10, r11, r12
 ; @function split_from_right
 ; @description Разделяет строку на части по разделителю справа налево (копии)
 ; @param string - строка для разделения
-; @param separator=0 - разделитель (по умолчанию пробел)
-; @param max_parts=0 - максимальное количество частей (0 - без ограничений)
+; @param separator=" " - разделитель
+; @param max_parts=-1 - максимальное количество частей
 ; @return Список частей строки как копии
 ; @example
 ;   string "Hello World Test"
@@ -871,7 +876,7 @@ _function split_from_right, rbx, rcx, rdx
 ; @function join_links
 ; @description Объединяет список строк в одну строку с разделителем (ссылки)
 ; @param list - список строк для объединения
-; @param separator=0 - разделитель (по умолчанию пробел)
+; @param separator=" " - разделитель
 ; @return Объединенная строка
 ; @example
 ;   list
@@ -885,7 +890,7 @@ _function join_links, rbx, rcx, rdx, r8, r9
   get_arg 1
   mov rcx, rax
 
-  cmp rcx, 0
+  cmp rcx, " "
   jne .not_default_separator
     string " "
     mov rcx, rax
@@ -911,7 +916,7 @@ _function join_links, rbx, rcx, rdx, r8, r9
     cmp rax, 1
     je .end_while
 
-    list_get rbx, r8
+    list_get_link rbx, r8
     check_type rax, STRING
     string_extend_links rdx, rax
 
@@ -935,7 +940,7 @@ _function join_links, rbx, rcx, rdx, r8, r9
 ; @function join
 ; @description Объединяет список строк в одну строку с разделителем (копии)
 ; @param list - список строк для объединения
-; @param separator=0 - разделитель (по умолчанию пробел)
+; @param separator=" " - разделитель
 ; @return Объединенная строка
 ; @example
 ;   list
@@ -1177,7 +1182,7 @@ _function string_reverse, rbx
 ; @description Создает срез строки как ссылки на символы
 ; @param string - строка для создания среза
 ; @param start=0 - начальный индекс среза
-; @param end=0 - конечный индекс среза (0 означает до конца)
+; @param end=-1 - конечный индекс среза
 ; @param step=1 - шаг среза
 ; @return Срез строки как ссылки
 ; @example
@@ -1199,7 +1204,7 @@ _function string_slice_links, rbx, rcx, rdx, r8, r9, r10, r15
     mov rcx, rax
   @@:
 
-  cmp rdx, 0
+  cmp rdx, -1
   jne @f
     integer -1
     mov rdx, rax
@@ -1286,7 +1291,7 @@ _function string_slice_links, rbx, rcx, rdx, r8, r9, r10, r15
 ; @description Создает срез строки как копии символов
 ; @param string - строка для создания среза
 ; @param start=0 - начальный индекс среза
-; @param end=0 - конечный индекс среза (0 означает до конца)
+; @param end=-1 - конечный индекс среза
 ; @param step=1 - шаг среза
 ; @return Срез строки как копии
 ; @example

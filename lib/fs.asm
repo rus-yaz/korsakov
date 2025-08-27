@@ -6,10 +6,13 @@
 ; @return Путь к текущей рабочей директории
 ; @example
 ;   getcwd  ; возвращает текущую рабочую директорию
-_function getcwd, rbx
+_function getcwd, rbx, r11
   sub rsp, MAX_PATH_LENGTH
   mov rax, rsp
+
+  push r11
   sys_getcwd rax, MAX_PATH_LENGTH
+  pop r11
 
   cmp rax, 0
   jg .correct
@@ -35,7 +38,7 @@ _function getcwd, rbx
 ; @example
 ;   string "/home/user"
 ;   chdir rax  ; изменяет рабочую директорию
-_function chdir, rax, rbx, rcx
+_function chdir, rax, rbx, rcx, r11
   get_arg 0
   mov rbx, rax
 
@@ -44,7 +47,9 @@ _function chdir, rax, rbx, rcx
   string_to_binary rbx
   add rax, BINARY_HEADER*8
 
+  push r11
   sys_chdir rax
+  pop r11
 
   cmp rax, 0
   jne @f
@@ -111,7 +116,7 @@ _function chdir, rax, rbx, rcx
 ; @example
 ;   string "/path/to/link"
 ;   readlink rax  ; читает содержимое символической ссылки
-_function readlink, rbx
+_function readlink, rbx, r11
   get_arg 0
   mov rbx, rax
 
@@ -123,7 +128,9 @@ _function readlink, rbx
 
   sub rsp, MAX_PATH_LENGTH
   mov rax, rsp
+  push r11
   sys_readlink rbx, rax, MAX_PATH_LENGTH
+  pop r11
 
   cmp rax, 0
   jg .correct

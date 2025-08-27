@@ -8,7 +8,7 @@
 ; @example
 ;   string "test.txt"
 ;   get_file_stat_buffer rax  ; получает информацию о файле test.txt
-_function get_file_stat_buffer, rbx, rcx
+_function get_file_stat_buffer, rbx, rcx, r11
   get_arg 0
   mov rbx, rax
 
@@ -21,12 +21,12 @@ _function get_file_stat_buffer, rbx, rcx
   create_block STAT_BUFFER_SIZE
   mov rcx, rax
 
-  push rcx
+  push rcx, r11
 
   sys_stat rbx,\      ; Указатель на имя файла
            rcx        ; Указатель на место хранения данных
 
-  pop rax
+  pop r11, rax
 
   ret
 
@@ -58,7 +58,7 @@ _function get_file_size, rbx
 ; @example
 ;   string "test.txt"
 ;   open_file rax  ; открывает файл для чтения
-_function open_file, rbx, rcx, rdx
+_function open_file, rbx, rcx, rdx, r11
   get_arg 2
   mov rcx, rax
   get_arg 1
@@ -72,9 +72,11 @@ _function open_file, rbx, rcx, rdx
   string_to_binary rax
   add rax, BINARY_HEADER*8
 
+  push r11
   sys_open rax,\      ; Указатель на имя файла
            rbx,\      ; Тип доступа файла
            rcx        ; Первоначальное разрешение на доступ к файлу
+  pop r11
 
   pop rbx
 
@@ -118,7 +120,7 @@ _function open_file, rbx, rcx, rdx
 ;   string "test.txt"
 ;   open_file rax
 ;   close_file rax  ; закрывает файл
-_function close_file, rax, rbx
+_function close_file, rax, rbx, r11
   get_arg 0
 
   ; Проверка типа
@@ -127,7 +129,9 @@ _function close_file, rax, rbx
   mov rbx, rax
 
   ; Закрытие файла
+  push r11
   sys_close [rax + 8*2] ; Дескриптор файла
+  pop r11
 
   delete_block rbx
 
@@ -141,7 +145,7 @@ _function close_file, rax, rbx
 ;   string "test.txt"
 ;   open_file rax
 ;   read_file rax  ; читает содержимое файла
-_function read_file, rbx, rcx
+_function read_file, rbx, rcx, r11
   get_arg 0
   mov rbx, rax
 
@@ -157,9 +161,11 @@ _function read_file, rbx, rcx
   mov rcx, rsp
 
   ; Чтение файла
+  push r11
   sys_read [rbx + 8*2],\ ; Файловый дескриптор
            rcx,\         ; Блок для хранения данных
            [rbx + 8*3]   ; Размер читаемого файла
+  pop r11
 
   ; Проверка, что файл успешно прочитан (проверка количества прочитанных байт)
   cmp rax, 0
@@ -190,7 +196,7 @@ _function read_file, rbx, rcx
 ;   open_file rax
 ;   string "Hello, World!"
 ;   write_file rbx, rax  ; записывает строку в файл
-_function write_file, rax, rbx, rcx, rdx
+_function write_file, rax, rbx, rcx, rdx, r11
   get_arg 0
   mov rbx, rax
   get_arg 1
@@ -208,7 +214,9 @@ _function write_file, rax, rbx, rcx, rdx
   mov rcx, rdx
   add rcx, 8*2
 
+  push r11
   sys_write [rbx + 8*2], rcx, rax
+  pop r11
 
   ret
 

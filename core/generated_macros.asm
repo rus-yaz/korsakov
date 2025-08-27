@@ -1763,25 +1763,25 @@ macro split string*, separator=" ", max_parts=-1 {
   return
 }
 
-macro split_from_right_links string*, separator=0, max_parts=0 {
+macro split_from_right_links string*, separator=" ", max_parts=-1 {
   enter string, separator, max_parts
   call f_split_from_right_links
   return
 }
 
-macro split_from_right string*, separator=0, max_parts=0 {
+macro split_from_right string*, separator=" ", max_parts=-1 {
   enter string, separator, max_parts
   call f_split_from_right
   return
 }
 
-macro join_links list*, separator=0 {
+macro join_links list*, separator=" " {
   enter list, separator
   call f_join_links
   return
 }
 
-macro join list*, separator=0 {
+macro join list*, separator=" " {
   enter list, separator
   call f_join
   return
@@ -1817,13 +1817,13 @@ macro string_reverse string* {
   return
 }
 
-macro string_slice_links string*, start=0, end=0, step=1 {
+macro string_slice_links string*, start=0, end=-1, step=1 {
   enter string, start, end, step
   call f_string_slice_links
   return
 }
 
-macro string_slice string*, start=0, end=0, step=1 {
+macro string_slice string*, start=0, end=-1, step=1 {
   enter string, start, end, step
   call f_string_slice
   return
