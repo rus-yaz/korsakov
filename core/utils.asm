@@ -253,7 +253,7 @@ _function type_full_size, rbx, rcx
 ; @param type - ожидаемый тип объекта
 ; @example
 ;   check_type some_variable, INTEGER  ; Проверяет, что переменная — целое число
-_function check_type rax, rbx, r8, r9
+_function check_type, rax, rbx, r8, r9
   get_arg 0
   mov r8, [rax]
   get_arg 1
