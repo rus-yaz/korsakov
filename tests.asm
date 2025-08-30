@@ -5,9 +5,7 @@ include "core/korsakov.asm"
 
 macro test function*, arguments* {
   enter function, arguments
-
   call f_test
-
   return
 }
 
@@ -16,7 +14,10 @@ start:
 
   exit 0
 
-f_test:
+; @function test
+; @param function
+; @param arguments
+_function test, rax, rbx, rcx, rdx, r8, r9, r10, r14, r11, r12, r13, r15
   get_arg 0
   mov rbx, rax
   get_arg 1
