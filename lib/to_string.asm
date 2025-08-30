@@ -24,15 +24,12 @@ _function to_string, rbx, rcx, rdx, r8, r9, r10
   cmp rbx, INTEGER
   jne .not_integer
     mov rax, [rax + INTEGER_HEADER*8]
-
     mov r8, rsp ; Сохранение указателя на конец стека
 
     dec rsp
-    mov rcx, 1  ; Количество байт в последовательности (1 — ноль-терминатор)
+    mov byte [rsp], 0
 
-    mov [rsp], cl
-    dec rsp
-
+    mov rcx, 1  ; Длина последовательности (1 — ноль-терминатор)
     mov r9, 0
 
     cmp rax, 0
@@ -109,8 +106,10 @@ _function to_string, rbx, rcx, rdx, r8, r9, r10
 
     raw_float -1.0
     comisd xmm0, [rax]
-    jna .skip_minus
+    jbe .skip_minus
 
+      ; Если между -1 и 0, то вручную добавить "-"
+      ; Так как целая часть будет просто "0"
       string "-"
       string_extend_links rbx, rax
 
