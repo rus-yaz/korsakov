@@ -18,6 +18,7 @@ include 'equates/gdi64.inc'
 include 'equates/comctl64.inc'
 include 'equates/comdlg64.inc'
 include 'equates/shell64.inc'
+include 'equates/bcrypt.inc'
 
 macro api [name] { if used name
 		    label name qword at name#W

@@ -148,6 +148,7 @@ include 'api/comctl32.inc'
 include 'api/comdlg32.inc'
 include 'api/shell32.inc'
 include 'api/wsock32.inc'
+include 'api/bcrypt.inc'
 
 purge import,api
 
@@ -176,7 +177,8 @@ macro .end value
 	     comctl32,'COMCTL32.DLL',\
 	     comdlg32,'COMDLG32.DLL',\
 	     shell32,'SHELL32.DLL',\
-	     wsock32,'WSOCK32.DLL'
+	     wsock32,'WSOCK32.DLL',\
+	     bcrypt,'BCRYPT.DLL'
 
      import_kernel32
      import_user32
@@ -186,6 +188,7 @@ macro .end value
      import_comdlg32
      import_shell32
      import_wsock32
+     import_bcrypt
 
      all_api
 }

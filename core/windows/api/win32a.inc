@@ -19,6 +19,7 @@ include 'equates/comctl32.inc'
 include 'equates/comdlg32.inc'
 include 'equates/shell32.inc'
 include 'equates/wsock32.inc'
+include 'equates/bcrypt.inc'
 
 macro api [name] { if used name
                     label name dword at name#A
