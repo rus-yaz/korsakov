@@ -1211,12 +1211,6 @@ macro string_to_float string* {
 
 ; ./lib/fs.asm
 
-macro getcwd {
-  enter
-  call f_getcwd
-  return
-}
-
 macro readlink path* {
   enter path
   call f_readlink
@@ -1432,6 +1426,12 @@ match =1, LINUX {
 ; ./lib/linux/fs.asm
 
 match =1, LINUX {
+  macro getcwd \{
+    enter
+    call f_getcwd
+    return
+  \}
+  
   macro chdir path* \{
     enter path
     call f_chdir
@@ -2018,6 +2018,12 @@ match =1, WINDOWS {
 ; ./lib/windows/fs.asm
 
 match =1, WINDOWS {
+  macro getcwd \{
+    enter
+    call f_getcwd
+    return
+  \}
+  
   macro chdir path* \{
     enter path
     call f_chdir

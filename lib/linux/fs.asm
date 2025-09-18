@@ -1,6 +1,37 @@
 ; Копирайт © 2025 ООО «РУС.ЯЗ»
 ; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
 
+; @function getcwd
+; @description Возвращает текущую рабочую директорию
+; @return Путь к текущей рабочей директории
+; @example
+;   getcwd  ; возвращает текущую рабочую директорию
+_function getcwd, rbx, r11
+  sub rsp, MAX_PATH_LENGTH
+  mov rax, rsp
+
+  push r11
+  sys_getcwd rax, MAX_PATH_LENGTH
+  pop r11
+
+  cmp rax, 0
+  jg .correct
+
+    string "getcwd: Не удалось получить рабочую директорию"
+    mov rbx, rax
+    list
+    list_append_link rax, rbx
+    error rax
+    exit -1
+
+  .correct:
+
+  mov rax, rsp
+  buffer_to_string rax
+
+  add rsp, MAX_PATH_LENGTH
+  ret
+
 ; @function chdir
 ; @description Изменяет текущую рабочую директорию
 ; @param path - путь к новой рабочей директории

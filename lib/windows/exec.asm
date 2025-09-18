@@ -14,7 +14,7 @@
 ;
 ;   list
 ;   run rbx, rax  ; запускает команду ls -la без переменных среды
-_function run, rax, rbx, rcx, rdx, r12
+_function run, rax, rbx, rcx, rdx
   get_arg 0
   mov rbx, rax
   get_arg 1
