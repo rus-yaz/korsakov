@@ -26,8 +26,8 @@ _function get_program_start_pointer
 ; @example
 ;   get_cli_arguments_count  ; Возвращает количество аргументов, переданных программе
 _function get_cli_arguments_count
-  get_program_start_pointer
-  integer [rax]
+  parse_cli_arguments
+  mov rax, [CLI_ARGUMENTS_COUNT]
   ret
 
 ; @function get_cli_arguments
@@ -35,68 +35,18 @@ _function get_cli_arguments_count
 ; @return Список аргументов, переданных программе
 ; @example
 ;   get_cli_arguments  ; Возвращает список аргументов, переданных программе
-_function get_cli_arguments, rbx, rcx, rdx
-  push rbp
-  get_program_start_pointer
-  mov rbp, rax
-
-  list
-  mov rbx, rax
-
-  get_cli_arguments_count
-  mov rdx, [rax + INTEGER_HEADER*8]
-
-  mov rcx, 0
-  @@:
-    cmp rdx, rcx
-    je @f
-
-    get_arg rcx
-    buffer_to_string rax
-    list_append_link rbx, rax
-
-    inc rcx
-    jmp @b
-  @@:
-
-  pop rbp
-  mov rax, rbx
+_function get_cli_arguments
+  parse_cli_arguments
+  mov rax, [CLI_ARGUMENTS]
   ret
 
 ; @function get_environment_variables
 ; @description Возвращает Список переменных окружения (Список из Строк) в формате "переменная=значение"
 ; @return Список переменных окружения
 ; @example
-;   get_environment_variables  ; Возвращает список переменных окружения
-_function get_environment_variables, rbx, rcx
-  push rbp
-  mov rbp, [PROGRAM_START_POINTER]
+;   get_environment_variables
+_function get_environment_variables
+  parse_environment_variables
 
-  get_cli_arguments_count
-  mov rax, [rax + INTEGER_HEADER*8]
-
-  inc rax ; Учёт числа, равного количеству аргументов
-  inc rax ; Разграничитель между аргументами и переменными среды
-
-  imul rax, 8
-  add rbp, rax
-
-  list
-  mov rbx, rax
-
-  mov rcx, 0
-  @@:
-    get_arg rcx
-    cmp rax, 0
-    je @f
-
-    buffer_to_string rax
-    list_append_link rbx, rax
-
-    inc rcx
-    jmp @b
-  @@:
-
-  pop rbp
-  mov rax, rbx
+  mov rax, [ENVIRONMENT_VARIABLES]
   ret

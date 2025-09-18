@@ -73,11 +73,19 @@ generate_macro() {
         fi
     done
 
+    if [ -n "$macro_params" ]; then
+        macro_params=" $macro_params"
+    fi
+
+    if [ -n "$clean_params" ]; then
+        clean_params=" $clean_params"
+    fi
+
     if [ "$has_debug" = "true" ]; then
         cat << EOF
-macro $function_name $macro_params {
+macro $function_name$macro_params {
   debug_start "$function_name"
-  enter $clean_params
+  enter$clean_params
   call f_$function_name
   return
   debug_end "$function_name"
@@ -85,8 +93,8 @@ macro $function_name $macro_params {
 EOF
     else
         cat << EOF
-macro $function_name $macro_params {
-  enter $clean_params
+macro $function_name$macro_params {
+  enter$clean_params
   call f_$function_name
   return
 }
@@ -203,6 +211,18 @@ process_file() {
     fi
 }
 
+# Функция для определения, нужно ли оборачивать код в дистрозависимый блок
+get_platform_wrapper() {
+    local file_path="$1"
+    if [[ "$file_path" == *"/windows/"* ]]; then
+        echo "match =1, WINDOWS"
+    elif [[ "$file_path" == *"/linux/"* ]]; then
+        echo "match =1, LINUX"
+    else
+        echo ""
+    fi
+}
+
 find_asm_files() {
     find . -name "*.asm" -type f | grep -v ".git" | sort
 }
@@ -224,12 +244,21 @@ for asm_file in $(find_asm_files); do
     fi
 
     macros=$(process_file "$asm_file")
+    platform_wrapper=$(get_platform_wrapper "$asm_file")
 
     if [ -n "$macros" ]; then
       echo >> "$OUTPUT_FILE"
       echo "; $asm_file" >> "$OUTPUT_FILE"
       echo >> "$OUTPUT_FILE"
-      echo "$macros" >> "$OUTPUT_FILE"
+
+      # Если файл находится в дистрозависимые директории, оборачиваем код
+      if [ -n "$platform_wrapper" ]; then
+          echo "$platform_wrapper {" >> "$OUTPUT_FILE"
+          echo "$macros" | sed 's/^/  /' | sed "s/{/\\\\{/" | sed "s/}/\\\\}/" >> "$OUTPUT_FILE"
+          echo "}" >> "$OUTPUT_FILE"
+      else
+          echo "$macros" >> "$OUTPUT_FILE"
+      fi
     fi
 done
 

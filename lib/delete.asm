@@ -19,7 +19,7 @@ _function delete, rax, rbx, rcx, rdx, r8
   mov r8d, [rcx]
   cmp r8d, HEAP_BLOCK
   je .correct_block
-    raw_string "free_block: Ожидался блок кучи"
+    raw_string "delete: Ожидался блок кучи"
     error_raw rax
     exit -1
   .correct_block:

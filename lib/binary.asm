@@ -295,17 +295,8 @@ _function string_to_binary, rbx, rcx, rdx, r8, r9, r11, r12, r15
 
   ; Приведение размера к числу, кратному 8
   mov rax, r9
-
-  mov rbx, 8
-  mov rdx, 0
-
-  idiv rbx
-  mov rcx, rdx
-
-  cmp rcx, 0
-  je @f
-    inc rax
-  @@:
+  add rax, 7
+  and rax, -8
 
   mov r11, rax
   add rax, BINARY_HEADER

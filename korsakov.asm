@@ -5,10 +5,11 @@ include "./core/korsakov.asm"
 
 include "./executor/.asm"
 
-section "koraskov_data" writable
+section ".data" writable
 
-  АСД                rq 1
-  СРАВНЕНИЯ          rq 1
+  АСД              rq 1
+  СРАВНЕНИЯ        rq 1
+  РАЗДЕЛИТЕЛЬ_ПУТИ rq 1
 
   ПЛЮС                      rq 1
   МИНУС                     rq 1
@@ -178,7 +179,7 @@ section "koraskov_data" writable
   АРГУМЕНТЫ_ДЛЯ_СПРАВКИ                           rq 1
   АРГУМЕНТЫ_ДЛЯ_ОТКЛЮЧЕНИЯ_СТАНДАРТНОЙ_БИБЛИОТЕКИ rq 1
 
-section "korsakov_code" executable
+section ".text" executable
 
 _include
 
@@ -188,6 +189,8 @@ macro string_to_label label* {
 }
 
 start:
+  and rsp, -0x10
+
   get_cli_arguments_count
   mov [КОЛИЧЕСТВО_АРГУМЕНТОВ], rax
 
@@ -350,6 +353,10 @@ start:
     exit -1
 
   .start:
+
+  match =1, LINUX   { string "/" }
+  match =1, WINDOWS { string '\' }
+  mov [РАЗДЕЛИТЕЛЬ_ПУТИ], rax
 
   string "+"
   mov [ПЛЮС], rax
@@ -715,11 +722,9 @@ start:
   integer 1
   list_get_link [АРГУМЕНТЫ], rax
   get_absolute_path rax
-  mov rcx, rax
-
   mov r8, rax
 
-  open_file rcx
+  open_file r8
   mov rbx, rax
 
   read_file rax
@@ -727,10 +732,8 @@ start:
 
   close_file rbx
 
-  string "/"
-  mov rdx, rax
   integer 1
-  split_from_right rcx, rdx, rax
+  split_from_right r8, [РАЗДЕЛИТЕЛЬ_ПУТИ], rax
   mov rcx, rax
 
   getcwd
@@ -788,7 +791,8 @@ start:
   mov rdx, rax
   string_extend_links rcx, rdx
 
-  string "/core/korsakov.asm'", 10
+  match =1, LINUX   { string "/core/korsakov.asm'", 10 }
+  match =1, WINDOWS { string "\core\korsakov.asm'", 10 }
   string_extend_links rcx, rax
 
   string "include '"
@@ -796,7 +800,8 @@ start:
 
   string_extend_links rcx, rdx
 
-  string "/modules/.asm'", 10
+  match =1, LINUX   { string "/modules/.asm'", 10 }
+  match =1, WINDOWS { string "\modules\.asm'", 10 }
   string_extend_links rcx, rax
 
   string "start:", 10
@@ -809,6 +814,11 @@ start:
 
   string 10, "exit 0"
   string_extend_links rcx, rax
+
+  match =1, WINDOWS {
+    string 10, ".end _start"
+    string_extend_links rcx, rax
+  }
 
   integer 1
   list_get_link [АРГУМЕНТЫ], rax
@@ -827,54 +837,92 @@ start:
   string ".asm"
   string_add_links rbx, rax
 
-  open_file rax, O_WRONLY + O_CREAT + O_TRUNC, 644o
+  match =1, LINUX   { open_file rax, O_WRONLY + O_CREAT + O_TRUNC, 644o }
+  match =1, WINDOWS { open_file rax, O_WRONLY, CREATE_ALWAYS }
   write_file rax, rcx
   close_file rax
 
-  list
-  mov rcx, rax
-  string "/bin/fasm"
-  list_append_link rcx, rax
-  string ".asm"
-  string_add_links rbx, rax
-  list_append_link rcx, rax
-  string ".o"
-  string_add_links rbx, rax
-  list_append_link rcx, rax
-  string "-m"
-  list_append_link rcx, rax
-  string "1000000"
-  list_append_link rcx, rax
-
-  cmp [ОТКЛЮЧЕНИЕ_СТАНДАРТНОЙ_БИБЛИОТЕКИ], 1
-  jne .use_std
+  match =1, LINUX {
+    list
+    mov rcx, rax
+    string "/bin/fasm"
+    list_append_link rcx, rax
+    string ".asm"
+    string_add_links rbx, rax
+    list_append_link rcx, rax
+    string ".o"
+    string_add_links rbx, rax
+    list_append_link rcx, rax
+    string "-m"
+    list_append_link rcx, rax
+    string "1000000"
+    list_append_link rcx, rax
     string "-d"
     list_append_link rcx, rax
-    string "NOSTD="
+    string "LINUX=1"
     list_append_link rcx, rax
-  .use_std:
 
-  run rcx, [ПЕРЕМЕННЫЕ_СРЕДЫ]
+    cmp [ОТКЛЮЧЕНИЕ_СТАНДАРТНОЙ_БИБЛИОТЕКИ], 1
+    jne .use_std
+      string "-d"
+      list_append_link rcx, rax
+      string "NOSTD="
+      list_append_link rcx, rax
+    .use_std:
 
-  list
-  mov rcx, rax
-  string "/bin/ld"
-  list_append_link rcx, rax
-  string ".o"
-  string_add_links rbx, rax
-  list_append_link rcx, rax
-  string "-o"
-  list_append_link rcx, rax
+    run rcx, [ПЕРЕМЕННЫЕ_СРЕДЫ]
 
-  cmp [ИМЯ_ВЫХОДНОГО_ФАЙЛА], 0
-  je .use_input_file_name
-    list_append_link rcx, [ИМЯ_ВЫХОДНОГО_ФАЙЛА]
-    jmp @f
-  .use_input_file_name:
-    list_append_link rcx, rbx
-  @@:
+    list
+    mov rcx, rax
+    string "/bin/ld"
+    list_append_link rcx, rax
+    string ".o"
+    string_add_links rbx, rax
+    list_append_link rcx, rax
+    string "-o"
+    list_append_link rcx, rax
 
-  run rcx, [ПЕРЕМЕННЫЕ_СРЕДЫ]
+    cmp [ИМЯ_ВЫХОДНОГО_ФАЙЛА], 0
+    je .use_input_file_name
+      list_append_link rcx, [ИМЯ_ВЫХОДНОГО_ФАЙЛА]
+      jmp @f
+    .use_input_file_name:
+      list_append_link rcx, rbx
+    @@:
+
+    run rcx, [ПЕРЕМЕННЫЕ_СРЕДЫ]
+  }
+
+  match =1, WINDOWS {
+    list
+    mov rcx, rax
+    string FASM_PATH
+    list_append_link rcx, rax
+    string ".asm"
+    string_add_links rbx, rax
+    list_append_link rcx, rax
+    string ".exe"
+    string_add_links rbx, rax
+    list_append_link rcx, rax
+    string "-m"
+    list_append_link rcx, rax
+    string "1000000"
+    list_append_link rcx, rax
+    string "-d"
+    list_append_link rcx, rax
+    string "WINDOWS=1"
+    list_append_link rcx, rax
+
+    cmp [ОТКЛЮЧЕНИЕ_СТАНДАРТНОЙ_БИБЛИОТЕКИ], 1
+    jne .use_std
+      string "-d"
+      list_append_link rcx, rax
+      string "NOSTD="
+      list_append_link rcx, rax
+    .use_std:
+
+    run rcx, [ПЕРЕМЕННЫЕ_СРЕДЫ]
+  }
 
   exit 0
 
@@ -1056,3 +1104,5 @@ _function check_compilation, rax, rbx
   .compilation:
 
   ret
+
+match =1, WINDOWS { .end _start }

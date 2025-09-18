@@ -818,7 +818,7 @@ analyze_file() {
     fi
 
     if [ "$CHECK_REGISTERS" = true ] && [ $total_issues -gt 0 ]; then
-        echo -e "${RED}Всего проблем: $total_issues${NC}"
+        echo -e "${RED}Всего проблем '$file': $total_issues${NC}"
     fi
 
     return $total_issues

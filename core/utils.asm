@@ -10,6 +10,7 @@
 ;   buffer_length rax  ; Вернёт 5
 _function buffer_length, rbx, rcx
   get_arg 0
+  mov rbx, 0
   mov rcx, 0 ; Счётчик
 
   @@:
@@ -35,14 +36,16 @@ _function buffer_length, rbx, rcx
 ;   raw_string "Hello"
 ;   buffer_length rax
 ;   sys_print rbx, rax  ; Выводит данные в стандартный поток вывода
-_function sys_print, rax, rbx
-  get_arg 1
-  mov rbx, rax
+_function sys_print, rax, r11, r12
   get_arg 0
+  mov r11, rax
+  get_arg 1
+  mov r12, rax
 
-  sys_write STDOUT,\
-            rax,\       ; Указатель на данные для вывода
-            rbx         ; Длина данных для вывода
+  _get_stdout
+  sys_write rax,\
+            r11,\ ; Указатель на данные для вывода
+            r12   ; Длина данных для вывода
 
   ret
 
@@ -54,14 +57,16 @@ _function sys_print, rax, rbx
 ;   raw_string "Error"
 ;   buffer_length rax
 ;   sys_error rbx, rax  ; Выводит данные в стандартный поток вывода
-_function sys_error, rax, rbx
-  get_arg 1
-  mov rbx, rax
+_function sys_error, rax, r11, r12
   get_arg 0
+  mov r11, rax
+  get_arg 1
+  mov r12, rax
 
-  sys_write STDERR,\
-            rax,\       ; Указатель на данные для вывода
-            rbx         ; Длина данных для вывода
+  _get_stderr
+  sys_write rax,\
+            r11,\ ; Указатель на данные для вывода
+            r12   ; Длина данных для вывода
 
   ret
 
@@ -273,3 +278,61 @@ _function check_type, rax, rbx, r8, r9
   list_append_link rbx, rax
   error rax
   exit -1
+
+match =1, WINDOWS {
+
+; @function utf8_to_utf16
+; @description
+;   Реализовано только для Windows
+;
+;   Перевод буфера UTF-8 и в буфер UTF-16
+; @param buffer - буфер UTF-8
+; @return Буфер UTF-16
+; @example
+;   invoke GetCommandLineA
+;   utf8_to_utf16 rax
+_function utf8_to_utf16, rbx, r12, r13
+  get_arg 0
+  mov rbx, rax
+
+  invoke MultiByteToWideChar, CP_UTF8, 0, rbx, -1, 0, 0
+
+  imul rax, 4 ; Учёт размера WideChar
+  mov r13, rax
+
+  create_block rax
+  mov r12, rax
+
+  invoke MultiByteToWideChar, CP_UTF8, 0, rbx, -1, r12, r13
+
+  mov rax, r12
+
+  ret
+
+; @function utf16_to_utf8
+; @description
+;   Реализовано только для Windows
+;
+;   Перевод буфера UTF-16 и в буфер UTF-8
+; @param buffer - буфер UTF-16
+; @return Буфер UTF-8
+; @example
+;   invoke GetCommandLineW
+;   utf16_to_utf8 rax
+_function utf16_to_utf8, rbx, r12, r13
+  get_arg 0
+  mov rbx, rax
+
+  invoke WideCharToMultiByte, CP_UTF8, 0, rbx, -1, 0, 0, 0, 0
+
+  mov r13, rax
+
+  create_block rax
+  mov r12, rax
+
+  invoke WideCharToMultiByte, CP_UTF8, 0, rbx, -1, r12, r13, 0, 0
+  mov rax, r12
+
+  ret
+
+} ; WINDOWS

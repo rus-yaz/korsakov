@@ -1,6 +1,8 @@
 ; Копирайт © 2025 ООО «РУС.ЯЗ»
 ; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
 
+match =1, LINUX   { include "linux/.asm"   }
+match =1, WINDOWS { include "windows/.asm" }
 include "arithmetical.asm"
 include "boolean.asm"
 include "binary.asm"
@@ -9,8 +11,6 @@ include "context.asm"
 include "copy.asm"
 include "delete.asm"
 include "dictionary.asm"
-include "exec.asm"
-include "file.asm"
 include "function.asm"
 include "heap.asm"
 include "exit.asm"
