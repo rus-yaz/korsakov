@@ -1,10 +1,10 @@
 ; Копирайт © 2025 ООО «РУС.ЯЗ»
 ; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
 
-section "parser_data" writable
+section ".data" writable
   try dq 0
 
-section "parser_code" executable
+section ".text" executable
 
 ; @function parser
 ; @debug
@@ -710,7 +710,7 @@ _function atom, rbx, rcx, rdx, r8, r9
   jne .not_list
     list_expression
     mov rbx, rax
-    jmp .end
+    jmp .continue
 
   .not_list:
 
@@ -719,7 +719,7 @@ _function atom, rbx, rcx, rdx, r8, r9
   jne .not_check
     check_expression
     mov rbx, rax
-    jmp .end
+    jmp .continue
 
   .not_check:
 
@@ -728,7 +728,7 @@ _function atom, rbx, rcx, rdx, r8, r9
   jne .not_if
     if_expression
     mov rbx, rax
-    jmp .end
+    jmp .continue
 
   .not_if:
 
@@ -737,7 +737,7 @@ _function atom, rbx, rcx, rdx, r8, r9
   jne .not_for
     for_expression
     mov rbx, rax
-    jmp .end
+    jmp .continue
 
   .not_for:
 
@@ -746,7 +746,7 @@ _function atom, rbx, rcx, rdx, r8, r9
   jne .not_while
     while_expression
     mov rbx, rax
-    jmp .end
+    jmp .continue
 
   .not_while:
 
@@ -755,7 +755,7 @@ _function atom, rbx, rcx, rdx, r8, r9
   jne .not_function
     function_expression
     mov rbx, rax
-    jmp .end
+    jmp .continue
 
   .not_function:
 
@@ -764,7 +764,7 @@ _function atom, rbx, rcx, rdx, r8, r9
   jne .not_class
     class_expression
     mov rbx, rax
-    jmp .end
+    jmp .continue
 
   .not_class:
 
@@ -773,7 +773,7 @@ _function atom, rbx, rcx, rdx, r8, r9
   jne .not_delete
     delete_expression
     mov rbx, rax
-    jmp .end
+    jmp .continue
 
   .not_delete:
 
@@ -782,11 +782,11 @@ _function atom, rbx, rcx, rdx, r8, r9
   jne .not_include
     include_statement
     mov rbx, rax
-    jmp .end
+    jmp .continue
 
   .not_include:
 
-  .end:
+  .continue:
 
   cmp rbx, 0
   jne .correct_expression

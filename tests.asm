@@ -14,9 +14,6 @@ start:
 
   exit 0
 
-; @function test
-; @param function
-; @param arguments
 _function test, rax, rbx, rcx, rdx, r8, r9, r10, r14, r11, r12, r13, r15
   get_arg 0
   mov rbx, rax

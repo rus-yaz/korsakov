@@ -47,6 +47,18 @@ macro check_type value*, type* {
   return
 }
 
+macro utf8_to_utf16 buffer* {
+  enter buffer
+  call f_utf8_to_utf16
+  return
+}
+
+macro utf16_to_utf8 buffer* {
+  enter buffer
+  call f_utf16_to_utf8
+  return
+}
+
 ; ./executor/compiler.asm
 
 macro compiler ast*, context* {
@@ -453,8 +465,8 @@ macro list_node elements* {
   return
 }
 
-macro null_node  {
-  enter 
+macro null_node {
+  enter
   call f_null_node
   return
 }
@@ -561,14 +573,14 @@ macro return_node value* {
   return
 }
 
-macro skip_node  {
-  enter 
+macro skip_node {
+  enter
   call f_skip_node
   return
 }
 
-macro break_node  {
-  enter 
+macro break_node {
+  enter
   call f_break_node
   return
 }
@@ -583,14 +595,14 @@ macro parser tokens* {
   debug_end "parser"
 }
 
-macro next  {
-  enter 
+macro next {
+  enter
   call f_next
   return
 }
 
-macro skip_newline  {
-  enter 
+macro skip_newline {
+  enter
   call f_skip_newline
   return
 }
@@ -601,14 +613,14 @@ macro revert amount=0 {
   return
 }
 
-macro update_token  {
-  enter 
+macro update_token {
+  enter
   call f_update_token
   return
 }
 
-macro expression  {
-  enter 
+macro expression {
+  enter
   call f_expression
   return
 }
@@ -619,80 +631,80 @@ macro binary_operation operators*, left_function*, right_function=0 {
   return
 }
 
-macro atom  {
-  enter 
+macro atom {
+  enter
   call f_atom
   return
 }
 
-macro call_expression  {
-  enter 
+macro call_expression {
+  enter
   call f_call_expression
   return
 }
 
-macro power_root  {
-  enter 
+macro power_root {
+  enter
   call f_power_root
   return
 }
 
-macro factor  {
-  enter 
+macro factor {
+  enter
   call f_factor
   return
 }
 
-macro term  {
-  enter 
+macro term {
+  enter
   call f_term
   return
 }
 
-macro comparison_expression  {
-  enter 
+macro comparison_expression {
+  enter
   call f_comparison_expression
   return
 }
 
-macro arithmetical_expression  {
-  enter 
+macro arithmetical_expression {
+  enter
   call f_arithmetical_expression
   return
 }
 
-macro list_expression  {
-  enter 
+macro list_expression {
+  enter
   call f_list_expression
   return
 }
 
-macro check_expression  {
-  enter 
+macro check_expression {
+  enter
   call f_check_expression
   return
 }
 
-macro if_expression  {
-  enter 
+macro if_expression {
+  enter
   call f_if_expression
   return
 }
 
-macro else_expression  {
-  enter 
+macro else_expression {
+  enter
   call f_else_expression
   return
 }
 
-macro for_expression  {
-  enter 
+macro for_expression {
+  enter
   call f_for_expression
   return
 }
 
-macro while_expression  {
-  enter 
+macro while_expression {
+  enter
   call f_while_expression
   return
 }
@@ -703,26 +715,26 @@ macro function_expression is_method=0 {
   return
 }
 
-macro class_expression  {
-  enter 
+macro class_expression {
+  enter
   call f_class_expression
   return
 }
 
-macro delete_expression  {
-  enter 
+macro delete_expression {
+  enter
   call f_delete_expression
   return
 }
 
-macro include_statement  {
-  enter 
+macro include_statement {
+  enter
   call f_include_statement
   return
 }
 
-macro statement  {
-  enter 
+macro statement {
+  enter
   call f_statement
   return
 }
@@ -779,8 +791,8 @@ macro format_token type*, value*, start_line*, start_column*, stop_line*, stop_c
 
 ; ./korsakov.asm
 
-macro print_help  {
-  enter 
+macro print_help {
+  enter
   call f_print_help
   return
 }
@@ -945,26 +957,26 @@ macro set_program_start_pointer pointer* {
   return
 }
 
-macro get_program_start_pointer  {
-  enter 
+macro get_program_start_pointer {
+  enter
   call f_get_program_start_pointer
   return
 }
 
-macro get_cli_arguments_count  {
-  enter 
+macro get_cli_arguments_count {
+  enter
   call f_get_cli_arguments_count
   return
 }
 
-macro get_cli_arguments  {
-  enter 
+macro get_cli_arguments {
+  enter
   call f_get_cli_arguments
   return
 }
 
-macro get_environment_variables  {
-  enter 
+macro get_environment_variables {
+  enter
   call f_get_environment_variables
   return
 }
@@ -1133,63 +1145,11 @@ macro error arguments*, separator=0, end_of_string=0 {
   return
 }
 
-; ./lib/exec.asm
-
-macro run command*, env*, wait=1 {
-  enter command, env, wait
-  call f_run
-  return
-}
-
 ; ./lib/exit.asm
 
 macro program_exit code=0 {
   enter code
   call f_program_exit
-  return
-}
-
-; ./lib/file.asm
-
-macro get_file_stat_buffer filename* {
-  enter filename
-  call f_get_file_stat_buffer
-  return
-}
-
-macro get_file_size filename* {
-  enter filename
-  call f_get_file_size
-  return
-}
-
-macro open_file filename*, flags=O_RDONLY, mode=444o {
-  enter filename, flags, mode
-  call f_open_file
-  return
-}
-
-macro close_file file* {
-  enter file
-  call f_close_file
-  return
-}
-
-macro read_file file* {
-  enter file
-  call f_read_file
-  return
-}
-
-macro write_file file*, string* {
-  enter file, string
-  call f_write_file
-  return
-}
-
-macro get_absolute_path path* {
-  enter path
-  call f_get_absolute_path
   return
 }
 
@@ -1251,33 +1211,15 @@ macro string_to_float string* {
 
 ; ./lib/fs.asm
 
-macro getcwd  {
-  enter 
+macro getcwd {
+  enter
   call f_getcwd
-  return
-}
-
-macro chdir path* {
-  enter path
-  call f_chdir
   return
 }
 
 macro readlink path* {
   enter path
   call f_readlink
-  return
-}
-
-macro get_exe_path  {
-  enter 
-  call f_get_exe_path
-  return
-}
-
-macro get_exe_directory  {
-  enter 
-  call f_get_exe_directory
   return
 }
 
@@ -1303,9 +1245,15 @@ macro function_call function*, arguments*, named_arguments* {
 
 ; ./lib/heap.asm
 
-macro allocate_heap  {
-  enter 
-  call f_allocate_heap
+macro get_heap_address_by_offset offset* {
+  enter offset
+  call f_get_heap_address_by_offset
+  return
+}
+
+macro get_heap_offset_by_address address* {
+  enter address
+  call f_get_heap_offset_by_address
   return
 }
 
@@ -1407,6 +1355,126 @@ macro float_to_integer float* {
   enter float
   call f_float_to_integer
   return
+}
+
+; ./lib/linux/context.asm
+
+match =1, LINUX {
+  macro parse_cli_arguments \{
+    enter
+    call f_parse_cli_arguments
+    return
+  \}
+  
+  macro parse_environment_variables \{
+    enter
+    call f_parse_environment_variables
+    return
+  \}
+}
+
+; ./lib/linux/exec.asm
+
+match =1, LINUX {
+  macro run command*, env*, wait=1 \{
+    enter command, env, wait
+    call f_run
+    return
+  \}
+}
+
+; ./lib/linux/file.asm
+
+match =1, LINUX {
+  macro _get_file_stat_buffer filename* \{
+    enter filename
+    call f__get_file_stat_buffer
+    return
+  \}
+  
+  macro _get_file_size filename* \{
+    enter filename
+    call f__get_file_size
+    return
+  \}
+  
+  macro open_file filename*, flags=O_RDONLY, mode=444o \{
+    enter filename, flags, mode
+    call f_open_file
+    return
+  \}
+  
+  macro close_file file* \{
+    enter file
+    call f_close_file
+    return
+  \}
+  
+  macro read_file file* \{
+    enter file
+    call f_read_file
+    return
+  \}
+  
+  macro write_file file*, string* \{
+    enter file, string
+    call f_write_file
+    return
+  \}
+  
+  macro get_absolute_path path* \{
+    enter path
+    call f_get_absolute_path
+    return
+  \}
+}
+
+; ./lib/linux/fs.asm
+
+match =1, LINUX {
+  macro chdir path* \{
+    enter path
+    call f_chdir
+    return
+  \}
+  
+  macro get_exe_path \{
+    enter
+    call f_get_exe_path
+    return
+  \}
+  
+  macro get_exe_directory \{
+    enter
+    call f_get_exe_directory
+    return
+  \}
+}
+
+; ./lib/linux/heap.asm
+
+match =1, LINUX {
+  macro init_heap \{
+    enter
+    call f_init_heap
+    return
+  \}
+  
+  macro expand_heap \{
+    enter
+    call f_expand_heap
+    return
+  \}
+}
+
+; ./lib/linux/random.asm
+
+match =1, LINUX {
+  macro get_random start=0, end=0 \{
+    enter start, end
+    call f_get_random
+    return
+  \}
 }
 
 ; ./lib/list.asm
@@ -1601,8 +1669,8 @@ macro euler_power exponent* {
 
 ; ./lib/null.asm
 
-macro null  {
-  enter 
+macro null {
+  enter
   call f_null
   return
 }
@@ -1629,12 +1697,6 @@ macro print arguments*, separator=0, end_of_string=0 {
 
 ; ./lib/random.asm
 
-macro get_random start=0, end=0 {
-  enter start, end
-  call f_get_random
-  return
-}
-
 macro get_pseudorandom start=0, end=0 {
   enter start, end
   call f_get_pseudorandom
@@ -1647,8 +1709,8 @@ macro set_seed seed* {
   return
 }
 
-macro reset_seed  {
-  enter 
+macro reset_seed {
+  enter
   call f_reset_seed
   return
 }
@@ -1885,4 +1947,118 @@ macro access variable*, keys*, context=[GLOBAL_CONTEXT] {
   enter variable, keys, context
   call f_access
   return
+}
+
+; ./lib/windows/context.asm
+
+match =1, WINDOWS {
+  macro parse_cli_arguments \{
+    enter
+    call f_parse_cli_arguments
+    return
+  \}
+  
+  macro parse_environment_variables \{
+    enter
+    call f_parse_environment_variables
+    return
+  \}
+}
+
+; ./lib/windows/exec.asm
+
+match =1, WINDOWS {
+  macro run command*, env*, wait=1 \{
+    enter command, env, wait
+    call f_run
+    return
+  \}
+}
+
+; ./lib/windows/file.asm
+
+match =1, WINDOWS {
+  macro _get_file_size handle* \{
+    enter handle
+    call f__get_file_size
+    return
+  \}
+  
+  macro open_file filename*, flags=O_RDONLY, mode=OPEN_EXISTING \{
+    enter filename, flags, mode
+    call f_open_file
+    return
+  \}
+  
+  macro close_file file* \{
+    enter file
+    call f_close_file
+    return
+  \}
+  
+  macro read_file file* \{
+    enter file
+    call f_read_file
+    return
+  \}
+  
+  macro write_file file*, string* \{
+    enter file, string
+    call f_write_file
+    return
+  \}
+  
+  macro get_absolute_path path* \{
+    enter path
+    call f_get_absolute_path
+    return
+  \}
+}
+
+; ./lib/windows/fs.asm
+
+match =1, WINDOWS {
+  macro chdir path* \{
+    enter path
+    call f_chdir
+    return
+  \}
+  
+  macro get_exe_path \{
+    enter
+    call f_get_exe_path
+    return
+  \}
+  
+  macro get_exe_directory \{
+    enter
+    call f_get_exe_directory
+    return
+  \}
+}
+
+; ./lib/windows/heap.asm
+
+match =1, WINDOWS {
+  macro init_heap \{
+    enter
+    call f_init_heap
+    return
+  \}
+  
+  macro expand_heap \{
+    enter
+    call f_expand_heap
+    return
+  \}
+}
+
+; ./lib/windows/random.asm
+
+match =1, WINDOWS {
+  macro get_random start=0, end=0 \{
+    enter start, end
+    call f_get_random
+    return
+  \}
 }

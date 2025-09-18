@@ -211,4 +211,54 @@ macro init_ {
   mov rcx, rax
   list
   assign rbx, rax, rcx
+
+  list
+  mov rdx, rax
+  dictionary
+  mov rcx, rax
+  string "амогус"
+  mov rbx, rax
+  function rbx, f_amogus, rdx, rcx, 0, 1
+  mov rcx, rax
+  list
+  assign rbx, rax, rcx
 }
+
+_function amogus, rax
+  raw_string "         ______________       ", 10
+  print_raw rax
+  raw_string "        /              \      ", 10
+  print_raw rax
+  raw_string "       /                \     ", 10
+  print_raw rax
+  raw_string "      /          __________   ", 10
+  print_raw rax
+  raw_string "      |         /          \  ", 10
+  print_raw rax
+  raw_string "  ____|        /            \ ", 10
+  print_raw rax
+  raw_string " /    |        \            / ", 10
+  print_raw rax
+  raw_string " |    |         \__________/  ", 10
+  print_raw rax
+  raw_string " |    |                 |     ", 10
+  print_raw rax
+  raw_string " |    |                 |     ", 10
+  print_raw rax
+  raw_string " |    |                 |     ", 10
+  print_raw rax
+  raw_string " |    |                 |     ", 10
+  print_raw rax
+  raw_string " \____|                 |     ", 10
+  print_raw rax
+  raw_string "      |      _____      |     ", 10
+  print_raw rax
+  raw_string "      |     /     \     |     ", 10
+  print_raw rax
+  raw_string "      |     |     |     |     ", 10
+  print_raw rax
+  raw_string "      |     |     |     |     ", 10
+  print_raw rax
+  raw_string "      \_____/     \_____/     ", 10
+  print_raw rax
+  ret

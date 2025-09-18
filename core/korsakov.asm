@@ -1,14 +1,37 @@
 ; Копирайт © 2025 ООО «РУС.ЯЗ»
 ; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
 
-format ELF64
-public _start
+match =1, LINUX {
+  format ELF64
+  public _start
 
-section "" writable
+  define WINDOWS 0
 
+  include "linux/syscalls.asm"
+}
+match =1, WINDOWS {
+  format PE64 console
+
+  define LINUX 0
+
+  include "windows/syscalls.asm"
+  purge .while, .else
+}
+
+include "debug.asm"
+include "macro.asm"
+
+match =1, LINUX   { section ".data" writable }
+match =1, WINDOWS { .data }
+
+  WINDOWS_HEAP_START    rq 1 ; Указатель на кучу
   HEAP_START            rq 1 ; Указатель на начало кучи
   HEAP_END              rq 1 ; Указатель на конец кучи
   FIRST_FREE_HEAP_BLOCK rq 1 ; Указатель на первый в цепочке свободный блок
+
+  CLI_ARGUMENTS_COUNT   dq 0 ; Количество аргументов командной строки
+  CLI_ARGUMENTS         dq 0 ; Аргументы командной строки
+  ENVIRONMENT_VARIABLES dq 0 ; Переменные среды
 
   PROGRAM_START_POINTER rq 1
 
@@ -20,48 +43,19 @@ section "" writable
   EULER_NUMBER rq 1
   E            rq 1
 
-section "" executable
 
-; Типы данных
-define HEAP_BLOCK  "KORS"
-define NULL        0
-define INTEGER     1
-define FLOAT       2
-define BOOLEAN     3
-define LIST        4
-define STRING      5
-define BINARY      6
-define DICTIONARY  7
-define FUNCTION    8
-define CLASS       9
-define FILE        10
+match =1, WINDOWS {
+  CRYPTO_CONTEXT dq 1
 
-; Размер заголовка
-define NULL_HEADER       1
-define BOOLEAN_HEADER    1
-define INTEGER_HEADER    1
-define FLOAT_HEADER      1
-define BINARY_HEADER     2
-define LIST_HEADER       4
-define STRING_HEADER     4
-define DICTIONARY_HEADER 4
-define FILE_HEADER       4
-define HEAP_BLOCK_HEADER 5
-define FUNCTION_HEADER   7
+  PROC_INFO  PROCESS_INFORMATION
+  START_INFO STARTUPINFO
+}
 
-; Полные размеры типа (для неизменяемых по длине)
-define NULL_SIZE    1
-define INTEGER_SIZE 2
-define FLOAT_SIZE   2
-define BOOLEAN_SIZE 2
-define FILE_SIZE    4
+match =1, LINUX   { section ".text" executable }
+match =1, WINDOWS { .code }
 
-define PAGE_SIZE 0x1000 ; Начальный размер кучи
-
-include "./debug.asm"
-include "./macro.asm"
-include "./syscalls_amd64.asm"
-include "./utils.asm"
+include "constants.asm"
+include "utils.asm"
 
 include "../lib/.asm"
 
@@ -79,13 +73,23 @@ macro arguments [argument] {
     pop rbx
 }
 
+include "../config.inc"
+
 _start:
-  mov rbp, rsp
+  match =1, LINUX {
+    mov rbp, rsp
 
-  mov rax, rbp
-  set_program_start_pointer rax
+    mov rax, rbp
+    set_program_start_pointer rax
+  }
+  match =1, WINDOWS {
+    and rsp, -0x10
 
-  allocate_heap
+    invoke SetConsoleOutputCP, CP_UTF8
+    invoke SetConsoleCP, CP_UTF8
+  }
+
+  init_heap
 
   if NODEFAULT eqtype
   else

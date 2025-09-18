@@ -1,7 +1,7 @@
 ; Копирайт © 2025 ООО «РУС.ЯЗ»
 ; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
 
-section "tokenizer_data" writable
+section ".data" writable
 
   НАЧАЛО_СТРОКА    rq 1
   НАЧАЛО_СТОЛБЕЦ   rq 1
@@ -10,7 +10,7 @@ section "tokenizer_data" writable
   ТЕКУЩИЙ_ФАЙЛ     rq 1
   ПРОЙДЕННЫЕ_ФАЙЛЫ rq 1
 
-section "tokenizer_code" executable
+section ".text" executable
 
 ; @function tokenizer
 ; @description Основная функция токенизатора, разбивает код на токены

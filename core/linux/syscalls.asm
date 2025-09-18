@@ -67,6 +67,18 @@ define MAX_PATH_LENGTH 0x1000
 define GRND_NONBLOCK 1 ; Попытка немедленного получения без накопления энтропии
 define GRND_RANDOM   2 ; Попытка вернуть число, используя максимальную энтропию
 
+macro _get_stdin {
+  mov rax, STDIN
+}
+
+macro _get_stdout {
+  mov rax, STDOUT
+}
+
+macro _get_stderr {
+  mov rax, STDERR
+}
+
 macro syscall number*, arg_1 = 0, arg_2 = 0, arg_3 = 0, arg_4 = 0, arg_5 = 0, arg_6 = 0 {
   push rcx, r9, r8, r10, rdx, rsi, rdi
 
@@ -115,6 +127,7 @@ macro sys_stat filename*, buffer_ptr* {
 }
 
 macro sys_mmap addr*, length*, rights*, flags*, file_descriptor*, offset* {
+  push r11
   syscall SYS_MMAP,\
           addr,\            ; Адрес (если 0, находится автоматически)
           length,\          ; Количество памяти для аллокации
@@ -122,6 +135,7 @@ macro sys_mmap addr*, length*, rights*, flags*, file_descriptor*, offset* {
           flags,\           ; MAP_ANONYMOUS | MAP_PRIVATE
           file_descriptor,\ ; Файловый дескриптор
           offset            ; Смещение относительно начала файла
+  pop r11
 }
 
 macro sys_munmap addr*, length* {

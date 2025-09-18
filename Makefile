@@ -5,21 +5,35 @@ PREFIX = $(DATADIR)/korsakov
 
 DOCS_ROOT = docs
 
-.PHONY: all build debug test install clean
+.PHONY: all compile debug test install clean
 
-all: build
+all: build_linux
 
-build: clean
-	fasm $(FASM_FLAGS) korsakov.asm korsakov.o
+# WIP
+#
+# build:
+
+build_linux: FASM_FLAGS += -d LINUX=1
+build_linux: clean compile
 	ld korsakov.o -o korsakov
 	ld korsakov.o -o корсаков
 
-debug: FASM_FLAGS += -d DEBUG=
-debug: clean build
+build_windows: FASM_FLAGS += -d WINDOWS=1
+build_windows: clean compile
+	cp korsakov.exe корсаков.exe
+
+compile:
+	fasm $(FASM_FLAGS) korsakov.asm
+
+debug_linux: FASM_FLAGS += -d DEBUG=
+debug_linux: clean build_linux
+
+debug_windows: FASM_FLAGS += -d DEBUG=
+debug_windows: clean build_windows
 
 install: korsakov корсаков
 	sudo mkdir -p $(PREFIX)
-	sudo cp -r core modules lib korsakov $(PREFIX)
+	sudo cp -r core modules lib korsakov корсаков config.inc $(PREFIX)
 	sudo ln -sf $(PREFIX)/korsakov $(BINDIR)/korsakov
 	sudo ln -sf $(PREFIX)/korsakov $(BINDIR)/корсаков
 
@@ -32,7 +46,10 @@ test: clean
 	./tests
 
 clean:
-	rm -f *.o $(TARGETS) $(TESTS)
+	rm -f *.o \
+		korsakov корсаков \
+		korsakov.exe корсаков.exe \
+		tests
 
 macros:
 	rm core/generated_macros.asm

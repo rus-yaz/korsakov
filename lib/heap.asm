@@ -1,59 +1,45 @@
 ; Копирайт © 2025 ООО «РУС.ЯЗ»
 ; SPDX-License-Identifier: GPLv3+ ИЛИ прориетарная
 
-; @function allocate_heap
-; @description Выделяет новую страницу памяти для кучи
+; @function get_heap_address_by_offset
+; @description Получение адреса на куче по отступу от зафиксированной границы
+; @param offset
+; @return Абсолютный адрес
 ; @example
-;   allocate_heap  ; выделяет новую страницу памяти
-_function allocate_heap, rax, rbx, rcx, r11
-  push r11
-  sys_mmap 0,\                                  ; Адрес (если 0, находится автоматически)
-           PAGE_SIZE,\                          ; Количество памяти для аллокации
-           PROT_READ + PROT_WRITE + PROT_EXEC,\ ; Права (PROT_READ | PROT_WRITE)
-           MAP_SHARED + MAP_ANONYMOUS,\         ; MAP_ANONYMOUS | MAP_PRIVATE
-           0,\                                  ; Файл дескриптор (ввод)
-           0                                    ; Смещение относительно начала файла (с начала файла)
-  pop r11
+;   get_heap_address
+_function get_heap_address_by_offset, rbx
+  get_arg 0
+  mov rbx, rax
 
-  ; Проверка корректности выделения памяти
-  test rax, rax
-  check_error js, "Ошибка аллокации"
+  match =1, HEAP_FORWARD {
+    mov rax, [HEAP_END]
+    sub rax, rbx
+  }
+  match =0, HEAP_FORWARD {
+    mov rax, rbx
+    add rax, [HEAP_START]
+  }
 
-  mov rbx, PAGE_SIZE                      ; Запись размера кучи
-  sub rbx, HEAP_BLOCK_HEADER*4            ; Учёт размера заголовка блока
+  ret
 
-  mov ecx, HEAP_BLOCK
-  mov [rax + 4*0], ecx ; Идентификатор
+; @function get_heap_offset_by_address
+; @description Получение отступа от зафиксированной границы по адресу на куче
+; @param address
+; @return Относительный адрес (от границы кучи)
+; @example
+;   get_heap_offset_by_address
+_function get_heap_offset_by_address, rbx
+  get_arg 0
+  mov rbx, rax
 
-  mov rcx, 0
-  mov [rax + 4*1], ecx ; Размер предыдущего блока (0 — крайний блок, другое — размер)
-  mov [rax + 4*2], ebx ; Размер текущего блока
-  mov [rax + 4*3], ecx ; Ссылка на предыдущий свободный блок (0 — крайний блок, 1 — занят, другое — указатель)
-  mov [rax + 4*4], ecx ; Ссылка на следующий свободный блок (0 — крайний блок, 1 — занят, другое — указатель)
-
-  cmp [HEAP_START], 0
-  jne .allocated
-
-    ; Если куча аллоцирована впервые
-    mov rbx, rax
-    add rbx, PAGE_SIZE  ; Смещение на размер страницы памяти
-    mov [HEAP_END], rbx ; Сохранение указателя на конец кучи
-
-    jmp @f
-
-  .allocated:
-
-    mov rbx, rax
-    add rbx, HEAP_BLOCK_HEADER*4
-    delete_block rbx
-
-  @@:
-
-  mov [HEAP_START], rax            ; Сохранение указателя на начало кучи
-
-  mov rbx, [HEAP_END]
-  sub rbx, rax
-  mov [FIRST_FREE_HEAP_BLOCK], rbx ; Сохранение указателя на первый свободный блок
+  match =1, HEAP_FORWARD {
+    mov rax, [HEAP_END]
+    sub rax, rbx
+  }
+  match =0, HEAP_FORWARD {
+    mov rax, rbx
+    sub rax, [HEAP_START]
+  }
 
   ret
 
@@ -62,10 +48,11 @@ _function allocate_heap, rax, rbx, rcx, r11
 ; @param block - блок памяти для освобождения
 ; @example
 ;   free_block some_block  ; освобождает блок памяти
-_function free_block, rax, rbx, rcx, rdx, r8, r9
+_function free_block, rax, rbx, rcx, rdx, r8, r11
   get_arg 0
+  mov r11, rax
 
-  mov r8d, [rax]
+  mov r8d, [r11]
   cmp r8d, HEAP_BLOCK
   je .correct_block
 
@@ -75,34 +62,32 @@ _function free_block, rax, rbx, rcx, rdx, r8, r9
 
   .correct_block:
 
-  mov r8, [HEAP_END]
-  sub r8, rax
+  get_heap_offset_by_address r11
+  mov r8, rax
 
   cmp [FIRST_FREE_HEAP_BLOCK], r8
   jne @f
     ret
   @@:
 
-  mov ebx, [rax + 4*3]
+  mov ebx, [r11 + 4*3]
   cmp rbx, 1
   je .not_empty
 
     ; Перезапись ссылок в свободных блоках, на которые указывают ссылки
-    mov ecx, [rax + 4*3]
-    mov edx, [rax + 4*4]
+    mov ecx, [r11 + 4*3]
+    mov edx, [r11 + 4*4]
 
-    cmp rcx, 0
+    cmp ecx, -1
     je @f
-      mov r9, [HEAP_END]
-      sub r9, rcx
-      mov [r9 + 4*4], edx
+      get_heap_address_by_offset rcx
+      mov [rax + 4*4], edx
     @@:
 
-    cmp rdx, 0
+    cmp edx, -1
     je @f
-      mov r9, [HEAP_END]
-      sub r9, rdx
-      mov [r9 + 4*3], ecx
+      get_heap_address_by_offset rdx
+      mov [rax + 4*3], ecx
     @@:
 
   .not_empty:
@@ -112,24 +97,22 @@ _function free_block, rax, rbx, rcx, rdx, r8, r9
   mov [FIRST_FREE_HEAP_BLOCK], r8
 
   ; Обновление нового первого свободного блока
-  mov rcx, 0
-  mov [rax + 4*3], ecx   ; Установка указателя на предыдущий свободный блок (0 — крайний блок)
-  mov [rax + 4*4], ebx ; Установка указателя на следущий свободный блок
+  mov dword [r11 + 4*3], -1  ; Установка указателя на предыдущий свободный блок (-1 — крайний блок)
+  mov       [r11 + 4*4], ebx ; Установка указателя на следущий свободный блок
 
   ; Обновление предыдущего первого свободного блока
-  cmp rbx, 0
+  cmp ebx, -1
   je @f
-    mov r9, [HEAP_END]
-    sub r9, rbx
-    mov [r9 + 4*3], r8d ; Установка указателя на предыдущий свободный блок
+    get_heap_address_by_offset rbx
+    mov [rax + 4*3], r8d ; Установка указателя на предыдущий свободный блок
   @@:
 
   ret
 
 ; @function merge_blocks
-; @description Объединяет два соседних блока памяти в куче
-; @param block_1 - первый блок для объединения
-; @param block_2 - второй блок для объединения
+; @description Объединяет два пустых соседних блока памяти в куче
+; @param block_1 - указатель на заголовок первого блока
+; @param block_2 - указатель на заголовок второго блока
 ; @example
 ;   merge_blocks block1, block2  ; объединяет два блока памяти
 _function merge_blocks, rax, rbx, rcx, rdx, r8
@@ -171,41 +154,36 @@ _function merge_blocks, rax, rbx, rcx, rdx, r8
   mov ecx, [rbx + 4*3]
   mov edx, [rbx + 4*4]
 
-  cmp rcx, 0
+  cmp ecx, -1
   je @f
-    mov r8, [HEAP_END]
-    sub r8, rcx
-    mov [r8 + 4*4], edx
+    get_heap_address_by_offset rcx
+    mov [rax + 4*4], edx
   @@:
 
-  cmp rdx, 0
+  cmp edx, -1
   je @f
-    mov r8, [HEAP_END]
-    sub r8, rdx
-    mov [r8 + 4*3], ecx
+    get_heap_address_by_offset rdx
+    mov [rax + 4*3], ecx
   @@:
 
-  mov r8, [HEAP_END]
-  sub r8, rbx
-
-  cmp r8, [FIRST_FREE_HEAP_BLOCK]
+  get_heap_offset_by_address rbx
+  cmp rax, [FIRST_FREE_HEAP_BLOCK]
   jne @f
     mov [FIRST_FREE_HEAP_BLOCK], rdx
   @@:
 
   ; Удаление заголовка текущего блока
-  mov ecx, 0
-  mov [rbx + 4*0], ecx
-  mov [rbx + 4*1], ecx
-  mov [rbx + 4*2], ecx
-  mov [rbx + 4*3], ecx
-  mov [rbx + 4*4], ecx
+  mov dword [rbx + 4*0], 0
+  mov dword [rbx + 4*1], 0
+  mov dword [rbx + 4*2], 0
+  mov dword [rbx + 4*3], 0
+  mov dword [rbx + 4*4], 0
 
   ret
 
 ; @function delete_block
 ; @description Удаляет блок памяти из кучи
-; @param block - блок памяти для удаления
+; @param block - указатель на тело блока памяти для удаления
 ; @example
 ;   delete_block some_block  ; удаляет блок памяти
 _function delete_block, rax, rbx, rcx, r8
@@ -225,8 +203,12 @@ _function delete_block, rax, rbx, rcx, r8
   free_block rax ; Освобождение текущего блока
 
   ; Смещение до заголовка предыдущего блока
-  mov rbx, rax
   mov ecx, [rax + 4*1]
+  mov rbx, rax
+
+  cmp ecx, 0
+  je @f
+
   sub rbx, rcx
   sub rbx, HEAP_BLOCK_HEADER*4
 
@@ -245,8 +227,9 @@ _function delete_block, rax, rbx, rcx, r8
   @@:
 
   ; Смещение до заголовка следующего блока
-  mov rbx, rax
   mov ecx, [rax + 4*2]
+  mov rbx, rax
+
   add rbx, rcx
   add rbx, HEAP_BLOCK_HEADER*4
 
@@ -286,44 +269,29 @@ _function delete_block, rax, rbx, rcx, r8
 ; @param size - размер блока для создания
 ; @return Указатель на созданный блок памяти
 ; @example
-;   integer 1024
-;   create_block rax  ; создает блок памяти размером 1024 байта
+;   create_block 1024  ; создает блок памяти размером 1024 байта
 _function create_block, rbx, rcx, rdx, r8, r9, r10
   get_arg 0
 
   ; Приведение размера к числу, кратному 8
-  mov rbx, 8
-  mov rdx, 0
-  idiv rbx
-
-  mov rcx, rdx
-  mov rdx, 0
-  imul rbx
-
-  cmp rcx, 0
-  je .skip
-    add rax, 8
-  .skip:
+  add rax, 7
+  and rax, -8
 
   mov r8, rax                      ; Сохранение размера создаваемого блока
   mov rax, [FIRST_FREE_HEAP_BLOCK] ; Запись указателя на первый свободный блок
 
   ; Цикл для нахождения подходящего блока
   .loop:
-    cmp rax, 0
+    cmp eax, -1
     jne .next
 
       ; Если блок является последним свободным блоком
-      allocate_heap                    ; Аллокация новой кучи
+      expand_heap                      ; Аллокация новой страницы
       mov rax, [FIRST_FREE_HEAP_BLOCK]
 
     .next:
 
-    mov r9, [HEAP_END]
-    sub r9, rax
-
-    mov rax, r9
-
+    get_heap_address_by_offset rax
     mov r9d, [rax]
     cmp r9d, HEAP_BLOCK
     je .correct_block
@@ -341,32 +309,32 @@ _function create_block, rbx, rcx, rdx, r8, r9, r10
       ; Перезапись ссылок в свободных блоках, на которые указывают ссылки
       mov ecx, [rax + 4*3]
       mov edx, [rax + 4*4]
+      mov rbx, rax
 
-      cmp rcx, 0
+      cmp ecx, -1
       je @f
-        mov r9, [HEAP_END]
-        sub r9, rcx
-        mov [r9 + 4*4], edx
+        get_heap_address_by_offset rcx
+        mov [rax + 4*4], edx
       @@:
 
-      cmp rdx, 0
+      cmp edx, -1
       je @f
-        mov r9, [HEAP_END]
-        sub r9, rdx
-        mov [r9 + 4*3], ecx
+        get_heap_address_by_offset rdx
+        mov [rax + 4*3], ecx
       @@:
 
       ; Установка статуса созданного блока на «занят»
       mov r9, 1
-      mov [rax + 4*3], r9d
-      mov [rax + 4*4], r9d
+      mov [rbx + 4*3], r9d
+      mov [rbx + 4*4], r9d
 
       ; Проверка, что обработанный блок был первым свободным
-      cmp rcx, 0
+      cmp ecx, -1
       jne @f
         mov [FIRST_FREE_HEAP_BLOCK], rdx
       @@:
 
+      mov rax, rbx
       jmp .continue
 
     .not_enough:
@@ -392,7 +360,7 @@ _function create_block, rbx, rcx, rdx, r8, r9, r10
       mov r9d, HEAP_BLOCK
       mov [rcx + 4*0], r9d ; Идентификатор
       mov r9d, [rax + 4*2]
-      mov [rcx + 4*1], r9d  ; Размер предыдущего блока (0 — крайний блок, другое — размер)
+      mov [rcx + 4*1], r9d ; Размер предыдущего блока (0 — крайний блок, другое — размер)
       mov [rcx + 4*2], ebx ; Размер текущего блока
       mov r9d, [rax + 4*3]
       mov [rcx + 4*3], r9d ; Ссылка на предыдущий свободный блок (0 — крайний блок, 1 — занят, другое — указатель)
@@ -400,38 +368,36 @@ _function create_block, rbx, rcx, rdx, r8, r9, r10
       mov [rcx + 4*4], r9d ; Ссылка на следующий свободный блок (0 — крайний блок, 1 — занят, другое — указатель)
 
       ; Установка статуса созданного блока на «занят»
-      mov r9, 1
-      mov [rax + 4*3], r9d
-      mov [rax + 4*4], r9d
+      mov dword [rax + 4*3], 1
+      mov dword [rax + 4*4], 1
 
-      mov r10, [HEAP_END]
-      sub r10, rcx
+      mov rbx, rax
+
+      get_heap_offset_by_address rcx
+      mov r10, rax
 
       ; Перезапись ссылок в свободных блоках, на которые указывают ссылки
       mov edx, [rcx + 4*3]
-      cmp rdx, 0
+      cmp edx, -1
       je @f
-        mov r9, [HEAP_END]
-        sub r9, rdx
-        mov [r9 + 4*4], r10d
+        get_heap_address_by_offset rdx
+        mov [rax + 4*4], r10d
       @@:
 
       mov edx, [rcx + 4*4]
-      cmp rdx, 0
+      cmp edx, -1
       je @f
-        mov r9, [HEAP_END]
-        sub r9, rdx
-        mov [r9 + 4*3], r10d
+        get_heap_address_by_offset rdx
+        mov [rax + 4*3], r10d
       @@:
 
-      mov r9, [HEAP_END]
-      sub r9, rax
-
-      cmp [FIRST_FREE_HEAP_BLOCK], r9
+      get_heap_offset_by_address rbx
+      cmp [FIRST_FREE_HEAP_BLOCK], rax
       jne @f
         mov [FIRST_FREE_HEAP_BLOCK], r10
       @@:
 
+      mov rax, rbx
       jmp .continue
 
     .too_little_size:
@@ -450,12 +416,12 @@ _function create_block, rbx, rcx, rdx, r8, r9, r10
     add rax, HEAP_BLOCK_HEADER*4
 
     cmp rax, [HEAP_END]
-    jge .end
+    jge @f
 
     mov [rax + 4*1], ebx
   end repeat
 
-  .end:
+  @@:
   pop rax
 
   add rax, HEAP_BLOCK_HEADER*4

@@ -185,7 +185,9 @@ macro _function name, [regs] {
   common
 
   local .start
-  public f_#name
+  match =1, LINUX \{
+    public f_#name
+  \}
 
   f_#name:
     if regs eq

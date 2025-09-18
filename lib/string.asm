@@ -643,9 +643,10 @@ _function string_extend, rbx, rcx
 ; @param max_parts=-1 - максимальное количество частей
 ; @return Список частей строки как ссылки
 ; @example
-;   string "Hello World Test"
 ;   string " "
-;   split_links rax, rbx  ; возвращает ["Hello", "World", "Test"]
+;   mov rbx, rax
+;   string "Hello World Test"
+;   split_links rax, rbx  ; возвращает %("Hello" "World" "Test")
 _function split_links, rbx, rcx, rdx, r8, r9, r10, r11, r12
   get_arg 0
   mov rbx, rax
@@ -705,7 +706,6 @@ _function split_links, rbx, rcx, rdx, r8, r9, r10, r11, r12
     je .split
 
     .join:
-
       string_extend_links r11, r12
 
       jmp .continue

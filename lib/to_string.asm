@@ -130,14 +130,14 @@ _function to_string, rbx, rcx, rdx, r8, r9, r10
       string "0"
       string_extend_links rbx, rax
 
-      jmp .end
+      jmp .continue
     .not_empty_mantissa:
 
     integer 0
     mov rdx, rax
     @@:
       ucomisd xmm0, xmm3
-      je .end
+      je .continue
 
       mulsd xmm0, xmm2
       cvttsd2si rax, xmm0
@@ -160,7 +160,7 @@ _function to_string, rbx, rcx, rdx, r8, r9, r10
       string_extend_links rbx, rax
 
       jmp @b
-    .end:
+    .continue:
 
     popsd 3, 2, 1, 0
 

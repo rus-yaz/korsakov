@@ -32,7 +32,8 @@ _function input, rbx, rcx
   push 0
   mov rbx, rsp
   sub rbx, 0x1000
-  sys_read STDIN, rbx, 0x1000
+  _get_stdin
+  sys_read rax, rbx, 0x1000
 
   buffer_to_string rbx
   mov rbx, rax

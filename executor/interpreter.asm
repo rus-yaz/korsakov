@@ -1213,10 +1213,10 @@ _function interpret_for, rbx, rcx, rdx, r8, r9, r10, r11, r12, r13, r14
     cmp rax, 1
     jne .not_default_step
       integer 1
-      jmp .continue
+      jmp @f
     .not_default_step:
       interpret r10, rbx
-    .continue:
+    @@:
 
     mov r10, rax
 
@@ -1315,7 +1315,7 @@ _function interpret_for, rbx, rcx, rdx, r8, r9, r10, r11, r12, r13, r14
     .generator_end_while:
 
     mov rax, r11
-    jmp .end
+    jmp .continue
 
   .entry_loop:
 
@@ -1417,7 +1417,7 @@ _function interpret_for, rbx, rcx, rdx, r8, r9, r10, r11, r12, r13, r14
     .entry_end_while:
 
     mov rax, r12
-    jmp .end
+    jmp .continue
 
   .else:
 
@@ -1428,7 +1428,7 @@ _function interpret_for, rbx, rcx, rdx, r8, r9, r10, r11, r12, r13, r14
     dictionary_get_link rcx, rax
     interpret rax, rbx
 
-  .end:
+  .continue:
 
   mov rbx, rax
 
