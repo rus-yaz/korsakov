@@ -181,13 +181,13 @@ macro sys_mmap addr*, length*, rights*, flags*, file_descriptor*, offset* {
 }
 
 macro sys_getcwd buffer*, size* {
-  invoke GetCurrentDirectory,\
+  invoke GetCurrentDirectoryW,\
          size,\   ; Размер буфера
          buffer   ; Буфер, куда будет помещён путь
 }
 
 macro sys_chdir path* {
-  invoke SetCurrentDirectory,\
+  invoke SetCurrentDirectoryW,\
          path ; Путь
 }
 
