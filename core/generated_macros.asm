@@ -85,12 +85,12 @@ macro compile_body node*, context* {
   debug_end "compile_body"
 }
 
-macro compile_assign node*, context* {
-  debug_start "compile_assign"
+macro compile_access_link node*, context* {
+  debug_start "compile_access_link"
   enter node, context
-  call f_compile_assign
+  call f_compile_access_link
   return
-  debug_end "compile_assign"
+  debug_end "compile_access_link"
 }
 
 macro compile_access node*, context* {
@@ -99,6 +99,22 @@ macro compile_access node*, context* {
   call f_compile_access
   return
   debug_end "compile_access"
+}
+
+macro compile_assign_link node*, context* {
+  debug_start "compile_assign_link"
+  enter node, context
+  call f_compile_assign_link
+  return
+  debug_end "compile_assign_link"
+}
+
+macro compile_assign node*, context* {
+  debug_start "compile_assign"
+  enter node, context
+  call f_compile_assign
+  return
+  debug_end "compile_assign"
 }
 
 macro compile_unary_operation node*, context* {
@@ -441,9 +457,21 @@ macro check_node_type node*, type* {
   debug_end "check_node_type"
 }
 
+macro access_link_node variable*, keys* {
+  enter variable, keys
+  call f_access_link_node
+  return
+}
+
 macro access_node variable*, keys* {
   enter variable, keys
   call f_access_node
+  return
+}
+
+macro assign_link_node variable*, keys*, value* {
+  enter variable, keys, value
+  call f_assign_link_node
   return
 }
 

@@ -113,6 +113,11 @@ _function function_call, rbx, rcx, rdx, r8, r9, r10, r11, r12, r13, r14, r15
     inc rax
   @@:
 
+  copy rcx
+  mov rcx, rax
+  copy rdx
+  mov rdx, rax
+
   integer rax
   mov r10, rax
 

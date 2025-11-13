@@ -71,10 +71,10 @@ _function compile, rbx, rcx
     ret
   @@:
 
-  check_node_type rcx, [УЗЕЛ_ПРИСВАИВАНИЯ_ПЕРЕМЕННОЙ]
+  check_node_type rcx, [УЗЕЛ_ДОСТУПА_К_ССЫЛКЕ_ПЕРЕМЕННОЙ]
   cmp rax, 1
   jne @f
-    compile_assign rbx, rcx
+    compile_access_link rbx, rcx
     ret
   @@:
 
@@ -82,6 +82,20 @@ _function compile, rbx, rcx
   cmp rax, 1
   jne @f
     compile_access rbx, rcx
+    ret
+  @@:
+
+  check_node_type rcx, [УЗЕЛ_ПРИСВАИВАНИЯ_ССЫЛКИ_ПЕРЕМЕННОЙ]
+  cmp rax, 1
+  jne @f
+    compile_assign_link rbx, rcx
+    ret
+  @@:
+
+  check_node_type rcx, [УЗЕЛ_ПРИСВАИВАНИЯ_ПЕРЕМЕННОЙ]
+  cmp rax, 1
+  jne @f
+    compile_assign rbx, rcx
     ret
   @@:
 
@@ -254,6 +268,151 @@ _function compile_body, rbx, rcx, rdx, r8, r9
   mov rax, rdx
   ret
 
+; @function compile_access_link
+; @debug
+; @description Компилирует доступ к переменной по ссылке
+; @param node - узел доступа к переменной по ссылке
+; @param context - контекст компиляции
+; @return Скомпилированный код доступа к переменной
+; @example
+;   compile_access_link access_node, context
+_function compile_access_link, rbx, rcx, rdx, r8
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
+
+  list
+  mov rdx, rax
+
+  add_code "push rcx, rbx"
+
+  string "ключи"
+  dictionary_get_link rcx, rax
+  compile rax, rbx
+  list_extend_links rdx, rax
+  add_code "mov rcx, rax"
+
+  string "string "
+  mov r8, rax
+  string "переменная"
+  dictionary_get_link rcx, rax
+  mov rcx, rax
+  string "значение"
+  dictionary_get_link rcx, rax
+  to_string rax
+  string_extend_links r8, rax
+  list_append_link rdx, rax
+
+  add_code "mov rbx, rax",\
+           "access_link rbx, rcx",\
+           "pop rbx, rcx"
+
+  mov rax, rdx
+  ret
+
+; @function compile_access
+; @debug
+; @description Компилирует доступ к переменной
+; @param node - узел доступа к переменной
+; @param context - контекст компиляции
+; @return Скомпилированный код доступа к переменной
+; @example
+;   compile_access access_node, context
+_function compile_access, rbx, rcx, rdx, r8
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
+
+  list
+  mov rdx, rax
+
+  add_code "push rcx, rbx"
+
+  string "ключи"
+  dictionary_get_link rcx, rax
+  compile rax, rbx
+  list_extend_links rdx, rax
+  add_code "mov rcx, rax"
+
+  string "string "
+  mov r8, rax
+  string "переменная"
+  dictionary_get_link rcx, rax
+  mov rcx, rax
+  string "значение"
+  dictionary_get_link rcx, rax
+  to_string rax
+  string_extend_links r8, rax
+  list_append_link rdx, rax
+
+  add_code "mov rbx, rax",\
+           "access rbx, rcx",\
+           "pop rbx, rcx"
+
+  mov rax, rdx
+  ret
+
+; @function compile_assign_link
+; @debug
+; @description Компилирует присваивание ссылки в переменную
+; @param node - узел присваивания
+; @param context - контекст компиляции
+; @return Скомпилированный код присваивания
+; @example
+;   compile_assign_link assign_node, context
+_function compile_assign_link, rbx, rcx, rdx, r8
+  get_arg 0
+  mov rbx, rax
+  get_arg 1
+  mov rcx, rax
+
+  list
+  mov rdx, rax
+
+  add_code "push rdx, rcx, rbx"
+
+  string "значение"
+  dictionary_get_link rcx, rax
+  mov r8, rax
+
+  null
+  is_equal rax, r8
+  boolean_value rax
+  cmp rax, 1
+  je .use_exists_value
+    compile r8, rbx
+    list_extend_links rdx, rax
+
+  .use_exists_value:
+
+  add_code "mov rdx, rax"
+
+  string "ключи"
+  dictionary_get_link rcx, rax
+  compile rax, rbx
+  list_extend_links rdx, rax
+  add_code "mov rcx, rax"
+
+  string "string "
+  mov r8, rax
+  string "переменная"
+  dictionary_get_link rcx, rax
+  mov rcx, rax
+  string "значение"
+  dictionary_get_link rcx, rax
+  to_string rax
+  string_extend_links r8, rax
+  list_append_link rdx, rax
+
+  add_code "mov rbx, rax",\
+           "assign_link rbx, rcx, rdx",\
+           "pop rbx, rcx, rdx"
+
+  mov rax, rdx
+  ret
+
 ; @function compile_assign
 ; @debug
 ; @description Компилирует присваивание переменной
@@ -309,49 +468,6 @@ _function compile_assign, rbx, rcx, rdx, r8
   add_code "mov rbx, rax",\
            "assign rbx, rcx, rdx",\
            "pop rbx, rcx, rdx"
-
-  mov rax, rdx
-  ret
-
-; @function compile_access
-; @debug
-; @description Компилирует доступ к переменной
-; @param node - узел доступа к переменной
-; @param context - контекст компиляции
-; @return Скомпилированный код доступа к переменной
-; @example
-;   compile_access access_node, context
-_function compile_access, rbx, rcx, rdx, r8
-  get_arg 0
-  mov rbx, rax
-  get_arg 1
-  mov rcx, rax
-
-  list
-  mov rdx, rax
-
-  add_code "push rcx, rbx"
-
-  string "ключи"
-  dictionary_get_link rcx, rax
-  compile rax, rbx
-  list_extend_links rdx, rax
-  add_code "mov rcx, rax"
-
-  string "string "
-  mov r8, rax
-  string "переменная"
-  dictionary_get_link rcx, rax
-  mov rcx, rax
-  string "значение"
-  dictionary_get_link rcx, rax
-  to_string rax
-  string_extend_links r8, rax
-  list_append_link rdx, rax
-
-  add_code "mov rbx, rax",\
-           "access rbx, rcx",\
-           "pop rbx, rcx"
 
   mov rax, rdx
   ret
@@ -417,7 +533,7 @@ _function compile_unary_operation, rbx, rcx, rdx, r8, r9, r11, r12
 
     string "ключи"
     dictionary_get_link r11, rax
-    assign_node r12, rax, r8
+    assign_link_node r12, rax, r8
     compile rax, rbx
     list_extend_links rdx, rax
 
@@ -471,7 +587,7 @@ _function compile_unary_operation, rbx, rcx, rdx, r8, r9, r11, r12
 
     string "ключи"
     dictionary_get_link r11, rax
-    assign_node r12, rax, r8
+    assign_link_node r12, rax, r8
     compile rax, rbx
     list_extend_links rdx, rax
 
@@ -1697,6 +1813,10 @@ _function compile_function, rbx, rcx, rdx, r8, r9, r10, r11, r12, r13, r14
     mov r13, rax
 
     check_node_type r13, [УЗЕЛ_ДОСТУПА_К_ПЕРЕМЕННОЙ]
+    cmp rax, 1
+    je .correct_argument
+
+    check_node_type r13, [УЗЕЛ_ДОСТУПА_К_ССЫЛКЕ_ПЕРЕМЕННОЙ]
     cmp rax, 1
     je .correct_argument
 

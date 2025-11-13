@@ -1084,6 +1084,31 @@ _function tokenizer, rbx, rcx, rdx, r8, r9, r10, r11, r12, r13, r14
 
     .not_minus:
 
+    string ":"
+    is_equal r11, rax
+    boolean_value rax
+    cmp rax, 1
+    jne .not_assign_link
+
+      integer_copy r13
+      integer_inc rax
+      list_get_link r10, rax
+      string_extend_links r11, rax
+
+      string ":="
+      is_equal r11, rax
+      boolean_value rax
+      cmp rax, 1
+      jne .not_assign_link
+
+        integer_inc [КОНЕЦ_СТОЛБЕЦ]
+        integer_inc r13
+
+        mem_mov [тип_токена], [ТИП_ПРИСВАИВАНИЕ_ССЫЛКИ]
+        jmp .write_token
+
+    .not_assign_link:
+
     string "="
     is_equal r11, rax
     boolean_value rax

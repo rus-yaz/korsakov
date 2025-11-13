@@ -199,6 +199,30 @@ _function expression, rbx, rcx, rdx, r8, r9, r10, r11, r12
 
     .skip_operator:
 
+    token_check_type [токен], [ТИП_ПРИСВАИВАНИЕ_ССЫЛКИ]
+    cmp rax, 1
+    jne .skip_assign_link
+
+      next
+
+      expression
+      mov r9, rax
+
+      cmp r8, 0
+      je .skip_operator_assign_link
+
+        access_link_node rcx, rdx
+        binary_operation_node rax, r8, r9
+        mov r9, rax
+
+      .skip_operator_assign_link:
+
+      assign_link_node rcx, rdx, r9
+
+      ret
+
+    .skip_assign_link:
+
     token_check_type [токен], [ТИП_ПРИСВАИВАНИЕ]
     cmp rax, 1
     jne .skip_assign
@@ -582,7 +606,7 @@ _function atom, rbx, rcx, rdx, r8, r9
 
       list
       list_node rax
-      access_node rbx, rax
+      access_link_node rbx, rax
 
       ret
 
@@ -666,7 +690,7 @@ _function atom, rbx, rcx, rdx, r8, r9
     .end_while:
 
     list_node rcx
-    access_node rbx, rax
+    access_link_node rbx, rax
 
     ret
 
@@ -2193,6 +2217,12 @@ _function function_expression, r10, r8, r9, rbx, rcx, rdx
 
     dictionary_get_link r9, [узел]
     is_equal rax, [УЗЕЛ_ДОСТУПА_К_ПЕРЕМЕННОЙ]
+    boolean_value rax
+    cmp rax, 1
+    je .correct_argument
+
+    dictionary_get_link r9, [узел]
+    is_equal rax, [УЗЕЛ_ДОСТУПА_К_ССЫЛКЕ_ПЕРЕМЕННОЙ]
     boolean_value rax
     cmp rax, 1
     je .correct_argument

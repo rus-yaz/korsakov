@@ -22,6 +22,25 @@ _function check_node_type, rbx, rcx
 
   ret
 
+; @function access_link_node
+; @description Создает узел доступа к переменной
+; @param variable - переменная для доступа
+; @param keys - ключи доступа
+; @return Узел доступа к переменной
+; @example
+;   access_link_node variable, keys
+_function access_link_node, rbx
+  dictionary
+  mov rbx, rax
+
+  dictionary_set_link rbx, [узел], [УЗЕЛ_ДОСТУПА_К_ССЫЛКЕ_ПЕРЕМЕННОЙ]
+  get_arg 0
+  dictionary_set_link rbx, [переменная], rax
+  get_arg 1
+  dictionary_set_link rbx, [ключи], rax
+
+  ret
+
 ; @function access_node
 ; @description Создает узел доступа к переменной
 ; @param variable - переменная для доступа
@@ -38,6 +57,28 @@ _function access_node, rbx
   dictionary_set_link rbx, [переменная], rax
   get_arg 1
   dictionary_set_link rbx, [ключи], rax
+
+  ret
+
+; @function assign_link_node
+; @description Создает узел присваивания ссылки переменной
+; @param variable - переменная для присваивания
+; @param keys - ключи доступа
+; @param value - значение для присваивания
+; @return Узел присваивания
+; @example
+;   assign_link_node variable, keys, value
+_function assign_link_node, rbx
+  dictionary
+  mov rbx, rax
+
+  dictionary_set_link rbx, [узел], [УЗЕЛ_ПРИСВАИВАНИЯ_ССЫЛКИ_ПЕРЕМЕННОЙ]
+  get_arg 0
+  dictionary_set_link rbx, [переменная], rax
+  get_arg 1
+  dictionary_set_link rbx, [ключи], rax
+  get_arg 2
+  dictionary_set_link rbx, [значение], rax
 
   ret
 

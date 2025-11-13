@@ -118,6 +118,7 @@ section ".data" writable
   ТИП_ВЕЩЕСТВЕННОЕ_ЧИСЛО        rq 1
   ТИП_ЗАКРЫВАЮЩАЯ_СКОБКА        rq 1
   ТИП_ОТКРЫВАЮЩАЯ_СКОБКА        rq 1
+  ТИП_ПРИСВАИВАНИЕ_ССЫЛКИ       rq 1
   ТИП_ВОЗВЕДЕНИЕ_В_СТЕПЕНЬ      rq 1
   ТИП_ВОСКЛИЦАТЕЛЬНЫЙ_ЗНАК      rq 1
   ТИП_ОБРАТНАЯ_КОСАЯ_ЧЕРТА      rq 1
@@ -472,6 +473,9 @@ start:
   integer_copy rax
   integer_inc rax
   mov [ТИП_ОТКРЫВАЮЩАЯ_СКОБКА], rax
+  integer_copy rax
+  integer_inc rax
+  mov [ТИП_ПРИСВАИВАНИЕ_ССЫЛКИ], rax
   integer_copy rax
   integer_inc rax
   mov [ТИП_ВОЗВЕДЕНИЕ_В_СТЕПЕНЬ], rax
