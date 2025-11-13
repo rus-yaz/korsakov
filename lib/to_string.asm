@@ -213,7 +213,8 @@ _function to_string, rbx, rcx, rdx, r8, r9, r10
 
     .list_end_while:
 
-    join_links r8
+    string "; "
+    join_links r8, rax
     mov rbx, rax
 
     string "%("
