@@ -16,4 +16,4 @@ include "comparisons/.asm"
 raw_string 10, "--------------------", 10, 10
 print_raw rax
 
-include "dictionary/.asm"
+; include "dictionary/.asm"
