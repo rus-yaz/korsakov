@@ -960,6 +960,29 @@ _function call_expression, rbx, rcx, rdx, r8, r9, r10, r11
 
     .next_argument:
 
+    token_check_type [токен], [ТИП_ЗАКРЫВАЮЩАЯ_СКОБКА]
+    cmp rax, 1
+    je .end_while
+
+    token_check_type [токен], [ТИП_ТОЧКА_С_ЗАПЯТОЙ]
+    cmp rax, 1
+    je .correct_separator
+
+      cmp [try], 1
+      jne @f
+        null
+        ret
+
+      @@:
+
+      raw_string "Ожидалась `;`"
+      error_raw rax
+      exit -1
+
+    .correct_separator:
+    next
+    skip_newline
+
     jmp .while
 
   .end_while:
@@ -1242,9 +1265,34 @@ _function list_expression, rbx, rcx, rdx
     cmp rax, 1
     je .end_while_list
 
+    skip_newline
+
+    token_check_type [токен], [ТИП_ТОЧКА_С_ЗАПЯТОЙ]
+    cmp rax, 1
+    je .correct_separator
+
+      cmp [try], 1
+      jne @f
+        null
+        ret
+
+      @@:
+
+      raw_string "Ожидалjсь `;`"
+      error_raw rax
+      exit -1
+
+    .correct_separator:
+    next
+    skip_newline
+
     expression
     list_append_link rcx, rax
     skip_newline
+
+    token_check_type [токен], [ТИП_ЗАКРЫВАЮЩАЯ_СКОБКА]
+    cmp rax, 1
+    je .end_while_list
 
     jmp .while_list
 
@@ -2282,6 +2330,29 @@ _function function_expression, r10, r8, r9, rbx, rcx, rdx
     .not_accumulator:
 
     list_append_link rdx, r9
+
+    token_check_type [токен], [ТИП_ЗАКРЫВАЮЩАЯ_СКОБКА]
+    cmp rax, 1
+    je .correct_closed_paren
+
+    token_check_type [токен], [ТИП_ТОЧКА_С_ЗАПЯТОЙ]
+    cmp rax, 1
+    je .correct_separator
+
+      cmp [try], 1
+      jne @f
+        null
+        ret
+
+      @@:
+
+      raw_string "Ожидалась `;`"
+      error_raw rax
+      exit -1
+
+    .correct_separator:
+    next
+    skip_newline
 
     jmp .while
 
