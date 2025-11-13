@@ -3,7 +3,7 @@ name: Зеркалирование
 on:
   push:
     branches:
-      - "*"
+      - "main"
 
 jobs:
   mirror:
