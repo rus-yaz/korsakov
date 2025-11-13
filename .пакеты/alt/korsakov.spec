@@ -1,4 +1,6 @@
 %define _unpackaged_files_terminate_build 1
+%define cyrillic_name корсаков
+
 
 Name: korsakov
 Version: 1.15.2
@@ -20,6 +22,7 @@ Requires: fasm
 ExclusiveArch: x86_64
 
 Provides: korsákov
+Provides: %cyrillic_name
 
 %description
 Korsakov is a project to develop a new, independent programming language that
@@ -39,16 +42,15 @@ the GNU/Linux kernel).
 %setup
 
 %build
-fasm build.asm
-ld build.o -o build
-./build
+make
 
 %install
-mkdir -p %buildroot%_bindir
-cp ./korsakov %buildroot%_bindir
+make install
 
 %files
+%_datadir/%name
 %_bindir/%name
+%_bindir/%cyrillic_name
 %doc README.md
 
 %changelog
