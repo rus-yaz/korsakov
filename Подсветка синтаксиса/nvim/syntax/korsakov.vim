@@ -22,7 +22,7 @@ syn keyword Keyword class function
 syn keyword Keyword класс функция
 syn match Function /[A-zА-яЁё_][A-zА-яЁё0-9_]*\((\)\@=/
 
-syn match Delimiter /\(---\|===\|%%%\)/
+syn match Delimiter /\(---\|===\)/
 
 syn keyword Include include
 syn keyword Include включить
